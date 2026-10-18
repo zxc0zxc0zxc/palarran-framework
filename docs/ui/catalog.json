@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "selection_modes": [
+    "system",
+    "custom",
+    "system+custom"
+  ],
+  "ordering": "menu-not-popularity-rank",
+  "verified_at": "2026-10-18",
+  "systems": [
+    {
+      "id": "material-3",
+      "label": "Material 3",
+      "owner": "Google",
+      "primary_url": "https://developer.android.com/develop/ui/compose/designsystems/material3",
+      "visual_start": "semantic tonal palette, shape and type hierarchy",
+      "caveat": "Android source; deliberate web adaptation"
+    },
+    {
+      "id": "liquid-glass",
+      "label": "Liquid Glass",
+      "owner": "Apple",
+      "primary_url": "https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/",
+      "visual_start": "translucent functional layers and depth",
+      "caveat": "Native material; web approximation requires opaque fallback"
+    },
+    {
+      "id": "fluent-2",
+      "label": "Fluent 2",
+      "owner": "Microsoft",
+      "primary_url": "https://fluent2.microsoft.design/",
+      "visual_start": "calm layered workspaces and control hierarchy",
+      "caveat": "Choose platform/version explicitly"
+    },
+    {
+      "id": "carbon",
+      "label": "Carbon",
+      "owner": "IBM",
+      "primary_url": "https://www.carbondesignsystem.com/",
+      "visual_start": "structured grids and neutral layered data surfaces",
+      "caveat": "Density must adapt to small screens"
+    },
+    {
+      "id": "atlassian",
+      "label": "Atlassian Design System",
+      "owner": "Atlassian",
+      "primary_url": "https://atlassian.design/foundations/",
+      "visual_start": "team workspace clarity and semantic status",
+      "caveat": "Adapt to project brand and tasks"
+    },
+    {
+      "id": "polaris",
+      "label": "Polaris",
+      "owner": "Shopify",
+      "primary_url": "https://shopify.dev/docs/api/polaris",
+      "visual_start": "commerce/admin surfaces and actionable hierarchy",
+      "caveat": "Current surface/version differs from legacy packages"
+    },
+    {
+      "id": "spectrum",
+      "label": "Spectrum",
+      "owner": "Adobe",
+      "primary_url": "https://spectrum.adobe.com/",
+      "visual_start": "content-focused tools and consistent control roles",
+      "caveat": "Inspect actual platform/version"
+    },
+    {
+      "id": "lightning",
+      "label": "Lightning / SLDS 2",
+      "owner": "Salesforce",
+      "primary_url": "https://developer.salesforce.com/docs/platform/lwc/guide/create-components-css-slds.html",
+      "visual_start": "enterprise records, forms and semantic hierarchy",
+      "caveat": "Visual inspiration does not require LWC migration"
+    },
+    {
+      "id": "ant-design",
+      "label": "Ant Design",
+      "owner": "Ant",
+      "primary_url": "https://ant.design/docs/spec/introduce/",
+      "visual_start": "enterprise forms, tables and states",
+      "caveat": "Mobile adaptation needs explicit work"
+    },
+    {
+      "id": "primer",
+      "label": "Primer",
+      "owner": "GitHub",
+      "primary_url": "https://primer.style/",
+      "visual_start": "restrained developer-workspace hierarchy",
+      "caveat": "Keep project identity and source UX"
+    }
+  ]
+}

@@ -15,3 +15,6 @@
 
 - `docs/ux/` is the mandatory source of truth for `/ux:design`: business description or target README, 3–4 distinct researched products (default 4), evidence-backed account/screenshot analysis, per-screen adaptive diagrams/states and concise UI copy. UX does not prescribe visual style or application implementation.
 - UX concepts/revisions and the screen catalog persist in target `.ai-development/ux/`; accepted rationale belongs in canonical decision records. Read them before subsequent tasks, and do not claim screenshot inference/user testing/adaptive implementation as observed fact.
+
+- `docs/ui/` is mandatory for `/ui:design`: bind to source UX revision/screens/states; offer ten established systems plus custom references, with no invented popularity rank. Study canonical/main plus at least two additional visual references. Preserve UX behavior and short copy; propose UX changes explicitly.
+- UI delivers responsive visual previews, semantic tokens/components and real render evidence when tools allow; missing mandatory checks means draft, not verified. If the design needs bitmap imagery, generate it using available image tools and include it with asset provenance/responsive crops; never fabricate observed reference screenshots. Persist UI concepts/assets/revisions and rationale in target `.ai-development/ui/` and reuse them in later tasks.

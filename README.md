@@ -1,6 +1,6 @@
 # AI tools
 
-Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD и UX; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
+Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX и UI; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
 
 ## Infrastructure planning
 
@@ -65,11 +65,29 @@ python3 scripts/package_plugin.py ux --output artifacts/plugins/ux
 claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ux
 ```
 
+## UI design
+
+[`/ui:design {направление/референсы}`](skills/ui-design/SKILL.md) создаёт визуальный дизайн поверх наших UX-концептов. В Codex — `$ui-design`. Сначала читает UX revision, screens/states и принятые решения; сохраняет их поведение и короткий copy.
+
+- Выбор из 10 известных систем: **Material 3 (Google), Liquid Glass (Apple), Fluent 2 (Microsoft), Carbon (IBM), Atlassian, Polaris (Shopify), Spectrum (Adobe), Lightning (Salesforce), Ant Design, Primer (GitHub)**. Это меню, не измеренный рейтинг популярности. Отдельный вариант — **свои референсы**: ссылки, картинки, локальные файлы, Figma; можно сочетать с системой.
+- Canonical/main source + минимум 2 дополнительных visual refs; наблюдения и наши адаптации отделены. [Каталог с источниками](docs/ui/design-codes.md).
+- Результат — адаптивное runnable preview всех in-scope screens/states, tokens и components: narrow/mobile/tablet/desktop, contrast/focus/overflow и fallback для glass/motion. Если дизайну нужна картинка — **генерирует её и включает в preview**, сохраняет asset record и crops. Без нужного tool — draft с явным gap.
+- Concepts/revisions, research/assets и объяснения решений остаются в target `.ai-development/ui/`; source UX changes оформляются отдельно. Production implementation/deploy не подразумеваются вызовом дизайн-скилла.
+
+[Документация](docs/ui/README.md) → [референсы](docs/ui/references.md) → [UX mapping](docs/ui/ux-binding.md) → [foundations](docs/ui/foundations.md) → [адаптивность](docs/ui/responsive.md) → [визуальный результат](docs/ui/visual-output.md) → [workflow](docs/ui/workflow.md). [Шаблоны](templates/ui).
+
+```sh
+python3 scripts/package_plugin.py ui --output artifacts/plugins/ui
+claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ui
+```
+
+UI package содержит обязательную UI/UX базу и UX skill как dependency. Slash namespace — `/ui:design`; UX методика доступна внутри пакета, отдельный `/ux:design` подключается UX plugin.
+
 ## Общее правило всех скиллов: объяснение и память решений
 
 До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
 
-Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех шести и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
+Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех семи и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
 
 ## Подключение из другого проекта
 
@@ -104,9 +122,10 @@ docs/infra/plan/     # Обязательная база знаний для inf
 docs/ci-cd/          # Обязательная база CI/CD скиллов
 docs/skills/         # Общие правила всех скиллов
 docs/ux/             # Бизнес-анализ, research и экранные UX-схемы
+docs/ui/             # Дизайн-системы, visual refs, адаптивный UI
 .ai-development/     # Решения и контекст этого проекта
 plugins/             # Manifests для сборки отдельных namespace
-templates/           # Infrastructure, UX и ADR templates
+templates/           # Infrastructure, UX, UI и ADR templates
 scripts/             # Обследование и проверки
 ```
 

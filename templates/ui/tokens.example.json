@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "format": "ai-tools-ui-example-not-dtcg",
+  "status": "illustrative-draft",
+  "color": {
+    "surface": "#ffffff",
+    "text": "#111827",
+    "textMuted": "#4b5563",
+    "action": "#1d4ed8",
+    "onAction": "#ffffff",
+    "border": "#6b7280",
+    "focus": "#111827"
+  },
+  "typography": {"family": "system-ui, sans-serif", "bodyPx": 16, "lineHeight": 1.5},
+  "spacingPx": [4, 8, 12, 16, 24, 32],
+  "shapePx": {"control": 8, "panel": 12},
+  "motionMs": {"short": 120, "reduced": 0}
+}

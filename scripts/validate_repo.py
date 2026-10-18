@@ -10,6 +10,7 @@ SKILLS = {
     **{f"infra-plan-{level}": ("infra-plan", level) for level in ("low", "med", "high")},
     **{f"ci-cd-{provider}": ("ci-cd", provider) for provider in ("github", "gitlab")},
     "ux-design": ("ux", "design"),
+    "ui-design": ("ui", "design"),
 }
 INFRA_GUIDES = ["README.md", "workflow.md", "security-network.md", "delivery-iac.md",
                 "storage-operations.md", "decisions.md", "plan-template.md", "sources.md"]
@@ -17,6 +18,8 @@ CI_GUIDES = ["README.md", "workflow.md", "evidence.md", "architecture.md", "perf
              "security.md", "environments.md", "decisions.md", "skill-contract.md", "sources.md"]
 UX_GUIDES = ["README.md", "business.md", "research.md", "analysis.md", "diagrams.md",
              "responsive.md", "microcopy.md", "workflow.md", "review.md", "sources.md"]
+UI_GUIDES = ["README.md", "design-codes.md", "references.md", "ux-binding.md", "foundations.md",
+             "responsive.md", "visual-output.md", "workflow.md", "review.md", "sources.md", "catalog.json"]
 IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch"}
 
 
@@ -51,8 +54,10 @@ def validate(root=ROOT):
             base, guides = "infra/plan", INFRA_GUIDES + [f"{command}.md"]
         elif namespace == "ci-cd":
             base, guides = "ci-cd", CI_GUIDES + [f"{command}.md"]
-        else:
+        elif namespace == "ux":
             base, guides = "ux", UX_GUIDES
+        else:
+            base, guides = "ui", UI_GUIDES
         if namespace == "ci-cd":
             guides += [f"stacks/{stack}.md" for stack in ("go", "php", "typescript-nextjs", "python", "rust")]
         for guide in guides:
@@ -72,7 +77,7 @@ def validate(root=ROOT):
         profile = (root / "docs/infra/plan" / f"{level}.md").read_text()
         if profile.count("```mermaid") < 2:
             errors.append(f"Profile {level} needs data and delivery diagrams")
-    for namespace, relative in [("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json")]:
+    for namespace, relative in [("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json")]:
         manifest = json.loads((root / relative).read_text())
         expected = {command for ns, command in SKILLS.values() if ns == namespace}
         if manifest.get("name") != namespace or set(manifest.get("commands", {})) != expected:
@@ -81,6 +86,26 @@ def validate(root=ROOT):
             source = command.get("source", "")
             if not source or not (root / source).is_file():
                 errors.append(f"Invalid plugin command source: {namespace}")
+
+    catalog_path = root / "docs/ui/catalog.json"
+    try:
+        catalog = json.loads(catalog_path.read_text())
+        systems = catalog["systems"]
+        ids = [item["id"] for item in systems]
+        if len(systems) != 10 or len(set(ids)) != 10:
+            errors.append("UI catalog needs exactly 10 distinct system choices")
+        if set(catalog["selection_modes"]) != {"system", "custom", "system+custom"}:
+            errors.append("UI catalog must support standalone custom references")
+        if catalog.get("ordering") != "menu-not-popularity-rank":
+            errors.append("UI menu must not invent a popularity ranking")
+        for item in systems:
+            if not all(isinstance(item.get(field), str) and item[field].strip()
+                       for field in ("id", "label", "owner", "primary_url", "visual_start", "caveat")):
+                errors.append("UI system needs identity, provenance, visual starting point and limitations")
+            if not item.get("primary_url", "").startswith("https://"):
+                errors.append("UI system needs an HTTPS primary source")
+    except (OSError, ValueError, KeyError, TypeError):
+        errors.append("Invalid UI catalog")
 
     index = root / ".ai-development/INDEX.md"
     indexed = index.read_text() if index.exists() else ""
