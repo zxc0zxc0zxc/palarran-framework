@@ -9,7 +9,7 @@
 - PASS: skill-creator `quick_validate.py skills/ui-design` (temporary PyYAML environment).
 - PASS: `python3 scripts/package_plugin.py ui --output artifacts/plugins/ui` и `claude plugin validate artifacts/plugins/ui --strict`.
 - PASS: changed Python compilation, `git diff --check`.
-- CI: pending publication.
+- PASS: [GitHub Actions run 39142897939](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39142897939) for implementation commit `3107f6123823cb68adce44a3c2f062de09a28b12`: offline contracts/tests/compilation and Terraform format/provider validation.
 - NOT RUN: application UI generation, user preference session, render/user tests и image generation — здесь authoring capability, application UX target не задан. Offline contracts не доказывают visual quality будущего результата.
 
 ## Использование
