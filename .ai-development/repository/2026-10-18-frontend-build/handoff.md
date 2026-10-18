@@ -9,7 +9,7 @@
 - PASS: skill-creator quick_validate (temporary PyYAML environment).
 - PASS: `python3 scripts/package_plugin.py frontend --output artifacts/plugins/frontend` и `claude plugin validate artifacts/plugins/frontend --strict`.
 - PASS: Python compilation и `git diff --check`.
-- CI: pending publication.
+- PASS: [GitHub Actions 39143432362](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39143432362) для implementation commit `914e85f5844595c9ee9bb88538640709008e8ab0`: offline contracts/tests/compilation и Terraform validation.
 - NOT RUN: browser acceptance конкретного приложения, real backend integration, rendering/image generation — application target не задан, здесь authoring capability. Offline tests не доказывают корректность будущей frontend реализации.
 
 ## Использование и следующий контекст
