@@ -1,6 +1,6 @@
 # AI tools
 
-Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура и CI/CD; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
+Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD и UX; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
 
 ## Infrastructure planning
 
@@ -47,11 +47,29 @@
 - [Фактура Google, Meta, Netflix, Microsoft и AWS](docs/ci-cd/evidence.md) и пять [stack guides](docs/ci-cd/stacks).
 - [Оптимизация](docs/ci-cd/performance.md), [security](docs/ci-cd/security.md), [deploy architecture](docs/ci-cd/architecture.md), [контракт результата](docs/ci-cd/skill-contract.md).
 
+## UX design
+
+[`/ux:design {описание}`](skills/ux-design/SKILL.md) исследует бизнес и проектирует адаптивный UX приложения. В Codex — `$ux-design {описание}`. Без описания читает README/product docs **целевого проекта**.
+
+- Ищет несколько похожих известных продуктов: default 4, minimum 3 с объяснением ограничения. Исследует одинаковые journeys; закрытые кабинеты — по найденным и просмотренным screenshots/официальным walkthrough с датой/platform/evidence.
+- Уточняет неясный бизнес-процесс, затем проверяет reuse существующих экранов/блоков/состояний до создания новых.
+- Для каждого экрана сохраняет functional desktop/mobile layout diagrams, states/actions/back/recovery, tablet/content adaptation и короткие пояснения. UI copy краткая, visual style/CSS в scope не входят.
+- Concepts/revisions, catalog, evidence и rationale сохраняются в target `.ai-development/ux/` для ревью и следующих задач. Не выдаёт desk review за user testing и статические схемы за проверенную вёрстку.
+
+[База знаний](docs/ux/README.md) → [поиск](docs/ux/research.md) → [анализ](docs/ux/analysis.md) → [диаграммы](docs/ux/diagrams.md) → [адаптация](docs/ux/responsive.md) → [workflow](docs/ux/workflow.md). [Шаблоны](templates/ux) и [критерии review](docs/ux/review.md).
+
+Для другого проекта собрать отдельный plugin namespace:
+
+```sh
+python3 scripts/package_plugin.py ux --output artifacts/plugins/ux
+claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ux
+```
+
 ## Общее правило всех скиллов: объяснение и память решений
 
 До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
 
-Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех пяти и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
+Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех шести и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
 
 ## Подключение из другого проекта
 
@@ -85,9 +103,10 @@ skills/               # Переносимые инструкции агента
 docs/infra/plan/     # Обязательная база знаний для infra-plan
 docs/ci-cd/          # Обязательная база CI/CD скиллов
 docs/skills/         # Общие правила всех скиллов
+docs/ux/             # Бизнес-анализ, research и экранные UX-схемы
 .ai-development/     # Решения и контекст этого проекта
-plugins/ci-cd/        # Manifest для сборки отдельного namespace
-templates/infra/    # Конфигурации для адаптации к плану
+plugins/             # Manifests для сборки отдельных namespace
+templates/           # Infrastructure, UX и ADR templates
 scripts/             # Обследование и проверки
 ```
 

@@ -12,10 +12,17 @@ PACKAGES = {
     "ci-cd": {
         "manifest": "plugins/ci-cd/plugin.json",
         "skills": ["ci-cd-github", "ci-cd-gitlab"],
+        "docs": ["docs/skills", "docs/infra", "docs/ci-cd"],
     },
     "infra-plan": {
         "manifest": ".claude-plugin/plugin.json",
         "skills": ["infra-plan-low", "infra-plan-med", "infra-plan-high"],
+        "docs": ["docs/skills", "docs/infra"],
+    },
+    "ux": {
+        "manifest": "plugins/ux/plugin.json",
+        "skills": ["ux-design"],
+        "docs": ["docs/skills", "docs/ux"],
     },
 }
 
@@ -36,9 +43,7 @@ def build_package(namespace, output, root=ROOT):
         raise ValueError("Plugin namespace mismatch")
     # Copy reviewed documentation and explicit template resources only. Never sweep
     # ignored .terraform binaries, .env files or local artifacts into a package.
-    doc_roots = [root / "docs/skills", root / "docs/infra"]
-    if namespace == "ci-cd":
-        doc_roots.append(root / "docs/ci-cd")
+    doc_roots = [root / directory for directory in config["docs"]]
     paths = sorted(path for directory in doc_roots for path in directory.rglob("*.md"))
     paths += [root / "skills" / name / "SKILL.md" for name in config["skills"]]
     resources = [
@@ -51,6 +56,11 @@ def build_package(namespace, output, root=ROOT):
         "templates/infra/terraform-hcloud/terraform.tfvars.example",
         "templates/infra/terraform-hcloud/.terraform.lock.hcl",
     ]
+    if namespace == "ux":
+        resources = [
+            "templates/ai-development/decision.md",
+            "templates/ux/concept.md", "templates/ux/screen.md", "templates/ux/reference.md",
+        ]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():
         paths.append(root / command["source"])

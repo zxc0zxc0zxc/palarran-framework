@@ -25,13 +25,20 @@
         0002-test-selection.md
       handoff.md
       scratch/
+  ux/
+    INDEX.md
+    2026-10-18-product-flow/
+      context.md
+      decisions/
+      concepts/v001/
+      handoff.md
   repository/
     2026-10-18-ci-cd-skills/
       context.md
       decisions/
 ```
 
-Области — `infra`, `ci-cd`, `repository` либо понятное имя подсистемы. Task ID — дата пользователя и короткое имя, при совпадении добавить суффикс, не перезаписывать чужую задачу. В `context.md` указать target root логически/относительно проекта, goal/scope, constraints, inspected commit/config, факты/допущения, связанные IDs и открытые вопросы. Не сохранять абсолютные пути чужих рабочих машин без необходимости.
+Области — `infra`, `ci-cd`, `ux`, `repository` либо понятное имя подсистемы. Task ID — дата пользователя и короткое имя, при совпадении добавить суффикс, не перезаписывать чужую задачу. В `context.md` указать target root логически/относительно проекта, goal/scope, constraints, inspected commit/config, факты/допущения, связанные IDs и открытые вопросы. Не сохранять абсолютные пути чужих рабочих машин без необходимости.
 
 «Временный каталог задачи» означает ограниченную задаче рабочую область. **Принятые решения, индекс и handoff не удаляются автоматически после завершения.** Только `scratch/` содержит заменяемые черновики; исключить его из Git. Sanitized durable records разрешены в Git в рамках обычного repo workflow, но публикация инфраструктурных сведений требует проверки видимости. Если проект запрещает такой каталог в Git, сохранить его локально/в согласованном private storage и явно указать предел переносимости контекста. Скилл не меняет глобальную память или глобальные настройки пользователя.
 
@@ -72,3 +79,5 @@
 Никаких tokens/passwords/private keys, `.env`, сырого inventory, customer data, полных CI logs, kubeconfig или state. В evidence только безопасные выдержки/ссылки без auth query string; private endpoint/topology при необходимости остаются в закрытом project storage. Не включать чувствительные данные в filename/ID.
 
 `.delivery/` хранит актуальную исполняемую конфигурацию стендов; `.ai-development/` — почему она выбрана. `plans/` хранит полный инфраструктурный план/config и исключён из Git по умолчанию; durable ADR сохраняет объяснение и безопасную ссылку, чтобы потеря временного плана не уничтожила причины. Доменные `decisions.md` содержат каталог вопросов, а не второй журнал. Не создавать конкурирующий `.delivery/decisions/` или второй источник accepted ADR в `plans/`; при existing journal связать/перенести согласованно, не удаляя историю.
+
+UX concepts/revisions, research summaries и screen catalog сохраняются в `.ai-development/ux/` по профильному workflow. UX catalog указывает на concepts; accepted rationale/статусы решений остаются в canonical ADR и общем INDEX, без второго противоречащего журнала.

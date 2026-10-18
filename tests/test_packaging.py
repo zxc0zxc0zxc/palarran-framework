@@ -15,7 +15,7 @@ SPEC.loader.exec_module(packager)
 class PackagingTest(unittest.TestCase):
     def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
-            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3)]:
+            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3), ("ux", 1)]:
                 package = packager.build_package(namespace, Path(directory) / namespace).resolve()
                 manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
                 self.assertEqual(manifest["name"], namespace)

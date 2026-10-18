@@ -9,11 +9,14 @@ ROOT = Path(__file__).resolve().parents[1]
 SKILLS = {
     **{f"infra-plan-{level}": ("infra-plan", level) for level in ("low", "med", "high")},
     **{f"ci-cd-{provider}": ("ci-cd", provider) for provider in ("github", "gitlab")},
+    "ux-design": ("ux", "design"),
 }
 INFRA_GUIDES = ["README.md", "workflow.md", "security-network.md", "delivery-iac.md",
                 "storage-operations.md", "decisions.md", "plan-template.md", "sources.md"]
 CI_GUIDES = ["README.md", "workflow.md", "evidence.md", "architecture.md", "performance.md",
              "security.md", "environments.md", "decisions.md", "skill-contract.md", "sources.md"]
+UX_GUIDES = ["README.md", "business.md", "research.md", "analysis.md", "diagrams.md",
+             "responsive.md", "microcopy.md", "workflow.md", "review.md", "sources.md"]
 IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch"}
 
 
@@ -44,8 +47,12 @@ def validate(root=ROOT):
             errors.append(f"Invalid skill frontmatter: {name}")
         if "../../docs/skills/decision-memory.md" not in body:
             errors.append(f"{name}: missing shared decision-memory contract")
-        base = "infra/plan" if namespace == "infra-plan" else "ci-cd"
-        guides = INFRA_GUIDES + [f"{command}.md"] if namespace == "infra-plan" else CI_GUIDES + [f"{command}.md"]
+        if namespace == "infra-plan":
+            base, guides = "infra/plan", INFRA_GUIDES + [f"{command}.md"]
+        elif namespace == "ci-cd":
+            base, guides = "ci-cd", CI_GUIDES + [f"{command}.md"]
+        else:
+            base, guides = "ux", UX_GUIDES
         if namespace == "ci-cd":
             guides += [f"stacks/{stack}.md" for stack in ("go", "php", "typescript-nextjs", "python", "rust")]
         for guide in guides:
@@ -65,7 +72,7 @@ def validate(root=ROOT):
         profile = (root / "docs/infra/plan" / f"{level}.md").read_text()
         if profile.count("```mermaid") < 2:
             errors.append(f"Profile {level} needs data and delivery diagrams")
-    for namespace, relative in [("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json")]:
+    for namespace, relative in [("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json")]:
         manifest = json.loads((root / relative).read_text())
         expected = {command for ns, command in SKILLS.values() if ns == namespace}
         if manifest.get("name") != namespace or set(manifest.get("commands", {})) != expected:
