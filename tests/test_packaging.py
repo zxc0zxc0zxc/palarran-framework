@@ -65,7 +65,7 @@ class PackagingTest(unittest.TestCase):
             external.write_text("must not be packaged")
             (fixture / "docs/ci-cd/leak.md").symlink_to(external)
             output = Path(directory) / "package"
-            with self.assertRaises(ValueError):
+            with self.assertRaisesRegex(ValueError, "symlink or escaping path"):
                 packager.build_package("ci-cd", output, root=fixture)
             self.assertFalse(output.exists())
 

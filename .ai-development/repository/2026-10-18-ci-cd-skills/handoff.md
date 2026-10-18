@@ -17,7 +17,7 @@
 | Bundled `quick_validate.py` для пяти скиллов | PASS | Frontmatter/name/structure; использован отдельный временный Python env с PyYAML |
 | `claude plugin validate ... --strict` для обоих materialized plugins | PASS | Реальный plugin manifest/path validation, не вызов агентом application integration |
 | Python compile + `git diff --check` | PASS | Syntax/whitespace |
-| GitHub repository CI | PENDING | Проверить run для commit этой задачи после push; subsequent task can inspect Actions by commit |
+| GitHub repository CI | PASS | [Run 39140562657](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39140562657), implementation commit `c915764`; offline + Terraform jobs прошли |
 | Реальный GitHub/GitLab application pipeline | NOT RUN | Пользователь попросил создать скиллы; application repo/targets не выбраны |
 | Live performance/identity/env gates/secret-leak/rollout | NOT RUN | Нужны конкретный sandbox проект/backend и соответствующий разрешённый scope |
 

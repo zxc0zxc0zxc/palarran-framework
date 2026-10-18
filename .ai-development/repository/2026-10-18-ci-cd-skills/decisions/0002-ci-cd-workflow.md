@@ -33,4 +33,4 @@ docs/ci-cd/skill-contract.md, architecture.md, provider guides и прямые �
 
 ## Применение и проверка
 
-Локальные repository/skill/package validators и offline suite выполнены: PASS. Evidence и границы — в [handoff](../handoff.md). GitHub CI до push PENDING; application/live deployment NOT RUN.
+Локальные repository/skill/package validators и offline suite выполнены: PASS. Evidence и границы — в [handoff](../handoff.md). GitHub CI для implementation commit `c915764` PASS (run linked in handoff); application/live deployment NOT RUN.
