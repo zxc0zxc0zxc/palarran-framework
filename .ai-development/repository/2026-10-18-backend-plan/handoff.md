@@ -10,7 +10,7 @@
 - PASS: allowlisted package `artifacts/plugins/backend`; Claude plugin validate --strict.
 - PASS: 2 Mermaid examples parsed with Mermaid 11 + JSDOM (syntax only, не rendered review).
 - PASS: changed Python compilation и diff whitespace checks.
-- CI: pending publication.
+- PASS: [GitHub Actions 39146935543](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39146935543) для implementation commit `d7e4a9754a61df15337b960746e78010d317666c`: offline contracts/tests/compilation и Terraform validation.
 - NOT RUN: application implementation/tests/load/migrations/deploy, live APIs/SSH/DB, worktree creation или implementation-agent dispatch. Они не входят в planning. Числовые цели будущего SLA — proposals/assumptions, не достигнутый SLA.
 
 ## Использование и контекст следующих задач
