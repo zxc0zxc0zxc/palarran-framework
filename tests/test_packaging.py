@@ -15,7 +15,7 @@ SPEC.loader.exec_module(packager)
 class PackagingTest(unittest.TestCase):
     def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
-            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2)]:
+            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 3)]:
                 package = packager.build_package(namespace, Path(directory) / namespace).resolve()
                 manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
                 self.assertEqual(manifest["name"], namespace)
@@ -32,13 +32,16 @@ class PackagingTest(unittest.TestCase):
                 self.assertFalse(any(path.is_symlink() for path in package.rglob("*")))
                 self.assertFalse((package / ".ai-development").exists())
                 self.assertFalse((package / ".git").exists())
-                if namespace == "ui":
+                if namespace in {"ui", "frontend"}:
                     catalog = json.loads((package / "docs/ui/catalog.json").read_text())
                     self.assertEqual(len(catalog["systems"]), 10)
                     self.assertIn("custom", catalog["selection_modes"])
                     tokens = json.loads((package / "templates/ui/tokens.example.json").read_text())
                     self.assertEqual(tokens["schema_version"], 1)
                     self.assertTrue((package / "skills/ux-design/SKILL.md").is_file())
+                if namespace == "frontend":
+                    self.assertTrue((package / "skills/ui-design/SKILL.md").is_file())
+                    self.assertTrue((package / "templates/frontend/browser-review.md").is_file())
                 self.assertFalse(any(path.name in {".terraform", ".env", "node_modules"} for path in package.rglob("*")))
 
     def test_refuses_existing_output_preserving_user_files(self):

@@ -11,6 +11,7 @@ SKILLS = {
     **{f"ci-cd-{provider}": ("ci-cd", provider) for provider in ("github", "gitlab")},
     "ux-design": ("ux", "design"),
     "ui-design": ("ui", "design"),
+    "frontend-build": ("frontend", "build"),
 }
 INFRA_GUIDES = ["README.md", "workflow.md", "security-network.md", "delivery-iac.md",
                 "storage-operations.md", "decisions.md", "plan-template.md", "sources.md"]
@@ -20,6 +21,8 @@ UX_GUIDES = ["README.md", "business.md", "research.md", "analysis.md", "diagrams
              "responsive.md", "microcopy.md", "workflow.md", "review.md", "sources.md"]
 UI_GUIDES = ["README.md", "design-codes.md", "references.md", "ux-binding.md", "foundations.md",
              "responsive.md", "visual-output.md", "workflow.md", "review.md", "sources.md", "catalog.json"]
+FRONTEND_GUIDES = ["README.md", "source-contract.md", "implementation.md", "responsive.md",
+                   "browser-verification.md", "quality.md", "workflow.md", "sources.md"]
 IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch"}
 
 
@@ -56,8 +59,10 @@ def validate(root=ROOT):
             base, guides = "ci-cd", CI_GUIDES + [f"{command}.md"]
         elif namespace == "ux":
             base, guides = "ux", UX_GUIDES
-        else:
+        elif namespace == "ui":
             base, guides = "ui", UI_GUIDES
+        else:
+            base, guides = "frontend", FRONTEND_GUIDES
         if namespace == "ci-cd":
             guides += [f"stacks/{stack}.md" for stack in ("go", "php", "typescript-nextjs", "python", "rust")]
         for guide in guides:
@@ -77,7 +82,7 @@ def validate(root=ROOT):
         profile = (root / "docs/infra/plan" / f"{level}.md").read_text()
         if profile.count("```mermaid") < 2:
             errors.append(f"Profile {level} needs data and delivery diagrams")
-    for namespace, relative in [("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json")]:
+    for namespace, relative in [("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json"), ("frontend", "plugins/frontend/plugin.json")]:
         manifest = json.loads((root / relative).read_text())
         expected = {command for ns, command in SKILLS.values() if ns == namespace}
         if manifest.get("name") != namespace or set(manifest.get("commands", {})) != expected:

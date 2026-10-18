@@ -1,6 +1,6 @@
 # AI tools
 
-Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX и UI; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
+Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX, UI и frontend; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
 
 ## Infrastructure planning
 
@@ -83,11 +83,30 @@ claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ui
 
 UI package содержит обязательную UI/UX базу и UX skill как dependency. Slash namespace — `/ui:design`; UX методика доступна внутри пакета, отдельный `/ux:design` подключается UX plugin.
 
+## Frontend build
+
+[`/frontend:build {scope/пути к UX/UI}`](skills/frontend-build/SKILL.md) реализует наши UX/UI-концепты в коде целевого приложения. В Codex — `$frontend-build`.
+
+- Фиксирует обе source revisions и mapping screens/states → routes/components/tests; сохраняет existing stack, tokens/assets и короткий copy.
+- Реализует реальные действия и API contracts, все in-scope состояния; mocks и недостающие интеграции обозначает явно.
+- Адаптивность обязательна: narrow/mobile/tablet/desktop, long content/zoom/focus/overflow, material/motion fallbacks. Нужные готовые картинки переиспользует, отсутствующие — генерирует.
+- Запускает приложение и **проверяет в браузере** действия, состояния, разные размеры окна, console/network; снимает и смотрит screenshots, сравнивает с UI, исправляет дефекты. Build без browser acceptance не считается verified.
+- Сохраняет решения, coverage, browser evidence и handoff в target `.ai-development/frontend/` для следующих задач. Deployment отдельно по scope.
+
+[Документация](docs/frontend/README.md) → [source contract](docs/frontend/source-contract.md) → [реализация](docs/frontend/implementation.md) → [адаптивность](docs/frontend/responsive.md) → [browser acceptance](docs/frontend/browser-verification.md) → [quality](docs/frontend/quality.md). [Шаблоны](templates/frontend).
+
+```sh
+python3 scripts/package_plugin.py frontend --output artifacts/plugins/frontend
+claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/frontend
+```
+
+Frontend package содержит frontend/UI/UX базу и три skills; slash namespace — `/frontend:build`, upstream slash namespaces подключаются отдельными plugins. Это набор инструкций для реализации, не приложение ai-tools.
+
 ## Общее правило всех скиллов: объяснение и память решений
 
 До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
 
-Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех семи и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
+Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех восьми и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
 
 ## Подключение из другого проекта
 
@@ -123,9 +142,10 @@ docs/ci-cd/          # Обязательная база CI/CD скиллов
 docs/skills/         # Общие правила всех скиллов
 docs/ux/             # Бизнес-анализ, research и экранные UX-схемы
 docs/ui/             # Дизайн-системы, visual refs, адаптивный UI
+docs/frontend/       # Реализация UX/UI и browser acceptance
 .ai-development/     # Решения и контекст этого проекта
 plugins/             # Manifests для сборки отдельных namespace
-templates/           # Infrastructure, UX, UI и ADR templates
+templates/           # Infrastructure, UX, UI, frontend и ADR templates
 scripts/             # Обследование и проверки
 ```
 

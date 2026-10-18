@@ -9,6 +9,11 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
+    "frontend": {
+        "manifest": "plugins/frontend/plugin.json",
+        "skills": ["frontend-build", "ui-design", "ux-design"],
+        "docs": ["docs/skills", "docs/ux", "docs/ui", "docs/frontend"],
+    },
     "ui": {
         "manifest": "plugins/ui/plugin.json",
         "skills": ["ui-design", "ux-design"],
@@ -61,15 +66,20 @@ def build_package(namespace, output, root=ROOT):
         "templates/infra/terraform-hcloud/terraform.tfvars.example",
         "templates/infra/terraform-hcloud/.terraform.lock.hcl",
     ]
-    if namespace in {"ux", "ui"}:
+    if namespace in {"ux", "ui", "frontend"}:
         resources = [
             "templates/ai-development/decision.md",
             "templates/ux/concept.md", "templates/ux/screen.md", "templates/ux/reference.md",
         ]
-    if namespace == "ui":
+    if namespace in {"ui", "frontend"}:
         resources += [
             "docs/ui/catalog.json", "templates/ui/concept.md", "templates/ui/screen.md",
             "templates/ui/reference.md", "templates/ui/tokens.example.json",
+        ]
+    if namespace == "frontend":
+        resources += [
+            "templates/frontend/coverage.md", "templates/frontend/browser-review.md",
+            "templates/frontend/handoff.md",
         ]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():
