@@ -14,3 +14,7 @@
 | [OWASP: XSS Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) | Context-sensitive encoding и dangerous HTML sinks | Не полный security audit приложения |
 
 Контракты этого репозитория: [UX](../ux/README.md), [UI](../ui/README.md), [UI responsive/accessibility](../ui/responsive.md), [image generation](../ui/visual-output.md), [decision memory](../skills/decision-memory.md). Их source links/версии проверяются при применении. Для Vue/Svelte/Angular/plain web использовать official docs выбранного target stack, не притворяться, что React guidance охватывает их APIs.
+
+## SDD execution update (2026-10-18)
+
+[Git worktree](https://git-scm.com/docs/git-worktree) — source checkout lifecycle, не runtime/DB/browser isolation. [Playwright parallelism](https://playwright.dev/docs/test-parallel) и [browser contexts](https://playwright.dev/docs/browser-contexts) — первичные источники для test workers/context isolation. Наш вывод для agents: separate worktrees/cwd/resources и final integrated browser checks; contexts не изолируют автоматически shared server/account/data. Exact source plan→task→test→DoD/progress protocol — наша методика, не утверждение о внутреннем процессе Microsoft/GitHub.

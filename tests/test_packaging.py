@@ -44,6 +44,17 @@ class PackagingTest(unittest.TestCase):
                 if namespace == "frontend":
                     self.assertTrue((package / "skills/ui-design/SKILL.md").is_file())
                     self.assertTrue((package / "templates/frontend/browser-review.md").is_file())
+                    self.assertFalse((package / "docs/backend").exists())
+                    target = Path(directory) / "frontend-plan.md"
+                    target.write_text((package / "templates/frontend/plan.md").read_text())
+                    checked = subprocess.run([
+                        sys.executable, str(package / "scripts/execution_progress.py"),
+                        str(package / "templates/frontend/progress.example.json"),
+                        "--area", "frontend", "--plan", str(target),
+                    ], capture_output=True, text=True)
+                    self.assertEqual(checked.returncode, 0, checked.stderr)
+                    self.assertIn("INCOMPLETE", target.read_text())
+                    self.assertIn("Requirements and design mapping", target.read_text())
                 if namespace == "backend":
                     self.assertEqual(set(manifest["commands"]), {"plan", "build"})
                     self.assertTrue((package / "templates/backend/reliability.md").is_file())

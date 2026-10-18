@@ -17,3 +17,7 @@ Build/lint/typecheck/tests PASS/FAIL/NOT RUN. Browser tool/version, actual viewp
 ## Remaining work and context
 
 Missing assets/source/API/tool, concrete effect and next step; preserved revisions and target indexes. Following tasks read these records and verify current assumptions before reusing old PASS.
+
+## SDD execution and resume
+
+Implemented plan ID/revision + source UX/UI/API versions, integration commit, ledger/source plan section links. TASK IDs/counts by pending/in_progress/implemented/integrated/verified/blocked/deferred; exact remaining causes/dependencies and DoD gates. Agent/worktree/branch ownership, scoped commits/reports/integration checks and saved cleanup state. Before resume check actual source/Git/evidence and invalidate affected stale PASS, then continue remaining tasks.

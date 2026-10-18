@@ -84,7 +84,9 @@ def build_package(namespace, output, root=ROOT):
     if namespace == "frontend":
         resources += [
             "templates/frontend/coverage.md", "templates/frontend/browser-review.md",
-            "templates/frontend/handoff.md",
+            "templates/frontend/handoff.md", "templates/frontend/plan.md",
+            "templates/frontend/agent-task.md", "templates/frontend/progress.example.json",
+            "scripts/execution_progress.py",
         ]
     if namespace == "backend":
         resources = [
@@ -94,6 +96,7 @@ def build_package(namespace, output, root=ROOT):
             "templates/backend/agent-task.md", "templates/backend/progress.example.json",
             "templates/backend/execution-agent.md", "templates/backend/build-verification.md",
             "templates/backend/build-handoff.md", "scripts/backend_progress.py",
+            "scripts/execution_progress.py",
         ]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():

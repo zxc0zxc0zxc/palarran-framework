@@ -27,3 +27,6 @@
 | repository/2026-10-18-backend-build/0002 | accepted | Backend build / Actual agents/worktrees | [Объяснение](repository/2026-10-18-backend-build/decisions/0002-worktree-agents.md); пересмотр по application run |
 | repository/2026-10-18-backend-build/0003 | accepted | Backend build / Actual tests и SLA evidence | [Объяснение](repository/2026-10-18-backend-build/decisions/0003-testing-reliability.md); пересмотр после измерений |
 | repository/2026-10-18-backend-build/0004 | accepted | Backend build / Package и проверки | [Объяснение](repository/2026-10-18-backend-build/decisions/0004-package-and-validation.md); пересмотр по application run |
+| repository/2026-10-18-frontend-sdd/0001 | accepted | Frontend / SDD и worktree lanes | [Объяснение](repository/2026-10-18-frontend-sdd/decisions/0001-sdd-worktrees.md); пересмотр по target run |
+| repository/2026-10-18-frontend-sdd/0002 | accepted | Shared execution progress / compatibility | [Объяснение](repository/2026-10-18-frontend-sdd/decisions/0002-shared-progress.md); пересмотр по regression |
+| repository/2026-10-18-frontend-sdd/0003 | accepted | Frontend / Integrated browser DoD и package | [Объяснение](repository/2026-10-18-frontend-sdd/decisions/0003-dod-packaging.md); пересмотр по target run |

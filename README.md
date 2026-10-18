@@ -85,7 +85,11 @@ UI package содержит обязательную UI/UX базу и UX skill 
 
 ## Frontend build
 
-[`/frontend:build {scope/пути к UX/UI}`](skills/frontend-build/SKILL.md) реализует наши UX/UI-концепты в коде целевого приложения. В Codex — `$frontend-build`.
+[`/frontend:build {путь/ID плана или scope/пути к UX/UI}`](skills/frontend-build/SKILL.md) реализует наши UX/UI-концепты по SDD-плану в коде целевого приложения. В Codex — `$frontend-build`.
+
+- Использует существующий SDD plan либо сначала создаёт execution spec/plan из UX/UI: requirements/AC/screens/states → tasks/tests → DoD, с версиями plan/UX/UI/API.
+- Независимые ready tasks выполняют internal agents в отдельных worktrees/branches; shared tokens/layout/router/types/lockfile имеют одного owner. Интеграция последовательная, browser review — на общем коде.
+- **Обновляет прогресс прямо в исходном плане:** plan revision/commit, pending/in_progress/implemented/integrated/verified/blocked/deferred, что сделано и что осталось. Canonical ledger и [общий helper](scripts/execution_progress.py) сохраняют причины и evidence для resume.
 
 - Фиксирует обе source revisions и mapping screens/states → routes/components/tests; сохраняет existing stack, tokens/assets и короткий copy.
 - Реализует реальные действия и API contracts, все in-scope состояния; mocks и недостающие интеграции обозначает явно.
@@ -93,14 +97,14 @@ UI package содержит обязательную UI/UX базу и UX skill 
 - Запускает приложение и **проверяет в браузере** действия, состояния, разные размеры окна, console/network; снимает и смотрит screenshots, сравнивает с UI, исправляет дефекты. Build без browser acceptance не считается verified.
 - Сохраняет решения, coverage, browser evidence и handoff в target `.ai-development/frontend/` для следующих задач. Deployment отдельно по scope.
 
-[Документация](docs/frontend/README.md) → [source contract](docs/frontend/source-contract.md) → [реализация](docs/frontend/implementation.md) → [адаптивность](docs/frontend/responsive.md) → [browser acceptance](docs/frontend/browser-verification.md) → [quality](docs/frontend/quality.md). [Шаблоны](templates/frontend).
+[Документация](docs/frontend/README.md) → [SDD/agents/DoD](docs/frontend/sdd-agents.md) → [progress](docs/frontend/progress.md) → [source contract](docs/frontend/source-contract.md) → [реализация](docs/frontend/implementation.md) → [адаптивность](docs/frontend/responsive.md) → [browser acceptance](docs/frontend/browser-verification.md) → [quality](docs/frontend/quality.md). [Шаблоны](templates/frontend).
 
 ```sh
 python3 scripts/package_plugin.py frontend --output artifacts/plugins/frontend
 claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/frontend
 ```
 
-Frontend package содержит frontend/UI/UX базу и три skills; slash namespace — `/frontend:build`, upstream slash namespaces подключаются отдельными plugins. Это набор инструкций для реализации, не приложение ai-tools.
+Frontend package v0.2 содержит frontend/UI/UX базу, три skills и shared progress helper/templates; slash namespace — `/frontend:build`, upstream slash namespaces подключаются отдельными plugins. Для пересборки выбрать новый output, например `artifacts/plugins/frontend-v0.2`. Это набор инструкций для реализации, не приложение ai-tools.
 
 ## Backend feature planning
 

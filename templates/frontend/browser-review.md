@@ -24,3 +24,7 @@ What used mocks, what hit real APIs, response and read-back/persistence evidence
 ## Fixes and retest
 
 Defect → changed source → affected checks rerun → result. Remaining blockers/NOT RUN prevent verified status for mandatory gaps. Actual user approval or deployment is recorded separately.
+
+## SDD traceability and progress
+
+Plan ID/revision, R/AC/TASK/T IDs and actual integration HEAD for each check. Lane report vs integrated acceptance explicitly separate. Invalidate affected old checks after shared style/router/component/API changes; coordinator updates ledger and original plan section with outcomes/remaining work, no mandatory browser gate waived.

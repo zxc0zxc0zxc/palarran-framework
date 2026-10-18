@@ -24,7 +24,8 @@ UX_GUIDES = ["README.md", "business.md", "research.md", "analysis.md", "diagrams
 UI_GUIDES = ["README.md", "design-codes.md", "references.md", "ux-binding.md", "foundations.md",
              "responsive.md", "visual-output.md", "workflow.md", "review.md", "sources.md", "catalog.json"]
 FRONTEND_GUIDES = ["README.md", "source-contract.md", "implementation.md", "responsive.md",
-                   "browser-verification.md", "quality.md", "workflow.md", "sources.md"]
+                   "browser-verification.md", "quality.md", "workflow.md", "sources.md",
+                   "sdd-agents.md", "progress.md"]
 BACKEND_GUIDES = ["README.md", "architecture.md", "foundation-stack.md", "contracts.md", "data.md",
                   "caching.md", "performance.md", "reliability.md", "testing.md", "delivery.md",
                   "sdd-agents.md", "workflow.md", "sources.md"]

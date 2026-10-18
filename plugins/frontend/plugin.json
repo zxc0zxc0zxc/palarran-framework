@@ -1,7 +1,13 @@
 {
   "name": "frontend",
-  "version": "0.1.0",
-  "author": {"name": "zxc0zxc0zxc"},
-  "description": "Build responsive frontend from UX/UI concepts with browser verification and persistent implementation decisions",
-  "commands": {"build": {"source": "./.claude/commands/frontend/build.md"}}
+  "version": "0.2.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Responsive frontend implementation from UX/UI and SDD plans with agent worktrees, integrated browser DoD and source-plan progress",
+  "commands": {
+    "build": {
+      "source": "./.claude/commands/frontend/build.md"
+    }
+  }
 }

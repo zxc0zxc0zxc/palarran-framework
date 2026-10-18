@@ -15,3 +15,7 @@
 Сохранять короткий UI copy, порядок/доступность actions, roles/permissions, entry/back/deep links, loading/empty/error/validation/success из UX. Визуальные density/material/type/color из UI. Реализация может улучшить внутреннее устройство без смены поведения, если choice объяснён. Требуемую смену поведения/стиля вынести в proposal с причиной и конкретным impact; не записывать её accepted по молчанию.
 
 Не нужен повторный выбор из 10 дизайн-систем: выбор уже сделан на UI этапе. Не начинать новое competitor research вместо реализации, если только источник действительно неясен или пользователь просит переработку.
+
+## SDD source и execution revision
+
+[SDD plan](sdd-agents.md) дополнительно фиксирует plan/spec/API revision и обе UX/UI revisions. При отсутствии execution plan сначала составить его из этих source concepts, не придумывая новый UX. R/AC/screen/state/block/C IDs → TASK/T IDs → app route/component → browser gate/DoD. [Прогресс](progress.md) отражается прямо в этом source plan; semantic scope change имеет новую revision/impact/ADR, metadata completion не меняет design revision. Missing critical source остаётся blocker, а не silently accepted requirement.

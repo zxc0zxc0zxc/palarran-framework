@@ -18,3 +18,7 @@
 - User-approved/deployed: только фактическое отдельное решение/событие, не следствие `build`.
 
 В handoff отделить syntax/build, actual UI interactions, visual review и real API integration. Запуск dev server сам по себе не evidence результата в браузере.
+
+## SDD DoD и completion
+
+[Task/feature DoD](sdd-agents.md) связывает source AC/screens/states с actual integration checks. Task code commits → implemented, integration commit → integrated, required actual checks → verified. Финальный scope verified требует всех tasks и mandatory browser/responsive/visual/flow gates на текущем integration HEAD. Build/lint/branch PASS не завершают DoD. Снижение targets/удаление cases требует оснований spec revision/ADR, не скрытого исправления прогресса.

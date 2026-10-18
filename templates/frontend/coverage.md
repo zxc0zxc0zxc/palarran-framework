@@ -13,3 +13,12 @@
 ## Deltas and missing requirements
 
 Source conflicts and proposed UX/UI changes, no silent approval. Missing images/API contracts and effect on completion. Record complete in-scope screen/state inventory, not only happy-path samples.
+
+## SDD execution mapping
+
+- Plan ID/revision/spec/API revision and source baseline:
+- R/AC/C/TASK/T IDs for each screen/state row:
+- Actual integration subject commit and mandatory browser/DoD gates:
+- Canonical progress.json / execution section in source plan:
+
+Coverage inventory is complete requested scope; deferred/missing states remain pending, not silently dropped. Branch test evidence does not verify combined app.

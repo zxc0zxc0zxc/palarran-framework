@@ -26,3 +26,11 @@
 | [sources.md](sources.md) | Первичные документы и границы claims |
 
 [Coverage template](../../templates/frontend/coverage.md), [browser review](../../templates/frontend/browser-review.md), [handoff](../../templates/frontend/handoff.md). Documentation-first authoring не означает, что ai-tools нуждается в app frontend или что чужое приложение уже проверено.
+
+## SDD, worktree agents и прогресс
+
+До реализации использовать готовый execution plan либо подготовить его из source UX/UI: [SDD/agents/DoD](sdd-agents.md). Independent ready tasks — internal agents в owned отдельных worktrees с explicit cwd и runtime isolation, shared files под одним owner, sequential integration и browser review общего результата.
+
+[Прогресс прямо в source plan](progress.md) показывает plan ID/revision, обе UX/UI versions, code/integration commits, выполненные/remaining TASK IDs, check evidence и blockers. `implemented` не равно `verified`. Canonical ledger и [shared protocol](../skills/execution-progress.md) переиспользуют backend механизм, frontend gates остаются browser/responsive/visual/flow-specific.
+
+Templates: [execution plan](../../templates/frontend/plan.md), [progress](../../templates/frontend/progress.example.json), [agent packet](../../templates/frontend/agent-task.md). Наличие полного execution plan не отменяет требования фактической browser проверки.

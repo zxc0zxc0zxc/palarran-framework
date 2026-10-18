@@ -26,3 +26,9 @@ Cross-browser scope брать из product requirements/существующе�
 ## Evidence
 
 В [browser review](../../templates/frontend/browser-review.md): commit/dirty diff identity, command и environment, browser/version, viewport/role/fixture mode, UX/UI IDs, выполненные шаги и **фактический** результат, screenshot/trace paths, PASS/FAIL/NOT RUN, bugs/recheck. Сохранить sanitized screenshots; traces/HAR могут содержать secrets — не публиковать raw recordings. Обязательные gaps означают partial/unverified, не verified. User acceptance/production deployment отдельно.
+
+## SDD integrated gates и статус задач
+
+Каждый случай связан с plan ID/revision, source UX/UI и TASK/T/AC/screen/state IDs; evidence указывает actual integration commit. Lane screenshots/tests возвращаются в agent reports и не подменяют required browser checks общего приложения. При shared component/router/style change перепроверить затронутые consumers/flows и инвалидировать stale evidence.
+
+Coordinator обновляет [ledger и section source plan](progress.md) после actual проверки: code-ready не verified. Required browser/responsive/visual/flow/DoD gates остаются NOT_RUN/FAIL при недоступном tool/источнике/API или дефекте. Не делить одну управляемую browser surface между одновременно кликающими агентами; isolated contexts/test data/ports либо serial final review.
