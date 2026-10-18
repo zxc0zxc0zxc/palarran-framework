@@ -30,6 +30,15 @@
 - [Адаптируемые конфигурации](templates/infra/README.md): Compose/Caddy, Kubernetes NetworkPolicy/AppProject и Terraform для нового сервера Hetzner. Это заготовки для конкретного плана, а не обещание универсального production deploy.
 - Обследование: `python3 scripts/infra_inventory.py --ssh-alias my-server`. Только уже проверенный SSH host key и ключ/agent; пароль вводится пользователем в интерактивной SSH-сессии, не в аргументах или чате.
 
+## CI/CD pipelines — документация
+
+Следующий набор — `/ci-cd:github` и `/ci-cd:gitlab`. Сейчас подготовлена [база знаний](docs/ci-cd/README.md), без реализации этих скиллов и application workflows:
+
+- [Фактура Google, Meta, Netflix, Microsoft и AWS](docs/ci-cd/evidence.md) с первичными источниками и границами переноса практик.
+- Пять стеков: [Go](docs/ci-cd/stacks/go.md), [PHP](docs/ci-cd/stacks/php.md), [TypeScript/Next.js](docs/ci-cd/stacks/typescript-nextjs.md), [Python](docs/ci-cd/stacks/python.md), [Rust](docs/ci-cd/stacks/rust.md).
+- [Быстрый CI с тестами](docs/ci-cd/performance.md), [безопасность без секретов в logs](docs/ci-cd/security.md), [автоматический deploy без SSH](docs/ci-cd/architecture.md).
+- [GitHub](docs/ci-cd/github.md)/[GitLab](docs/ci-cd/gitlab.md), [память о стендах и optional кнопка dev/test/prod](docs/ci-cd/environments.md), [контракт будущих скиллов](docs/ci-cd/skill-contract.md).
+
 ## Проверка
 
 ```sh
@@ -47,6 +56,7 @@ skills/               # Переносимые инструкции агента
 .claude/commands/     # Slash-адаптеры
 .claude-plugin/       # Manifest namespace infra-plan
 docs/infra/plan/     # Обязательная база знаний для infra-plan
+docs/ci-cd/          # Фактура и спецификация будущих CI/CD скиллов
 templates/infra/    # Конфигурации для адаптации к плану
  scripts/            # Обследование и проверки
 ```
