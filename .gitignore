@@ -15,3 +15,6 @@ plans/
 !*.tfvars.example
 *.pem
 *.key
+
+# Keep sanitized decisions/context; discard only per-task scratch.
+.ai-development/**/scratch/

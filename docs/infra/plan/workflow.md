@@ -13,6 +13,8 @@
 
 ## 1. Обязательное чтение
 
+Сначала [общее правило решений](../../skills/decision-memory.md): читать target `.ai-development/INDEX.md` и связанные accepted ADR, затем создавать task context. Каждый новый принятый выбор объяснить в canonical журнале до изменения; подтвердившийся старый выбор связать через `reuses`. `--plan` не разрешает live проверки ради освежения контекста.
+
 Прочитать `README.md`, `workflow.md`, выбранный профиль, `security-network.md`, `delivery-iac.md`, `storage-operations.md`, `decisions.md`, `plan-template.md`, `sources.md` в `docs/infra/plan/` и подходящие `templates/infra/`. Не заменять эти документы общими знаниями. Найти checkout относительно реального расположения `SKILL.md` (разрешив symlink), затем относительно текущего проекта. Если базы нет, остановить архитектурное планирование и попросить путь/checkout.
 
 ## 2. Краткий intake
@@ -38,7 +40,7 @@
 
 ## 4. План и конфигурация
 
-Создать `plans/<target-slug>/<YYYY-MM-DD>/` (каталог исключён из Git): `plan.md`, `inventory.md`, `decisions.md`, `acceptance.md`, `runbook.md`, `config/`. Для offline inventory содержит только заявленные характеристики и допущения. Использовать [шаблон](plan-template.md).
+Создать `plans/<target-slug>/<YYYY-MM-DD>/` (каталог исключён из Git): `plan.md`, `inventory.md`, `acceptance.md`, `runbook.md`, `config/`. Для offline inventory содержит только заявленные характеристики и допущения. Использовать [шаблон](plan-template.md). Причины решений хранятся в `.ai-development/infra/<task>/decisions/`; план ссылается на IDs, не создаёт второй независимый ADR-журнал. После задачи обновить общий индекс и handoff для следующих запусков.
 
 Подготовить реальные файлы под OS, arch, провайдера и зависимости: Terraform/OpenTofu для ресурсов провайдера при наличии API, Ansible/cloud-init для OS, Compose либо Kubernetes/Helm/Kustomize для workload, GitHub Actions и Argo CD там, где выбран Kubernetes. Не выдавать за deploy-ready шаблон с `REPLACE_*`, неизвестными CIDR/образами/версиями. Если входных данных мало, файлы остаются явно помеченным draft с перечнем блокеров.
 

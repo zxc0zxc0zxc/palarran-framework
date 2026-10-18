@@ -10,10 +10,10 @@
   environments/dev.yaml       # target identity, capacity, deployment contract
   environments/test.yaml
   environments/prod.yaml
-  decisions/                  # ADR по deployment/cache/tests
+  # Причины решений — в .ai-development/ci-cd/<task>/decisions/
 ```
 
-Это проектируемый формат, не созданный здесь parser/конфиг активной машины. YAML examples ниже — иллюстрация контракта. На этапе скилла нужны schema validation и semantic checks; свободный YAML не считать безопасным исполнением. В public repo реальные hostnames/IP и topology могут быть конфиденциальны: использовать logical IDs/ссылку на private registry, не раскрывая inventory.
+Это контракт для генерируемой скиллом конфигурации, не конфиг активной машины в ai-tools. YAML examples ниже — иллюстрация контракта. На этапе скилла нужны schema validation и semantic checks; свободный YAML не считать безопасным исполнением. В public repo реальные hostnames/IP и topology могут быть конфиденциальны: использовать logical IDs/ссылку на private registry, не раскрывая inventory.
 
 Пример одного environment:
 
@@ -84,3 +84,5 @@ Environment lock охватывает promotion → apply → verification. В G
 [GitHub concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) и [GitLab resource groups](https://docs.gitlab.com/ci/resource_groups/) дают provider-механизмы, но не заменяют release freshness check. Порядок ожидания job не гарантирует порядок исходных commits. GitLab имеет [outdated deploy protection](https://docs.gitlab.com/ci/environments/deployment_safety/), его семантику проверить относительно выбранного workflow.
 
 Не отменять активный prod rollout/migration при новом commit. Можно отменять superseded PR CI и ещё не начатые разрешённые deployments; начатый change доводится до определённого состояния/rollback. Emergency rollback не маскируется под обычный старый pipeline retry: отдельная авторизованная операция с причиной и ограниченным scope.
+
+Причины любого принятого выбора хранятся по [общему правилу памяти](../skills/decision-memory.md) в `.ai-development/`, а не в дублирующем `.delivery/decisions/`. Перед новым запуском читать журнал вместе с текущими конфигурациями.

@@ -1,10 +1,10 @@
-# Контракт будущих /ci-cd:github и /ci-cd:gitlab
+# Контракт /ci-cd:github и /ci-cd:gitlab
 
-**Это спецификация следующего этапа**, не созданные команды. На текущем этапе готовы документы. Реализация скиллов/workflows/deployment agents и подключение credentials не выполнены и не подразумеваются этим файлом.
+Созданы переносимые `skills/ci-cd-github` и `skills/ci-cd-gitlab` и slash-адаптеры. Это контракт их применения, не обещание уже работающего application pipeline. Credentials, targets и agents ai-tools не подключает автоматически.
 
 ## Обязательное чтение
 
-Будущий скилл читает `docs/ci-cd/README.md`, `evidence.md`, `architecture.md`, `performance.md`, `security.md`, `environments.md`, `decisions.md`, этот контракт, `sources.md`, guide выбранного provider и все обнаруженные `stacks/*.md`. Если база отсутствует — запросить checkout, не планировать только по общим знаниям. В результате указать реально прочитанные paths/commit и применимые первоисточники; claims компании и нашу адаптацию различать.
+Скилл сначала выполняет [общий контракт памяти решений](../skills/decision-memory.md), затем читает `docs/ci-cd/README.md`, `evidence.md`, `workflow.md`, `architecture.md`, `performance.md`, `security.md`, `environments.md`, `decisions.md`, этот контракт, `sources.md`, guide выбранного provider и все обнаруженные `stacks/*.md`. Если база отсутствует — запросить checkout, не планировать только по общим знаниям. В результате указать реально прочитанные paths/commit и применимые первоисточники; claims компании и нашу адаптацию различать.
 
 ## Intake и discovery
 
@@ -14,7 +14,7 @@
 4. Live metadata разрешённого control-plane API читать по необходимости и в пределах предоставленного доступа; без credentials готовить draft и список blocker. **SSH-доступ к host не запрашивать**, runtime secrets не собирать через чат.
 5. Проверить mismatch между config и actual identity/namespace/revision/capacity; актуализация через reviewed project configuration, не неявное изменение target.
 
-## Планируемые результаты реализации
+## Результаты применения
 
 - Краткое решение: выбранные provider/stacks/backend, текущие bottlenecks, измеримые цели, ограничения, вопросы и ADR.
 - Pipeline graph + traffic/trust boundary graph; список source/events/jobs/gates/identities/cache/artifact boundaries.
@@ -50,4 +50,4 @@
 
 ## Неймспейсы и упаковка
 
-Целевые пользовательские команды остаются `/ci-cd:github` и `/ci-cd:gitlab`. При следующем этапе выбрать корректный adapter под host. Существующий корневой plugin manifest называется `infra-plan`: не переименовывать его и не ломать существующие infra-команды ради нового набора. Отдельный namespace при распространении потребует отдельного package/manifest, либо project command adapters; конкретную упаковку проверить по документации host при реализации.
+В checkout доступны project adapters `/ci-cd:github` и `/ci-cd:gitlab`, а portable skill names — `ci-cd-github`, `ci-cd-gitlab`. Для другого проекта собрать отдельный namespace `ci-cd` через `scripts/package_plugin.py` по root README. Пакет включает обязательные docs/templates и не ссылается за пределы plugin root. Корневой `infra-plan` manifest сохранён; production pipelines не активируются самим фактом установки скилла.

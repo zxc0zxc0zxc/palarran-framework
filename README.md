@@ -1,6 +1,6 @@
 # AI tools
 
-Монорепозиторий скиллов, инженерной документации и MCP-серверов. Первый набор — проектирование и подготовка инфраструктуры.
+Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура и CI/CD; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
 
 ## Infrastructure planning
 
@@ -30,14 +30,41 @@
 - [Адаптируемые конфигурации](templates/infra/README.md): Compose/Caddy, Kubernetes NetworkPolicy/AppProject и Terraform для нового сервера Hetzner. Это заготовки для конкретного плана, а не обещание универсального production deploy.
 - Обследование: `python3 scripts/infra_inventory.py --ssh-alias my-server`. Только уже проверенный SSH host key и ключ/agent; пароль вводится пользователем в интерактивной SSH-сессии, не в аргументах или чате.
 
-## CI/CD pipelines — документация
+## CI/CD pipelines
 
-Следующий набор — `/ci-cd:github` и `/ci-cd:gitlab`. Сейчас подготовлена [база знаний](docs/ci-cd/README.md), без реализации этих скиллов и application workflows:
+Готовы два скилла с обязательным чтением [базы знаний](docs/ci-cd/README.md):
 
-- [Фактура Google, Meta, Netflix, Microsoft и AWS](docs/ci-cd/evidence.md) с первичными источниками и границами переноса практик.
-- Пять стеков: [Go](docs/ci-cd/stacks/go.md), [PHP](docs/ci-cd/stacks/php.md), [TypeScript/Next.js](docs/ci-cd/stacks/typescript-nextjs.md), [Python](docs/ci-cd/stacks/python.md), [Rust](docs/ci-cd/stacks/rust.md).
-- [Быстрый CI с тестами](docs/ci-cd/performance.md), [безопасность без секретов в logs](docs/ci-cd/security.md), [автоматический deploy без SSH](docs/ci-cd/architecture.md).
-- [GitHub](docs/ci-cd/github.md)/[GitLab](docs/ci-cd/gitlab.md), [память о стендах и optional кнопка dev/test/prod](docs/ci-cd/environments.md), [контракт будущих скиллов](docs/ci-cd/skill-contract.md).
+| Slash-команда | Переносимый скилл | Для чего |
+|---|---|---|
+| `/ci-cd:github` | [ci-cd-github](skills/ci-cd-github/SKILL.md) | Создание/исправление/оптимизация GitHub Actions |
+| `/ci-cd:gitlab` | [ci-cd-gitlab](skills/ci-cd-gitlab/SKILL.md) | Создание/исправление/оптимизация GitLab CI/CD |
+
+В Codex вызывайте `$ci-cd-github` или `$ci-cd-gitlab` в проекте с подключённым скиллом. Пример запроса: `$ci-cd-github Настрой CI/CD для этого Go + Next.js проекта, автоматический test и кнопку prod`. Plan-only запрос создаёт план; запрос реализации — адаптированные workflows/config и проверки.
+
+Поддерживаются Go, PHP, TypeScript/Next.js, Python и Rust, включая mixed monorepo. Скиллы требуют fast-feedback/test/cache budgets, protected release evidence, автоматический deploy без SSH, optional выбор dev/test/prod и безопасное хранение конфигурации стендов в `.delivery/`. Они не обещают готовый runtime без существующего controller/API/identity и не активируют application pipeline самим фактом установки.
+
+- [Общий workflow](docs/ci-cd/workflow.md), [GitHub](docs/ci-cd/github.md)/[GitLab](docs/ci-cd/gitlab.md).
+- [Фактура Google, Meta, Netflix, Microsoft и AWS](docs/ci-cd/evidence.md) и пять [stack guides](docs/ci-cd/stacks).
+- [Оптимизация](docs/ci-cd/performance.md), [security](docs/ci-cd/security.md), [deploy architecture](docs/ci-cd/architecture.md), [контракт результата](docs/ci-cd/skill-contract.md).
+
+## Общее правило всех скиллов: объяснение и память решений
+
+До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
+
+Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех пяти и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
+
+## Подключение из другого проекта
+
+Project slash-adapters лежат в `.claude/commands/`. Для переносимого plugin namespace CI/CD собрать самодостаточный пакет (необходим Python >= 3.9):
+
+```sh
+python3 scripts/package_plugin.py ci-cd --output artifacts/plugins/ci-cd
+claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ci-cd
+```
+
+Пакет содержит свой manifest `ci-cd`, два скилла и обязательные документы/templates; команды — `/ci-cd:github` и `/ci-cd:gitlab`. Корневой plugin `infra-plan` сохранён. Для изолированного infra-пакета: `python3 scripts/package_plugin.py infra-plan --output artifacts/plugins/infra-plan`.
+
+Сборщик не перезаписывает существующий output: при повторной сборке выберите новый каталог. Он не переносит `.ai-development/` исходного проекта, secrets, `.terraform/` или внешние symlinks. Причины решений создаются в **target project**, не внутри package cache. Копирование одного `SKILL.md` без базы знаний недостаточно.
 
 ## Проверка
 
@@ -56,9 +83,12 @@ skills/               # Переносимые инструкции агента
 .claude/commands/     # Slash-адаптеры
 .claude-plugin/       # Manifest namespace infra-plan
 docs/infra/plan/     # Обязательная база знаний для infra-plan
-docs/ci-cd/          # Фактура и спецификация будущих CI/CD скиллов
+docs/ci-cd/          # Обязательная база CI/CD скиллов
+docs/skills/         # Общие правила всех скиллов
+.ai-development/     # Решения и контекст этого проекта
+plugins/ci-cd/        # Manifest для сборки отдельного namespace
 templates/infra/    # Конфигурации для адаптации к плану
- scripts/            # Обследование и проверки
+scripts/             # Обследование и проверки
 ```
 
 MCP-серверы будут добавляться отдельными каталогами по мере появления реализаций.

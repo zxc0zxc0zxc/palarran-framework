@@ -1,6 +1,6 @@
 # GitLab CI/CD
 
-Документ задаёт требования будущего `/ci-cd:gitlab`; pipeline ещё не установлен. Использовать вместе с общими документами и всеми обнаруженными stack guides. Перед генерацией определить GitLab.com/Self-Managed, version/tier, runner executor/pools, registry, required policies и доступные environment protections.
+Документ задаёт требования `/ci-cd:gitlab`; pipeline ещё не установлен. Использовать вместе с общими документами и всеми обнаруженными stack guides. Перед генерацией определить GitLab.com/Self-Managed, version/tier, runner executor/pools, registry, required policies и доступные environment protections.
 
 ## Pipeline graph
 

@@ -1,4 +1,4 @@
-name: Validate infrastructure toolkit
+name: Validate AI tools
 on:
   push:
   pull_request:
@@ -13,10 +13,10 @@ jobs:
           persist-credentials: false
       - name: Validate repository contracts and local links
         run: python3 scripts/validate_repo.py
-      - name: Test inventory safety without SSH
+      - name: Test inventory safety and portable packaging offline
         run: python3 -m unittest discover -s tests -v
       - name: Compile Python files
-        run: python3 -m py_compile scripts/infra_inventory.py scripts/validate_repo.py
+        run: python3 -m py_compile scripts/infra_inventory.py scripts/validate_repo.py scripts/package_plugin.py
   terraform:
     runs-on: ubuntu-latest
     steps:

@@ -1,0 +1,74 @@
+"""Offline portability and containment tests against real package contents."""
+import importlib.util
+import json
+from pathlib import Path
+import re
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+SPEC = importlib.util.spec_from_file_location("packaging_tool", ROOT / "scripts/package_plugin.py")
+packager = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(packager)
+
+
+class PackagingTest(unittest.TestCase):
+    def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3)]:
+                package = packager.build_package(namespace, Path(directory) / namespace).resolve()
+                manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
+                self.assertEqual(manifest["name"], namespace)
+                self.assertEqual(len(list((package / "skills").iterdir())), expected)
+                for item in manifest["commands"].values():
+                    self.assertTrue((package / item["source"]).is_file())
+                for source in package.rglob("*.md"):
+                    for target in re.findall(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)", source.read_text()):
+                        if target.startswith(("http:", "https:", "#", "mailto:")):
+                            continue
+                        destination = (source.parent / target.split("#", 1)[0]).resolve()
+                        self.assertTrue(destination.is_relative_to(package), (source, target))
+                        self.assertTrue(destination.exists(), (source, target))
+                self.assertFalse(any(path.is_symlink() for path in package.rglob("*")))
+                self.assertFalse((package / ".ai-development").exists())
+                self.assertFalse((package / ".git").exists())
+                self.assertFalse(any(path.name in {".terraform", ".env", "node_modules"} for path in package.rglob("*")))
+
+    def test_refuses_existing_output_preserving_user_files(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "existing"
+            output.mkdir()
+            marker = output / "user-work.md"
+            marker.write_text("preserve")
+            with self.assertRaises(FileExistsError):
+                packager.build_package("ci-cd", output)
+            self.assertEqual(marker.read_text(), "preserve")
+
+    def test_refuses_source_tree_output_before_creating_anything(self):
+        target = ROOT / "docs" / "must-not-create-plugin"
+        self.assertFalse(target.exists())
+        with self.assertRaises(ValueError):
+            packager.build_package("ci-cd", target)
+        self.assertFalse(target.exists())
+
+    def test_rejects_external_source_symlink(self):
+        with tempfile.TemporaryDirectory() as directory:
+            fixture = Path(directory) / "source"
+            fixture.mkdir()
+            (fixture / "docs/ci-cd").mkdir(parents=True)
+            (fixture / "templates").mkdir()
+            (fixture / "plugins/ci-cd").mkdir(parents=True)
+            (fixture / "plugins/ci-cd/plugin.json").write_text(json.dumps({"name": "ci-cd", "commands": {}}))
+            for name in ["ci-cd-github", "ci-cd-gitlab"]:
+                (fixture / "skills" / name).mkdir(parents=True)
+            external = Path(directory) / "private.txt"
+            external.write_text("must not be packaged")
+            (fixture / "docs/ci-cd/leak.md").symlink_to(external)
+            output = Path(directory) / "package"
+            with self.assertRaises(ValueError):
+                packager.build_package("ci-cd", output, root=fixture)
+            self.assertFalse(output.exists())
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,6 +1,6 @@
-# CI/CD: база знаний для будущих github/gitlab скиллов
+# CI/CD: база знаний github/gitlab скиллов
 
-Статус: **документация и проектные решения**, не реализованный скилл и не работающие application pipelines. Подготовлено 2026-10-18. Целевые вызовы следующего этапа: `/ci-cd:github`, `/ci-cd:gitlab`. Сейчас не добавляем эти команды, credentials, runners или deployment agents.
+Статус: база знаний и [GitHub](../../skills/ci-cd-github/SKILL.md)/[GitLab](../../skills/ci-cd-gitlab/SKILL.md) скиллы реализованы. Вызовы: `/ci-cd:github`, `/ci-cd:gitlab`. Application pipelines, credentials, runners и deployment agents создаются/подключаются только при применении к конкретному разрешённому проекту.
 
 ## Контракт
 
@@ -9,7 +9,7 @@
 - Опциональная кнопка выбора `dev`, `test`, `prod` запускает автоматизацию для уже проверенного release. Автодеплой по политике тоже поддерживается. Ручной запуск не означает ручное применение.
 - Память проекта — версионированные конфигурации environments и deployment contract в `.delivery/`; секреты там запрещены. Не использовать историю чата как источник сведений о production.
 - Отсутствие секретов в logs, reports, images и caches — критерий приёмки. Masking полезен, но не считается доказательством отсутствия утечек.
-- Будущий скилл обязан читать эту базу, выбранный provider guide и **все обнаруженные stack guides** до проектирования; источники и отклонения показывать в результате.
+- Скилл обязан читать эту базу, выбранный provider guide и **все обнаруженные stack guides** до проектирования; источники и отклонения показывать в результате.
 
 ## Навигация
 
@@ -28,7 +28,9 @@
 | [stacks/python.md](stacks/python.md) | uv/pip, pytest/xdist, wheel/container compatibility |
 | [stacks/rust.md](stacks/rust.md) | Cargo, sccache, nextest/doctests, release builds |
 | [decisions.md](decisions.md) | Открытые решения и аргументы |
-| [skill-contract.md](skill-contract.md) | Входы, результаты и acceptance будущего скилла |
+| [workflow.md](workflow.md) | Пошаговая работа скилла от контекста до реализации и handoff |
+| [../skills/decision-memory.md](../skills/decision-memory.md) | Обязательное объяснение каждого выбора и контекст следующих задач |
+| [skill-contract.md](skill-contract.md) | Входы, результаты и acceptance скилла |
 | [sources.md](sources.md) | Проверенные первоисточники, даты, ограничения |
 
 ## Как применять
@@ -37,4 +39,4 @@
 
 Первый пригодный baseline: весь обязательный release suite проходит на release commit; артефакт traceable до source/toolchain/lockfile; deploy только разрешённого digest; окончательный статус после rollout и smoke/SLI checks. Ускорение нельзя получать обходом обязательных тестов. Численные latency budgets — наши цели для согласования, не обещания бигтехов.
 
-Для подготовки самой инфраструктуры существует [отдельная база](../infra/plan/README.md). Её SSH workflow не распространяется на эти скиллы: здесь действует явное требование пользователя о deploy без SSH. При отсутствии API/controller доступа будущий скилл фиксирует blocker и готовит bootstrap requirements.
+Для подготовки самой инфраструктуры существует [отдельная база](../infra/plan/README.md). Её SSH workflow не распространяется на эти скиллы: здесь действует явное требование пользователя о deploy без SSH. При отсутствии API/controller доступа скилл фиксирует blocker и готовит bootstrap requirements.
