@@ -1,0 +1,37 @@
+---
+name: backend-plan
+description: Спланировать backend фичу по контексту проекта и первичным engineering sources; сначала stack/architecture/contracts foundation при отсутствии backend, затем SDD spec, SLA/SLO, данные/cache/performance, edge-case tests, rollout и DoD с future git worktree tasks. Использовать для /backend:plan; только планирование, без реализации.
+---
+
+# Backend plan
+
+Вызов `/backend:plan {фича}` или `$backend-plan {фича}`. Это только planning. Создание самого скилла не означает планирование backend ai-tools.
+
+## Границы и память
+
+Определи installed checkout по реальному `SKILL.md`, разрешив symlink (`../../`), отдельно target project. Прочитай [общую память](../../docs/skills/decision-memory.md), target `.ai-development/INDEX.md`, backend index, relevant accepted ADR/specs/handoffs. Каждый принятый выбор объясни до зависимого planning изменения: причина/альтернативы/evidence/последствия; обновляй canonical decisions/index/handoff, reuses/supersedes. Proposed с blocker не accepted; старый ADR не новое полномочие. Сохраняй контекст следующих задач в target, не plugin cache.
+
+**Разрешено:** read-only local repository research, web/official docs research, запись plan/spec/contracts/design sketches/diagrams и decision records в target planning area или existing canonical spec convention. **Не делать:** application code/config/dependency changes, install/codegen, app/tests/benchmarks/migrations/apply/deploy, SSH/cloud/live DB calls, создание branches/worktrees или запуск implementation agents. Будущие команды и snippets сохраняй inert, не исполняй. Эти границы относятся к применению planning skill, не запрещают автору репозитория валидировать сам skill.
+
+## Обязательная база
+
+- [Контракт](../../docs/backend/plan/README.md), [architecture/масштаб](../../docs/backend/plan/architecture.md), [foundation/stack](../../docs/backend/plan/foundation-stack.md).
+- [Contracts/security/snippets](../../docs/backend/plan/contracts.md), [DB/data/migrations](../../docs/backend/plan/data.md).
+- [Cache](../../docs/backend/plan/caching.md), [performance/capacity](../../docs/backend/plan/performance.md), [SLA/SLI/SLO/recovery](../../docs/backend/plan/reliability.md).
+- [Edge/test strategy](../../docs/backend/plan/testing.md), [delivery/recovery](../../docs/backend/plan/delivery.md).
+- [SDD/DoD/agent worktrees](../../docs/backend/plan/sdd-agents.md), [workflow/context](../../docs/backend/plan/workflow.md), [primary sources](../../docs/backend/plan/sources.md).
+- Шаблоны [foundation](../../templates/backend/foundation.md), [spec](../../templates/backend/spec.md), [plan](../../templates/backend/plan.md), [reliability](../../templates/backend/reliability.md), [tests](../../templates/backend/test-matrix.md), [agent task](../../templates/backend/agent-task.md).
+
+Если обязательной базы нет, запроси checkout, не подменяй общими знаниями. Укажи реально прочитанные guides/source versions/commit; external company practice и наши рекомендации/estimates отделяй.
+
+## Порядок работы
+
+1. Из feature description и target контекста извлеки business outcome, actors/roles, scope/non-goals, requirements/инварианты и constraints. Прочитай repo instructions/README/existing specs, relevant code/contracts/schema/tests/CI/infra docs и память; baseline SHA/relevant dirty changes зафиксируй без коммита чужой работы. Workload/host resources/team/budget/dependencies — facts либо assumptions. Нет фичи — спроси какую, не выбирай сам. Критичные unknowns уточни рано, независимые разделы продолжай условно.
+2. **До feature plan — foundation gate.** Есть backend/установленный stack: обоснуй reuse/version/границы/gaps, не мигрируй по привычке. Нет: сначала сравни разумные architecture/stack/storage/protocol варианты по workload, infra и team/ops cost; выбери или оставь blocking proposal, опиши modules/deploy shape, formats/contracts/auth/data/test/observability foundation. Не навязывай Go/Next/микросервисы/Kafka/Kubernetes. Неразрешённый foundation допускает только conditional downstream outline.
+3. Оформи SDD spec со stable R/AC/INV/C IDs, state/error/permission cases и контрактами. Исследуй актуальные primary sources по выбранным механизмам/versions и покажи **почему применимо** к этому масштабу. Shopify/Uber/Google/Meta/Amazon/Stripe — источники опыта, не универсальные рецепты. Company snippet только с permalink/license/version/attribution и адаптацией; собственный pseudocode так и назови. Snippets не меняют app.
+4. Спроектируй modules/interfaces/data ownership, main и failure flow diagrams, ER/state где нужно. Обязательно data invariants/schema/access patterns/index/transaction/isolation/locking/retention/migration; cache need или отказ с trigger, key/tenant/TTL/max-stale/invalidation/failure; numerical workload/latency/resource/query/pool/queue budgets и будущую процедуру измерения. Не объявляй estimates benchmark results.
+5. **Обязательный SLA proposal:** service scope, numerical targets/window/workload, eligibility/good/bad semantics, измерение/exclusions/owner, incident/support/breach response/status. Отдельно SLI/SLO/error budget, latency tails/async freshness/correctness и applicable RPO/RTO. При нехватке цифр предложи provisional numerical targets с assumptions/feasibility/validation gates, не всё TBD. Не заключай коммерческий SLA за владельца; существующие условия учитывай, infra/dependency gaps показывай. Single host не получает HA по имени языка.
+6. Покрой feature-specific edges и risks тест-планом: inputs/access/tenant/state, duplicates/concurrency/unknown commit, dependency timeouts/retry/cancel, cache stale/cold/failure, async replay/order, migration/backfill/restore, load/overload/ресурсы по применимости. Для каждого T-ID: setup/interleaving/fault, stimulus, ожидаемый observable/durable outcome, layer/env/future command и linked R/AC/INV/SLO. N/A аргументируй. Процент покрытия кода не заменяет invariant/edge tests. Всё execution NOT RUN (planning).
+7. Спланируй внедрение: prerequisites, compatibility/expand-backfill-switch-contract, pipeline/rollout/observation/stop thresholds, flags где нужны, recovery/rollback vs roll-forward/reconciliation, owners/runbook. Учти single-instance limitations и data side effects, не обещай zero downtime без capacity/compatibility. Ничего не разворачивай.
+8. Создай SDD task DAG и [agent packets](../../templates/backend/agent-task.md): dependencies/contract freeze, outputs/touch sets/ownership, future branch/worktree/base SHA, isolated ports/DB/cache/queue/test resources и budget/max concurrency, integration order/retests. Worktree изолирует checkout, не DB/process/secrets. Shared migrations/contracts/lockfiles/indexes — один owner или serial tasks. Для малого scope допустим обоснованный serial critical path; не обещай speedup без evidence. **Сейчас worktrees/agents не создавать.** Per-task и feature DoD конкретны, traceability R→AC→design→TASK→T→gate без дыр.
+9. Проверь согласованность plan/contract/data/tests/targets/DAG и исправь gaps. Plan-ready — качество спецификации, не реализованная feature; blocking choices → draft/conditional. Сохрани artifacts/revisions/decisions в target `.ai-development/backend/<task>/` либо связанном existing spec layout, обнови общий/backend indexes и handoff. Дай краткое саммари foundation/ключевых решений/SLA proposal/рисков/edge coverage/parallel lanes/DoD и ссылки. Заверши на планировании; не переходи к реализации или deploy.

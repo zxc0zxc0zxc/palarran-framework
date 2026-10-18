@@ -19,3 +19,7 @@
 | repository/2026-10-18-frontend-build/0001 | accepted | Frontend / Реализация из UX/UI без редизайна | [Объяснение](repository/2026-10-18-frontend-build/decisions/0001-source-contract.md); пересмотр по первому application run |
 | repository/2026-10-18-frontend-build/0002 | accepted | Frontend / Адаптивность и фактическая browser проверка | [Объяснение](repository/2026-10-18-frontend-build/decisions/0002-browser-acceptance.md); пересмотр по первому application run |
 | repository/2026-10-18-frontend-build/0003 | accepted | Frontend / Память, необходимые картинки и portable package | [Объяснение](repository/2026-10-18-frontend-build/decisions/0003-delivery-and-assets.md); пересмотр по первому application run |
+| repository/2026-10-18-backend-plan/0001 | accepted | Backend / Planning-only SDD и foundation | [Объяснение](repository/2026-10-18-backend-plan/decisions/0001-plan-only-sdd.md); пересмотр по application run |
+| repository/2026-10-18-backend-plan/0002 | accepted | Backend / Архитектура, данные, performance и SLA | [Объяснение](repository/2026-10-18-backend-plan/decisions/0002-scale-data-reliability.md); пересмотр после измерений |
+| repository/2026-10-18-backend-plan/0003 | accepted | Backend / DAG и future worktrees | [Объяснение](repository/2026-10-18-backend-plan/decisions/0003-agent-worktrees.md); пересмотр по application run |
+| repository/2026-10-18-backend-plan/0004 | accepted | Backend / Package и проверка | [Объяснение](repository/2026-10-18-backend-plan/decisions/0004-delivery-validation.md); пересмотр по application run |

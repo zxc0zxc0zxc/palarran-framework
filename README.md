@@ -1,6 +1,6 @@
 # AI tools
 
-Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX, UI и frontend; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
+Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX, UI, frontend и backend planning; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
 
 ## Infrastructure planning
 
@@ -102,11 +102,31 @@ claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/frontend
 
 Frontend package содержит frontend/UI/UX базу и три skills; slash namespace — `/frontend:build`, upstream slash namespaces подключаются отдельными plugins. Это набор инструкций для реализации, не приложение ai-tools.
 
+## Backend feature planning
+
+[`/backend:plan {фича}`](skills/backend-plan/SKILL.md) — только план разработки, внедрения и тестирования по текущему контексту проекта и применимым primary sources. В Codex — `$backend-plan {фича}`.
+
+- Сначала reuse existing backend либо foundation: architecture/stack/modules/formats/contracts/data/infra fit. Затем SDD feature spec и конкретный task plan.
+- [Архитектурная база](docs/backend/plan/architecture.md): монолит, модульный монолит, API/worker, микросервисы, serverless; многомодульность отдельно от числа deployables, условия перехода и operational cost.
+- Отдельные guides: [данные/DB](docs/backend/plan/data.md), [кеширование](docs/backend/plan/caching.md), [performance](docs/backend/plan/performance.md), [SLA/SLI/SLO](docs/backend/plan/reliability.md), [edge tests](docs/backend/plan/testing.md), [rollout/recovery](docs/backend/plan/delivery.md).
+- Обязательный SLA proposal с числовыми целями/нагрузкой/окном, измерением/error budget и applicable RTO/RPO; targets по инфраструктуре, без договорных обещаний от имени владельца.
+- [SDD для агентов](docs/backend/plan/sdd-agents.md): requirement → AC/invariant → design/contract → task → test → DoD. Future worktree DAG, ownership/shared-file conflicts, isolation и integration gates; small scope может иметь обоснованный serial path.
+- Сохраняет решения/spec context в target `.ai-development/backend/`. Не меняет app, не устанавливает зависимости, не запускает tests/migrations/live APIs/deploy и не создаёт worktrees/implementation agents.
+
+[Карта документации](docs/backend/plan/README.md), [выбор foundation/stack](docs/backend/plan/foundation-stack.md), [контракты/snippets](docs/backend/plan/contracts.md), [workflow](docs/backend/plan/workflow.md), [источники Google, Shopify, Uber, Amazon, Meta, Stripe и другие](docs/backend/plan/sources.md), [шаблоны](templates/backend).
+
+```sh
+python3 scripts/package_plugin.py backend --output artifacts/plugins/backend
+claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/backend
+```
+
+Package содержит backend-plan и обязательную базу; namespace `/backend:plan`. Plan-ready означает согласованность спецификации, а не доказанный SLA или выполненную реализацию.
+
 ## Общее правило всех скиллов: объяснение и память решений
 
 До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
 
-Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех восьми и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
+Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех девяти и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
 
 ## Подключение из другого проекта
 
@@ -143,9 +163,10 @@ docs/skills/         # Общие правила всех скиллов
 docs/ux/             # Бизнес-анализ, research и экранные UX-схемы
 docs/ui/             # Дизайн-системы, visual refs, адаптивный UI
 docs/frontend/       # Реализация UX/UI и browser acceptance
+docs/backend/plan/   # Архитектура, данные, SLA и SDD feature planning
 .ai-development/     # Решения и контекст этого проекта
 plugins/             # Manifests для сборки отдельных namespace
-templates/           # Infrastructure, UX, UI, frontend и ADR templates
+templates/           # Infrastructure, UX, UI, frontend, backend и ADR templates
 scripts/             # Обследование и проверки
 ```
 

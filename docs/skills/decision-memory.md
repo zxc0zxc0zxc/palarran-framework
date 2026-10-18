@@ -48,13 +48,24 @@
       browser-review.md
       evidence/
       handoff.md
+  backend/
+    INDEX.md
+    2026-10-18-feature-plan/
+      context.md
+      decisions/
+      foundation.md
+      spec.md
+      plan.md
+      test-matrix.md
+      tasks/
+      handoff.md
   repository/
     2026-10-18-ci-cd-skills/
       context.md
       decisions/
 ```
 
-Области — `infra`, `ci-cd`, `ux`, `ui`, `frontend`, `repository` либо понятное имя подсистемы. Task ID — дата пользователя и короткое имя, при совпадении добавить суффикс, не перезаписывать чужую задачу. В `context.md` указать target root логически/относительно проекта, goal/scope, constraints, inspected commit/config, факты/допущения, связанные IDs и открытые вопросы. Не сохранять абсолютные пути чужих рабочих машин без необходимости.
+Области — `infra`, `ci-cd`, `ux`, `ui`, `frontend`, `backend`, `repository` либо понятное имя подсистемы. Task ID — дата пользователя и короткое имя, при совпадении добавить суффикс, не перезаписывать чужую задачу. В `context.md` указать target root логически/относительно проекта, goal/scope, constraints, inspected commit/config, факты/допущения, связанные IDs и открытые вопросы. Не сохранять абсолютные пути чужих рабочих машин без необходимости.
 
 «Временный каталог задачи» означает ограниченную задаче рабочую область. **Принятые решения, индекс и handoff не удаляются автоматически после завершения.** Только `scratch/` содержит заменяемые черновики; исключить его из Git. Sanitized durable records разрешены в Git в рамках обычного repo workflow, но публикация инфраструктурных сведений требует проверки видимости. Если проект запрещает такой каталог в Git, сохранить его локально/в согласованном private storage и явно указать предел переносимости контекста. Скилл не меняет глобальную память или глобальные настройки пользователя.
 
@@ -99,3 +110,5 @@
 UX concepts/revisions, research summaries и screen catalog сохраняются в `.ai-development/ux/` по профильному workflow. UX catalog указывает на concepts; accepted rationale/статусы решений остаются в canonical ADR и общем INDEX, без второго противоречащего журнала.
 
 Frontend implementation decisions, source UX/UI mapping и sanitized browser evidence сохраняются в `.ai-development/frontend/`; app code/tests/assets остаются в штатных app directories. Старый PASS не заменяет проверку новой реализации.
+
+Backend plans/specs/contracts, SLA proposals и SDD task packets сохраняются в `.ai-development/backend/` или связанном existing spec layout. Canonical rationale остаётся в ADR; будущие tests/worktrees/rollout не считаются выполненными или разрешёнными наличием плана.
