@@ -33,4 +33,4 @@ Concepts/status/revision и decisions разделены; superseded не уда
 
 ## Применение и проверка
 
-Реализация выполнена; repository/skill/package validators, 11 offline tests и syntax parse 8 Mermaid examples — PASS. Evidence и ограничения — в [handoff](../handoff.md). CI до публикации PENDING; application research/user testing/render review NOT RUN.
+Реализация выполнена; repository/skill/package validators, 11 offline tests и syntax parse 8 Mermaid examples — PASS. Evidence и ограничения — в [handoff](../handoff.md). CI implementation commit `ebed76d` PASS (ссылка в handoff); application research/user testing/render review NOT RUN.

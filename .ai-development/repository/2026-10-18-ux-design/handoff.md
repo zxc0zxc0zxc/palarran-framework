@@ -18,7 +18,7 @@
 | `claude plugin validate artifacts/plugins/ux --strict` | PASS | Реальный manifest/path check; skill invocation в application project NOT RUN |
 | Mermaid parser | PASS, 8 diagrams в UX docs/templates | Только syntax parse; visual render review NOT RUN |
 | Python compile / `git diff --check` | PASS | Syntax/whitespace |
-| Repository GitHub CI | PENDING publication | Проверить run для implementation commit после push |
+| Repository GitHub CI | PASS | [Run 39141839387](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39141839387) для implementation commit `ebed76d`; последующее уточнение full-app scope и evidence обновлено отдельно |
 | Реальное UX исследование приложения | NOT RUN | Пользователь просит documentation+skill, business target не выбран |
 | User testing / adaptive implementation / WCAG conformance | NOT RUN | Нужен конкретный prototype/application и отдельная проверка |
 
