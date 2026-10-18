@@ -11,7 +11,7 @@ Canonical progress.json updates the marked section of the original source plan a
 - PASS: all 6 packages isolated; frontend packaged core sync runs on an external target plan and keeps original design, backend legacy packaged CLI still runs. No backend docs dependency in frontend package, no project memory/external symlinks.
 - PASS: skill-creator quick_validate frontend-build; Python compilation and whitespace checks.
 - PASS: frontend v0.2.0 and backend v0.2.1 plugin packages, Claude plugin validate --strict. New ignored output paths: artifacts/plugins/frontend-v0.2 and artifacts/plugins/backend-v0.2.1.
-- CI: pending publication.
+- PASS: [GitHub Actions 39158397620](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39158397620) for implementation commit `cda9458383d143aa104f4a01b30b1d0a1162f5a1`: repository contracts, 24 tests, compilation and Terraform validation.
 - NOT RUN: actual application implementation, parallel application worktrees, browser acceptance/user tests/API integration — no application target given; authoring tests do not prove future UI correctness.
 
 ## Usage and next context
