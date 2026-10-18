@@ -11,7 +11,7 @@
 - PASS: portable package test исполняет packaged helper в изолированном каталоге, sync сохраняет design и показывает INCOMPLETE для pending example. Test results в fixtures synthetic; это проверка helper, не real application evidence.
 - PASS: skill-creator quick_validate backend-build и изменённый backend-plan; Python compilation/diff whitespace checks.
 - PASS: `artifacts/plugins/backend-v0.2` и `claude plugin validate --strict`, оба commands в namespace backend, без live project memory/external symlinks.
-- CI: pending publication.
+- PASS: [GitHub Actions 39148843333](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39148843333) для implementation commit `a9dc02a94cc1a9ab3e7f3000e1708e08bd1e8fae`: repository contracts, 21 tests, compilation и Terraform validation.
 - NOT RUN: реализация application feature, parallel application agent/worktree lanes, реальные API/DB/load/recovery/operational SLA checks — application target/feature здесь не заданы. Authoring checks их не подменяют.
 
 ## Использование и следующие задачи
