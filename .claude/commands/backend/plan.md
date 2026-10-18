@@ -8,3 +8,5 @@ argument-hint: "{фича}"
 Фича: $ARGUMENTS
 
 Только planning: local read-only research и запись spec/plan/contracts/diagrams/decisions. При отсутствии backend сначала architecture/stack/formats/contracts foundation, затем feature plan. Обязательны SLA proposal + SLI/SLO, DB/data/cache/performance, feature-specific edge tests, rollout/recovery, SDD traceability/DoD и future agent/worktree DAG с ownership/isolation. Не менять приложение/dependencies, не запускать tests/live APIs/deploy, не создавать worktrees/branches и не запускать implementation agents. Причины/план сохранить в target `.ai-development/backend/` для следующих задач.
+
+Инициализируй full TASK inventory/progress.json со статусами pending/NOT_RUN и marked execution section в самом плане по docs/backend/progress.md; локальная structural sync не запускает application execution. Будущий /backend:build обновляет это же место с actual revision/commits/evidence/оставшимися задачами.

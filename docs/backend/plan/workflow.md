@@ -39,3 +39,7 @@
 Можно объединить файлы для малого scope или использовать existing spec layout, сохранив anchors/mapping/index и единый источник принятого решения. Старые revisions/причины не стирать, менять через supersedes/reuses. Planning artifacts пишутся в target, не installed plugin/cache; app source и deploy configs не меняются.
 
 Handoff: понятый scope и foundation, ключевые decisions/alternatives/source links, proposed SLA/нагрузка и feasibility gaps, edge/test coverage, tasks/critical path/parallel ownership, DoD, rollout/recovery и вопросы. Следующий агент получает конкретные входы, а не указание «сам разберись». План сам по себе не разрешает implementation/deploy и не доказывает performance/SLA.
+
+## Progress с момента создания плана
+
+Создать [canonical progress.json и marked section](../progress.md) по полному TASK inventory, planned gates и source revision; все execution checks `NOT_RUN`, tasks `pending`. Structural helper проверяет только artifacts и синхронизирует section, application tests не исполняет. Plan-ready — согласованность design, не feature done. Source design revisions сохраняются, а последующий `/backend:build` обновляет status в **этом же плане**, с commit/evidence и remaining tasks. Existing plans без section получают её перед execution без перезаписи requirements.

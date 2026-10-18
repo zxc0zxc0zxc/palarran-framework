@@ -23,3 +23,7 @@
 | repository/2026-10-18-backend-plan/0002 | accepted | Backend / Архитектура, данные, performance и SLA | [Объяснение](repository/2026-10-18-backend-plan/decisions/0002-scale-data-reliability.md); пересмотр после измерений |
 | repository/2026-10-18-backend-plan/0003 | accepted | Backend / DAG и future worktrees | [Объяснение](repository/2026-10-18-backend-plan/decisions/0003-agent-worktrees.md); пересмотр по application run |
 | repository/2026-10-18-backend-plan/0004 | accepted | Backend / Package и проверка | [Объяснение](repository/2026-10-18-backend-plan/decisions/0004-delivery-validation.md); пересмотр по application run |
+| repository/2026-10-18-backend-build/0001 | accepted | Backend build / Source и прогресс в плане | [Объяснение](repository/2026-10-18-backend-build/decisions/0001-source-and-progress.md); пересмотр по application run |
+| repository/2026-10-18-backend-build/0002 | accepted | Backend build / Actual agents/worktrees | [Объяснение](repository/2026-10-18-backend-build/decisions/0002-worktree-agents.md); пересмотр по application run |
+| repository/2026-10-18-backend-build/0003 | accepted | Backend build / Actual tests и SLA evidence | [Объяснение](repository/2026-10-18-backend-build/decisions/0003-testing-reliability.md); пересмотр после измерений |
+| repository/2026-10-18-backend-build/0004 | accepted | Backend build / Package и проверки | [Объяснение](repository/2026-10-18-backend-build/decisions/0004-package-and-validation.md); пересмотр по application run |

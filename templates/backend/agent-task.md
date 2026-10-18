@@ -20,3 +20,7 @@ Linked AC/invariants implemented; relevant tests/checks actual results; contract
 ## Integration
 
 Owner/merge order, conflicting touch-set resolution, mandatory retest on integrated baseline, shared index/ADR update owner. Cleanup only after changes preserved/integrated and dirty/untracked check; no force removal. Execution/merge/deploy separately authorized by subsequent task scope.
+
+## Execution tracking
+
+Canonical progress.json and plan execution section are coordinator-owned. This task starts pending; code-ready, integrated and verified are separate statuses with commit/evidence binding. Return scoped lane reports; do not race shared progress/index writes. Backend build links the actual outcome back to this TASK ID/source revision.

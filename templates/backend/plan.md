@@ -1,6 +1,6 @@
 # Backend feature development plan <feature-id> / <revision>
 
-- Planning only; implementation/runtime validation NOT RUN.
+- Planning artifact; initial execution/runtime validation NOT_RUN. Current build outcome is tracked in the execution section below.
 - Target/baseline, source spec/foundation/ADR links, status:
 - Facts/assumptions and approved vs proposed decisions:
 
@@ -14,7 +14,7 @@ Invariants, schema/access patterns/indexes/transaction/isolation/concurrency, vo
 
 ## Reliability, tests and delivery
 
-Link SLA/SLI/SLO/error budget/RTO/RPO, feature-specific test matrix and thresholds. Compatibility/expand-backfill-switch-contract, release stages/observation/stop criteria, rollback vs roll-forward/data recovery, owners/runbook. All execution remains planned, not PASS.
+Link SLA/SLI/SLO/error budget/RTO/RPO, feature-specific test matrix and thresholds. Compatibility/expand-backfill-switch-contract, release stages/observation/stop criteria, rollback vs roll-forward/data recovery, owners/runbook. At plan creation execution is planned, not PASS; subsequent actual outcomes belong to the execution section.
 
 ## Traceability and agent DAG
 
@@ -27,3 +27,13 @@ Contract freeze, dependencies/critical path/max concurrency, ownership conflicts
 ## Definition of Done
 
 Plan-ready criteria separate from future implementation/feature DoD. List concrete tests/invariant/contract/load/recovery/observability gates and owner. Runtime tests NOT RUN at planning time. Remaining blockers and next execution scope; no automatic implementation/deploy.
+
+## Execution progress (maintained by backend build)
+
+Source plan ID/revision/ref and full task/gate inventory must be initialized in canonical progress.json. At planning time all tasks pending and execution checks NOT_RUN. During build this section shows implemented/integrated/verified work and remaining blockers for the exact plan revision; source design above is preserved.
+
+<!-- backend-progress:start -->
+
+Not started. Initialize/sync the full target progress ledger; no execution evidence yet.
+
+<!-- backend-progress:end -->

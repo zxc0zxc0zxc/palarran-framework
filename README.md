@@ -1,6 +1,6 @@
 # AI tools
 
-Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX, UI, frontend и backend planning; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
+Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX, UI, frontend и backend; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
 
 ## Infrastructure planning
 
@@ -120,13 +120,27 @@ python3 scripts/package_plugin.py backend --output artifacts/plugins/backend
 claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/backend
 ```
 
-Package содержит backend-plan и обязательную базу; namespace `/backend:plan`. Plan-ready означает согласованность спецификации, а не доказанный SLA или выполненную реализацию.
+Backend package v0.2 содержит backend-plan/backend-build, оба slash adapters, обязательную базу и progress helper. Plan-ready означает согласованность спецификации, а не доказанный SLA или выполненную реализацию.
+
+## Backend implementation
+
+[`/backend:build {путь/ID плана}`](skills/backend-build/SKILL.md) реализует конкретную SDD revision. В Codex — `$backend-build`.
+
+- Независимые ready задачи выполняет internal agents в отдельных Git worktrees/branches, с absolute cwd и isolated DB/ports/cache/queue; coordinator последовательно review/integrates и проверяет общий результат.
+- Реализует contracts/data/invariants и linked edge/concurrency/integration/fault tests, проверяет actual API/DB outcomes и source DoD.
+- Проверяет SLI instrumentation и load/SLO thresholds; operational SLA за полное окно учитывает отдельно. Missing evidence означает partial, не выдуманный SLA PASS.
+- **Прямо в исходном плане обновляет прогресс:** plan ID/revision/commit, pending → in_progress → implemented → integrated → verified, blockers/deferred и remaining gates. Code-ready не равно verified.
+- Canonical `progress.json` и [helper](scripts/backend_progress.py) проверяют статус/evidence/DAG и синхронизируют только marked execution section плана; accepted rationale и reports сохраняются в target `.ai-development/backend/` для resume.
+
+[Документация build](docs/backend/build/README.md), [общий progress contract](docs/backend/progress.md), [agent worktrees](docs/backend/build/worktrees.md), [tests/DoD](docs/backend/build/verification.md), [SLA/SLO](docs/backend/build/reliability.md), [шаблоны](templates/backend). `/backend:plan` остаётся planning-only; создаёт pending ledger, но ничего не реализует. Local build не подразумевает production deploy/live migration.
+
+При пересборке backend plugin выбрать новый output directory, например `artifacts/plugins/backend-v0.2`. Namespace содержит `/backend:plan` и `/backend:build`; другие plugins не меняются.
 
 ## Общее правило всех скиллов: объяснение и память решений
 
 До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
 
-Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех девяти и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
+Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех десяти и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
 
 ## Подключение из другого проекта
 
@@ -164,6 +178,7 @@ docs/ux/             # Бизнес-анализ, research и экранные U
 docs/ui/             # Дизайн-системы, visual refs, адаптивный UI
 docs/frontend/       # Реализация UX/UI и browser acceptance
 docs/backend/plan/   # Архитектура, данные, SLA и SDD feature planning
+docs/backend/build/  # Реализация, agent worktrees, проверки и progress
 .ai-development/     # Решения и контекст этого проекта
 plugins/             # Manifests для сборки отдельных namespace
 templates/           # Infrastructure, UX, UI, frontend, backend и ADR templates

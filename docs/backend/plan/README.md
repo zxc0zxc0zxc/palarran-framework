@@ -30,3 +30,7 @@
 | [sources.md](sources.md) | Первичные источники и границы применения |
 
 Шаблоны: [foundation](../../../templates/backend/foundation.md), [spec](../../../templates/backend/spec.md), [feature plan](../../../templates/backend/plan.md), [SLA/SLO](../../../templates/backend/reliability.md), [tests](../../../templates/backend/test-matrix.md), [agent task](../../../templates/backend/agent-task.md). Маленький проект может объединять эти разделы в компактные документы, но обязательные вопросы/traceability не исчезают. Это authoring база скилла, не готовый план фичи самого ai-tools.
+
+## Передача в реализацию и учёт статуса
+
+При создании плана инициализировать [progress ledger](../progress.md) с полным TASK inventory (`pending`, проверки `NOT_RUN`) и execution section прямо в `plan.md`. Local structural validation/sync этого plan artifact допустимы, application tests/worktree execution по-прежнему не запускаются. Реализация отдельным [backend build](../build/README.md) обновляет ledger/таблицу: реализованная plan revision/commit, что code-ready/integrated/verified и что осталось. Планирование не выставляет выполненные статусы из предположений.

@@ -16,7 +16,7 @@ jobs:
       - name: Test inventory safety and portable packaging offline
         run: python3 -m unittest discover -s tests -v
       - name: Compile Python files
-        run: python3 -m py_compile scripts/infra_inventory.py scripts/validate_repo.py scripts/package_plugin.py
+        run: python3 -m py_compile scripts/infra_inventory.py scripts/validate_repo.py scripts/package_plugin.py scripts/backend_progress.py
   terraform:
     runs-on: ubuntu-latest
     steps:

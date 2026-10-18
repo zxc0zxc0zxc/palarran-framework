@@ -1,7 +1,16 @@
 {
   "name": "backend",
-  "version": "0.1.0",
-  "author": {"name": "zxc0zxc0zxc"},
-  "description": "Planning-only backend feature specifications, scale-aware architecture, reliability and agent worktree task plans",
-  "commands": {"plan": {"source": "./.claude/commands/backend/plan.md"}}
+  "version": "0.2.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Backend SDD planning and implementation with agent worktrees, progress tracking and reliability verification",
+  "commands": {
+    "plan": {
+      "source": "./.claude/commands/backend/plan.md"
+    },
+    "build": {
+      "source": "./.claude/commands/backend/build.md"
+    }
+  }
 }

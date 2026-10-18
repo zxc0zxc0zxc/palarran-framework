@@ -112,3 +112,5 @@ UX concepts/revisions, research summaries и screen catalog сохраняютс
 Frontend implementation decisions, source UX/UI mapping и sanitized browser evidence сохраняются в `.ai-development/frontend/`; app code/tests/assets остаются в штатных app directories. Старый PASS не заменяет проверку новой реализации.
 
 Backend plans/specs/contracts, SLA proposals и SDD task packets сохраняются в `.ai-development/backend/` или связанном existing spec layout. Canonical rationale остаётся в ADR; будущие tests/worktrees/rollout не считаются выполненными или разрешёнными наличием плана.
+
+Backend build фиксирует source plan/revision, actual code commits и task/gate evidence в canonical progress.json; выделенный section самого плана — derived view этого ledger. Task code-ready/integrated/verified и operational SLA status разделяются, old PASS переоценивается при affected code/spec changes. Coordinator один обновляет shared plan/progress/index, agent worktree reports интегрируются с сохранением истории.

@@ -3,6 +3,8 @@ import importlib.util
 import json
 from pathlib import Path
 import re
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -15,7 +17,7 @@ SPEC.loader.exec_module(packager)
 class PackagingTest(unittest.TestCase):
     def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
-            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 3), ("backend", 1)]:
+            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 3), ("backend", 2)]:
                 package = packager.build_package(namespace, Path(directory) / namespace).resolve()
                 manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
                 self.assertEqual(manifest["name"], namespace)
@@ -43,11 +45,23 @@ class PackagingTest(unittest.TestCase):
                     self.assertTrue((package / "skills/ui-design/SKILL.md").is_file())
                     self.assertTrue((package / "templates/frontend/browser-review.md").is_file())
                 if namespace == "backend":
-                    self.assertEqual(set(manifest["commands"]), {"plan"})
+                    self.assertEqual(set(manifest["commands"]), {"plan", "build"})
                     self.assertTrue((package / "templates/backend/reliability.md").is_file())
                     self.assertTrue((package / "templates/backend/agent-task.md").is_file())
+                    self.assertTrue((package / "scripts/backend_progress.py").is_file())
+                    self.assertTrue((package / "templates/backend/progress.example.json").is_file())
                     self.assertFalse((package / "scripts/infra_inventory.py").exists())
                     self.assertFalse((package / "docs/ui").exists())
+                    target_plan = Path(directory) / "target-plan.md"
+                    target_plan.write_text((package / "templates/backend/plan.md").read_text())
+                    checked = subprocess.run([
+                        sys.executable, str(package / "scripts/backend_progress.py"),
+                        str(package / "templates/backend/progress.example.json"),
+                        "--plan", str(target_plan),
+                    ], capture_output=True, text=True)
+                    self.assertEqual(checked.returncode, 0, checked.stderr)
+                    self.assertIn("INCOMPLETE", target_plan.read_text())
+                    self.assertIn("Architecture and implementation shape", target_plan.read_text())
                 self.assertFalse(any(path.name in {".terraform", ".env", "node_modules"} for path in package.rglob("*")))
 
     def test_refuses_existing_output_preserving_user_files(self):

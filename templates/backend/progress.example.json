@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "plan_id": "example-feature",
+  "plan_revision": "v001",
+  "source_commit": "0000000",
+  "execution_id": "not-started",
+  "integration_commit": null,
+  "tasks": [
+    {
+      "id": "TASK-01",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched; replace example IDs and source_commit with actual plan context",
+      "checks": [
+        {"id": "T-01", "required": true, "status": "NOT_RUN", "subject_commit": null, "evidence": [], "reason": "Planning only"}
+      ]
+    }
+  ],
+  "gates": [
+    {"id": "INTEGRATED-DOD", "required": true, "status": "NOT_RUN", "subject_commit": null, "evidence": [], "reason": "Integrated feature acceptance not run"},
+    {"id": "SLO-ACCEPTANCE", "required": true, "status": "NOT_RUN", "subject_commit": null, "evidence": [], "reason": "Use source SLI/SLO workload and thresholds"},
+    {"id": "SLA-WINDOW", "required": true, "status": "NOT_RUN", "subject_commit": null, "evidence": [], "reason": "Operational observation pending; applicability must come from source plan"}
+  ]
+}

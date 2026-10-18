@@ -13,6 +13,7 @@ SKILLS = {
     "ui-design": ("ui", "design"),
     "frontend-build": ("frontend", "build"),
     "backend-plan": ("backend", "plan"),
+    "backend-build": ("backend", "build"),
 }
 INFRA_GUIDES = ["README.md", "workflow.md", "security-network.md", "delivery-iac.md",
                 "storage-operations.md", "decisions.md", "plan-template.md", "sources.md"]
@@ -27,6 +28,8 @@ FRONTEND_GUIDES = ["README.md", "source-contract.md", "implementation.md", "resp
 BACKEND_GUIDES = ["README.md", "architecture.md", "foundation-stack.md", "contracts.md", "data.md",
                   "caching.md", "performance.md", "reliability.md", "testing.md", "delivery.md",
                   "sdd-agents.md", "workflow.md", "sources.md"]
+BACKEND_BUILD_GUIDES = ["README.md", "source-progress.md", "worktrees.md", "implementation.md",
+                        "verification.md", "reliability.md", "workflow.md", "sources.md"]
 IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch"}
 
 
@@ -67,8 +70,10 @@ def validate(root=ROOT):
             base, guides = "ui", UI_GUIDES
         elif namespace == "frontend":
             base, guides = "frontend", FRONTEND_GUIDES
-        else:
+        elif command == "plan":
             base, guides = "backend/plan", BACKEND_GUIDES
+        else:
+            base, guides = "backend/build", BACKEND_BUILD_GUIDES
         if namespace == "ci-cd":
             guides += [f"stacks/{stack}.md" for stack in ("go", "php", "typescript-nextjs", "python", "rust")]
         for guide in guides:
