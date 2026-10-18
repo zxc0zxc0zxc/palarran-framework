@@ -12,3 +12,5 @@ Implement only assigned scope, short source copy and responsive states. Reuse ex
 Run linked tests and available lane browser checks, report actual command/environment/viewports/source commit/evidence and PASS/FAIL/NOT_RUN. Mocks separated from real API. Shared browser surface not used concurrently; lane PASS is not integrated browser acceptance.
 
 Return scoped commits/touch set/report/DoD coverage/blockers. Coordinator reviews/integrates sequentially, reruns combined checks, updates canonical ledger and original plan. No protected-main merge/production activation/force dirty cleanup outside scope.
+
+Dispatch status when produced by /frontend:plan: planned/not dispatched. Worktree setup, implementation and commands are future execution tasks, not authorization from this planning artifact alone.

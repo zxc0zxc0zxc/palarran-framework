@@ -83,6 +83,18 @@ claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ui
 
 UI package содержит обязательную UI/UX базу и UX skill как dependency. Slash namespace — `/ui:design`; UX методика доступна внутри пакета, отдельный `/ux:design` подключается UX plugin.
 
+## Frontend feature planning
+
+[`/frontend:plan {фича}`](skills/frontend-plan/SKILL.md) — отдельное планирование по UX/UI и контексту проекта. В Codex — `$frontend-plan {фича}`.
+
+- Фиксирует plan/spec/UX/UI/API revisions, SDD requirements/AC/screens/states и reuse/foundation choices.
+- Описывает API schemas/errors/auth/retry/cancellation/cache и связь с UI states; existing capabilities отделяет от proposals и backend prerequisites.
+- Планирует feature-specific edges, responsive/browser проверки, task/feature DoD и future agent/worktree DAG с ownership/resources/integration gates.
+- Сохраняет решения, spec/plan/contracts/test matrix/task packets и pending progress прямо в source plan для отдельного `/frontend:build`.
+- Не меняет app/dependencies, не запускает application tests/browser/API/image generation/deploy и не создаёт worktrees/implementation agents. Structural validation/sync плановых artifacts разрешены.
+
+[Planning docs](docs/frontend/plan/README.md), [контекст](docs/frontend/plan/source-context.md), [API contracts](docs/frontend/plan/api-contracts.md), [edge cases/DoD](docs/frontend/plan/edge-cases.md), [workflow](docs/frontend/plan/workflow.md).
+
 ## Frontend build
 
 [`/frontend:build {путь/ID плана или scope/пути к UX/UI}`](skills/frontend-build/SKILL.md) реализует наши UX/UI-концепты по SDD-плану в коде целевого приложения. В Codex — `$frontend-build`.
@@ -104,7 +116,7 @@ python3 scripts/package_plugin.py frontend --output artifacts/plugins/frontend
 claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/frontend
 ```
 
-Frontend package v0.2 содержит frontend/UI/UX базу, три skills и shared progress helper/templates; slash namespace — `/frontend:build`, upstream slash namespaces подключаются отдельными plugins. Для пересборки выбрать новый output, например `artifacts/plugins/frontend-v0.2`. Это набор инструкций для реализации, не приложение ai-tools.
+Frontend package v0.3 содержит frontend/UI/UX базу, четыре skills и shared progress helper/templates; команды — `/frontend:plan` и `/frontend:build`, upstream slash namespaces подключаются отдельными plugins. Для пересборки выбрать новый output, например `artifacts/plugins/frontend-v0.3`. Это набор инструкций для реализации, не приложение ai-tools.
 
 ## Backend feature planning
 
@@ -144,7 +156,7 @@ Backend package v0.2 содержит backend-plan/backend-build, оба slash a
 
 До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
 
-Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех десяти и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
+Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех одиннадцати и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
 
 ## Подключение из другого проекта
 

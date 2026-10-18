@@ -24,3 +24,5 @@
 ```
 
 App code/tests/assets остаются в штатных app directories. Старые runs/revisions/evidence сохранять; UI/UX catalogs связать с реализацией, не менять source approval. При resume начать с plan/UX/UI revisions, ledger/Git/current HEAD/evidence и affected checks, продолжить незавершённое. [Handoff](../../templates/frontend/handoff.md) — конкретные delivered/remaining TASK IDs, DoD и actual browser coverage.
+
+Отдельный `/frontend:plan` следует [planning-only workflow](plan/workflow.md) и заканчивается на spec/handoff/pending progress. Этот execution workflow запускается только для build scope, наличие plan само по себе не разрешает dispatch/app changes.

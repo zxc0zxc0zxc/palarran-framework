@@ -12,6 +12,7 @@ SKILLS = {
     "ux-design": ("ux", "design"),
     "ui-design": ("ui", "design"),
     "frontend-build": ("frontend", "build"),
+    "frontend-plan": ("frontend", "plan"),
     "backend-plan": ("backend", "plan"),
     "backend-build": ("backend", "build"),
 }
@@ -26,6 +27,8 @@ UI_GUIDES = ["README.md", "design-codes.md", "references.md", "ux-binding.md", "
 FRONTEND_GUIDES = ["README.md", "source-contract.md", "implementation.md", "responsive.md",
                    "browser-verification.md", "quality.md", "workflow.md", "sources.md",
                    "sdd-agents.md", "progress.md"]
+FRONTEND_PLAN_GUIDES = ["README.md", "source-context.md", "api-contracts.md", "edge-cases.md",
+                        "workflow.md", "sources.md"]
 BACKEND_GUIDES = ["README.md", "architecture.md", "foundation-stack.md", "contracts.md", "data.md",
                   "caching.md", "performance.md", "reliability.md", "testing.md", "delivery.md",
                   "sdd-agents.md", "workflow.md", "sources.md"]
@@ -70,7 +73,10 @@ def validate(root=ROOT):
         elif namespace == "ui":
             base, guides = "ui", UI_GUIDES
         elif namespace == "frontend":
-            base, guides = "frontend", FRONTEND_GUIDES
+            if command == "plan":
+                base, guides = "frontend/plan", FRONTEND_PLAN_GUIDES
+            else:
+                base, guides = "frontend", FRONTEND_GUIDES
         elif command == "plan":
             base, guides = "backend/plan", BACKEND_GUIDES
         else:

@@ -17,7 +17,7 @@ SPEC.loader.exec_module(packager)
 class PackagingTest(unittest.TestCase):
     def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
-            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 3), ("backend", 2)]:
+            for namespace, expected in [("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
                 package = packager.build_package(namespace, Path(directory) / namespace).resolve()
                 manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
                 self.assertEqual(manifest["name"], namespace)
@@ -42,6 +42,10 @@ class PackagingTest(unittest.TestCase):
                     self.assertEqual(tokens["schema_version"], 1)
                     self.assertTrue((package / "skills/ux-design/SKILL.md").is_file())
                 if namespace == "frontend":
+                    self.assertEqual(set(manifest["commands"]), {"plan", "build"})
+                    self.assertTrue((package / "skills/frontend-plan/SKILL.md").is_file())
+                    for resource in ["spec.md", "api-contract.md", "test-matrix.md", "planning-handoff.md"]:
+                        self.assertTrue((package / "templates/frontend" / resource).is_file())
                     self.assertTrue((package / "skills/ui-design/SKILL.md").is_file())
                     self.assertTrue((package / "templates/frontend/browser-review.md").is_file())
                     self.assertFalse((package / "docs/backend").exists())

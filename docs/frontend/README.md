@@ -34,3 +34,7 @@
 [Прогресс прямо в source plan](progress.md) показывает plan ID/revision, обе UX/UI versions, code/integration commits, выполненные/remaining TASK IDs, check evidence и blockers. `implemented` не равно `verified`. Canonical ledger и [shared protocol](../skills/execution-progress.md) переиспользуют backend механизм, frontend gates остаются browser/responsive/visual/flow-specific.
 
 Templates: [execution plan](../../templates/frontend/plan.md), [progress](../../templates/frontend/progress.example.json), [agent packet](../../templates/frontend/agent-task.md). Наличие полного execution plan не отменяет требования фактической browser проверки.
+
+## Отдельное планирование
+
+[`/frontend:plan {фича}`](plan/README.md) создаёт SDD spec/API contracts/edge test matrix/DoD/future task packets и pending progress по UX/UI/context, затем **останавливается до реализации**. `/frontend:build` принимает этот plan; если пользователь сразу запросил build без готового плана, compact inline planning внутри build сохраняется. Planning-only и execution scope не смешиваются.

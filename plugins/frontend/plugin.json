@@ -1,13 +1,16 @@
 {
   "name": "frontend",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": {
     "name": "zxc0zxc0zxc"
   },
-  "description": "Responsive frontend implementation from UX/UI and SDD plans with agent worktrees, integrated browser DoD and source-plan progress",
+  "description": "Frontend SDD planning and responsive implementation with UX/UI API contracts, worktree tasks, browser DoD and plan progress",
   "commands": {
     "build": {
       "source": "./.claude/commands/frontend/build.md"
+    },
+    "plan": {
+      "source": "./.claude/commands/frontend/plan.md"
     }
   }
 }

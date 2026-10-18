@@ -30,3 +30,6 @@
 | repository/2026-10-18-frontend-sdd/0001 | accepted | Frontend / SDD и worktree lanes | [Объяснение](repository/2026-10-18-frontend-sdd/decisions/0001-sdd-worktrees.md); пересмотр по target run |
 | repository/2026-10-18-frontend-sdd/0002 | accepted | Shared execution progress / compatibility | [Объяснение](repository/2026-10-18-frontend-sdd/decisions/0002-shared-progress.md); пересмотр по regression |
 | repository/2026-10-18-frontend-sdd/0003 | accepted | Frontend / Integrated browser DoD и package | [Объяснение](repository/2026-10-18-frontend-sdd/decisions/0003-dod-packaging.md); пересмотр по target run |
+| repository/2026-10-18-frontend-plan/0001 | accepted | Frontend / Standalone planning scope | [Объяснение](repository/2026-10-18-frontend-plan/decisions/0001-planning-boundary.md); пересмотр по target use |
+| repository/2026-10-18-frontend-plan/0002 | accepted | Frontend / Contracts, edges и pending progress | [Объяснение](repository/2026-10-18-frontend-plan/decisions/0002-contracts-edge-progress.md); пересмотр по source/API changes |
+| repository/2026-10-18-frontend-plan/0003 | accepted | Frontend / Plan-build namespace | [Объяснение](repository/2026-10-18-frontend-plan/decisions/0003-namespace-validation.md); пересмотр по target use |

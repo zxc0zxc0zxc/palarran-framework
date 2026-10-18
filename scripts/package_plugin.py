@@ -16,7 +16,7 @@ PACKAGES = {
     },
     "frontend": {
         "manifest": "plugins/frontend/plugin.json",
-        "skills": ["frontend-build", "ui-design", "ux-design"],
+        "skills": ["frontend-plan", "frontend-build", "ui-design", "ux-design"],
         "docs": ["docs/skills", "docs/ux", "docs/ui", "docs/frontend"],
     },
     "ui": {
@@ -86,7 +86,9 @@ def build_package(namespace, output, root=ROOT):
             "templates/frontend/coverage.md", "templates/frontend/browser-review.md",
             "templates/frontend/handoff.md", "templates/frontend/plan.md",
             "templates/frontend/agent-task.md", "templates/frontend/progress.example.json",
-            "scripts/execution_progress.py",
+            "scripts/execution_progress.py", "templates/frontend/spec.md",
+            "templates/frontend/api-contract.md", "templates/frontend/test-matrix.md",
+            "templates/frontend/planning-handoff.md",
         ]
     if namespace == "backend":
         resources = [

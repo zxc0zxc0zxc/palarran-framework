@@ -4,7 +4,7 @@ SDD здесь: requirements/acceptance → contracts/design → tasks → code/
 
 ## План до изменения приложения
 
-Есть конкретный SDD plan — использовать его ID/revision/согласованный scope. Если готового плана нет, в `/frontend:build` **сначала** подготовить компактный frontend spec/plan из уже существующих UX/UI, затем реализовать: отдельный `/frontend:plan` не вводится. Рутинные technical choices внутри requested build не требуют нового approval; critical business/design gaps уточнить, не редизайнить молча. Missing UX/UI остаётся зависимым blocker.
+Есть конкретный SDD plan — использовать его ID/revision/согласованный scope. Если готового плана нет, в `/frontend:build` **сначала** подготовить компактный frontend spec/plan из уже существующих UX/UI, затем реализовать: отдельный [planning-only `/frontend:plan`](plan/README.md) также может подготовить этот source plan и завершает работу до реализации. Рутинные technical choices внутри requested build не требуют нового approval; critical business/design gaps уточнить, не редизайнить молча. Missing UX/UI остаётся зависимым blocker.
 
 [Шаблон плана](../../templates/frontend/plan.md): source plan/spec/UX/UI/API revisions, R/AC IDs, screen/state/block IDs, invariant (например, доступность primary action/role isolation), contract C-ID, TASK/T IDs, full coverage, component/route/state/asset boundaries, test strategy, DAG и DoD. Подготовить полный inventory и [pending progress](progress.md) до dispatch. Existing `specs/`/constitution convention сохранить, canonical rationale — в target memory.
 
