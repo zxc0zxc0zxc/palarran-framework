@@ -24,11 +24,11 @@ python3 -m orchestrator work --state /path/to/private-state --run RUN_ID
 python3 -m orchestrator status --state /path/to/private-state --run RUN_ID
 ```
 
-Idea file UTF-8, непустой, <=32KiB; без credentials/customer PII. CLI не вызывает модель при create. Explicit adapter codex/claude и installed executable, авторизация вне workflow. Default environment PATH/HOME означает доступ к configured CLI auth/config; это trusted workflow, не sandbox. `--run-seconds` default 7200, `--task-seconds` 900, `--max-attempts` 2; existing runtime maxima действуют. Ожидание clarification расходует wall deadline, attempts не обнуляются. Paid research/API calls не разрешаются автоматически; dollar cap runtime не гарантирует.
+Idea file regular non-symlink UTF-8, непустой, <=32KiB; без credentials/customer PII. CLI не вызывает модель при create. Explicit adapter codex/claude и installed executable, авторизация вне workflow. Default environment PATH/HOME означает доступ к configured CLI auth/config; это trusted workflow, не sandbox. `--run-seconds` default 7200, `--task-seconds` 900, `--max-attempts` 2; existing runtime maxima действуют. Ожидание clarification расходует wall deadline, attempts не обнуляются. Paid research/API calls не разрешаются автоматически; dollar cap runtime не гарантирует.
 
 Source bundle из пяти SKILL.md, docs/product, shared memory guide и templates/product хешируется. Нет обязательного файла, source symlink/изменение bundle, старые dependency hashes, application edits или altered Git HEAD → verifier failure. Параллельно редактировать skills root во время run нельзя; для стабильного запуска использовать отдельный pinned checkout. Источник runtime verifier — trusted local code.
 
-`product-create` создаёт pipeline UUID/context и owned run worktree. Context записывается до pending run admission через initializer; ошибка оставляет рабочие файлы для диагностики, без выполнения model task. Исходный target checkout не меняется. Results живут в worktree:
+`product-create` создаёт pipeline UUID/context и owned run worktree. Context записывается до pending run admission через initializer; ошибка оставляет рабочие файлы для диагностики, без выполнения model task. Исходный target checkout не меняется. Status/export включает product.pipeline_id, mvp_plan path и после successful gates recommendation; market_validated=false. Results живут в worktree:
 
 ```text
 .ai-development/product/pipeline-<pipeline_id>/
@@ -48,8 +48,10 @@ Source bundle из пяти SKILL.md, docs/product, shared memory guide и templ
 
 ## Финальное решение
 
-MVP report включает target/ICP/JTBD, competitor wedge, value proposition/model, scope/non-goals, requirements/AC/priorities, metric/validation plan, economics/channel assumptions, risks/open questions и UX/engineering planning handoff. Каждая requirement и experiment имеет E/ADR refs. Все inherited unknowns перечислить в final disposition: resolved с evidence/ADR либо unresolved. Нельзя тихо потерять неудобную цифру/источник.
+[MVP template](../../templates/product/pipeline-mvp.md) задаёт структуру narrative, artifact schema остаётся в contract. MVP report включает target/ICP/JTBD, competitor wedge, value proposition/model, scope/non-goals, requirements/AC/priorities, metric/validation plan, economics/channel assumptions, risks/open questions и UX/engineering planning handoff. Каждая requirement и experiment имеет E/ADR refs. Все inherited unknowns перечислить в final disposition: resolved с evidence/ADR либо unresolved. Нельзя тихо потерять неудобную цифру/источник.
 
 `plan` — обоснованная рекомендация следующего planning scope, без критичных unresolved; `validate` — сначала рыночный тест; `pivot`/`stop` — аргументированная смена/остановка. Любой verdict завершает bounded pipeline и может быть artifact-verified. `market_validated=false` всегда: план не выполняет исследования пользователей/оплату/рекламные эксперименты сам. Critical ambiguity о бизнесе/полномочиях → needs_input/question.md; ответ через existing resolve с сохранённой причиной.
 
 Machine gates проверяют структуру/целостность/traceability и allowed changes, а не правдивость источников, достаточность выборки, качество стратегии или реальную готовность рынка. Перед engineering start нужен содержательный review report/primary refs/решений. Runtime не запускает UX/build/ads/deploy автоматически.
+
+Fingerprint включает product artifacts/decision INDEX даже при target gitignore для .ai-development; статус станет stale после изменения таких deliverables. Остальные ignored cache/runtime paths остаются вне identity.

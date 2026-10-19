@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import sys
 import sqlite3
+import os
+import stat
 
 from .engine import _store, create, status, work
 
@@ -38,9 +40,14 @@ def main(argv=None):
     try:
         if args.command == 'product-create':
             from .product_pipeline import create_product
-            if args.idea_file.stat().st_size > 32768:
+            fd = os.open(str(args.idea_file), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+            with os.fdopen(fd, 'rb') as stream:
+                if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                    raise ValueError('Regular idea file required')
+                data = stream.read(32769)
+            if len(data) > 32768:
                 raise ValueError('Idea exceeds byte budget')
-            idea = args.idea_file.read_text(encoding='utf-8')
+            idea = data.decode('utf-8')
             run = create_product(args.state, idea, args.target, args.skills_root, args.adapter, args.agent, limits=dict(run_seconds=args.run_seconds, task_seconds=args.task_seconds, max_attempts=args.max_attempts))
             print(json.dumps({'run_id': run})); return 0
         if args.command == 'create':

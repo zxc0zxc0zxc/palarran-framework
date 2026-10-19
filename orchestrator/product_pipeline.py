@@ -47,6 +47,8 @@ def build(idea, skills_root, adapter, executable, *, python=None, limits=None, e
     environment = ['PATH', 'HOME'] if env is None else copy.deepcopy(env)
     tasks = []
     verifier = skills_root / 'orchestrator' / 'product_artifacts.py'
+    if not verifier.is_file() or any(part.is_symlink() for part in (verifier, verifier.parent)):
+        raise ValueError('Trusted runtime verifier missing from skills checkout')
     for position, stage in enumerate(STAGES):
         skill = skills_root / 'skills' / SKILL_FOR_STAGE[stage] / 'SKILL.md'
         marker = dict(pipeline_id=pipeline_id, stage=stage, context_sha256=context_sha)
@@ -60,6 +62,7 @@ def build(idea, skills_root, adapter, executable, *, python=None, limits=None, e
             'Immutable context: ' + relative + '/context.json, canonical SHA-256 ' + context_sha + '.',
             'Read ALL preceding stage.json, report.md, evidence and referenced ADRs: ' + json.dumps(list(STAGES[:position])) + '. Each lives under ' + relative + '/stages/<stage>/. Preserve source IDs and original classifications; no rebranding guesses into facts.',
             TASK_GUIDANCE[stage],
+            'For final synthesis use the narrative template ' + str(skills_root / 'templates/product/pipeline-mvp.md') + '; other stages use their own profile template.',
             'Write a concise Russian report at ' + relative + '/stages/' + stage + '/report.md and the strict stage.json envelope beside it. Include full typed evidence records, claims, unknowns and at least one meaningful proposed/accepted canonical ADR under ' + relative + '/decisions/. Use distinct stage-prefixed IDs and pin exact source/report/ADR/input digests. The inputs map must include every preceding stage canonical manifest hash.',
             'Read canonical_sha/source_digest helpers if needed; do not approximate the serialization. The verifier is independent trusted code and must not be edited. Stage-level completion does not validate market demand or source truth.',
             'Update target general INDEX with decision IDs/links and product INDEX with this pipeline ID and exact report revisions. Keep previously verified stage files/ADRs immutable. Before replacing any unfinished draft on a resumed attempt preserve it under this stage history/; never erase accepted decision history.',

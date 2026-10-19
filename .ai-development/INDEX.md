@@ -51,3 +51,4 @@
 | backend/2026-10-19-product-pipeline/0004 | accepted | Product pipeline / Research verification и готовность MVP-плана — разные verdicts | [record](backend/2026-10-19-product-pipeline/decisions/0004-readiness.md); пересмотр v002 |
 | backend/2026-10-19-product-pipeline/0005 | accepted | Product pipeline / SDD lanes: artifact verifier в agent worktree, coordinator builder/CLI/integration/tests | [record](backend/2026-10-19-product-pipeline/decisions/0005-delivery.md); пересмотр v002 |
 | backend/2026-10-19-product-pipeline/0006 | accepted | Private stable verifier receipts | [record](backend/2026-10-19-product-pipeline/decisions/0006-stable-receipts.md); пересмотр typed storage |
+| backend/2026-10-19-product-pipeline/0007 | accepted | Bounded idea input / ignored memory fingerprint | [record](backend/2026-10-19-product-pipeline/decisions/0007-boundaries.md); пересмотр integrity scope |

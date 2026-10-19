@@ -104,6 +104,9 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(work(self.state, run), 'verified')
             report = status(self.state, run)
             self.assertEqual(report['status'], 'verified')
+            self.assertEqual(report['product']['recommendation'], 'plan')
+            self.assertTrue(Path(report['product']['mvp_plan']).is_file())
+            self.assertFalse(report['product']['market_validated'])
             self.assertEqual(len(report['tasks']), 7)
             final = validate_stage(report['workspace'], meta['pipeline_id'], 'mvp', meta['context_sha256'], ROOT)
             self.assertEqual(final['verdict']['recommendation'], 'plan')
@@ -138,6 +141,26 @@ class PipelineTests(unittest.TestCase):
         report = status(self.state, run)
         self.assertEqual(report['tasks'][-1]['id'], '__final__')
         self.assertEqual(report['tasks'][-1]['status'], 'failed')
+
+    def test_ignored_product_reports_still_invalidate_verified_status(self):
+        (self.target / '.gitignore').write_text('.ai-development/\n')
+        self.git('add', '.gitignore'); self.git('commit', '-qm', 'Private memory policy')
+        run, meta = self.new()
+        self.assertEqual(work(self.state, run), 'verified')
+        report = status(self.state, run)
+        (pipeline_dir(report['workspace'], meta['pipeline_id']) / 'stages/mvp/report.md').write_text('corrupted')
+        self.assertEqual(status(self.state, run)['status'], 'stale')
+
+    def test_fifo_and_symlink_idea_rejected_without_hang(self):
+        import os
+        fifo = self.base / 'idea-fifo'; os.mkfifo(fifo)
+        regular = self.base / 'idea.md'; regular.write_text('Idea')
+        link = self.base / 'idea-link'; link.symlink_to(regular)
+        for file in (fifo, link):
+            result = subprocess.run([PYTHON, '-m', 'orchestrator', 'product-create', '--state', str(self.state), '--target', str(self.target), '--idea-file', str(file), '--adapter', 'codex', '--agent', self.executable(), '--skills-root', str(ROOT)], cwd=ROOT, capture_output=True, text=True, timeout=3)
+            self.assertEqual(result.returncode, 2)
+            self.assertNotIn('Traceback', result.stderr)
+            self.assertFalse(self.state.exists())
 
     def test_product_cli_creates_real_pending_run(self):
         idea = self.base / 'idea.md'; idea.write_text('Synthetic idea')

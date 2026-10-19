@@ -52,6 +52,22 @@ def status(state, run_id):
             current = None
         if current != record['fingerprint']:
             report['status'], report['reason'] = 'stale', 'workspace_changed_after_verification'
+    if json.loads(record['workflow']).get('name') == 'product-pipeline':
+        try:
+            from .product_artifacts import load_json, pipeline_dir
+            flow = json.loads(record['workflow'])
+            marker = flow['tasks'][0]['prompt'].splitlines()[0]
+            if not marker.startswith('PRODUCT_PIPELINE_TASK '):
+                raise ValueError('Unknown product workflow')
+            meta = json.loads(marker.split(' ', 1)[1])
+            base = pipeline_dir(record['workspace'], meta['pipeline_id'])
+            report['product'] = dict(pipeline_id=meta['pipeline_id'], mvp_plan=str(base / 'stages/mvp/report.md'))
+            if report['status'] == 'verified':
+                relative = (base / 'stages/mvp/stage.json').relative_to(Path(record['workspace'])).as_posix()
+                manifest = load_json(record['workspace'], relative)
+                report['product'].update(recommendation=manifest['verdict']['recommendation'], market_validated=False)
+        except (ValueError, OSError, KeyError, IndexError, TypeError):
+            report.pop('product', None)
     return report
 
 
@@ -94,11 +110,11 @@ def work(state, run_id):
                     completed = {row['id']: row for row in store.tasks(run_id)}
                     for source in flow['tasks']:
                         observed = json.loads(completed[source['id']]['result'] or '[]')
-                        if source['verify_stable'] and len(observed) != len(source['verify']) + 1:
+                        if source.get('verify_stable', False) and len(observed) != len(source['verify']) + 1:
                             raise ValueError('Missing stable receipts')
                         for check_index, argv in enumerate(source['verify']):
                             commands.append((argv, ''))
-                            stable_receipts.append(observed[check_index + 1]['output_sha256'] if source['verify_stable'] else None)
+                            stable_receipts.append(observed[check_index + 1]['output_sha256'] if source.get('verify_stable', False) else None)
                 else:
                     task = next(t for t in flow['tasks'] if t['id'] == task_id)
                     argv, prompt = invocation(task, workspace)

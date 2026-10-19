@@ -35,7 +35,7 @@ BACKEND_GUIDES = ["README.md", "architecture.md", "foundation-stack.md", "contra
                   "sdd-agents.md", "workflow.md", "sources.md"]
 BACKEND_BUILD_GUIDES = ["README.md", "source-progress.md", "worktrees.md", "implementation.md",
                         "verification.md", "reliability.md", "workflow.md", "sources.md"]
-PRODUCT_GUIDES = ["README.md", "evidence.md", "workflow.md", "data-sources.md", "sources.md", "cases/README.md"]
+PRODUCT_GUIDES = ["README.md", "evidence.md", "workflow.md", "data-sources.md", "sources.md", "cases/README.md", "pipeline.md", "pipeline-contract.md"]
 PRODUCT_CASES = {'define': 'product-discovery.md', 'market': 'market-validation.md', 'compare': 'competitive-positioning.md', 'revenue': 'revenue-economics.md', 'acquisition': 'acquisition-growth.md'}
 IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch"}
 

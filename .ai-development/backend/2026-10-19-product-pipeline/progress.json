@@ -1,20 +1,22 @@
 {
   "schema_version": 1,
   "plan_id": "product-pipeline",
-  "plan_revision": "v001",
+  "plan_revision": "v002",
   "source_commit": "ac6ffc0",
   "execution_id": "product-pipeline-v001",
-  "integration_commit": null,
+  "integration_commit": "244336f",
   "tasks": [
     {
       "id": "ARTIFACTS",
-      "plan_revision": "v001",
+      "plan_revision": "v002",
       "owner": "agent-product-artifacts",
-      "status": "in_progress",
+      "status": "integrated",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
-      "reason": "Contract frozen; owned lane implementation ready for integration",
+      "code_commits": [
+        "244336f"
+      ],
+      "integration_commit": "244336f",
+      "reason": "Integrated; final acceptance pending",
       "checks": [
         {
           "id": "T-ARTIFACTS",
@@ -28,13 +30,15 @@
     },
     {
       "id": "BUILDER",
-      "plan_revision": "v001",
+      "plan_revision": "v002",
       "owner": "coordinator",
-      "status": "in_progress",
+      "status": "integrated",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
-      "reason": "Contract frozen; owned lane implementation ready for integration",
+      "code_commits": [
+        "0c50c6d"
+      ],
+      "integration_commit": "244336f",
+      "reason": "Integrated; final acceptance pending",
       "checks": [
         {
           "id": "T-BUILDER",
@@ -48,16 +52,16 @@
     },
     {
       "id": "ACCEPT",
-      "plan_revision": "v001",
+      "plan_revision": "v002",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "in_progress",
       "depends_on": [
         "ARTIFACTS",
         "BUILDER"
       ],
       "code_commits": [],
       "integration_commit": null,
-      "reason": "Not dispatched",
+      "reason": "Regression and complete integrated checks in progress",
       "checks": [
         {
           "id": "T-ACCEPT",

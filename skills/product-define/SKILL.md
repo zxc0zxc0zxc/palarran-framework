@@ -30,3 +30,7 @@ Scope — read-only public research, уже разрешённые источн�
 До зависимых решений записывай concise rationale/evidence/alternatives/consequences в target `.ai-development/product/<task>/decisions/`, обновляй общий INDEX, reuses/supersedes/history. Results в `revisions/vNNN/` с exact source refs; product INDEX каталогизирует reports, не дублирует ADR. Не перезаписывай чужой existing task/историю; при смене source отметь downstream refs needing review.
 
 Проверь профильный DoD. Report status draft/research_complete/needs_input/blocked; experiments not_run до actual evidence. Research complete не PMF/market validated/build-ready. Итог краткий: вывод, основание, unknown/blocker, следующий дешёвый falsifying test и ссылки на report/ledger/ADR/handoff. Никакого автоматического перехода к execution.
+
+## Явный runtime pipeline
+
+Если задача явно выдана как product pipeline stage, дополнительно прочитай [pipeline](../../docs/product/pipeline.md) и [artifact contract](../../docs/product/pipeline-contract.md). Выполни только назначенный stage, прочитай pinned cumulative context/reports/E-IDs/ADR и сохрани typed manifest + report; upstream artifacts не переписывай. `mvp` — synthesis mode product-define с [MVP template](../../templates/product/pipeline-mvp.md), не шестой skill. Runtime handoff implemented разрешает только independent checks, не подтверждает рынок. Standalone invocation не запускает pipeline автоматически.

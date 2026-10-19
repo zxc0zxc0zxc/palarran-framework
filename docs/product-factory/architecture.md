@@ -33,6 +33,6 @@ PostgreSQL/отдельный scheduler нужны при multi-host workers, HA
 
 ## Проверка и масштабирование
 
-Каждая задача имеет independent verifier argv. Финальная проверка повторяет все gates на общем конечном worktree. Сохраняются exit/timeout/output digest, Git HEAD и hash tracked+untracked content (без ignored файлов). Статус становится stale после изменения subject. Это laboratory code acceptance, не deploy и не market validation. Verifiers являются доверенной частью спецификации; произвольная команда `true` качества не доказывает.
+Каждая задача имеет independent verifier argv. Финальная проверка повторяет все gates на общем конечном worktree. Сохраняются exit/timeout/output digest, Git HEAD и hash tracked+untracked content (ignored files исключены, кроме product memory и общего decision INDEX). Статус становится stale после изменения subject. Это laboratory code acceptance, не deploy и не market validation. Verifiers являются доверенной частью спецификации; произвольная команда `true` качества не доказывает.
 
 Следующие этапы: task worktree integration queue → multi-host PG/leases → typed research/opportunity contracts → evidence-driven product loop → разрешённый GitOps delivery/observation. Каждый этап с отдельными DoD, budget и stop conditions, без автоматического production доступа.

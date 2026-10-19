@@ -110,6 +110,7 @@ def build_package(namespace, output, root=ROOT):
             "templates/ai-development/decision.md", "templates/product/brief.md",
             "templates/product/research.md", "templates/product/competitors.md",
             "templates/product/economics.md", "templates/product/channels.md",
+            "templates/product/pipeline-mvp.md",
         ]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():

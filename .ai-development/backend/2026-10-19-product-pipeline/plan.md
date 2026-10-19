@@ -1,4 +1,6 @@
-# Product pipeline plan v001
+# Product pipeline plan v002
+
+Revision v002 adds stable receipt invariant (ADR 0006) and bounded-input/ignored-memory guards (ADR 0007) before final acceptance; v001 baseline ac6ffc0 retained in Git. Artifact schema/product release remain v1/product-v001.
 
 [Spec/contract](../../../docs/product/pipeline-contract.md), [workflow](../../../docs/product/pipeline.md). Existing Python3.9/SQLite/CLI stack. No migration required, generic workflow schema stays v1.
 
@@ -20,15 +22,15 @@ Invariants: no completion without final independent gates; no orphan source/deci
 
 <!-- backend-progress:start -->
 
-Plan: product-pipeline / v001; execution: product-pipeline-v001.
-Integration commit: -. Status: **INCOMPLETE**.
-Implemented 0/3; integrated 0/3; verified 0/3.
+Plan: product-pipeline / v002; execution: product-pipeline-v001.
+Integration commit: 244336f. Status: **INCOMPLETE**.
+Implemented 2/3; integrated 2/3; verified 0/3.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] ARTIFACTS | in_progress | agent-product-artifacts | - | Contract frozen; owned lane implementation ready for integration |
-| [ ] BUILDER | in_progress | coordinator | - | Contract frozen; owned lane implementation ready for integration |
-| [ ] ACCEPT | pending | coordinator | - | Not dispatched |
+| [ ] ARTIFACTS | integrated | agent-product-artifacts | 244336f | Integrated; final acceptance pending |
+| [ ] BUILDER | integrated | coordinator | 244336f | Integrated; final acceptance pending |
+| [ ] ACCEPT | in_progress | coordinator | - | Regression and complete integrated checks in progress |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |
 |---|---|---|---|---|

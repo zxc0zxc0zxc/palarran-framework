@@ -31,7 +31,7 @@ def prepare(state, target, run_id):
 
 
 def fingerprint(path):
-    """HEAD + tracked/untracked non-ignored bytes; never dereference symlinks."""
+    """HEAD + tracked/untracked bytes and ignored product memory; no symlink traversal."""
     path = Path(path)
     digest = hashlib.sha256()
     def frame(value):
@@ -39,6 +39,7 @@ def fingerprint(path):
         digest.update(value)
     frame(git(path, 'rev-parse', 'HEAD'))
     files = set(git(path, 'ls-files', '-z', '--cached', '--others', '--exclude-standard').split(b'\x00')) - {b''}
+    files.update(set(git(path, 'ls-files', '-z', '--others', '--ignored', '--exclude-standard', '--', '.ai-development/product', '.ai-development/INDEX.md').split(b'\x00')) - {b''})
     if len(files) > 10000:
         raise ValueError('Fingerprint file budget exceeded')
     total = 0
