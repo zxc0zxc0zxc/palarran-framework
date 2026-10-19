@@ -4,75 +4,125 @@
   "plan_revision": "v001",
   "source_commit": "bfa24dd",
   "execution_id": "model-budgets-v001",
-  "integration_commit": null,
+  "integration_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
   "tasks": [
     {
       "id": "POLICY",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "in_progress",
+      "status": "verified",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
+      "code_commits": [
+        "a71e24b"
+      ],
+      "integration_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
       "reason": "",
-      "checks": []
+      "checks": [
+        {
+          "id": "T-POLICY",
+          "required": true,
+          "status": "PASS",
+          "subject_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
+          "evidence": [
+            ".ai-development/backend/2026-10-19-model-budgets/verification.md"
+          ]
+        }
+      ]
     },
     {
       "id": "ADAPTER",
       "plan_revision": "v001",
       "owner": "agent-runner",
-      "status": "integrated",
+      "status": "verified",
       "depends_on": [],
       "code_commits": [
         "ac11d9e"
       ],
-      "integration_commit": "ac11d9e",
+      "integration_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
       "reason": "",
-      "checks": []
+      "checks": [
+        {
+          "id": "T-ADAPTER",
+          "required": true,
+          "status": "PASS",
+          "subject_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
+          "evidence": [
+            ".ai-development/backend/2026-10-19-model-budgets/verification.md"
+          ]
+        }
+      ]
     },
     {
       "id": "CORE",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "in_progress",
+      "status": "verified",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
+      "code_commits": [
+        "a71e24b"
+      ],
+      "integration_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
       "reason": "",
-      "checks": []
+      "checks": [
+        {
+          "id": "T-CORE",
+          "required": true,
+          "status": "PASS",
+          "subject_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
+          "evidence": [
+            ".ai-development/backend/2026-10-19-model-budgets/verification.md"
+          ]
+        }
+      ]
     },
     {
       "id": "ACCEPT",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "verified",
       "depends_on": [
         "POLICY",
         "ADAPTER",
         "CORE"
       ],
-      "code_commits": [],
-      "integration_commit": null,
+      "code_commits": [
+        "a71e24b"
+      ],
+      "integration_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
       "reason": "",
-      "checks": []
+      "checks": [
+        {
+          "id": "T-ACCEPT",
+          "required": true,
+          "status": "PASS",
+          "subject_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
+          "evidence": [
+            ".ai-development/backend/2026-10-19-model-budgets/verification.md"
+          ]
+        }
+      ]
     }
   ],
   "gates": [
     {
       "id": "INTEGRATED-DOD",
       "required": true,
-      "status": "NOT_RUN",
-      "subject_commit": null,
-      "evidence": [],
-      "reason": "Execution pending"
+      "status": "PASS",
+      "subject_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
+      "evidence": [
+        ".ai-development/backend/2026-10-19-model-budgets/verification.md"
+      ],
+      "reason": ""
     },
     {
       "id": "LAB-SLO",
       "required": true,
-      "status": "NOT_RUN",
-      "subject_commit": null,
-      "evidence": [],
-      "reason": "Execution pending"
+      "status": "PASS",
+      "subject_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
+      "evidence": [
+        ".ai-development/backend/2026-10-19-model-budgets/verification.md"
+      ],
+      "reason": ""
     }
   ]
 }

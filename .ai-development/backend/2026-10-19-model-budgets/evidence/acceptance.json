@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "subject_commit": "a71e24bc6db19a962e6e0a7117596006a9c930ca",
+  "samples": 100,
+  "control_plane_p95_ms": 1.04,
+  "threshold_ms": 100,
+  "smoke_seconds": 0.394,
+  "smoke": "PASS",
+  "control_plane": "PASS",
+  "live_providers": "NOT_RUN",
+  "operational_sla": "NOT_RUN"
+}

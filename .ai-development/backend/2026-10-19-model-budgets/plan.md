@@ -15,20 +15,20 @@ DoD: all R edge tests, full offline suite, validator, real disposable runtime ac
 <!-- backend-progress:start -->
 
 Plan: model-budgets / v001; execution: model-budgets-v001.
-Integration commit: -. Status: **INCOMPLETE**.
-Implemented 1/4; integrated 1/4; verified 0/4.
+Integration commit: a71e24bc6db19a962e6e0a7117596006a9c930ca. Status: **VERIFIED**.
+Implemented 4/4; integrated 4/4; verified 4/4.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] POLICY | in_progress | coordinator | - | - |
-| [ ] ADAPTER | integrated | agent-runner | ac11d9e | - |
-| [ ] CORE | in_progress | coordinator | - | - |
-| [ ] ACCEPT | pending | coordinator | - | - |
+| [x] POLICY | verified | coordinator | a71e24bc6db19a962e6e0a7117596006a9c930ca | - |
+| [x] ADAPTER | verified | agent-runner | a71e24bc6db19a962e6e0a7117596006a9c930ca | - |
+| [x] CORE | verified | coordinator | a71e24bc6db19a962e6e0a7117596006a9c930ca | - |
+| [x] ACCEPT | verified | coordinator | a71e24bc6db19a962e6e0a7117596006a9c930ca | - |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |
 |---|---|---|---|---|
-| INTEGRATED-DOD | True | NOT_RUN | - | Execution pending |
-| LAB-SLO | True | NOT_RUN | - | Execution pending |
+| INTEGRATED-DOD | True | PASS | a71e24bc6db19a962e6e0a7117596006a9c930ca | .ai-development/backend/2026-10-19-model-budgets/verification.md |
+| LAB-SLO | True | PASS | a71e24bc6db19a962e6e0a7117596006a9c930ca | .ai-development/backend/2026-10-19-model-budgets/verification.md |
 
 Structural validation is not proof of test execution, Git ancestry or operational SLA.
 
