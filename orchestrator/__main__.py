@@ -4,6 +4,7 @@ from contextlib import closing
 import json
 from pathlib import Path
 import sys
+import sqlite3
 
 from .engine import _store, create, status, work
 
@@ -47,7 +48,7 @@ def main(argv=None):
         if args.command == 'work':
             return 0 if report['status'] == 'verified' else 2
         return 0
-    except (ValueError, OSError, KeyError, TypeError):
+    except (ValueError, OSError, KeyError, TypeError, sqlite3.Error):
         print('Factory operation rejected; check workflow, state and trusted target configuration.', file=sys.stderr)
         return 2
 

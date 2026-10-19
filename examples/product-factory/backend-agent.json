@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "name": "backend-agent",
+  "plan_revision": "v001",
+  "limits": {
+    "run_seconds": 1800,
+    "task_seconds": 900,
+    "lease_seconds": 30,
+    "max_attempts": 2,
+    "output_bytes": 1048576
+  },
+  "policy": {
+    "executables": [
+      "/absolute/path/to/codex",
+      "/absolute/path/to/python3"
+    ],
+    "adapters": [
+      "codex"
+    ],
+    "env": [
+      "PATH",
+      "HOME"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "backend-feature",
+      "adapter": "codex",
+      "executable": "/absolute/path/to/codex",
+      "prompt": "Read /absolute/path/to/ai-tools/skills/backend-build/SKILL.md and all its mandatory documentation. Target is the current worktree. Read target .ai-development/INDEX.md, accepted decisions and .ai-development/backend/FEATURE/plan.md revision v001. Implement only that approved SDD scope; record decisions before dependent changes and keep canonical skill progress and plan updated. Do not deploy, push or create additional autonomous runs. Missing decisions or permissions require needs_input. Follow the appended runtime handoff protocol. The verifier below must be replaced with the feature-specific DoD commands from the source plan before admission.",
+      "verify": [
+        [
+          "/absolute/path/to/python3",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests",
+          "-v"
+        ]
+      ],
+      "replay_safe": false
+    }
+  ]
+}

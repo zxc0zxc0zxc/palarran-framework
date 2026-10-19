@@ -46,6 +46,9 @@ class Store:
             seq INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL,
             task_id TEXT, at REAL NOT NULL, kind TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS reconciliations (
+            run_id TEXT NOT NULL, task_id TEXT NOT NULL, at REAL NOT NULL, reason TEXT NOT NULL
+        );
         CREATE INDEX IF NOT EXISTS events_run ON events(run_id,seq);
         PRAGMA user_version=1;
         ''')
@@ -114,7 +117,7 @@ class Store:
                 self.db.execute("UPDATE tasks SET status='running',attempts=attempts+1,token=?,lease_until=?,reason='' WHERE run_id=? AND id=?", (token, now + flow['limits']['lease_seconds'], run, task['id']))
                 self.db.execute("UPDATE runs SET status='running',reason='' WHERE id=?", (run,))
                 self.event(run, 'claimed', task['id'])
-                return {'id': task['id'], 'token': token, 'attempt': task['attempts'] + 1}
+                return {'id': task['id'], 'token': token, 'attempt': task['attempts'] + 1, 'context': task['reason']}
             return None
 
     def fail_run(self, run, reason):
@@ -141,6 +144,9 @@ class Store:
             if record['status'] != 'running' or row is None or row['status'] != 'running' or row['token'] != token or row['lease_until'] <= time.time():
                 return False
             flow = json.loads(record['workflow'])
+            if time.time() >= record['created'] + flow['limits']['run_seconds']:
+                self.fail_run(run, 'run_deadline')
+                return False
             source = next((t for t in flow['tasks'] if t['id'] == task), None)
             retry = not success and source is not None and source['replay_safe'] and row['attempts'] < flow['limits']['max_attempts']
             outcome = 'verified' if success else ('pending' if retry else 'failed')
@@ -155,6 +161,22 @@ class Store:
                 self.fail_run(run, reason)
             return True
 
+    def pause(self, run, task, token):
+        with self.transaction():
+            record = self.get(run)
+            if record['status'] != 'running':
+                return False
+            now = time.time()
+            if now >= record['created'] + json.loads(record['workflow'])['limits']['run_seconds']:
+                self.fail_run(run, 'run_deadline')
+                return False
+            cursor = self.db.execute("UPDATE tasks SET status='needs_input',token=NULL,lease_until=NULL,reason='agent_requested_input' WHERE run_id=? AND id=? AND status='running' AND token=? AND lease_until>?", (run, task, token, now))
+            if not cursor.rowcount:
+                return False
+            self.db.execute("UPDATE runs SET status='needs_input',reason='agent_requested_input' WHERE id=? AND status='running'", (run,))
+            self.event(run, 'agent_requested_input', task)
+            return True
+
     def resolve(self, run, task, reason, processes_stopped):
         if not processes_stopped or not isinstance(reason, str) or not reason.strip() or len(reason) > 240 or '\n' in reason:
             raise ValueError('Safe reason and explicit stopped-process assertion required')
@@ -165,6 +187,7 @@ class Store:
                 raise ValueError('Only unknown outcome may be reconciled')
             self.db.execute("UPDATE tasks SET status='pending',reason=?,token=NULL,lease_until=NULL WHERE run_id=? AND id=?", (reason, run, task))
             self.db.execute("UPDATE runs SET status='pending',reason='' WHERE id=?", (run,))
+            self.db.execute('INSERT INTO reconciliations(run_id,task_id,at,reason) VALUES(?,?,?,?)', (run, task, time.time(), reason))
             self.event(run, 'operator_reconciled', task)
 
     def cancel(self, run):

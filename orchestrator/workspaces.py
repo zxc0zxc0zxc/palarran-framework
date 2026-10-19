@@ -33,7 +33,11 @@ def prepare(state, target, run_id):
 def fingerprint(path):
     """HEAD + tracked/untracked non-ignored bytes; never dereference symlinks."""
     path = Path(path)
-    digest = hashlib.sha256(git(path, 'rev-parse', 'HEAD'))
+    digest = hashlib.sha256()
+    def frame(value):
+        digest.update(len(value).to_bytes(8, 'big'))
+        digest.update(value)
+    frame(git(path, 'rev-parse', 'HEAD'))
     files = set(git(path, 'ls-files', '-z', '--cached', '--others', '--exclude-standard').split(b'\x00')) - {b''}
     if len(files) > 10000:
         raise ValueError('Fingerprint file budget exceeded')
@@ -46,22 +50,24 @@ def fingerprint(path):
         # A directory component must never redirect a tracked file outside workspace.
         if any(parent.is_symlink() for parent in file.parents if parent != path and path in parent.parents):
             raise ValueError('Symlink parent unsupported')
-        digest.update(len(name).to_bytes(8, 'big')); digest.update(name)
+        frame(name)
         try:
             meta = file.lstat()
         except FileNotFoundError:
-            digest.update(b'missing'); continue
-        digest.update(str(stat.S_IMODE(meta.st_mode)).encode())
+            frame(b'missing'); continue
+        frame(str(stat.S_IMODE(meta.st_mode)).encode())
         if stat.S_ISLNK(meta.st_mode):
-            digest.update(b'link'); digest.update(os.fsencode(os.readlink(file)))
+            frame(b'link'); frame(os.fsencode(os.readlink(file)))
         elif stat.S_ISREG(meta.st_mode):
-            digest.update(b'file')
+            frame(b'file')
+            content = hashlib.sha256()
             total += meta.st_size
             if total > 100 * 1024 * 1024:
                 raise ValueError('Fingerprint byte budget exceeded')
             with file.open('rb') as stream:
                 for chunk in iter(lambda: stream.read(65536), b''):
-                    digest.update(chunk)
+                    content.update(chunk)
+            frame(content.digest())
         else:
             raise ValueError('Non-regular workspace entry unsupported')
     return digest.hexdigest()

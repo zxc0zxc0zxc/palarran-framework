@@ -14,3 +14,12 @@ python3 -m orchestrator status --state /path/to/private-state --run RUN_ID
 ```
 
 `create` создаёт owned detached Git worktree в state; исходный checkout не редактируется. `work` запускает доверенные команды: это явная граница исполнения. Демонстрационный workflow создаёт файл и проверяет его реальное содержимое. Адаптеры `codex`/`claude` запускают установленные авторизованные CLI; модель не выбирается вместо пользователя. Ошибка доступа/лимита/уточнение приводят к остановке, а не обходу permissions.
+
+Проверить runtime на disposable target одним запуском (без LLM и сети):
+
+```sh
+python3 scripts/factory_acceptance.py
+python3 -m unittest discover -s tests -p 'test_factory_*.py' -v
+```
+
+[Шаблон backend agent](../../examples/product-factory/backend-agent.json) требует замены executable/skill/feature paths и verifiers на actual source DoD. Он не запускается автоматически. Для Claude заменить adapter/executable/allowlists; собственный login и разрешённые env настраиваются вне Git. Runtime добавляет explicit handoff: implemented разрешает независимые checks, needs_input приостанавливает run. Provider CLI не вызывается smoke-тестом.

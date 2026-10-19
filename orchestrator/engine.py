@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 import uuid
 
+from .protocol import handoff_path, instruction, read_handoff
 from .spec import validate
 from .store import Store, TERMINAL
 from .workspaces import fingerprint, prepare
@@ -38,6 +39,7 @@ def status(state, run_id):
         tasks = store.tasks(run_id)
     report = {key: record[key] for key in ('id', 'status', 'workspace', 'baseline', 'created', 'workflow_sha256', 'fingerprint', 'reason')}
     report['schema_version'] = 1
+    report['artifact_type'] = 'product-factory-report'
     report['tasks'] = [{key: task[key] for key in ('id', 'status', 'attempts', 'reason')} for task in tasks]
     for reported, task in zip(report['tasks'], tasks):
         reported['results'] = json.loads(task['result']) if task['result'] else []
@@ -81,16 +83,22 @@ def work(state, run_id):
             tmp.mkdir(mode=0o700, parents=True, exist_ok=True)
             env.update({'TMPDIR': str(tmp.absolute()), 'FACTORY_RUN_ID': run_id, 'FACTORY_TASK_ID': task_id})
             results, success, subject = [], True, None
+            handoff = None
+            paused = False
             try:
                 if task_id == '__final__':
                     before = fingerprint(workspace)
                     commands = [(argv, '') for task in flow['tasks'] for argv in task['verify']]
                 else:
                     task = next(t for t in flow['tasks'] if t['id'] == task_id)
-                    commands = [invocation(task, workspace)] + [(argv, '') for argv in task['verify']]
+                    argv, prompt = invocation(task, workspace)
+                    if task['adapter'] != 'command':
+                        handoff = handoff_path(workspace, run_id, task_id, claim['attempt'])
+                        prompt += instruction(handoff, claim['context'])
+                    commands = [(argv, prompt)] + [(argv, '') for argv in task['verify']]
                 # A task's entire command+verification bundle shares one task deadline.
                 deadline = min(record['created'] + limits['run_seconds'], time.time() + limits['task_seconds'])
-                for argv, stdin_text in commands:
+                for index, (argv, stdin_text) in enumerate(commands):
                     remaining = deadline - time.time()
                     if remaining <= 0 or not heartbeat():
                         success = False; break
@@ -98,13 +106,18 @@ def work(state, run_id):
                     results.append(asdict(outcome))
                     if outcome.returncode != 0 or outcome.reason != 'exited':
                         success = False; break
+                    if index == 0 and handoff is not None:
+                        if read_handoff(handoff) == 'needs_input':
+                            paused = store.pause(run_id, task_id, token)
+                            success = False; break
                 if task_id == '__final__' and success:
                     subject = fingerprint(workspace)
                     if before != subject:
                         success = False
-                if not heartbeat():
+                if time.time() > deadline or not heartbeat():
                     success = False
-                store.finish(run_id, task_id, token, success, results, subject)
+                if not paused:
+                    store.finish(run_id, task_id, token, success, results, subject)
             except (OSError, ValueError):
                 # Do not persist exception text: paths/process errors may contain secrets.
                 store.finish(run_id, task_id, token, False, results)

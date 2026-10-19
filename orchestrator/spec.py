@@ -38,7 +38,7 @@ def validate(value):
     _object(limits, bounds)
     for field, (low, high) in bounds.items():
         n = limits[field]
-        if type(n) not in (int, float) or not math.isfinite(n) or n > high or n < low or (low == 0 and n == 0):
+        if type(n) not in (int, float) or n > high or n < low or (type(n) is float and not math.isfinite(n)) or (low == 0 and n == 0):
             raise ValueError('Invalid numerical limit')
         if field in ('max_attempts', 'output_bytes') and type(n) is not int:
             raise ValueError('Expected integer limit')

@@ -4,17 +4,19 @@
   "plan_revision": "v001",
   "source_commit": "ec9e2cfb2eb7bc88d78605d6256aed666fdf49f4",
   "execution_id": "pf-v001",
-  "integration_commit": null,
+  "integration_commit": "aec80041e9d8dcf2b8ecffaabaa420132f35e52f",
   "tasks": [
     {
       "id": "RUNNER",
       "plan_revision": "v001",
-      "owner": "coordinator",
-      "status": "pending",
+      "owner": "agent-runner",
+      "status": "integrated",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
-      "reason": "Not dispatched",
+      "code_commits": [
+        "2b2ca37"
+      ],
+      "integration_commit": "aec80041e9d8dcf2b8ecffaabaa420132f35e52f",
+      "reason": "Integrated; final acceptance pending",
       "checks": [
         {
           "id": "T-RUNNER",
@@ -29,12 +31,14 @@
     {
       "id": "CONTRACT-TEST",
       "plan_revision": "v001",
-      "owner": "coordinator",
-      "status": "pending",
+      "owner": "agent-contract-tests",
+      "status": "integrated",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
-      "reason": "Not dispatched",
+      "code_commits": [
+        "aec8004"
+      ],
+      "integration_commit": "aec80041e9d8dcf2b8ecffaabaa420132f35e52f",
+      "reason": "Integrated; final acceptance pending",
       "checks": [
         {
           "id": "T-CONTRACT-TEST",
@@ -50,11 +54,13 @@
       "id": "CORE",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "in_progress",
       "depends_on": [],
-      "code_commits": [],
+      "code_commits": [
+        "1a0df1c"
+      ],
       "integration_commit": null,
-      "reason": "Not dispatched",
+      "reason": "Implementation and acceptance in progress",
       "checks": [
         {
           "id": "T-CORE",
@@ -70,11 +76,11 @@
       "id": "ACCEPT",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "in_progress",
       "depends_on": [],
       "code_commits": [],
       "integration_commit": null,
-      "reason": "Not dispatched",
+      "reason": "Implementation and acceptance in progress",
       "checks": [
         {
           "id": "T-ACCEPT",

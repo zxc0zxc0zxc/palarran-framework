@@ -16,15 +16,15 @@ Concurrency разработки max 3. Agents own temporary worktrees, temp DB/
 <!-- backend-progress:start -->
 
 Plan: product-factory / v001; execution: pf-v001.
-Integration commit: -. Status: **INCOMPLETE**.
-Implemented 0/4; integrated 0/4; verified 0/4.
+Integration commit: aec80041e9d8dcf2b8ecffaabaa420132f35e52f. Status: **INCOMPLETE**.
+Implemented 2/4; integrated 2/4; verified 0/4.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] RUNNER | pending | coordinator | - | Not dispatched |
-| [ ] CONTRACT-TEST | pending | coordinator | - | Not dispatched |
-| [ ] CORE | pending | coordinator | - | Not dispatched |
-| [ ] ACCEPT | pending | coordinator | - | Not dispatched |
+| [ ] RUNNER | integrated | agent-runner | aec80041e9d8dcf2b8ecffaabaa420132f35e52f | Integrated; final acceptance pending |
+| [ ] CONTRACT-TEST | integrated | agent-contract-tests | aec80041e9d8dcf2b8ecffaabaa420132f35e52f | Integrated; final acceptance pending |
+| [ ] CORE | in_progress | coordinator | - | Implementation and acceptance in progress |
+| [ ] ACCEPT | in_progress | coordinator | - | Implementation and acceptance in progress |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |
 |---|---|---|---|---|
