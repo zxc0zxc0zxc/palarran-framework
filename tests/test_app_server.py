@@ -36,6 +36,7 @@ for line in sys.stdin:
  if method=='initialize': send({'id':ident,'result':{}})
  elif method=='thread/start':
   assert r['params']['ephemeral'] and r['params']['sandbox']=='workspace-write' and r['params']['approvalPolicy']=='never'
+  assert r['params']['config']['tool_output_token_limit']==100000
   send({'id':ident,'result':{'thread':{'id':'PRIVATE_THREAD'}}})
  elif method=='turn/start':
   send({'method':'turn/started','params':{'threadId':'PRIVATE_THREAD','turn':{'id':'PRIVATE_TURN'}}})

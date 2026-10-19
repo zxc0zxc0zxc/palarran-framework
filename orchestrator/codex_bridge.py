@@ -112,7 +112,7 @@ def run(executable, cwd, model, effort, prompt, stream_limit=1048576):
                             send('initialized', {})
                             send('thread/start', dict(model=model, cwd=cwd, ephemeral=True,
                                 approvalPolicy='never', sandbox='workspace-write',
-                                config={'model_reasoning_effort': effort}), 2)
+                                config={'model_reasoning_effort': effort, 'tool_output_token_limit': 100000}), 2)
                         elif message['id'] == 2:
                             thread = response['thread']['id']
                             if not isinstance(thread, str) or not thread:

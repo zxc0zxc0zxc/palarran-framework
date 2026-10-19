@@ -109,3 +109,7 @@ Continuation в текущем контракте требует nonempty review
 ### Завершение process group после выхода
 
 При PermissionError на cleanup signal runtime подавляет ошибку только если root уже вышел и read-only `/bin/ps -axo pgid=` подтверждает отсутствие группы. Inventory timeout2s, numeric-only, результат не сохраняется как raw log. Active root/group, недоступный ps или непонятный output — fail closed. Это не обход permission и не reconciliation старых unknown receipts. Проверенное отсутствие позволяет дочитать pipe и terminal telemetry; прошлые lost receipts не восстанавливаются предположением.
+
+### Полный guide packet в истории инструмента
+
+App Server задаёт task-local `tool_output_token_limit=100000`, чтобы обязательный source packet не исчезал при усечении истории. [OpenAI config reference](https://learn.chatgpt.com/docs/config-file/config-reference), проверено2026-10-19: настройка относится к отдельным tool/function outputs в history. Значение100000 — наша engineering policy, не рекомендация вендора. Это не разрешение тратить100000 новых токенов: обычные stage/run spending guards, raw-output1MiB bound и permissions сохраняются. Для вложенного functions.exec его внешний output budget тоже задаётся явно; при остаточном усечении читаются только недостающие bounded chunks, желательно параллельно. Повтор целого пакета и пропуск непрочитанных mandatory docs запрещены.
