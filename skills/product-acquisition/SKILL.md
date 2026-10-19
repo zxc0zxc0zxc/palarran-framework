@@ -34,3 +34,7 @@ Scope — read-only public research, уже разрешённые источн�
 ## Явный runtime pipeline
 
 Если задача явно выдана как product pipeline stage, дополнительно прочитай [pipeline](../../docs/product/pipeline.md) и [artifact contract](../../docs/product/pipeline-contract.md). Выполни только назначенный stage, прочитай pinned cumulative context/reports/E-IDs/ADR и сохрани typed manifest + report; upstream artifacts не переписывай. `mvp` — synthesis mode product-define с [MVP template](../../templates/product/pipeline-mvp.md), не шестой skill. Runtime handoff implemented разрешает только independent checks, не подтверждает рынок. Standalone invocation не запускает pipeline автоматически.
+
+## Первые покупатели до MVP
+
+Прочитай [go-to-market](../../docs/product/go-to-market.md), [цены](../../docs/product/pricing.md), [источники](../../docs/product/go-to-market-sources.md). В этом же scope выбери и прочитай профиль [B2B](../product-b2b/SKILL.md) или [B2C](../product-b2c/SKILL.md) по buyer/user; для mixed модели раздели стороны. Подготовь sales/growth план по шаблону профиля внутри текущего report. Это не запуск другой команды/агента/дополнительного stage. Cash cap неизвестен → 0; expensive reject, unknown quote не free. Перед engineering — review кому/как продаём; после polish — свежая revision/quotes.

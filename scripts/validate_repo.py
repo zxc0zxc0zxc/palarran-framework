@@ -7,7 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = {
-    **{f"product-{command}": ("product", command) for command in ("define", "market", "compare", "revenue", "acquisition")},
+    **{f"product-{command}": ("product", command) for command in ("define", "market", "compare", "revenue", "acquisition", "b2b", "b2c")},
     **{f"infra-plan-{level}": ("infra-plan", level) for level in ("low", "med", "high")},
     **{f"ci-cd-{provider}": ("ci-cd", provider) for provider in ("github", "gitlab")},
     "ux-design": ("ux", "design"),
@@ -36,7 +36,7 @@ BACKEND_GUIDES = ["README.md", "architecture.md", "foundation-stack.md", "contra
 BACKEND_BUILD_GUIDES = ["README.md", "source-progress.md", "worktrees.md", "implementation.md",
                         "verification.md", "reliability.md", "workflow.md", "sources.md"]
 PRODUCT_GUIDES = ["README.md", "evidence.md", "workflow.md", "data-sources.md", "sources.md", "cases/README.md", "pipeline.md", "pipeline-contract.md"]
-PRODUCT_CASES = {'define': 'product-discovery.md', 'market': 'market-validation.md', 'compare': 'competitive-positioning.md', 'revenue': 'revenue-economics.md', 'acquisition': 'acquisition-growth.md'}
+PRODUCT_CASES = {'define': 'product-discovery.md', 'market': 'market-validation.md', 'compare': 'competitive-positioning.md', 'revenue': 'revenue-economics.md', 'acquisition': 'acquisition-growth.md', 'b2b': 'b2b-first-customers.md', 'b2c': 'b2c-frugal-growth.md'}
 IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch"}
 
 
@@ -69,6 +69,8 @@ def validate(root=ROOT):
             errors.append(f"{name}: missing shared decision-memory contract")
         if namespace == "product":
             base, guides = "product", PRODUCT_GUIDES + [f"{command}.md", "cases/" + PRODUCT_CASES[command]]
+            if command in {"b2b", "b2c", "acquisition"}:
+                guides += ["go-to-market.md", "pricing.md", "go-to-market-sources.md"]
         elif namespace == "infra-plan":
             base, guides = "infra/plan", INFRA_GUIDES + [f"{command}.md"]
         elif namespace == "ci-cd":

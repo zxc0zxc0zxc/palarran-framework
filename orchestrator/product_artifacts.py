@@ -12,7 +12,7 @@ import subprocess
 from urllib.parse import urlsplit
 
 STAGES = ('define', 'market', 'compare', 'revenue', 'acquisition', 'mvp')
-PROFILES = ('define', 'market', 'compare', 'revenue', 'acquisition')
+PROFILES = ('define', 'market', 'compare', 'revenue', 'acquisition', 'b2b', 'b2c')
 HEX = re.compile(r'^[0-9a-f]{64}$')
 HEADINGS = ('Контекст и основание', 'Выбор и объяснение', 'Альтернативы',
             'Источники и evidence', 'Последствия и пересмотр', 'Применение и проверка')
@@ -105,12 +105,13 @@ def source_digest(skills_root):
     mandatory += ['skills/product-%s/SKILL.md' % profile for profile in PROFILES]
     mandatory += ['docs/product/%s.md' % name for name in
                   ('README', 'define', 'market', 'compare', 'revenue', 'acquisition',
-                   'workflow', 'evidence', 'sources', 'data-sources', 'pipeline', 'pipeline-contract')]
+                   'workflow', 'evidence', 'sources', 'data-sources', 'pipeline', 'pipeline-contract',
+                   'b2b', 'b2c', 'go-to-market', 'pricing', 'go-to-market-sources')]
     mandatory += ['docs/product/cases/%s.md' % name for name in
                   ('README', 'product-discovery', 'market-validation', 'competitive-positioning',
-                   'revenue-economics', 'acquisition-growth')]
+                   'revenue-economics', 'acquisition-growth', 'b2b-first-customers', 'b2c-frugal-growth')]
     mandatory += ['templates/product/%s.md' % name for name in
-                  ('brief', 'research', 'competitors', 'economics', 'channels')]
+                  ('brief', 'research', 'competitors', 'economics', 'channels', 'b2b-sales', 'b2c-growth')]
     for relative in mandatory:
         read_bytes(root, relative, 1048576)
     paths = set(mandatory)

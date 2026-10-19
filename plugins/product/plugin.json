@@ -1,10 +1,10 @@
 {
   "name": "product",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "zxc0zxc0zxc"
   },
-  "description": "Case-based product definition, market research, competitive analysis, revenue intelligence and acquisition planning",
+  "description": "Case-based product definition, market research, competitive analysis, revenue intelligence and acquisition planning; small B2B sales and frugal B2C go-to-market planning",
   "commands": {
     "define": {
       "source": "./.claude/commands/product/define.md"
@@ -20,6 +20,12 @@
     },
     "acquisition": {
       "source": "./.claude/commands/product/acquisition.md"
+    },
+    "b2b": {
+      "source": "./.claude/commands/product/b2b.md"
+    },
+    "b2c": {
+      "source": "./.claude/commands/product/b2c.md"
     }
   }
 }

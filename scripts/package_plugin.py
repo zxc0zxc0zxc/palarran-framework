@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
     "product": {
         "manifest": "plugins/product/plugin.json",
-        "skills": ["product-define", "product-market", "product-compare", "product-revenue", "product-acquisition"],
+        "skills": ["product-define", "product-market", "product-compare", "product-revenue", "product-acquisition", "product-b2b", "product-b2c"],
         "docs": ["docs/skills", "docs/product"],
     },
     "backend": {
@@ -111,6 +111,7 @@ def build_package(namespace, output, root=ROOT):
             "templates/product/research.md", "templates/product/competitors.md",
             "templates/product/economics.md", "templates/product/channels.md",
             "templates/product/pipeline-mvp.md",
+            "templates/product/b2b-sales.md", "templates/product/b2c-growth.md",
         ]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():

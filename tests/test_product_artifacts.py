@@ -2,6 +2,7 @@
 import copy
 import hashlib
 import json
+import shutil
 from pathlib import Path
 import subprocess
 import tempfile
@@ -269,6 +270,26 @@ class ArtifactTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaises((ValueError, OSError)):
                 source_digest(temp)
+
+    def test_first_customer_profiles_are_pinned_and_required(self):
+        with tempfile.TemporaryDirectory() as temp:
+            bundle = Path(temp).resolve()
+            for relative in ('docs/product', 'docs/skills', 'templates/product', 'skills'):
+                shutil.copytree(SKILLS_ROOT / relative, bundle / relative)
+            original = source_digest(bundle)
+            profile = bundle / 'skills/product-b2b/SKILL.md'
+            profile.write_text(profile.read_text() + '\nChanged sales policy\n')
+            self.assertNotEqual(original, source_digest(bundle))
+            required = [bundle / 'skills/product-b2c/SKILL.md',
+                        bundle / 'docs/product/pricing.md',
+                        bundle / 'templates/product/b2b-sales.md']
+            for path in required:
+                with self.subTest(required=path.name):
+                    content = path.read_bytes()
+                    path.unlink()
+                    with self.assertRaises((ValueError, OSError)):
+                        source_digest(bundle)
+                    path.write_bytes(content)
 
     def test_cli_safe_receipt(self):
         manifest = write_stage(self.root, self.context, 'define')

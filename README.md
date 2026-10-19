@@ -211,21 +211,23 @@ MCP-серверы будут добавляться отдельными кат
 
 ## Product research skills
 
-[Документация и кейсы](docs/product/README.md) созданы до скиллов: startup cases Superhuman, Buffer, Airbnb, Ahrefs; практики GitLab, Amazon, Google и Microsoft. Пять независимых команд:
+[Документация и кейсы](docs/product/README.md) созданы до скиллов: startup cases Superhuman, Buffer, Airbnb, Ahrefs; практики GitLab, Amazon, Google и Microsoft. Семь независимых команд:
 
 - `/product:define {идея}` — ICP/JTBD, MVP/business model и проверяемые продуктовые гипотезы.
 - `/product:market {рынок}` — demand, сегменты, trends/volume и scope TAM/SAM/SOM.
 - `/product:compare {продукт}` — конкуренты/замены и обоснованное позиционирование.
 - `/product:revenue {аналоги}` — disclosed metrics, estimates и отдельные scenarios.
 - `/product:acquisition {аналоги}` — paid search/social, native/creator, organic/referral и future channel tests.
+- `/product:b2b {продукт}` — небольшие первые клиенты, bounded offer и sales/outreach plan.
+- `/product:b2c {продукт}` — узкая аудитория, дешёвые каналы, цены и growth tests.
 
-Codex: `$product-define`, `$product-market`, `$product-compare`, `$product-revenue`, `$product-acquisition`; discoverable через `.agents/skills/`. Claude plugin: `python3 scripts/package_plugin.py product --output /tmp/ai-tools-product`, затем `claude --plugin-dir /tmp/ai-tools-product`. Внутри checkout доступны project slash adapters.
+Codex: `$product-define`, `$product-market`, `$product-compare`, `$product-revenue`, `$product-acquisition`, `$product-b2b`, `$product-b2c`; discoverable через `.agents/skills/`. Claude plugin: `python3 scripts/package_plugin.py product --output /tmp/ai-tools-product`, затем `claude --plugin-dir /tmp/ai-tools-product`. Внутри checkout доступны project slash adapters.
 
 Каждый skill обязан читать профильные кейсы/guide и сохранять evidence/решения в target `.ai-development/product/`. [Data/API catalog](docs/product/data-sources.md) описывает access/coverage/fallback; реальных credentials/integrations в пакете нет. Research не запускает рекламу, outreach или разработку.
 
 ### Единый product pipeline
 
-[Pipeline guide](docs/product/pipeline.md): пять skills последовательно и synthesis через product-define → обоснованный MVP-план с source/decision traceability. Структура проверяется отдельно от истинности market claims; plan/validate/pivot/stop допустимы, build не запускается.
+[Pipeline guide](docs/product/pipeline.md): пять основных research stages с B2B/B2C профилем внутри acquisition и synthesis через product-define → обоснованный MVP-план с source/decision traceability. Структура проверяется отдельно от истинности market claims; plan/validate/pivot/stop допустимы, build не запускается.
 
 ```sh
 python3 -m orchestrator product-create --idea-file examples/product-factory/product-idea.md --target /path/to/product --state /path/to/private-state --adapter codex --agent /absolute/path/to/codex
@@ -233,3 +235,10 @@ python3 -m orchestrator work --state /path/to/private-state --run RUN_ID
 ```
 
 Create только подготавливает run, work вызывает установленный авторизованный CLI. Источники/версии/ADR передаются typed artifacts; private stable receipts и final gates отклоняют подмену ранних выводов. Итог в owned worktree `.ai-development/product/pipeline-ID/stages/mvp/report.md` и `stage.json`. Нужные уточнения останавливают run через needs_input/resolve. API accounts/paid calls автоматически не подключаются.
+
+### Первые клиенты до разработки
+
+- `/product:b2b {продукт}` — маленькие независимые компании, проверяемые кандидаты, bounded offer и sales/outreach plan.
+- `/product:b2c {продукт}` — узкая аудитория, бесплатные/дешёвые каналы, российские и иностранные кейсы, цены и план тестов.
+
+Сначала [документация](docs/product/go-to-market.md); cash cap без бюджета — 0, неизвестный прайс не бесплатность. После polish обновляем тот же план по revision продукта. Product plugin содержит 7 скиллов; runtime использует B2B/B2C внутри acquisition, сохраняя 6 stages и прежние лимиты. Только research/planning, без отправки outreach и закупки рекламы.

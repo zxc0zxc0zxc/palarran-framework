@@ -67,7 +67,7 @@ class PipelineTests(unittest.TestCase):
         meta = json.loads(flow['tasks'][0]['prompt'].splitlines()[0].split(' ', 1)[1])
         return run, meta
 
-    def test_build_composes_five_skills_plus_synthesis(self):
+    def test_build_preserves_six_stages_and_budget_with_customer_profiles(self):
         flow, context = build('Idea', ROOT, 'codex', '/fake/codex', python=PYTHON, baseline=self.baseline, pipeline_id='2' * 32)
         self.assertEqual([t['id'] for t in flow['tasks']], ['product-' + stage for stage in STAGES])
         for i, task in enumerate(flow['tasks']):
