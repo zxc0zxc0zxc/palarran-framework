@@ -191,6 +191,7 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
                         if reason != "exited":
                             break
                     except Exception:
+                        diagnostics.usage_failure(getattr(usage_stream, "failure_code", None))
                         reason = "usage_error"
                         break
             if reason != "exited":
@@ -202,6 +203,7 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
                 else:
                     reason = "usage_stop"
             except Exception:
+                diagnostics.usage_failure(getattr(usage_stream, "failure_code", None))
                 reason = "usage_error"
     finally:
         _kill_group(process)

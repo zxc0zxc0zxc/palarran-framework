@@ -64,3 +64,4 @@
 | backend/2026-10-19-cli-diagnostics/0001 | accepted | Safe CLI diagnostic enums, fenced result preservation, attended live recovery | [record](backend/2026-10-19-cli-diagnostics/decisions/0001-diagnostics.md); review after live canary |
 | backend/2026-10-19-cli-diagnostics/0002 | accepted | Observable step trace and reviewed few-shot cards | [record](backend/2026-10-19-cli-diagnostics/decisions/0002-observable-cases.md); review after actual runs |
 | backend/2026-10-19-cli-diagnostics/0003 | accepted | Observed canary allocation and guarded live recovery | [record](backend/2026-10-19-cli-diagnostics/decisions/0003-canary-recovery.md); no automatic third canary |
+| backend/2026-10-19-cli-diagnostics/0004 | accepted | Duplicate nested Codex tool payload separated from strict billing envelope | [record](backend/2026-10-19-cli-diagnostics/decisions/0004-web-event-parsing.md); validate with web probe |

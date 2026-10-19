@@ -89,6 +89,13 @@ class Diagnostics:
                 self.buffers[source] = b''
                 self.dropping[source] = False
 
+    def usage_failure(self, code):
+        allowed = {'usage_line_invalid', 'usage_json_invalid', 'usage_event_invalid',
+                   'usage_invariant', 'usage_provider_error', 'usage_line_limit',
+                   'usage_incomplete', 'usage_duplicate_key', 'usage_integer_limit',
+                   'usage_nonfinite_value'}
+        self.codes.add(code if isinstance(code, str) and code in allowed else 'usage_invalid')
+
     def finish(self):
         for source in self.buffers:
             if self.buffers[source] and not self.dropping[source]:

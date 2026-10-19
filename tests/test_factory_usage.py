@@ -173,6 +173,19 @@ class UsageStreamTests(unittest.TestCase):
         receipts = self.parse('codex', codex(reasoning_output_tokens=2) + codex() + codex(reasoning_output_tokens=1))
         self.assertEqual([item['reasoning_output_tokens'] for item in receipts], [2, None, None])
 
+    def test_codex_ignored_tool_duplicates_do_not_weaken_accounting(self):
+        ignored = b'{"type":"item.completed","item":{"type":"web_search","action":{"type":"search","type":"search"}}}\n'
+        expected = self.parse('codex', codex())
+        self.assertEqual(self.parse('codex', ignored + codex()), expected)
+        with self.assertRaises(ValueError):
+            self.parse('codex', ignored)
+        for malformed in (
+                b'{"type":"item.completed","type":"turn.completed","item":{}}\n',
+                b'{"type":"turn.completed","usage":{"input_tokens":1,"input_tokens":2}}\n',
+                b'{"type":"unknown","data":{"key":1,"key":2}}\n'):
+            with self.subTest(data=malformed), self.assertRaises(ValueError):
+                self.parse('codex', malformed + codex())
+
     def test_malformed_duplicate_json_nonobject_and_utf8(self):
         for data in (b'not json\n', b'[]\n', b'{}\n', b'\xff\n', b'\n', b'{"type":"x","type":"y"}\n',
                      b'{"type":"x","usage":NaN}\n', b'{"type":"x","x":1e99999999999999999999999}\n'):

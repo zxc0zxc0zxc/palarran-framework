@@ -242,3 +242,9 @@ Create только подготавливает run, work вызывает ус
 - `/product:b2c {продукт}` — узкая аудитория, бесплатные/дешёвые каналы, российские и иностранные кейсы, цены и план тестов.
 
 Сначала [документация](docs/product/go-to-market.md); cash cap без бюджета — 0, неизвестный прайс не бесплатность. После polish обновляем тот же план по revision продукта. Product plugin содержит 7 скиллов; runtime использует B2B/B2C внутри acquisition, сохраняя 6 stages и прежние лимиты. Только research/planning, без отправки outreach и закупки рекламы.
+
+### Диагностика и объяснения решений
+
+Runtime сохраняет безопасные категории CLI ошибок и наблюдаемые step events даже при `usage_unknown`/budget stop. Сырые сообщения/команды/ответы и private reasoning не сохраняются; unknown расход не становится нулём. [Контракт диагностики и decision trace](docs/product-factory/usage-accounting.md).
+
+Для существенных решений агент может сохранить публичный `decision-trace.json` рядом с handoff. `python3 -m orchestrator.decision_trace --trace /path/decision-trace.json --output /path/review.html` создаёт адаптивную подсветку результатов и якоря шагов. Outcome требует отдельного evidence review; few-shot используется только после очистки и ревью, автоматически в prompts не добавляется.

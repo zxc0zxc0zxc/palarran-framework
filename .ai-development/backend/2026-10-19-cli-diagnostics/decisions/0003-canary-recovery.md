@@ -29,3 +29,6 @@ Private canary-report.json и verified marker/handoff readback. Sanitized daemon
 
 ## Применение и проверка
 Offline metadata/fencing/secret tests, complete EOF canary и independent final gate; product run с фактическим status/usage, без обещания успеха.
+
+### Observed recovery failure и уточнение диагностики
+Recovery e2479d49 дошёл до command/web_search events, затем UsageStream rejected stream до terminal usage event (36.97s,181259bytes); local usage_error, не доказанный provider error. Unknown сохраняется. Дополнительный scope пользователя «разбирайся с причиной» требует одного отдельного bounded web-probe после instrumentation safe parser failure_code; не повторять product task без новой причины. Probe budget1launch/100k/$0.25/90s, старые unknown не обнуляются. Никаких третьих trivial canaries; это отличающийся web-event compatibility test. По его результату сначала исправление и offline regression, затем explicit reviewed recovery allocation; не бесконечный retry loop.

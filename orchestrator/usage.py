@@ -9,6 +9,12 @@ MAX_COST_NANO = 10 ** 15
 _ERROR = 'Invalid or incomplete provider usage stream'
 
 
+class UsageFormatError(ValueError):
+    def __init__(self, code):
+        super().__init__(_ERROR)
+        self.code = code
+
+
 def _require(condition):
     if not condition:
         raise ValueError(_ERROR)
@@ -22,19 +28,34 @@ def _counter(value):
 def _pairs(pairs):
     result = {}
     for key, value in pairs:
-        _require(key not in result)
+        if key in result:
+            raise UsageFormatError("usage_duplicate_key")
         result[key] = value
     return result
 
 
+class _CapturedObject:
+    def __init__(self, pairs):
+        self.pairs = pairs
+
+
+def _strict(value):
+    if isinstance(value, _CapturedObject):
+        return {key: _strict(item) for key, item in _pairs(value.pairs).items()}
+    if isinstance(value, list):
+        return [_strict(item) for item in value]
+    return value
+
+
 def _integer(value):
     # Bound conversion work even for ignored provider fields and older Python.
-    _require(len(value) <= 64)
+    if len(value) > 64:
+        raise UsageFormatError("usage_integer_limit")
     return int(value)
 
 
 def _constant(value):
-    raise ValueError(_ERROR)
+    raise UsageFormatError("usage_nonfinite_value")
 
 
 def _nano(value):
@@ -67,6 +88,7 @@ class UsageStream:
         self._creation = 0
         self._output = 0
         self._reasoning = 0
+        self.failure_code = None
 
     def _snapshot(self, input_tokens, cached, creation, output, reasoning, cost):
         for value in (input_tokens, cached, output):
@@ -87,20 +109,40 @@ class UsageStream:
                     total_tokens=input_tokens + output, reported_cost_nano_usd=cost)
 
     def _line(self, raw):
+        self.failure_code = "usage_line_invalid"
         self._lines += 1
         _require(self._lines <= MAX_LINES and 0 < len(raw) <= MAX_LINE_BYTES)
+        self.failure_code = "usage_json_invalid"
         try:
             record = json.loads(raw.decode('utf-8'), parse_float=Decimal,
-                                parse_constant=_constant, parse_int=_integer, object_pairs_hook=_pairs)
+                                parse_constant=_constant, parse_int=_integer, object_pairs_hook=_CapturedObject)
+            if isinstance(record, _CapturedObject):
+                record = _pairs(record.pairs)
+        except UsageFormatError as error:
+            self.failure_code = error.code
+            raise ValueError(_ERROR) from None
         except (ValueError, UnicodeError, RecursionError, OverflowError, DecimalException):
             raise ValueError(_ERROR) from None
+        self.failure_code = "usage_event_invalid"
         _require(isinstance(record, dict) and isinstance(record.get('type'), str))
         kind = record['type']
+        self.failure_code = "usage_invariant"
+        # CLI tool payloads can contain duplicate nested discriminators. They
+        # never carry authoritative accounting. Envelope keys remain unique;
+        # all turn/usage/result trees below are still recursively strict.
+        if self.adapter == 'codex' and kind in ('item.started', 'item.updated', 'item.completed'):
+            return []
+        try:
+            record = {key: _strict(value) for key, value in record.items()}
+        except UsageFormatError as error:
+            self.failure_code = error.code
+            raise ValueError(_ERROR) from None
         if self.adapter == 'codex':
             if kind == 'turn.started':
                 _require(not self._active)
                 self._active = True
             elif kind in ('turn.failed', 'error'):
+                self.failure_code = 'usage_provider_error'
                 raise ValueError(_ERROR)
             elif kind == 'turn.completed':
                 _require(self._active and isinstance(record.get('usage'), dict))
@@ -167,6 +209,7 @@ class UsageStream:
             while start < len(chunk):
                 end = chunk.find(b'\n', start)
                 stop = len(chunk) if end < 0 else end
+                self.failure_code = "usage_line_limit"
                 _require(len(self._buffer) + stop - start <= MAX_LINE_BYTES)
                 self._buffer.extend(chunk[start:stop])
                 if end < 0:
@@ -187,6 +230,7 @@ class UsageStream:
         try:
             snapshots = self._line(bytes(self._buffer)) if self._buffer else []
             self._buffer.clear()
+            self.failure_code = "usage_incomplete"
             _require(self._sequence > 0 and not self._active)
             return snapshots
         except (ValueError, TypeError, RecursionError, OverflowError, DecimalException):

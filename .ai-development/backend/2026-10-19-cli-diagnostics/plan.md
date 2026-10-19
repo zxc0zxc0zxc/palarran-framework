@@ -9,3 +9,5 @@
 DoD: no raw payload leaks, paused attempts retain process metadata, no accounting weakening, actual root-cause evidence distinguished from inference. Pipeline success claimed only after independent final verification; otherwise concrete blocker and retained result.
 
 Implemented authoring v001: observable step enums + safe public decision summary renderer/protocol, fenced pre-pause and terminal-budget outcome retention.212tests PASS; actual current CLI canary VERIFIED. Full product recovery pending.
+
+Execution revision:25d84d0 integrated,212offline tests PASS. Current live recovery run e2479d49afb349849b5a5bfac375a621 admitted/running from pinned skills-recovery-25d84d0b; canonical execution state remains private SQLite, source plan reports its observed status only. No runtime verified claim while running.
