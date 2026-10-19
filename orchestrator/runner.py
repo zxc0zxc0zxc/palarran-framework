@@ -62,11 +62,31 @@ def invocation(task, workspace, *, profile=None, telemetry=False, max_cost_usd=N
     return argv, task["prompt"]
 
 
+def _group_absent(group_id):
+    """Prove absence after a denied signal, without changing process permissions."""
+    try:
+        result = subprocess.run(['/bin/ps', '-axo', 'pgid='], stdout=subprocess.PIPE,
+                                stderr=subprocess.DEVNULL, timeout=2, check=True,
+                                encoding='ascii', env={'PATH': '/usr/bin:/bin'})
+        lines = result.stdout.splitlines()
+        if len(result.stdout) > 1048576 or not lines or any(not line.strip().isdigit() for line in lines):
+            return False
+        return group_id not in {int(line.strip()) for line in lines}
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+
+
 def _kill_group(process):
     try:
         os.killpg(process.pid, signal.SIGKILL)
     except ProcessLookupError:
         pass
+    except PermissionError:
+        # macOS can deny a cleanup group signal after root exit. Never treat
+        # denial as success for a live root/group or an unverified inventory.
+        if process.poll() is not None and _group_absent(process.pid):
+            return
+        raise
 
 
 def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",

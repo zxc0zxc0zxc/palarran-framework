@@ -105,3 +105,7 @@ Optional usage_policy `carry` — reviewed inherited entries source/observed_tok
 Continuation в текущем контракте требует nonempty reviewed carry и max_cost_usd<=explicit original budget-ceiling; отсутствие переносимого учёта отклоняется, а не создаёт чистый бюджет. Unknown reserves берутся max(old stage allocation, observed lower bound), complete entries ровно observed; это согласованный консервативный scheduling reserve, не подтверждённая верхняя граница старого invoice. Новые receipts выводятся отдельно от carry. `available_reserved_cost_usd` показывает allowance после резервов; actual completeness остаётся false при старых unknown.
 
 Ошибки supervisor сохраняют безопасный outcome: класс исключения и место в собственном runtime, без текста ошибки, аргументов или локальных переменных. Полученный перед сбоем счётчик остаётся lower bound; marker/handoff не заменяют terminal receipt.
+
+### Завершение process group после выхода
+
+При PermissionError на cleanup signal runtime подавляет ошибку только если root уже вышел и read-only `/bin/ps -axo pgid=` подтверждает отсутствие группы. Inventory timeout2s, numeric-only, результат не сохраняется как raw log. Active root/group, недоступный ps или непонятный output — fail closed. Это не обход permission и не reconciliation старых unknown receipts. Проверенное отсутствие позволяет дочитать pipe и terminal telemetry; прошлые lost receipts не восстанавливаются предположением.
