@@ -8,6 +8,8 @@ import sqlite3
 import time
 import uuid
 
+from .budgets import claim_allowed
+
 TERMINAL = {'verified', 'failed', 'cancelled'}
 
 
@@ -111,6 +113,8 @@ class Store:
                 deps = source['depends_on'] if source else [t['id'] for t in flow['tasks']]
                 if any(states[dep] != 'verified' for dep in deps):
                     continue
+                if not claim_allowed(flow, tasks, source):
+                    self.fail_run(run, 'model_budget_exhausted'); return None
                 if task['attempts'] >= flow['limits']['max_attempts']:
                     self.fail_run(run, 'attempt_limit'); return None
                 token = uuid.uuid4().hex

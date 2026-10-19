@@ -1,0 +1,25 @@
+{
+  "max_calls": 6,
+  "max_units": 30,
+  "max_prompt_bytes": 32768,
+  "profiles": {
+    "planning": {
+      "model": "opus",
+      "effort": "high",
+      "weight": 5,
+      "seconds": 600
+    },
+    "implementation": {
+      "model": "sonnet",
+      "effort": "medium",
+      "weight": 2,
+      "seconds": 300
+    },
+    "simple": {
+      "model": "haiku",
+      "effort": "low",
+      "weight": 1,
+      "seconds": 60
+    }
+  }
+}

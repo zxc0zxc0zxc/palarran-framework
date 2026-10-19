@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_id": "model-budgets",
   "plan_revision": "v001",
-  "source_commit": "9e514d4",
+  "source_commit": "bfa24dd",
   "execution_id": "model-budgets-v001",
   "integration_commit": null,
   "tasks": [
@@ -10,7 +10,7 @@
       "id": "POLICY",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "in_progress",
       "depends_on": [],
       "code_commits": [],
       "integration_commit": null,
@@ -21,10 +21,12 @@
       "id": "ADAPTER",
       "plan_revision": "v001",
       "owner": "agent-runner",
-      "status": "pending",
+      "status": "integrated",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
+      "code_commits": [
+        "ac11d9e"
+      ],
+      "integration_commit": "ac11d9e",
       "reason": "",
       "checks": []
     },
@@ -32,7 +34,7 @@
       "id": "CORE",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "in_progress",
       "depends_on": [],
       "code_commits": [],
       "integration_commit": null,

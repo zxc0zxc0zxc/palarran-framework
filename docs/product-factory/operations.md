@@ -19,3 +19,7 @@
 - Budgets: attempts <= cap; wall timeout плюс <=1s cleanup grace; bounded output. Финальные verifiers также ограничены run/task deadline.
 
 Нужны tests: malformed DAG/policy, real command+file readback, nonzero verifier, retries/attempt cap, timeout/output flood/descendant kill, parallel claim/fencing, expired lease/reopen, operator gate, cancellation, immutable workflow, stale fingerprint, final cross-task regression, secret sentinel absence в status/events/DB output. Итоговая evidence — [handoff](../../.ai-development/backend/2026-10-19-product-factory/handoff.md).
+
+## Модели и бюджет
+
+До work проверьте `budget` в create/status/export: requested model/effort и allocations каждой task. [Контракт](model-budgets.md) различает launch cap и неизвестный provider spend. Product CLI принимает `--ai-policy /path/to/policy.json` (regular non-symlink JSON <=64KiB); invalid policy отклоняется до создания worktree. Изменение policy требует нового run. Запас для retry распределять до create; resolve не возвращает потраченный launch.

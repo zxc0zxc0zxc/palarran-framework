@@ -33,6 +33,7 @@ def main(argv=None):
     p.add_argument('--skills-root', type=Path, default=Path(__file__).resolve().parents[1])
     p.add_argument('--adapter', required=True, choices=['codex', 'claude'])
     p.add_argument('--agent', required=True)
+    p.add_argument('--ai-policy', type=Path, help='Reviewed model routing and launch allocations JSON')
     p.add_argument('--run-seconds', type=float, default=7200)
     p.add_argument('--task-seconds', type=float, default=900)
     p.add_argument('--max-attempts', type=int, default=2)
@@ -48,8 +49,20 @@ def main(argv=None):
             if len(data) > 32768:
                 raise ValueError('Idea exceeds byte budget')
             idea = data.decode('utf-8')
-            run = create_product(args.state, idea, args.target, args.skills_root, args.adapter, args.agent, limits=dict(run_seconds=args.run_seconds, task_seconds=args.task_seconds, max_attempts=args.max_attempts))
-            print(json.dumps({'run_id': run})); return 0
+            options = {}
+            if args.ai_policy is not None:
+                fd = os.open(str(args.ai_policy), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+                with os.fdopen(fd, 'rb') as stream:
+                    if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                        raise ValueError('Regular policy file required')
+                    payload = stream.read(65537)
+                if len(payload) > 65536:
+                    raise ValueError('Policy exceeds byte budget')
+                options['ai_policy'] = json.loads(payload)
+                if not isinstance(options['ai_policy'], dict):
+                    raise ValueError('AI policy object required')
+            run = create_product(args.state, idea, args.target, args.skills_root, args.adapter, args.agent, limits=dict(run_seconds=args.run_seconds, task_seconds=args.task_seconds, max_attempts=args.max_attempts), **options)
+            print(json.dumps({'run_id': run, 'budget': status(args.state, run)['budget']})); return 0
         if args.command == 'create':
             if args.workflow.stat().st_size > 1048576:
                 raise ValueError('Workflow exceeds admission byte budget')

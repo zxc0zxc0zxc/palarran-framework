@@ -7,6 +7,7 @@ import re
 import sys
 import uuid
 
+from .budgets import default_policy
 from .engine import create
 from .product_artifacts import STAGES, canonical_sha, pipeline_dir, source_digest
 from .spec import validate
@@ -23,7 +24,7 @@ TASK_GUIDANCE = {
 }
 
 
-def build(idea, skills_root, adapter, executable, *, python=None, limits=None, env=None, pipeline_id=None, baseline=None):
+def build(idea, skills_root, adapter, executable, *, python=None, limits=None, env=None, pipeline_id=None, baseline=None, ai_policy=None):
     if not isinstance(idea, str) or not idea.strip() or len(idea.encode('utf-8')) > 32768 or '\x00' in idea:
         raise ValueError('A nonempty bounded UTF-8 idea is required')
     if not isinstance(baseline, str) or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', baseline):
@@ -70,9 +71,10 @@ def build(idea, skills_root, adapter, executable, *, python=None, limits=None, e
             'If business scope or permissions need clarification, write question.md beside the runtime handoff and use needs_input; do not claim a report is complete. Otherwise complete required artifacts, then use implemented in the APPENDED runtime handoff. The runtime independently validates artifacts and reruns all gates.',
         ])
         tasks.append(dict(id='product-' + stage, depends_on=[] if not position else ['product-' + STAGES[position - 1]], adapter=adapter, executable=executable, prompt=prompt,
-                          verify=[[python, str(verifier), '--root', '.', '--pipeline', pipeline_id, '--stage', stage, '--context-sha', context_sha, '--skills-root', str(skills_root)]], replay_safe=False, verify_stable=True))
+                          verify=[[python, str(verifier), '--root', '.', '--pipeline', pipeline_id, '--stage', stage, '--context-sha', context_sha, '--skills-root', str(skills_root)]], replay_safe=False, verify_stable=True, model_role='planning', model_calls=1))
     workflow = dict(version=1, name='product-pipeline', plan_revision='product-v001', limits=values,
                     policy=dict(executables=list(dict.fromkeys([python, executable])), adapters=[adapter], env=environment), tasks=tasks)
+    workflow['ai_policy'] = copy.deepcopy(ai_policy) if ai_policy is not None else default_policy(adapter)
     return validate(workflow), context
 
 

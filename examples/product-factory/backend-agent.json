@@ -39,7 +39,34 @@
           "-v"
         ]
       ],
-      "replay_safe": false
+      "replay_safe": false,
+      "model_role": "implementation",
+      "model_calls": 1
     }
-  ]
+  ],
+  "ai_policy": {
+    "max_calls": 1,
+    "max_units": 2,
+    "max_prompt_bytes": 32768,
+    "profiles": {
+      "planning": {
+        "model": "gpt-6.1-sol",
+        "effort": "high",
+        "weight": 5,
+        "seconds": 600
+      },
+      "implementation": {
+        "model": "gpt-6-luna",
+        "effort": "high",
+        "weight": 2,
+        "seconds": 300
+      },
+      "simple": {
+        "model": "gpt-6-luna",
+        "effort": "low",
+        "weight": 1,
+        "seconds": 60
+      }
+    }
+  }
 }

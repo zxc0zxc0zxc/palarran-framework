@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 import uuid
 
+from .budgets import summary
 from .protocol import handoff_path, instruction, read_handoff
 from .spec import validate
 from .store import Store, TERMINAL
@@ -40,6 +41,7 @@ def status(state, run_id):
         record = store.get(run_id)
         tasks = store.tasks(run_id)
     report = {key: record[key] for key in ('id', 'status', 'workspace', 'baseline', 'created', 'workflow_sha256', 'fingerprint', 'reason')}
+    report['budget'] = summary(json.loads(record['workflow']), tasks)
     report['schema_version'] = 1
     report['artifact_type'] = 'product-factory-report'
     report['tasks'] = [{key: task[key] for key in ('id', 'status', 'attempts', 'reason')} for task in tasks]
@@ -102,6 +104,7 @@ def work(state, run_id):
             results, success, subject = [], True, None
             handoff = None
             paused = False
+            profile = None
             try:
                 if task_id == '__final__':
                     before = fingerprint(workspace)
@@ -117,13 +120,18 @@ def work(state, run_id):
                             stable_receipts.append(observed[check_index + 1]['output_sha256'] if source.get('verify_stable', False) else None)
                 else:
                     task = next(t for t in flow['tasks'] if t['id'] == task_id)
-                    argv, prompt = invocation(task, workspace)
+                    profile = flow['ai_policy']['profiles'][task['model_role']] if 'ai_policy' in flow and task['adapter'] != 'command' else None
+                    argv, prompt = invocation(task, workspace, profile=profile) if profile is not None else invocation(task, workspace)
                     if task['adapter'] != 'command':
                         handoff = handoff_path(workspace, run_id, task_id, claim['attempt'])
+                        if profile is not None:
+                            prompt += '\nBudgeted worker role: ' + task['model_role'] + '. Use only the assigned model and scope. Do not spawn nested agents, invoke other model CLIs/APIs, or escalate models. Ordinary authorized tools are allowed. If the assigned scope/model is unsuitable, request needs_input using the handoff.\n'
                         prompt += instruction(handoff, claim['context'])
+                        if profile is not None and len(prompt.encode('utf-8')) > flow['ai_policy']['max_prompt_bytes']:
+                            raise ValueError('Full prompt exceeds AI budget')
                     commands = [(argv, prompt)] + [(argv, '') for argv in task['verify']]
                 # A task's entire command+verification bundle shares one task deadline.
-                deadline = min(record['created'] + limits['run_seconds'], time.time() + limits['task_seconds'])
+                deadline = min(record['created'] + limits['run_seconds'], time.time() + min(limits['task_seconds'], profile['seconds'] if task_id != '__final__' and profile is not None else limits['task_seconds']))
                 for index, (argv, stdin_text) in enumerate(commands):
                     remaining = deadline - time.time()
                     if remaining <= 0 or not heartbeat():

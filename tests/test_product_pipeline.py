@@ -75,6 +75,8 @@ class PipelineTests(unittest.TestCase):
         self.assertIn('SYNTHESIS MODE', flow['tasks'][-1]['prompt'])
         self.assertIn('product-define/SKILL.md', flow['tasks'][-1]['prompt'])
         self.assertEqual(flow['policy']['env'], ['PATH', 'HOME'])
+        self.assertEqual(flow['ai_policy']['max_calls'], 6)
+        self.assertTrue(all(t['model_role'] == 'planning' and t['model_calls'] == 1 for t in flow['tasks']))
 
     def test_invalid_admission_before_side_effects(self):
         for idea in ('', ' ', 'x'*32769, 'a\x00b'):
@@ -108,6 +110,8 @@ class PipelineTests(unittest.TestCase):
             self.assertTrue(Path(report['product']['mvp_plan']).is_file())
             self.assertFalse(report['product']['market_validated'])
             self.assertEqual(len(report['tasks']), 7)
+            self.assertEqual(report['budget']['charged_calls'], 6)
+            self.assertEqual(report['budget']['charged_units'], 30)
             final = validate_stage(report['workspace'], meta['pipeline_id'], 'mvp', meta['context_sha256'], ROOT)
             self.assertEqual(final['verdict']['recommendation'], 'plan')
             self.assertFalse(final['verdict']['market_validated'])
@@ -120,15 +124,17 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(final['verdict']['recommendation'], 'validate')
         self.assertIn('U-market-1', final['verdict']['unresolved'])
 
-    def test_pause_then_operator_context_resumes_same_pipeline(self):
+    def test_pause_consumes_default_stage_allocation_and_resolve_does_not_refund(self):
         run, meta = self.new('pause')
         self.assertEqual(work(self.state, run), 'needs_input')
         with closing(Store(self.state)) as store:
             store.resolve(run, 'product-market', 'Scope clarified: one region only', True)
-        self.assertEqual(work(self.state, run), 'verified')
-        tasks = status(self.state, run)['tasks']
-        self.assertEqual(tasks[0]['attempts'], 1)
-        self.assertEqual(tasks[1]['attempts'], 2)
+        self.assertEqual(work(self.state, run), 'failed')
+        report = status(self.state, run)
+        self.assertEqual(report['reason'], 'model_budget_exhausted')
+        self.assertEqual(report['tasks'][0]['attempts'], 1)
+        self.assertEqual(report['tasks'][1]['attempts'], 1)
+        self.assertEqual(report['budget']['charged_calls'], 2)
 
     def test_app_edit_rejected(self):
         run, _ = self.new('app')
@@ -161,6 +167,34 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertNotIn('Traceback', result.stderr)
             self.assertFalse(self.state.exists())
+
+    def test_custom_policy_preflight_and_unsafe_files(self):
+        import os
+        from orchestrator.budgets import default_policy
+        idea=self.base/'idea.md'; idea.write_text('Synthetic idea')
+        policy=self.base/'policy.json'; values=default_policy('codex')
+        values['profiles']['planning']['model']='custom-pinned-model'
+        policy.write_text(json.dumps(values))
+        argv=[PYTHON,'-m','orchestrator','product-create','--state',str(self.state),'--target',str(self.target),'--idea-file',str(idea),'--adapter','codex','--agent',self.executable(),'--skills-root',str(ROOT),'--ai-policy']
+        fifo=self.base/'fifo-policy'; os.mkfifo(fifo)
+        link=self.base/'link-policy'; link.symlink_to(policy)
+        for file in (fifo,link):
+            result=subprocess.run(argv+[str(file)],cwd=ROOT,capture_output=True,text=True,timeout=3)
+            self.assertEqual(result.returncode,2)
+            self.assertFalse(self.state.exists())
+        policy.write_text('null')
+        result=subprocess.run(argv+[str(policy)],cwd=ROOT,capture_output=True,text=True,timeout=3)
+        self.assertEqual(result.returncode,2); self.assertFalse(self.state.exists())
+        values['max_units']=29; policy.write_text(json.dumps(values))
+        result=subprocess.run(argv+[str(policy)],cwd=ROOT,capture_output=True,text=True,timeout=3)
+        self.assertEqual(result.returncode,2); self.assertFalse(self.state.exists())
+        values['max_units']=30; policy.write_text(json.dumps(values))
+        result=subprocess.run(argv+[str(policy)],cwd=ROOT,capture_output=True,text=True,timeout=10)
+        self.assertEqual(result.returncode,0,result.stderr)
+        preflight=json.loads(result.stdout)
+        self.assertEqual(preflight['budget']['charged_calls'],0)
+        self.assertEqual(preflight['budget']['tasks'][0]['requested_model'],'custom-pinned-model')
+        self.assertEqual(status(self.state,preflight['run_id'])['status'],'pending')
 
     def test_product_cli_creates_real_pending_run(self):
         idea = self.base / 'idea.md'; idea.write_text('Synthetic idea')

@@ -16,13 +16,13 @@ DoD: all R edge tests, full offline suite, validator, real disposable runtime ac
 
 Plan: model-budgets / v001; execution: model-budgets-v001.
 Integration commit: -. Status: **INCOMPLETE**.
-Implemented 0/4; integrated 0/4; verified 0/4.
+Implemented 1/4; integrated 1/4; verified 0/4.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] POLICY | pending | coordinator | - | - |
-| [ ] ADAPTER | pending | agent-runner | - | - |
-| [ ] CORE | pending | coordinator | - | - |
+| [ ] POLICY | in_progress | coordinator | - | - |
+| [ ] ADAPTER | integrated | agent-runner | ac11d9e | - |
+| [ ] CORE | in_progress | coordinator | - | - |
 | [ ] ACCEPT | pending | coordinator | - | - |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |

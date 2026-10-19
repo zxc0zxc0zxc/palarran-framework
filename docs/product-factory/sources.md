@@ -13,3 +13,7 @@
 | [Git worktree](https://git-scm.com/docs/git-worktree) | Рабочие деревья общей repository | Owned detached worktree на run; это не security sandbox |
 
 Не приписываем Netflix/Meta несуществующий exact factory pipeline. Эти первичные источники покрывают конкретные решения; новых компаний ради списка не добавляем.
+
+## Model governance, 2026-10-19
+
+[OpenAI models](https://developers.openai.com/codex/models): Sol для сложных повторяемых задач, Luna для focused работы; availability зависит от account/client. Наша адаптация: planning Sol/high, implementation Luna/high, simple Luna/low; это provisional policy, не измеренная экономия. [Claude CLI reference](https://code.claude.com/docs/en/cli-reference): explicit model/effort; max-budget-usd — estimate с возможным overshoot. Наша адаптация: portable hard launch allocations вместо обещания hard USD. Модельный launch включает внутренние API calls. Units/deadlines выбраны нами, не vendor prices.

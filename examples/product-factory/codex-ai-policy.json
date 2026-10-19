@@ -1,0 +1,25 @@
+{
+  "max_calls": 6,
+  "max_units": 30,
+  "max_prompt_bytes": 32768,
+  "profiles": {
+    "planning": {
+      "model": "gpt-6.1-sol",
+      "effort": "high",
+      "weight": 5,
+      "seconds": 600
+    },
+    "implementation": {
+      "model": "gpt-6-luna",
+      "effort": "high",
+      "weight": 2,
+      "seconds": 300
+    },
+    "simple": {
+      "model": "gpt-6-luna",
+      "effort": "low",
+      "weight": 1,
+      "seconds": 60
+    }
+  }
+}

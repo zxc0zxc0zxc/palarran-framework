@@ -4,6 +4,8 @@ import math
 import os
 import re
 
+from .budgets import validate_policy
+
 ID = re.compile(r'^[A-Za-z0-9_-]{1,64}$')
 ENV = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 
@@ -26,7 +28,7 @@ def _unique(value):
 
 def validate(value):
     """Return an independent normalized snapshot, or raise ValueError."""
-    _object(value, ('version', 'name', 'plan_revision', 'limits', 'policy', 'tasks'))
+    _object(value, ('version', 'name', 'plan_revision', 'limits', 'policy', 'tasks'), ('ai_policy',))
     result = copy.deepcopy(value)
     if type(result['version']) is not int or result['version'] != 1:
         raise ValueError('Unsupported workflow version')
@@ -58,7 +60,7 @@ def validate(value):
         raise ValueError('Expected 1..100 tasks')
     ids = []
     for task in tasks:
-        _object(task, ('id', 'verify'), ('depends_on', 'adapter', 'argv', 'prompt', 'executable', 'replay_safe', 'verify_stable'))
+        _object(task, ('id', 'verify'), ('depends_on', 'adapter', 'argv', 'prompt', 'executable', 'replay_safe', 'verify_stable', 'model_role', 'model_calls'))
         if not isinstance(task['id'], str) or not ID.fullmatch(task['id']) or task['id'] == '__final__':
             raise ValueError('Invalid task identity')
         ids.append(task['id'])
@@ -85,6 +87,9 @@ def validate(value):
             executable = task.get('executable')
         if executable not in policy['executables']:
             raise ValueError('Task executable denied')
+    if 'ai_policy' in result and result['ai_policy'] is None:
+        raise ValueError('AI policy cannot be null')
+    validate_policy(result.get('ai_policy'), tasks, limits['max_attempts'])
     _unique(ids)
     graph = {task['id']: task['depends_on'] for task in tasks}
     if any(dep not in graph for deps in graph.values() for dep in deps):

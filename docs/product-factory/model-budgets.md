@@ -48,3 +48,7 @@ flowchart LR
   Run --> Gate[Independent command verifier]
   Run --> Stop[Failure or needs input]
 ```
+
+Managed worker получает запрет nested model/agent invocations и model escalation; coordinator заранее выделяет отдельные tasks. Это инструкция доверенному worker, не OS enforcement. Наш scheduler не настраивает fallback, но inherited provider config/router способен переключать backend самостоятельно: status сообщает requested model, не фактическую attestation. Claude effort поддерживается не всеми версиями/моделями; сверять установленный client и provider mapping ([model configuration](https://code.claude.com/docs/en/model-config), проверено 2026-10-19).
+
+Готовые policy-файлы: [Codex](../../examples/product-factory/codex-ai-policy.json), [Claude](../../examples/product-factory/claude-ai-policy.json). Например добавить `--ai-policy examples/product-factory/codex-ai-policy.json` к product-create; пути разрешаются относительно cwd оператора. Для самостоятельного engineering workflow [пример](../../examples/product-factory/backend-agent.json) выделяет implementation launch, но executable/feature/verifiers сначала адаптировать.
