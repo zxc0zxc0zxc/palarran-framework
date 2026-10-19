@@ -204,3 +204,7 @@ scripts/             # Обследование и проверки
 MCP-серверы будут добавляться отдельными каталогами по мере появления реализаций.
 
 Форматы интеграции сверены с [официальным руководством Codex skills](https://learn.chatgpt.com/docs/build-skills) и [Claude plugin commands](https://code.claude.com/docs/en/plugins-reference#commands).
+
+## Product Factory runtime
+
+[Документация, контракт и запуск](docs/product-factory/README.md): bounded engineering loop с durable SQLite state, Git worktree, CLI agents и независимыми проверками. [SDD план v001](.ai-development/backend/2026-10-19-product-factory/plan.md).

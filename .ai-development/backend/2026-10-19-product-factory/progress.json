@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "plan_id": "product-factory",
+  "plan_revision": "v001",
+  "source_commit": "ec9e2cfb2eb7bc88d78605d6256aed666fdf49f4",
+  "execution_id": "pf-v001",
+  "integration_commit": null,
+  "tasks": [
+    {
+      "id": "RUNNER",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched",
+      "checks": [
+        {
+          "id": "T-RUNNER",
+          "required": true,
+          "status": "NOT_RUN",
+          "subject_commit": null,
+          "evidence": [],
+          "reason": "Not executed"
+        }
+      ]
+    },
+    {
+      "id": "CONTRACT-TEST",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched",
+      "checks": [
+        {
+          "id": "T-CONTRACT-TEST",
+          "required": true,
+          "status": "NOT_RUN",
+          "subject_commit": null,
+          "evidence": [],
+          "reason": "Not executed"
+        }
+      ]
+    },
+    {
+      "id": "CORE",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched",
+      "checks": [
+        {
+          "id": "T-CORE",
+          "required": true,
+          "status": "NOT_RUN",
+          "subject_commit": null,
+          "evidence": [],
+          "reason": "Not executed"
+        }
+      ]
+    },
+    {
+      "id": "ACCEPT",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched",
+      "checks": [
+        {
+          "id": "T-ACCEPT",
+          "required": true,
+          "status": "NOT_RUN",
+          "subject_commit": null,
+          "evidence": [],
+          "reason": "Not executed"
+        }
+      ]
+    }
+  ],
+  "gates": [
+    {
+      "id": "INTEGRATED-DOD",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Not executed"
+    }
+  ]
+}

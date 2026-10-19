@@ -18,3 +18,6 @@ plans/
 
 # Keep sanitized decisions/context; discard only per-task scratch.
 .ai-development/**/scratch/
+
+# Private local orchestrator state, including workflow snapshots.
+.factory-state/
