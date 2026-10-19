@@ -69,9 +69,13 @@ class UsageStream:
         self._reasoning = 0
 
     def _snapshot(self, input_tokens, cached, creation, output, reasoning, cost):
-        for value in (input_tokens, cached, creation, output):
+        for value in (input_tokens, cached, output):
             _counter(value)
-        _require(cached + creation <= input_tokens and input_tokens + output <= MAX_TOKENS)
+        if creation is None:
+            _require(self.adapter == 'codex')
+        else:
+            _counter(creation)
+        _require(cached + (creation or 0) <= input_tokens and input_tokens + output <= MAX_TOKENS)
         if reasoning is not None:
             _counter(reasoning)
             _require(reasoning <= output)
@@ -105,16 +109,19 @@ class UsageStream:
                     _require(required in usage)
                 incoming = _counter(usage['input_tokens'])
                 cached = _counter(usage['cached_input_tokens'])
-                creation = _counter(usage.get('cache_creation_input_tokens', 0))
+                creation = usage.get('cache_creation_input_tokens')
+                if creation is not None:
+                    _counter(creation)
                 output = _counter(usage['output_tokens'])
                 reasoning = usage.get('reasoning_output_tokens')
-                _require(cached + creation <= incoming)
+                _require(cached + (creation or 0) <= incoming)
                 if reasoning is not None:
                     _counter(reasoning)
                     _require(reasoning <= output)
                 total_reasoning = None if reasoning is None or self._reasoning is None else self._reasoning + reasoning
+                total_creation = None if creation is None or self._creation is None else self._creation + creation
                 snapshot = self._snapshot(self._input + incoming, self._cached + cached,
-                                          self._creation + creation, self._output + output,
+                                          total_creation, self._output + output,
                                           total_reasoning, None)
                 self._input, self._cached, self._creation = snapshot['input_tokens'], snapshot['cached_input_tokens'], snapshot['cache_creation_input_tokens']
                 self._output, self._reasoning = snapshot['output_tokens'], snapshot['reasoning_output_tokens']

@@ -143,6 +143,32 @@ class UsageStreamTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.parse('claude', data)
 
+    def test_missing_cache_creation_is_unknown_but_explicit_zero_is_known(self):
+        missing = self.parse('codex', codex())[0]
+        explicit = self.parse('codex', codex(cache_creation_input_tokens=0))[0]
+        self.assertIsNone(missing['cache_creation_input_tokens'])
+        self.assertEqual(explicit['cache_creation_input_tokens'], 0)
+        self.assertEqual(missing['total_tokens'], explicit['total_tokens'])
+
+    def test_cache_creation_unknown_propagates_across_turns(self):
+        data = (codex(cache_creation_input_tokens=2) + codex() +
+                codex(cache_creation_input_tokens=0) + codex(cache_creation_input_tokens=1))
+        snapshots = self.parse('codex', data)
+        self.assertEqual([item['cache_creation_input_tokens'] for item in snapshots], [2, None, None, None])
+        snapshots = self.parse('codex', codex() + codex(cache_creation_input_tokens=3))
+        self.assertEqual([item['cache_creation_input_tokens'] for item in snapshots], [None, None])
+
+    def test_nullable_creation_does_not_relax_other_counter_bounds(self):
+        for fields in ({'cache_creation_input_tokens':True}, {'cache_creation_input_tokens':-1},
+                       {'cache_creation_input_tokens':10**12+1}):
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                self.parse('codex', codex(**fields))
+        with self.assertRaises(ValueError):
+            self.parse('codex', codex(input_tokens=1, cached=2))
+        with self.assertRaises(ValueError):
+            self.parse('claude', claude(modelUsage={'m':dict(inputTokens=1, cacheReadInputTokens=0,
+                                                           cacheCreationInputTokens=None, outputTokens=0)}))
+
     def test_unknown_reasoning_propagates_without_invention(self):
         receipts = self.parse('codex', codex(reasoning_output_tokens=2) + codex() + codex(reasoning_output_tokens=1))
         self.assertEqual([item['reasoning_output_tokens'] for item in receipts], [2, None, None])
