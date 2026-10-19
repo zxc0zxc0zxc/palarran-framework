@@ -23,19 +23,19 @@ Invariants: no completion without final independent gates; no orphan source/deci
 <!-- backend-progress:start -->
 
 Plan: product-pipeline / v003; execution: product-pipeline-v001.
-Integration commit: 244336f. Status: **INCOMPLETE**.
-Implemented 2/3; integrated 2/3; verified 0/3.
+Integration commit: 0e3b93da6b9ffda0ea2ab8b0b60246c4e51aa28f. Status: **VERIFIED**.
+Implemented 3/3; integrated 3/3; verified 3/3.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] ARTIFACTS | integrated | agent-product-artifacts | 244336f | Integrated; final acceptance pending |
-| [ ] BUILDER | integrated | coordinator | 244336f | Integrated; final acceptance pending |
-| [ ] ACCEPT | in_progress | coordinator | - | Regression and complete integrated checks in progress |
+| [x] ARTIFACTS | verified | agent-product-artifacts | 0e3b93da6b9ffda0ea2ab8b0b60246c4e51aa28f | - |
+| [x] BUILDER | verified | coordinator | 0e3b93da6b9ffda0ea2ab8b0b60246c4e51aa28f | - |
+| [x] ACCEPT | verified | coordinator | 0e3b93da6b9ffda0ea2ab8b0b60246c4e51aa28f | - |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |
 |---|---|---|---|---|
-| INTEGRATED-DOD | True | NOT_RUN | - | Not executed |
-| LAB-SLO | True | NOT_RUN | - | Not executed |
+| INTEGRATED-DOD | True | PASS | 0e3b93da6b9ffda0ea2ab8b0b60246c4e51aa28f | .ai-development/backend/2026-10-19-product-pipeline/verification.md |
+| LAB-SLO | True | PASS | 0e3b93da6b9ffda0ea2ab8b0b60246c4e51aa28f | .ai-development/backend/2026-10-19-product-pipeline/verification.md |
 
 Structural validation is not proof of test execution, Git ancestry or operational SLA.
 
