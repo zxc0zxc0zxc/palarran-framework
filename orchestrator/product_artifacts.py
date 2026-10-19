@@ -222,7 +222,11 @@ def validate_stage(root, pipeline_id, stage, expected_context_sha, skills_root):
             datetime.date.fromisoformat(record['retrieved_at'])
             url = record['source_url']
             require(url is None or isinstance(url, str))
-            if url is not None:
+            if url == 'artifact:context':
+                pass  # context was already integrity checked above
+            elif isinstance(url, str) and url.startswith('artifact:decision/'):
+                require(url[len('artifact:decision/'):] in decisions)
+            elif url is not None:
                 text(url)
                 parsed = urlsplit(url)
                 parsed.port  # Reject malformed port literals as well as invalid IPv6 authorities.

@@ -132,6 +132,17 @@ class ArtifactTests(unittest.TestCase):
             self.save(manifest)
             self.fail()
 
+    def test_local_context_and_decision_evidence_are_pinned(self):
+        manifest = write_stage(self.root, self.context, 'define')
+        for uri in ('artifact:context', 'artifact:decision/' + manifest['decisions'][0]['id']):
+            manifest['evidence'][0]['source_url'] = uri
+            self.save(manifest)
+            self.check()
+        for uri in ('artifact:decision/missing', 'artifact:/private/key', 'artifact:context?secret=x'):
+            manifest['evidence'][0]['source_url'] = uri
+            self.save(manifest)
+            self.fail()
+
     def test_evidence_urls_and_unknown_value(self):
         for url in ('https://user:secret@example.com/x', 'https://example.com/?token=secret',
                     'https://example.com/#x', 'https://@example.com/', 'https://example.com/?',
