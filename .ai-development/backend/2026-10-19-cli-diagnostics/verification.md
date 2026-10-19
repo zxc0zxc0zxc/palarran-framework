@@ -28,3 +28,9 @@ Known diagnostic receipts lower bound:174055tokens/$0.209191estimate across thre
 Public trace v002/HTML preserved beside v001 in external diagnostic-review. Still draft, no automatic few-shot injection or training.
 
 Final v002 stable source: full suite213tests PASS62.186s, validator298MD/18skills PASS, factory acceptance p95 1.059ms/100samples and0.398s smoke PASS. Live post-fix web-probe independently VERIFIED. No source stream/log retention added; only allowlisted parser failure enums. Next product recovery permitted by ADR0004, same600k/$12 run and100k/$2stage caps, no auto increase.
+
+## Recovery2 final observation
+
+Run61053f1bf8914d98b653a0cb53923687 on pinned d29cc4e produced define report/evidence/ADR/public decision trace. Independent pinned define verifier PASSa9f843f863acc8a282b4eca732662ab776efa1260b8ecca0daadcc11ffc75533 after termination. No downstream attempt. Runtime failed/usage_budget_exhausted: receipt1567892tokens(input1549910,cached1407360,output17982),$1.263952estimate,407.983s,usage_stop at turn.completed; EOF incomplete remains unknown. This is artifact-integrity PASS only, not completed pipeline/market validation. No retries/limit raises after budget stop.
+
+CLI terminal receipts are too coarse for hard inside-turn token enforcement:100kstage/600krun token caps were exceeded before the first terminal event. Existing observed-stop guarantee disclosed; caps not silently bypassed. Future context/telemetry redesign remains explicit follow-up, not delivered in this diagnostics fix. Account snapshot25→26% over coordination+diagnostics+research; no clean per-run attribution. External RECOVERY-REPORT.md preserves final details and artifacts.
