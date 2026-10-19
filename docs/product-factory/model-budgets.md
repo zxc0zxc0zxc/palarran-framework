@@ -35,9 +35,11 @@ Product-create по умолчанию выделяет шести research/synt
 
 ## Граница гарантии
 
+Новое [usage accounting](usage-accounting.md) добавляет реальные CLI counters, reported/rate-card стоимость и stop по stage/run caps. Ниже ограничения legacy launch-only режима; поле `budget.provider_usage` остаётся legacy null, актуальная telemetry вынесена в `usage`.
+
 Units — условные веса, не USD, токены, credits или проценты недельной подписки. Один CLI launch может содержать много внутренних API calls и дочерних агентов. Runtime гарантирует свои launch allocations, prompt-size и process deadlines, но не API token cap и не итоговый счёт. Размер prompt не ограничивает файлы/инструменты, которые агент прочитает. Inherited CLI config/hooks/MCP не sandboxed этим счётчиком. Выделяйте trusted environment и provider/account-side ограничения, когда нужен финансовый предел.
 
-Codex поддерживает explicit model и JSONL usage ([noninteractive](https://developers.openai.com/codex/noninteractive)), но текущий runtime не сохраняет и не интерпретирует raw provider stream. `usage` отсутствует, а не ноль. Claude `--max-budget-usd` — client estimate, допускающий overshoot, поэтому не используем его как portable hard cap. Реальные расходы/remaining subscription quota здесь unknown; market validation и operational SLA также не выводятся из offline acceptance.
+Codex поддерживает explicit model и JSONL usage ([noninteractive](https://developers.openai.com/codex/noninteractive)), в launch-only режиме поток не интерпретируется. С `usage_policy` bounded parser извлекает только numeric allowlist в отдельный `usage` ledger; raw stream не сохраняется. Claude `--max-budget-usd` — client estimate, допускающий overshoot, поэтому не используем его как portable hard cap. Реальные расходы/remaining subscription quota здесь unknown; market validation и operational SLA также не выводятся из offline acceptance.
 
 ```mermaid
 flowchart LR

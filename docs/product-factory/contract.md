@@ -1,6 +1,6 @@
 # Workflow v1 и контракт модулей
 
-Workflow — JSON object, только перечисленные поля; неизвестные поля запрещены. Все IDs `[A-Za-z0-9_-]{1,64}`, уникальны. Optional `ai_policy` и task `model_role`/`model_calls` определены в [model budget contract](model-budgets.md); отсутствие policy сохраняет legacy поведение. Нужны `version:1`, `name`, `plan_revision`, `tasks`, `limits`, `policy`. Task count 1..100; DAG без циклов/неизвестных/повторных dependencies. Все числовые значения конечны, положительны, bool не number.
+Workflow — JSON object, только перечисленные поля; неизвестные поля запрещены. Все IDs `[A-Za-z0-9_-]{1,64}`, уникальны. Optional `usage_policy` определён в [usage accounting contract](usage-accounting.md): durable attempt ledger/schema v2, stdout usage callbacks, stage/run token/USD guards и явная unknown reconciliation. Optional `ai_policy` и task `model_role`/`model_calls` определены в [model budget contract](model-budgets.md); отсутствие policy сохраняет legacy поведение. Нужны `version:1`, `name`, `plan_revision`, `tasks`, `limits`, `policy`. Task count 1..100; DAG без циклов/неизвестных/повторных dependencies. Все числовые значения конечны, положительны, bool не number.
 
 `limits`: `run_seconds` (<=86400), `task_seconds` (<=3600), `lease_seconds` (>=3, <=300), `max_attempts` (1..10), `output_bytes` (1024..10485760). Лимит run включает ожидание и простои после create. CPU/memory/network и денежные лимиты этим runtime не гарантируются. При невозможности hard monetary cap запускать provider в отдельно ограниченном account; не выдавать wall time за стоимость.
 
@@ -22,13 +22,15 @@ class Result:
     output_sha256: str
     output_bytes: int
     seconds: float
+    usage_complete: Optional[bool] = None
 
-def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="") -> Result:
+def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
+            usage_adapter=None, on_usage=None) -> Result:
     # heartbeat() -> bool; call at least every 0.2s, False kills process group
     # shell=False; no raw output persisted/printed; env exact supplied mapping
     ...
 
-def invocation(task, workspace):
+def invocation(task, workspace, *, profile=None, telemetry=False, max_cost_usd=None):
     # returns (argv: list[str], stdin_text: str)
     # command passes argv; codex/claude explicit noninteractive argv, no bypass
     ...

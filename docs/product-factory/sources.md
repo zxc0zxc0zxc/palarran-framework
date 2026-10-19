@@ -17,3 +17,7 @@
 ## Model governance, 2026-10-19
 
 [OpenAI models](https://developers.openai.com/codex/models): Sol для сложных повторяемых задач, Luna для focused работы; availability зависит от account/client. Наша адаптация: planning Sol/high, implementation Luna/high, simple Luna/low; это provisional policy, не измеренная экономия. [Claude CLI reference](https://code.claude.com/docs/en/cli-reference): explicit model/effort; max-budget-usd — estimate с возможным overshoot. Наша адаптация: portable hard launch allocations вместо обещания hard USD. Модельный launch включает внутренние API calls. Units/deadlines выбраны нами, не vendor prices.
+
+## Usage telemetry, 2026-10-19
+
+[OpenAI JSONL](https://developers.openai.com/codex/noninteractive) определяет turn.completed usage. [API pricing](https://developers.openai.com/api/docs/pricing) — snapshot Standard long-context USD/1M, а не подписка или invoice. [Claude cost tracking](https://code.claude.com/docs/en/agent-sdk/cost-tracking) рекомендует result/modelUsage для полной стоимости, отмечает per-step output placeholder, неполную usage при budget error и zeroed metrics при crash. Наша адаптация: bounded stdout parser, cumulative durable attempt snapshots, Decimal rate card estimate для Codex, reported cost для Claude, unknown fail closed и observed-budget stop. Cap/defaults/DB/schema — наш контракт, не vendor обещание.

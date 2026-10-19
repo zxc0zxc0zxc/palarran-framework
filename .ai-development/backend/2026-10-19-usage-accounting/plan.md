@@ -1,4 +1,6 @@
-# Usage accounting v001
+# Usage accounting v002
+
+v002: nullable cache-write breakdown и conservative ambiguous bucket pricing после independent review (ADR 0002). v001 до коррекции сохранён в Git; его 200-test PASS не заменяет v002 acceptance.
 
 Source [contract](../../../docs/product-factory/usage-accounting.md), ADR 0001; base 746481f. Existing Python3.9 stdlib/SQLite/CLI transport remains.
 
@@ -14,15 +16,15 @@ DoD: all R critical tests, schema v1->v2 migration preserving snapshot hashes/ol
 
 <!-- backend-progress:start -->
 
-Plan: usage-accounting / v001; execution: usage-accounting-v001.
+Plan: usage-accounting / v002; execution: usage-accounting-v001.
 Integration commit: -. Status: **INCOMPLETE**.
-Implemented 0/4; integrated 0/4; verified 0/4.
+Implemented 2/4; integrated 2/4; verified 0/4.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] PARSER | pending | agent-parser | - | - |
-| [ ] RUNNER | pending | agent-runner | - | - |
-| [ ] CORE | pending | coordinator | - | - |
+| [ ] PARSER | integrated | agent-parser | 8e53642 | - |
+| [ ] RUNNER | integrated | agent-runner | 8e53642 | - |
+| [ ] CORE | in_progress | coordinator | - | - |
 | [ ] ACCEPT | pending | coordinator | - | - |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |

@@ -1,38 +1,42 @@
 {
   "schema_version": 1,
   "plan_id": "usage-accounting",
-  "plan_revision": "v001",
-  "source_commit": "746481f",
+  "plan_revision": "v002",
+  "source_commit": "85377e0",
   "execution_id": "usage-accounting-v001",
   "integration_commit": null,
   "tasks": [
     {
       "id": "PARSER",
-      "plan_revision": "v001",
+      "plan_revision": "v002",
       "owner": "agent-parser",
-      "status": "pending",
+      "status": "integrated",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
+      "code_commits": [
+        "eef0654"
+      ],
+      "integration_commit": "8e53642",
       "reason": "",
       "checks": []
     },
     {
       "id": "RUNNER",
-      "plan_revision": "v001",
+      "plan_revision": "v002",
       "owner": "agent-runner",
-      "status": "pending",
+      "status": "integrated",
       "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
+      "code_commits": [
+        "8e53642"
+      ],
+      "integration_commit": "8e53642",
       "reason": "",
       "checks": []
     },
     {
       "id": "CORE",
-      "plan_revision": "v001",
+      "plan_revision": "v002",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "in_progress",
       "depends_on": [],
       "code_commits": [],
       "integration_commit": null,
@@ -41,7 +45,7 @@
     },
     {
       "id": "ACCEPT",
-      "plan_revision": "v001",
+      "plan_revision": "v002",
       "owner": "coordinator",
       "status": "pending",
       "depends_on": [

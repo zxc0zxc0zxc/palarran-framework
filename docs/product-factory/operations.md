@@ -23,3 +23,16 @@
 ## Модели и бюджет
 
 До work проверьте `budget` в create/status/export: requested model/effort и allocations каждой task. [Контракт](model-budgets.md) различает launch cap и неизвестный provider spend. Product CLI принимает `--ai-policy /path/to/policy.json` (regular non-symlink JSON <=64KiB); invalid policy отклоняется до создания worktree. Изменение policy требует нового run. Запас для retry распределять до create; resolve не возвращает потраченный launch.
+
+## Реальные usage и stop
+
+[Usage contract](usage-accounting.md) определяет caps и источник цен. У новых product runs default 600000 tokens/$12 run, 100000/$2 stage (включая все retries). Пример: `--usage-policy examples/product-factory/codex-usage-policy.json`. Custom Codex model требует matching rate card. `status`/`export` возвращают `usage` с counters/стоимостью/completeness каждой attempt/stage/run; `budget` остаётся launch guard. Unknown != zero, observed lower bound виден отдельно.
+
+При usage_unknown остановить прежний worker, проверить provider receipts и подготовить normalized JSON по contract. Команда ничего не исполняет:
+
+```sh
+python3 -m orchestrator usage-reconcile --state /path/to/private-state --run RUN_ID --task TASK_ID --attempt 1 --usage-file /path/to/checked-usage.json --reason "Provider receipts checked" --processes-stopped
+python3 -m orchestrator resolve --state /path/to/private-state --run RUN_ID --task TASK_ID --reason "Scope and prior outcome reconciled" --processes-stopped
+```
+
+Reconcile не допускает уменьшения наблюдённых counters/cost и не пополняет launch allocation; превышенный budget остаётся terminal. Бюджет не защищает от невидимых внутренних requests до первого usage event. Claude получает дополнительный `--max-budget-usd` для remaining stage/run estimate, но его overshoot не скрывается. Financial invoice и quota subscription отдельно от этих telemetry.

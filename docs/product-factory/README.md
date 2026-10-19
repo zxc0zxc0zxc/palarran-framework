@@ -13,7 +13,7 @@ python3 -m orchestrator work --state /path/to/private-state --run RUN_ID
 python3 -m orchestrator status --state /path/to/private-state --run RUN_ID
 ```
 
-`create` создаёт owned detached Git worktree в state; исходный checkout не редактируется. `work` запускает доверенные команды: это явная граница исполнения. Демонстрационный workflow создаёт файл и проверяет его реальное содержимое. Адаптеры `codex`/`claude` запускают установленные авторизованные CLI; новые product runs заранее фиксируют модели и allocation по [политике бюджета](model-budgets.md); generic workflows без неё явно unmanaged. Ошибка доступа/лимита/уточнение приводят к остановке, а не обходу permissions.
+`create` создаёт owned detached Git worktree в state; исходный checkout не редактируется. `work` запускает доверенные команды: это явная граница исполнения. Демонстрационный workflow создаёт файл и проверяет его реальное содержимое. Адаптеры `codex`/`claude` запускают установленные авторизованные CLI; [Учёт токенов/стоимости](usage-accounting.md) сохраняет реальные usage receipts и останавливает AI stages при stage/run caps. Адаптеры: новые product runs заранее фиксируют модели и allocation по [политике бюджета](model-budgets.md); generic workflows без неё явно unmanaged. Ошибка доступа/лимита/уточнение приводят к остановке, а не обходу permissions.
 
 Проверить runtime на disposable target одним запуском (без LLM и сети):
 
