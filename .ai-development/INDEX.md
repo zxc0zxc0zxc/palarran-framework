@@ -57,3 +57,7 @@
 | backend/2026-10-19-model-budgets/0002 | accepted | Managed worker без nested model/agent запусков | [record](backend/2026-10-19-model-budgets/decisions/0002-worker-scope.md); пересмотр при provider gateway |
 | backend/2026-10-19-usage-accounting/0001 | accepted | Реальные usage receipts, stage/run caps, durable ledger и fail-closed reconciliation | [record](backend/2026-10-19-usage-accounting/decisions/0001-accounting.md); пересмотр по provider evals |
 | backend/2026-10-19-usage-accounting/0002 | accepted | Unknown cache writes и conservative pricing | [record](backend/2026-10-19-usage-accounting/decisions/0002-cache-uncertainty.md); пересмотр по authoritative buckets |
+| product/2026-10-19-first-customers/0001 | accepted | Два planning skills и два checkpoint | [record](product/2026-10-19-first-customers/decisions/0001-scope.md); пересмотр по первым проверкам рынка |
+| product/2026-10-19-first-customers/0002 | accepted | Hard small-client filter и free-first | [record](product/2026-10-19-first-customers/decisions/0002-small-and-frugal.md); пересмотр по первым проверкам рынка |
+| product/2026-10-19-first-customers/0003 | accepted | Primary case evidence и dated quote register | [record](product/2026-10-19-first-customers/decisions/0003-cases-prices.md); пересмотр по первым проверкам рынка |
+| product/2026-10-19-first-customers/0004 | accepted | Portable packages и bounded runtime reuse | [record](product/2026-10-19-first-customers/decisions/0004-delivery.md); пересмотр по первым проверкам рынка |

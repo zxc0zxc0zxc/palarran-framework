@@ -13,3 +13,6 @@
 Для нового кейса: кто/стадия/рынок/историческая дата → проблема → действие → заявленный измеримый результат или «не раскрыт» → источник и заинтересованность → causal limitations → что применимо/что не копировать → дешёвая проверка на нашем масштабе. Число без denominator/window не становится benchmark.
 
 Выбор успешных компаний имеет survivorship/publication bias. Поэтому для каждого переноса записать альтернативное объяснение и falsification/stop condition. Не придумывать «неудачный A/B» для баланса. Если полного первоисточника нет, отметить not inspected, не использовать поисковый snippet как подтверждённый результат. Исторические цифры не представлять актуальными.
+
+| B2B | [Yclients/YouGile/Buffer](b2b-first-customers.md) | Small buyer, bounded pilot, founder content | Self-report, не универсальная small-first причинность |
+| B2C | [BuduFood/HireSeeker/SweetyTreatyCo](b2c-frugal-growth.md) | Local native/barter, early distribution, organic tests | Historical/vendor claims; нет текущего дешёвого CAC |

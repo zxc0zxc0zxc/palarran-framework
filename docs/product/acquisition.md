@@ -19,3 +19,7 @@
 Своё предложение: audience/job/offer, creative angle, channel fit, required landing/onboarding capability, unit economics constraints из revenue report. Эксперимент: H-ID, eligible unit/cohort, primary metric и denominator, attribution window/dedup rules, guardrails/retention/refunds, proposed spend+time cap/stop, owner/data access. Views/CTR/CPI дополняют, но не заменяют activated/paying retained users. Organic cost включает production и время людей. Platform ROAS отличается от blended economics/incrementality; наблюдённая корреляция отдельно от controlled lift.
 
 DoD: evidence table, reasoned channel shortlist по стадии/региону/марже, competing explanation и future test cards, no automatic ad purchase/outreach/pixel installation. Выход [channels](../../templates/product/channels.md).
+
+## Первые клиенты и стоимость
+
+Перед implementation применить [go-to-market checkpoint](go-to-market.md), [small B2B](b2b.md) или [B2C](b2c.md), [price register](pricing.md) и [датированные источники](go-to-market-sources.md). После polish обновить revision/offer/quotes. Неизвестный бюджет означает cash cap=0; unknown price не бесплатность, Similarweb N/A не zero. Outreach/закупки остаются будущим отдельным scope.

@@ -19,3 +19,7 @@ Case-based methods обязательны прежде инструментов:
 Перед каждым использованием: provider capability/status (`not_configured`, `available`, `denied`, `quota_limited`, `not_supported`) + actual tool/version/access_checked_at, dataset coverage/cost ceiling/rate/cache/retention. Статус available только после реальной успешной разрешённой операции, не по наличию документации или env name. Auth failure → stop этого источника/fallback; не retry бесконечно и не обходить ограничения.
 
 Не просить credentials в чате, не писать values в URL/argv/logs/ADR. В target `.delivery/research/` — actual nonsecret provider config и secret-store reference при необходимости; в `.ai-development/product/` — rationale, access status и sanitized evidence. Неофициальный Trends scraper не default: нестабильность/доступ/terms нужно отдельно обосновать. Paid calls, account creation, установка connector/MCP требуют своего явного scope; текущая authoring-задача их не запускает.
+
+## Первые клиенты и стоимость
+
+Перед implementation применить [go-to-market checkpoint](go-to-market.md), [small B2B](b2b.md) или [B2C](b2c.md), [price register](pricing.md) и [датированные источники](go-to-market-sources.md). После polish обновить revision/offer/quotes. Неизвестный бюджет означает cash cap=0; unknown price не бесплатность, Similarweb N/A не zero. Outreach/закупки остаются будущим отдельным scope.

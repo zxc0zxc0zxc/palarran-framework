@@ -33,3 +33,7 @@ Actual status всех экспериментов not_run. Для plan пере�
 ## Handoff
 
 Следующий scoped UX/engineering planning: input artifacts/revisions, R/AC IDs, бизнес-процессы/сущности/состояния, owners/blockers. Product report не запускает UX/build/deploy. Источники/decisions читаются по pinned refs; source changes требуют нового review/revision.
+
+## Sellability checkpoint до engineering
+
+Из acquisition report: B2B/B2C route и buyer/user; qualified small prospects с size/ownership evidence либо конкретная B2C аудитория/площадки; supported offer и ограниченный pilot; Q-ID quotes/rejections, cash/time caps, доступный дешёвый тест, sales/outreach или media plan. Нет evidence/доступа/полной стоимости → conditional и validation прежде engineering, не фиктивный build-ready. После polish пересмотреть actual product revision/обещания/цены. Это содержательный review, не автоматически доказанная verifier-ом продаваемость.

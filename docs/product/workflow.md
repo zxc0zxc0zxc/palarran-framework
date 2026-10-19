@@ -38,3 +38,7 @@ flowchart TD
 В target `.ai-development/INDEX.md` — canonical decision links; product INDEX — каталог report revisions/scope/status/dependency refs, не второй журнал ADR. Для linked report из другого task явно сохранить path/revision/date, не молчаливо использовать latest. В common handoff: что исследовано, actual evidence/queries/API status, что осталось unknown, source revisions, decision owner, next cheapest test, limits/permissions и downstream applicability.
 
 `research_complete` возможно с явно неизвестной выручкой: качественный report не обязан выдумывать недоступное число. Но critical input для конкретного build/test решения удерживает это решение conditional/needs_input. Автоматический запуск экспериментов/engineering work из отчёта запрещён без соответствующего scope.
+
+## Первые клиенты и стоимость
+
+Перед implementation применить [go-to-market checkpoint](go-to-market.md), [small B2B](b2b.md) или [B2C](b2c.md), [price register](pricing.md) и [датированные источники](go-to-market-sources.md). После polish обновить revision/offer/quotes. Неизвестный бюджет означает cash cap=0; unknown price не бесплатность, Similarweb N/A не zero. Outreach/закупки остаются будущим отдельным scope.

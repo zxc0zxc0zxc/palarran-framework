@@ -25,3 +25,7 @@
 | [Appfigures estimates](https://docs.appfigures.com/api/reference/v2/estimates) | Live provider docs | Net mobile estimates по supported perimeter; не все revenue sources |
 
 Excluded during research: Duolingo TikTok case URL вернул notfound при прямом открытии; Google Ads Never Fully Dressed case body не удалось надёжно прочитать. Поэтому их рекламные числовые claims не включены как подтверждённые кейсы. Google HEART PDF redirect был недоступен, использована доступная official publication page. Primary Meta canonical URL не открылся, проверена официальная locale-версия. Это access limitations, не доказательство отсутствия кейса/канала.
+
+## Первые клиенты и стоимость
+
+Перед implementation применить [go-to-market checkpoint](go-to-market.md), [small B2B](b2b.md) или [B2C](b2c.md), [price register](pricing.md) и [датированные источники](go-to-market-sources.md). После polish обновить revision/offer/quotes. Неизвестный бюджет означает cash cap=0; unknown price не бесплатность, Similarweb N/A не zero. Outreach/закупки остаются будущим отдельным scope.
