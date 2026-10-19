@@ -144,11 +144,41 @@ if mode=='fail': sys.exit(1)
             self.assertEqual(work(self.state,run),'needs_input')
             report=status(self.state,run)
             self.assertEqual(report['reason'],'usage_unknown')
+            self.assertEqual(len(report['tasks'][0]['results']),1)
+            result=report['tasks'][0]['results'][0]
+            self.assertEqual(result['reason'],'usage_error')
+            self.assertGreaterEqual(result['seconds'],0)
+            self.assertIn('diagnostics',result)
             self.assertIsNone(report['usage']['total_tokens']);self.assertIsNone(report['usage']['cost_usd'])
             self.assertEqual(report['usage']['observed_tokens'],observed)
             with closing(Store(self.state)) as store:store.resolve(run,'ai','Old worker stopped, scope reviewed',True)
             self.assertEqual(work(self.state,run),'needs_input')
             self.assertEqual(status(self.state,run)['tasks'][0]['attempts'],1)
+
+    def test_budget_revocation_retains_outcome_without_restoring_usage_or_lease(self):
+        run=self.new(self.flow(calls=1))
+        with closing(Store(self.state)) as store:
+            claim=store.claim(run)
+            store.fail_run(run,'usage_budget_exhausted')
+            self.assertFalse(store.record_outcomes(run,claim['id'],'stale',[{'returncode':9}]))
+            self.assertTrue(store.record_outcomes(run,claim['id'],claim['token'],[{'returncode':9}]))
+            self.assertFalse(store.record_outcomes(run,claim['id'],claim['token'],[]))
+            self.assertEqual(store.get(run)['status'],'failed')
+            self.assertEqual(store.usage_rows(run)[0]['state'],'unknown')
+            self.assertIsNone(store.tasks(run)[0]['token'])
+        self.assertEqual(status(self.state,run)['tasks'][0]['results'],[{'returncode':9}])
+
+    def test_outcome_record_is_fenced_before_and_after_usage_pause(self):
+        run=self.new(self.flow(calls=2))
+        with closing(Store(self.state)) as store:
+            claim=store.claim(run)
+            task=claim['task_id'] if 'task_id' in claim else claim['id']
+            token=claim['token']
+            self.assertFalse(store.record_outcomes(run,task,'stale',[]))
+            self.assertTrue(store.record_outcomes(run,task,token,[{'returncode':7}]))
+            self.assertFalse(store.complete_usage(run,task,token,complete=False))
+            self.assertFalse(store.record_outcomes(run,task,token,[]))
+        self.assertEqual(status(self.state,run)['tasks'][0]['results'],[{'returncode':7}])
 
     def test_durable_receipt_replay_fencing_and_concurrent_idempotency(self):
         run=self.new(self.flow(calls=2))

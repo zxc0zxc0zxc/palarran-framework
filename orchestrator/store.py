@@ -162,6 +162,29 @@ class Store:
             cursor = self.db.execute("UPDATE tasks SET lease_until=? WHERE run_id=? AND id=? AND token=? AND status='running' AND lease_until>?", (now + flow['limits']['lease_seconds'], run, task, token, now))
             return cursor.rowcount == 1
 
+    def record_outcomes(self, run, task, token, results):
+        """Preserve transport metadata before accounting can revoke this lease."""
+        with self.transaction():
+            row = self.db.execute('SELECT * FROM tasks WHERE run_id=? AND id=?', (run, task)).fetchone()
+            record = self.get(run)
+            if row is None:
+                return False
+            # A budget callback revokes the lease before execute returns. Permit
+            # one metadata-only write for that exact charged attempt; never
+            # restore its lease, change usage or overwrite a retained outcome.
+            if record['status'] == 'failed' and record['reason'] == 'usage_budget_exhausted':
+                receipt = self.db.execute('SELECT token FROM usage_attempts WHERE run_id=? AND task_id=? AND attempt=?', (run, task, row['attempts'])).fetchone()
+                if row['status'] != 'failed' or row['reason'] != 'usage_budget_exhausted' or row['result'] is not None or receipt is None or receipt['token'] != token:
+                    return False
+            else:
+                if record['status'] != 'running' or row['status'] != 'running' or row['token'] != token or row['lease_until'] <= time.time():
+                    return False
+                flow = json.loads(record['workflow'])
+                if time.time() >= record['created'] + flow['limits']['run_seconds']:
+                    return False
+            self.db.execute('UPDATE tasks SET result=? WHERE run_id=? AND id=?', (json.dumps(results), run, task))
+            return True
+
     def finish(self, run, task, token, success, results, fingerprint=None):
         with self.transaction():
             record = self.get(run)

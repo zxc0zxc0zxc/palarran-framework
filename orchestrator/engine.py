@@ -156,6 +156,7 @@ def work(state, run_id):
                         agent_called = True
                     outcome = execute(argv, workspace, timeout=remaining, output_limit=limits['output_bytes'], env=env, heartbeat=heartbeat, stdin_text=stdin_text, **execution_options)
                     results.append(asdict(outcome))
+                    store.record_outcomes(run_id, task_id, token, results)
                     if accounting and index == 0:
                         if not store.complete_usage(run_id, task_id, token, complete=outcome.usage_complete is True, not_started=outcome.reason == 'spawn_error'):
                             paused = store.get(run_id)['status'] == 'needs_input'

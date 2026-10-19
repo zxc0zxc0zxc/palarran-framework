@@ -73,3 +73,21 @@ flowchart LR
   S --> U[Missing or invalid usage]
   U --> R[Needs input and explicit reconciliation]
 ```
+
+## Безопасная диагностика CLI
+
+`Result.diagnostics` содержит только fixed diagnostic codes, число JSON events, наблюдённый turn.started и allowlisted terminal event. Bounded parser stdout error events/stderr классифицирует auth/model/config/network/sandbox/rate-limit ошибки, не сохраняет сообщения/URLs/IDs/prompts. Это observation/classification, не доказательство billing outcome. Oversized lines отбрасываются, не буферизуются без ограничения. Без usage receipt расход unknown даже при известном коде ошибки.
+
+Process outcome сохраняется fenced transaction до complete_usage/usage_unknown pause, поэтому status/export доступны returncode/reason/seconds/digest/bytes даже при отсутствующих counters. Старые результаты без diagnostics совместимы. Никакого automatic replay/zero reconciliation. Отдельный attended diagnostic canary допускается только при явном user scope/budget и не заменяет расход прежней попытки; successful canary с trustworthy usage нужен прежде полного recovery. Unknown прежнего run сохраняется отдельно и раскрывается, а не обнуляется новым run.
+
+### Observable steps и few-shot
+
+Diagnostics сохраняет до32 enum-only step records (turn/item/error/result, allowlisted tool category, bounded exit code), общее число events и число отброшенных steps. Reasoning text/items, arguments, commands, URLs, file paths и model output не сохраняются. Это журнал внешних действий, не chain-of-thought. `steps_dropped>0` явно показывает неполноту trace.
+
+Для последующего few-shot подготовить **reviewed case card**: sanitized task summary; applicable scope/model/source revision; observed steps; actual checks/result; ошибка/root cause vs hypothesis; подтверждённое исправление либо unknown; evidence refs; lesson и ограничения; status draft/reviewed/rejected. Success требует independent checks/fingerprint, failure не доказывает remedy. Сырые логи нельзя автоматически превращать в trusted examples. Перед включением в следующий prompt — deidentify/review, проверить актуальность и выбрать 1–3 релевантных коротких карточки под отдельный token cap. Автоматическое обучение/инъекция cases этим изменением не включены.
+
+### Подсветка публичного decision trace
+
+Для существенных решений managed worker получает optional инструкцию написать рядом с handoff `decision-trace.json`: version1, review_status=draft, task (публичное краткое описание), steps (1..32). Step: id, action (до120 символов), summary (до600; краткое основание выбора, не внутренний ход рассуждений), evidence (до10 source/E/receipt refs), decision_ref, outcome proposed/succeeded/failed/unknown. Никаких скрытых рассуждений, raw commands, аргументов, tool output или персональных данных. Summaries — отдельный публичный артефакт, не извлечение reasoning items из provider stream.
+
+`python3 -m orchestrator.decision_trace --trace /path/decision-trace.json --output /path/review.html` создаёт локальный адаптивный HTML без overwrite/network/scripts. Цвет outcome и якорь `#step-id` позволяют подсвечивать шаги. Input text экранируется; renderer не превращает author-reported outcome или review_status в independent proof. Draft никогда не означает готовый few-shot: очистка/evidence review и актуальность обязательны. Автору нужно указать outcome unknown, если фактических проверок нет. Core pipeline schema не меняется; наличие trace не заменяет stage gates.

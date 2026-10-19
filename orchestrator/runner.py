@@ -11,6 +11,8 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
+from .diagnostics import Diagnostics
+
 
 @dataclass(frozen=True)
 class Result:
@@ -20,6 +22,7 @@ class Result:
     output_bytes: int
     seconds: float
     usage_complete: Optional[bool] = None
+    diagnostics: Optional[dict] = None
 
 
 def invocation(task, workspace, *, profile=None, telemetry=False, max_cost_usd=None):
@@ -77,6 +80,7 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
     reason = "exited"
     usage_complete = None if usage_adapter is None else False
     usage_stream = None
+    diagnostics = Diagnostics() if usage_adapter is not None else None
     if usage_adapter is not None:
         try:
             # Legacy executions neither import nor instantiate telemetry code.
@@ -100,7 +104,8 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
         )
     except (OSError, ValueError):
         return Result(127, "spawn_error", digest.hexdigest(), 0,
-                      time.monotonic() - started, usage_complete)
+                      time.monotonic() - started, usage_complete,
+                      diagnostics.finish() if diagnostics is not None else None)
     selector = selectors.DefaultSelector()
     pending_input = memoryview(stdin_text.encode("utf-8"))
     for stream in (process.stdout, process.stderr):
@@ -164,6 +169,8 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
                     selector.unregister(stream)
                     stream.close()
                     continue
+                if diagnostics is not None:
+                    diagnostics.feed("stdout" if stream is process.stdout else "stderr", chunk)
                 output_bytes += len(chunk)
                 digest.update(chunk)
                 if output_bytes > output_limit:
@@ -203,4 +210,5 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
             stream.close()
         process.wait()
     return Result(process.returncode, reason, digest.hexdigest(), output_bytes,
-                  time.monotonic() - started, usage_complete)
+                  time.monotonic() - started, usage_complete,
+                  diagnostics.finish() if diagnostics is not None else None)

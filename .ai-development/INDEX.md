@@ -61,3 +61,6 @@
 | product/2026-10-19-first-customers/0002 | accepted | Hard small-client filter и free-first | [record](product/2026-10-19-first-customers/decisions/0002-small-and-frugal.md); пересмотр по первым проверкам рынка |
 | product/2026-10-19-first-customers/0003 | accepted | Primary case evidence и dated quote register | [record](product/2026-10-19-first-customers/decisions/0003-cases-prices.md); пересмотр по первым проверкам рынка |
 | product/2026-10-19-first-customers/0004 | accepted | Portable packages и bounded runtime reuse | [record](product/2026-10-19-first-customers/decisions/0004-delivery.md); пересмотр по первым проверкам рынка |
+| backend/2026-10-19-cli-diagnostics/0001 | accepted | Safe CLI diagnostic enums, fenced result preservation, attended live recovery | [record](backend/2026-10-19-cli-diagnostics/decisions/0001-diagnostics.md); review after live canary |
+| backend/2026-10-19-cli-diagnostics/0002 | accepted | Observable step trace and reviewed few-shot cards | [record](backend/2026-10-19-cli-diagnostics/decisions/0002-observable-cases.md); review after actual runs |
+| backend/2026-10-19-cli-diagnostics/0003 | accepted | Observed canary allocation and guarded live recovery | [record](backend/2026-10-19-cli-diagnostics/decisions/0003-canary-recovery.md); no automatic third canary |
