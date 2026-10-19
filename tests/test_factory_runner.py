@@ -1,6 +1,7 @@
 """Real subprocess fault tests; no provider requests or live credentials."""
 
 import hashlib
+import json
 import os
 from pathlib import Path
 import sys
@@ -130,6 +131,78 @@ class InvocationTests(unittest.TestCase):
         self.assertNotIn("--model", argv)
         self.assertNotIn("--dangerously-skip-permissions", argv)
         self.assertEqual(stdin, "secret prompt")
+
+    def test_none_profile_preserves_legacy_argv_exactly(self):
+        expected = {
+            "codex": ["/tool/codex", "exec", "--ephemeral", "--sandbox",
+                      "workspace-write", "-c", 'approval_policy="never"',
+                      "-C", "/workspace", "-"],
+            "claude": ["/tool/claude", "--print", "--permission-mode", "dontAsk",
+                       "--allowedTools", "Read,Edit,Write,Bash", "--output-format",
+                       "json", "--no-session-persistence"],
+        }
+        for adapter, argv in expected.items():
+            with self.subTest(adapter=adapter):
+                task = {"adapter": adapter, "executable": "/tool/" + adapter,
+                        "prompt": "stdin prompt"}
+                self.assertEqual(invocation(task, "/workspace", profile=None),
+                                 (argv, "stdin prompt"))
+                self.assertEqual(invocation(task, "/workspace"),
+                                 (argv, "stdin prompt"))
+
+    def test_each_role_uses_its_explicit_profile_without_fallback(self):
+        profiles = {
+            "codex": [("planning", "gpt-6.1-sol", "high"),
+                      ("implementation", "gpt-6-luna", "high"),
+                      ("simple", "gpt-6-luna", "low")],
+            "claude": [("planning", "opus", "high"),
+                       ("implementation", "sonnet", "medium"),
+                       ("simple", "haiku", "low")],
+        }
+        for adapter, roles in profiles.items():
+            for role, model, effort in roles:
+                with self.subTest(adapter=adapter, role=role):
+                    task = {"adapter": adapter, "executable": "/tool/" + adapter,
+                            "prompt": "stdin prompt", "model_role": role}
+                    profile = {"model": model, "effort": effort, "weight": 5, "seconds": 60}
+                    legacy, _ = invocation(task, "/workspace")
+                    argv, stdin = invocation(task, "/workspace", profile=profile)
+                    extra = ["--model", model]
+                    extra.extend(["-c", "model_reasoning_effort=" + json.dumps(effort)]
+                                 if adapter == "codex" else ["--effort", effort])
+                    self.assertEqual(argv, legacy + extra)
+                    self.assertEqual(stdin, "stdin prompt")
+                    self.assertEqual(argv.count("--model"), 1)
+                    self.assertNotIn("--dangerously-skip-permissions", argv)
+                    self.assertNotIn("--dangerously-bypass-approvals-and-sandbox", argv)
+
+    def test_command_ignores_profile_and_preserves_argv(self):
+        task = {"adapter": "command", "argv": ["/tool/check", "literal"]}
+        argv, stdin = invocation(task, "/workspace",
+                                 profile={"model": "unused", "effort": "unused"})
+        self.assertEqual(argv, task["argv"])
+        self.assertIsNot(argv, task["argv"])
+        self.assertEqual(stdin, "")
+
+    def test_model_and_effort_are_literal_arguments_and_config_is_quoted(self):
+        # Admission validates allowed IDs/efforts. Transport still never turns
+        # values into shell code and encodes Codex config as a JSON string.
+        model = 'custom-model; $(touch leaked) --dangerously-skip-permissions'
+        effort = 'high"\nunsafe=true'
+        for adapter in ("codex", "claude"):
+            with self.subTest(adapter=adapter):
+                task = {"adapter": adapter, "executable": "/tool/" + adapter,
+                        "prompt": "stdin prompt"}
+                argv, _ = invocation(task, "/workspace",
+                                     profile={"model": model, "effort": effort})
+                self.assertEqual(argv[argv.index("--model") + 1], model)
+                self.assertEqual(argv.count(model), 1)
+                self.assertNotIn("--dangerously-skip-permissions", argv)
+                if adapter == "codex":
+                    self.assertEqual(json.loads(argv[-1].split("=", 1)[1]), effort)
+                    self.assertNotIn("\n", argv[-1])
+                else:
+                    self.assertEqual(argv[argv.index("--effort") + 1], effort)
 
     def test_unknown_adapter_rejected(self):
         with self.assertRaises(ValueError):

@@ -1,6 +1,7 @@
 """Bounded POSIX subprocess transport for trusted workflows, not a sandbox."""
 
 import hashlib
+import json
 import math
 import os
 import selectors
@@ -19,20 +20,27 @@ class Result:
     seconds: float
 
 
-def invocation(task, workspace):
+def invocation(task, workspace, *, profile=None):
     """Build a noninteractive argv; prompts travel over stdin, never argv."""
     adapter = task.get("adapter", "command")
     if adapter == "command":
         return list(task["argv"]), ""
     if adapter == "codex":
-        return [task["executable"], "exec", "--ephemeral", "--sandbox",
+        argv = [task["executable"], "exec", "--ephemeral", "--sandbox",
                 "workspace-write", "-c", 'approval_policy="never"', "-C",
-                str(workspace), "-"], task["prompt"]
-    if adapter == "claude":
-        return [task["executable"], "--print", "--permission-mode", "dontAsk",
+                str(workspace), "-"]
+        if profile is not None:
+            argv.extend(["--model", profile["model"], "-c",
+                         "model_reasoning_effort=" + json.dumps(profile["effort"])])
+    elif adapter == "claude":
+        argv = [task["executable"], "--print", "--permission-mode", "dontAsk",
                 "--allowedTools", "Read,Edit,Write,Bash", "--output-format",
-                "json", "--no-session-persistence"], task["prompt"]
-    raise ValueError("unsupported adapter")
+                "json", "--no-session-persistence"]
+        if profile is not None:
+            argv.extend(["--model", profile["model"], "--effort", profile["effort"]])
+    else:
+        raise ValueError("unsupported adapter")
+    return argv, task["prompt"]
 
 
 def _kill_group(process):
