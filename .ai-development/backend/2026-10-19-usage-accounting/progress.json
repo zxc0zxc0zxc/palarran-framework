@@ -2,7 +2,7 @@
   "schema_version": 1,
   "plan_id": "usage-accounting",
   "plan_revision": "v002",
-  "source_commit": "85377e0",
+  "source_commit": "a926bd6",
   "execution_id": "usage-accounting-v001",
   "integration_commit": null,
   "tasks": [
@@ -13,9 +13,11 @@
       "status": "integrated",
       "depends_on": [],
       "code_commits": [
-        "eef0654"
+        "eef0654",
+        "962931a",
+        "79870f4"
       ],
-      "integration_commit": "8e53642",
+      "integration_commit": "79870f4",
       "reason": "",
       "checks": []
     },
@@ -47,7 +49,7 @@
       "id": "ACCEPT",
       "plan_revision": "v002",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "in_progress",
       "depends_on": [
         "PARSER",
         "RUNNER",

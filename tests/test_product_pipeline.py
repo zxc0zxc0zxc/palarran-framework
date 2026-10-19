@@ -45,14 +45,18 @@ class PipelineTests(unittest.TestCase):
             'context=json.loads((base/"context.json").read_text())\nstage=meta["stage"]\n' +
             'handoff=Path(re.search(r"write (.+?/handoff\\.json) as a JSON object",prompt).group(1))\n' +
             'mode=' + repr(mode) + '\n' +
+            'def emit_usage():\n' +
+            ' if \"--json\" in sys.argv:\n' +
+            '  print(json.dumps({\"type\":\"turn.started\"})); print(json.dumps({\"type\":\"turn.completed\",\"usage\":{\"input_tokens\":100,\"cached_input_tokens\":40,\"cache_creation_input_tokens\":10,\"output_tokens\":20}}),flush=True)\n' +
+            ' else: print(json.dumps({\"type\":\"result\",\"subtype\":\"success\",\"total_cost_usd\":0.002,\"modelUsage\":{\"fixture\":{\"inputTokens\":50,\"cacheReadInputTokens\":40,\"cacheCreationInputTokens\":10,\"outputTokens\":20}}}),flush=True)\n' +
             'if mode=="pause" and stage=="market" and "Scope clarified" not in prompt:\n' +
-            ' handoff.write_text(json.dumps({"status":"needs_input"})); (handoff.parent/"question.md").write_text("Which geography?"); sys.exit(0)\n' +
+            ' handoff.write_text(json.dumps({"status":"needs_input"})); (handoff.parent/"question.md").write_text("Which geography?"); emit_usage(); sys.exit(0)\n' +
             'with (root/".ai-development/product/INDEX.md").open("a") as f: f.write(meta["pipeline_id"]+"\\n")\n' +
             'manifest=write_stage(root,context,stage,unknown=(mode=="validate" and stage=="market"),critical=(mode=="validate" and stage=="market"),recommendation="validate" if mode=="validate" else "plan")\n' +
             'if mode=="app" and stage=="compare": (root/"app.py").write_text("pass\\n")\n' +
             'if mode=="rewrite" and stage=="market":\n' +
             ' parent=base/"stages/define/stage.json"; value=json.loads(parent.read_text()); value["claims"][0]["text"]="Rewritten accepted finding"; write_json(parent,value); manifest["inputs"]["define"]=canonical_sha(value); write_json(base/"stages/market/stage.json",manifest)\n' +
-            'handoff.write_text(json.dumps({"status":"implemented"}))\n')
+            'handoff.write_text(json.dumps({"status":"implemented"})); emit_usage()\n')
         file.chmod(0o700)
         return str(file)
 
@@ -112,6 +116,9 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(len(report['tasks']), 7)
             self.assertEqual(report['budget']['charged_calls'], 6)
             self.assertEqual(report['budget']['charged_units'], 30)
+            self.assertTrue(report['usage']['complete'])
+            self.assertEqual(report['usage']['total_tokens'], 720)
+            self.assertNotEqual(report['usage']['cost_usd'], '0.000000000')
             final = validate_stage(report['workspace'], meta['pipeline_id'], 'mvp', meta['context_sha256'], ROOT)
             self.assertEqual(final['verdict']['recommendation'], 'plan')
             self.assertFalse(final['verdict']['market_validated'])
@@ -171,11 +178,13 @@ class PipelineTests(unittest.TestCase):
     def test_custom_policy_preflight_and_unsafe_files(self):
         import os
         from orchestrator.budgets import default_policy
+        from orchestrator.accounting import default_usage_policy
         idea=self.base/'idea.md'; idea.write_text('Synthetic idea')
         policy=self.base/'policy.json'; values=default_policy('codex')
         values['profiles']['planning']['model']='custom-pinned-model'
         policy.write_text(json.dumps(values))
-        argv=[PYTHON,'-m','orchestrator','product-create','--state',str(self.state),'--target',str(self.target),'--idea-file',str(idea),'--adapter','codex','--agent',self.executable(),'--skills-root',str(ROOT),'--ai-policy']
+        usage=self.base/'usage.json'; allocation=default_usage_policy([{'id':'product-'+stage,'adapter':'codex'} for stage in STAGES]); allocation['pricing']['custom-pinned-model']=copy.deepcopy(allocation['pricing']['gpt-6.1-sol']); usage.write_text(json.dumps(allocation))
+        argv=[PYTHON,'-m','orchestrator','product-create','--state',str(self.state),'--target',str(self.target),'--idea-file',str(idea),'--adapter','codex','--agent',self.executable(),'--skills-root',str(ROOT),'--usage-policy',str(usage),'--ai-policy']
         fifo=self.base/'fifo-policy'; os.mkfifo(fifo)
         link=self.base/'link-policy'; link.symlink_to(policy)
         for file in (fifo,link):

@@ -4,6 +4,7 @@ import math
 import os
 import re
 
+from .accounting import validate_usage_policy
 from .budgets import validate_policy
 
 ID = re.compile(r'^[A-Za-z0-9_-]{1,64}$')
@@ -28,7 +29,7 @@ def _unique(value):
 
 def validate(value):
     """Return an independent normalized snapshot, or raise ValueError."""
-    _object(value, ('version', 'name', 'plan_revision', 'limits', 'policy', 'tasks'), ('ai_policy',))
+    _object(value, ('version', 'name', 'plan_revision', 'limits', 'policy', 'tasks'), ('ai_policy', 'usage_policy'))
     result = copy.deepcopy(value)
     if type(result['version']) is not int or result['version'] != 1:
         raise ValueError('Unsupported workflow version')
@@ -90,6 +91,8 @@ def validate(value):
     if 'ai_policy' in result and result['ai_policy'] is None:
         raise ValueError('AI policy cannot be null')
     validate_policy(result.get('ai_policy'), tasks, limits['max_attempts'])
+    if 'usage_policy' in result:
+        validate_usage_policy(result['usage_policy'], tasks, result.get('ai_policy'))
     _unique(ids)
     graph = {task['id']: task['depends_on'] for task in tasks}
     if any(dep not in graph for deps in graph.values() for dep in deps):

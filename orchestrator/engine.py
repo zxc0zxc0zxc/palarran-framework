@@ -8,6 +8,7 @@ from pathlib import Path
 import time
 import uuid
 
+from .accounting import nano, usage_report, usd
 from .budgets import summary
 from .protocol import handoff_path, instruction, read_handoff
 from .spec import validate
@@ -38,10 +39,13 @@ def _store(state):
 
 def status(state, run_id):
     with closing(_store(state)) as store:
-        record = store.get(run_id)
-        tasks = store.tasks(run_id)
+        with store.transaction():
+            record = store.get(run_id)
+            tasks = store.tasks(run_id)
+            receipts = store.usage_rows(run_id)
     report = {key: record[key] for key in ('id', 'status', 'workspace', 'baseline', 'created', 'workflow_sha256', 'fingerprint', 'reason')}
     report['budget'] = summary(json.loads(record['workflow']), tasks)
+    report['usage'] = usage_report(json.loads(record['workflow']), receipts, tasks)
     report['schema_version'] = 1
     report['artifact_type'] = 'product-factory-report'
     report['tasks'] = [{key: task[key] for key in ('id', 'status', 'attempts', 'reason')} for task in tasks]
@@ -105,6 +109,8 @@ def work(state, run_id):
             handoff = None
             paused = False
             profile = None
+            accounting = False
+            agent_called = False
             try:
                 if task_id == '__final__':
                     before = fingerprint(workspace)
@@ -121,7 +127,15 @@ def work(state, run_id):
                 else:
                     task = next(t for t in flow['tasks'] if t['id'] == task_id)
                     profile = flow['ai_policy']['profiles'][task['model_role']] if 'ai_policy' in flow and task['adapter'] != 'command' else None
-                    argv, prompt = invocation(task, workspace, profile=profile) if profile is not None else invocation(task, workspace)
+                    accounting = 'usage_policy' in flow and task['adapter'] != 'command'
+                    if accounting:
+                        observed = usage_report(flow, store.usage_rows(run_id), store.tasks(run_id))
+                        stage = next(s for s in observed['stages'] if s['task_id'] == task_id)
+                        run_remaining = nano(flow['usage_policy']['max_cost_usd']) - sum((json.loads(r['metrics']) if r['metrics'] else {}).get('cost_nano_usd', 0) for r in store.usage_rows(run_id))
+                        stage_remaining = nano(stage['max_cost_usd']) - sum((a['metrics'] or {}).get('cost_nano_usd', 0) for a in stage['attempts'])
+                        argv, prompt = invocation(task, workspace, profile=profile, telemetry=True, max_cost_usd=usd(min(run_remaining, stage_remaining)))
+                    else:
+                        argv, prompt = invocation(task, workspace, profile=profile) if profile is not None else invocation(task, workspace)
                     if task['adapter'] != 'command':
                         handoff = handoff_path(workspace, run_id, task_id, claim['attempt'])
                         if profile is not None:
@@ -136,8 +150,16 @@ def work(state, run_id):
                     remaining = deadline - time.time()
                     if remaining <= 0 or not heartbeat():
                         success = False; break
-                    outcome = execute(argv, workspace, timeout=remaining, output_limit=limits['output_bytes'], env=env, heartbeat=heartbeat, stdin_text=stdin_text)
+                    execution_options = {}
+                    if accounting and index == 0:
+                        execution_options = dict(usage_adapter=task['adapter'], on_usage=lambda snapshot: store.record_usage(run_id, task_id, token, snapshot))
+                        agent_called = True
+                    outcome = execute(argv, workspace, timeout=remaining, output_limit=limits['output_bytes'], env=env, heartbeat=heartbeat, stdin_text=stdin_text, **execution_options)
                     results.append(asdict(outcome))
+                    if accounting and index == 0:
+                        if not store.complete_usage(run_id, task_id, token, complete=outcome.usage_complete is True, not_started=outcome.reason == 'spawn_error'):
+                            paused = store.get(run_id)['status'] == 'needs_input'
+                            success = False; break
                     if task_id == '__final__' and stable_receipts[index] is not None and outcome.output_sha256 != stable_receipts[index]:
                         success = False; break
                     if outcome.returncode != 0 or outcome.reason != 'exited':
@@ -156,5 +178,7 @@ def work(state, run_id):
                     store.finish(run_id, task_id, token, success, results, subject)
             except (OSError, ValueError):
                 # Do not persist exception text: paths/process errors may contain secrets.
+                if accounting:
+                    store.complete_usage(run_id, task_id, token, complete=False, not_started=not agent_called)
                 store.finish(run_id, task_id, token, False, results)
         return store.get(run_id)['status']

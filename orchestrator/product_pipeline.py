@@ -7,6 +7,7 @@ import re
 import sys
 import uuid
 
+from .accounting import default_usage_policy
 from .budgets import default_policy
 from .engine import create
 from .product_artifacts import STAGES, canonical_sha, pipeline_dir, source_digest
@@ -24,7 +25,7 @@ TASK_GUIDANCE = {
 }
 
 
-def build(idea, skills_root, adapter, executable, *, python=None, limits=None, env=None, pipeline_id=None, baseline=None, ai_policy=None):
+def build(idea, skills_root, adapter, executable, *, python=None, limits=None, env=None, pipeline_id=None, baseline=None, ai_policy=None, usage_policy=None):
     if not isinstance(idea, str) or not idea.strip() or len(idea.encode('utf-8')) > 32768 or '\x00' in idea:
         raise ValueError('A nonempty bounded UTF-8 idea is required')
     if not isinstance(baseline, str) or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', baseline):
@@ -75,6 +76,7 @@ def build(idea, skills_root, adapter, executable, *, python=None, limits=None, e
     workflow = dict(version=1, name='product-pipeline', plan_revision='product-v001', limits=values,
                     policy=dict(executables=list(dict.fromkeys([python, executable])), adapters=[adapter], env=environment), tasks=tasks)
     workflow['ai_policy'] = copy.deepcopy(ai_policy) if ai_policy is not None else default_policy(adapter)
+    workflow['usage_policy'] = copy.deepcopy(usage_policy) if usage_policy is not None else default_usage_policy(tasks)
     return validate(workflow), context
 
 

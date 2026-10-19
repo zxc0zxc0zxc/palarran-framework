@@ -8,6 +8,7 @@ import sqlite3
 import time
 import uuid
 
+from .accounting import COUNTERS, priced_snapshot, usage_exceeded, zero_snapshot
 from .budgets import claim_allowed
 
 TERMINAL = {'verified', 'failed', 'cancelled'}
@@ -29,7 +30,7 @@ class Store:
         self.db.execute('PRAGMA journal_mode=WAL')
         self.db.execute('PRAGMA synchronous=FULL')
         version = self.db.execute('PRAGMA user_version').fetchone()[0]
-        if version not in (0, 1):
+        if version not in (0, 1, 2):
             self.db.close(); raise ValueError('Unsupported database schema')
         self.db.executescript('''
         CREATE TABLE IF NOT EXISTS runs (
@@ -52,7 +53,17 @@ class Store:
             run_id TEXT NOT NULL, task_id TEXT NOT NULL, at REAL NOT NULL, reason TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS events_run ON events(run_id,seq);
-        PRAGMA user_version=1;
+        CREATE TABLE IF NOT EXISTS usage_attempts (
+            run_id TEXT NOT NULL, task_id TEXT NOT NULL, attempt INTEGER NOT NULL,
+            token TEXT NOT NULL, sequence INTEGER NOT NULL DEFAULT 0,
+            metrics TEXT, state TEXT NOT NULL,
+            PRIMARY KEY(run_id,task_id,attempt), FOREIGN KEY(run_id,task_id) REFERENCES tasks(run_id,id)
+        );
+        CREATE TABLE IF NOT EXISTS usage_reconciliations (
+            run_id TEXT NOT NULL, task_id TEXT NOT NULL, attempt INTEGER NOT NULL,
+            at REAL NOT NULL, old_metrics TEXT, new_metrics TEXT NOT NULL, reason TEXT NOT NULL
+        );
+        PRAGMA user_version=2;
         ''')
         self.db.execute('PRAGMA foreign_keys=ON')
 
@@ -101,6 +112,7 @@ class Store:
                     if task['lease_until'] <= now:
                         self.db.execute("UPDATE tasks SET status='needs_input',token=NULL,reason='expired_lease_unknown_outcome' WHERE run_id=? AND id=?", (run, task['id']))
                         self.db.execute("UPDATE runs SET status='needs_input',reason='expired_lease_unknown_outcome' WHERE id=?", (run,))
+                        self.db.execute("UPDATE usage_attempts SET state='unknown' WHERE run_id=? AND task_id=? AND state='active'", (run, task['id']))
                         self.event(run, 'lease_expired', task['id'])
                     return None
             if now >= record['created'] + flow['limits']['run_seconds']:
@@ -113,6 +125,12 @@ class Store:
                 deps = source['depends_on'] if source else [t['id'] for t in flow['tasks']]
                 if any(states[dep] != 'verified' for dep in deps):
                     continue
+                if source is not None and source['adapter'] != 'command' and 'usage_policy' in flow:
+                    receipts = self.usage_rows(run)
+                    if usage_exceeded(flow, receipts, task['id']):
+                        self.fail_run(run, 'usage_budget_exhausted'); return None
+                    if any(row['state'] != 'complete' for row in receipts):
+                        self._pause_usage(run, task['id']); return None
                 if not claim_allowed(flow, tasks, source):
                     self.fail_run(run, 'model_budget_exhausted'); return None
                 if task['attempts'] >= flow['limits']['max_attempts']:
@@ -120,6 +138,8 @@ class Store:
                 token = uuid.uuid4().hex
                 self.db.execute("UPDATE tasks SET status='running',attempts=attempts+1,token=?,lease_until=?,reason='' WHERE run_id=? AND id=?", (token, now + flow['limits']['lease_seconds'], run, task['id']))
                 self.db.execute("UPDATE runs SET status='running',reason='' WHERE id=?", (run,))
+                if source is not None and source['adapter'] != 'command' and 'usage_policy' in flow:
+                    self.db.execute("INSERT INTO usage_attempts(run_id,task_id,attempt,token,state) VALUES(?,?,?,?, 'active')", (run, task['id'], task['attempts']+1, token))
                 self.event(run, 'claimed', task['id'])
                 return {'id': task['id'], 'token': token, 'attempt': task['attempts'] + 1, 'context': task['reason']}
             return None
@@ -127,6 +147,7 @@ class Store:
     def fail_run(self, run, reason):
         self.db.execute("UPDATE runs SET status='failed',reason=? WHERE id=?", (reason, run))
         self.db.execute("UPDATE tasks SET status='failed',token=NULL,reason=? WHERE run_id=? AND status IN ('pending','running')", (reason, run))
+        self.db.execute("UPDATE usage_attempts SET state='unknown' WHERE run_id=? AND state='active'", (run,))
         self.event(run, reason)
 
     def heartbeat(self, run, task, token):
@@ -152,6 +173,10 @@ class Store:
                 self.fail_run(run, 'run_deadline')
                 return False
             source = next((t for t in flow['tasks'] if t['id'] == task), None)
+            if source is not None and source['adapter'] != 'command' and 'usage_policy' in flow:
+                receipt = self.db.execute('SELECT state FROM usage_attempts WHERE run_id=? AND task_id=? AND attempt=?', (run, task, row['attempts'])).fetchone()
+                if receipt is None or receipt['state'] != 'complete':
+                    self._pause_usage(run, task); return False
             retry = not success and source is not None and source['replay_safe'] and row['attempts'] < flow['limits']['max_attempts']
             outcome = 'verified' if success else ('pending' if retry else 'failed')
             reason = '' if success else ('retry_scheduled' if retry else 'execution_or_verifier_failed')
@@ -201,8 +226,97 @@ class Store:
                 raise ValueError('Run is terminal')
             self.db.execute("UPDATE runs SET status='cancelled',reason='operator_cancelled' WHERE id=?", (run,))
             self.db.execute("UPDATE tasks SET status='cancelled',token=NULL,reason='operator_cancelled' WHERE run_id=? AND status!='verified'", (run,))
+            self.db.execute("UPDATE usage_attempts SET state='unknown' WHERE run_id=? AND state='active'", (run,))
             self.event(run, 'cancelled')
 
     def events(self, run):
         self.get(run)
         return [dict(row) for row in self.db.execute('SELECT seq,task_id,at,kind FROM events WHERE run_id=? ORDER BY seq', (run,))]
+
+    def usage_rows(self, run):
+        return [dict(row) for row in self.db.execute('SELECT * FROM usage_attempts WHERE run_id=? ORDER BY task_id,attempt', (run,))]
+
+    def _usage_owner(self, run, task, token):
+        record = self.get(run)
+        row = self.db.execute('SELECT * FROM tasks WHERE run_id=? AND id=?', (run, task)).fetchone()
+        if record['status'] != 'running' or row is None or row['status'] != 'running' or row['token'] != token or row['lease_until'] <= time.time():
+            return None
+        flow = json.loads(record['workflow'])
+        if time.time() >= record['created'] + flow['limits']['run_seconds']:
+            self.fail_run(run, 'run_deadline'); return None
+        source = next((t for t in flow['tasks'] if t['id'] == task), None)
+        if 'usage_policy' not in flow or source is None or source['adapter'] == 'command':
+            raise ValueError('Accounting owner required')
+        receipt = self.db.execute('SELECT * FROM usage_attempts WHERE run_id=? AND task_id=? AND attempt=?', (run, task, row['attempts'])).fetchone()
+        if receipt is None or receipt['state'] != 'active' or receipt['token'] != token:
+            return None
+        return flow, source, dict(receipt)
+
+    def _pause_usage(self, run, task):
+        self.db.execute("UPDATE tasks SET status='needs_input',token=NULL,lease_until=NULL,reason='usage_unknown' WHERE run_id=? AND id=?", (run, task))
+        self.db.execute("UPDATE runs SET status='needs_input',reason='usage_unknown' WHERE id=?", (run,))
+        self.db.execute("UPDATE usage_attempts SET state='unknown' WHERE run_id=? AND state='active'", (run,))
+        self.event(run, 'usage_unknown', task)
+
+    def record_usage(self, run, task, token, snapshot):
+        """Persist a cumulative receipt before allowing the child to continue."""
+        with self.transaction():
+            owner = self._usage_owner(run, task, token)
+            if owner is None:
+                return False
+            flow, source, receipt = owner
+            metrics = priced_snapshot(flow, source, snapshot)
+            previous = json.loads(receipt['metrics']) if receipt['metrics'] else None
+            if metrics['sequence'] == receipt['sequence']:
+                if metrics != previous:
+                    raise ValueError('Conflicting usage replay')
+                return not usage_exceeded(flow, self.usage_rows(run), task)
+            if metrics['sequence'] != receipt['sequence'] + 1:
+                raise ValueError('Nonsequential usage receipt')
+            if previous is not None and any(metrics[key] is not None and previous[key] is not None and metrics[key] < previous[key] for key in COUNTERS + ('cost_nano_usd',)):
+                raise ValueError('Usage cannot decrease')
+            self.db.execute('UPDATE usage_attempts SET sequence=?,metrics=? WHERE run_id=? AND task_id=? AND attempt=?', (metrics['sequence'], json.dumps(metrics, sort_keys=True), run, task, receipt['attempt']))
+            self.event(run, 'usage_observed', task)
+            if usage_exceeded(flow, self.usage_rows(run), task):
+                self.fail_run(run, 'usage_budget_exhausted'); return False
+            return True
+
+    def complete_usage(self, run, task, token, *, complete, not_started=False):
+        with self.transaction():
+            owner = self._usage_owner(run, task, token)
+            if owner is None:
+                return False
+            flow, source, receipt = owner
+            if not_started:
+                if receipt['metrics'] is not None:
+                    raise ValueError('Cannot erase observed usage')
+                metrics = zero_snapshot(flow, source)
+                self.db.execute('UPDATE usage_attempts SET metrics=?,sequence=1 WHERE run_id=? AND task_id=? AND attempt=?', (json.dumps(metrics, sort_keys=True), run, task, receipt['attempt']))
+                complete = True
+            if not complete or (receipt['metrics'] is None and not not_started):
+                self._pause_usage(run, task); return False
+            self.db.execute("UPDATE usage_attempts SET state='complete' WHERE run_id=? AND task_id=? AND attempt=?", (run, task, receipt['attempt']))
+            return True
+
+    def reconcile_usage(self, run, task, attempt, snapshot, reason, processes_stopped):
+        if not processes_stopped or type(attempt) is not int or not 1 <= attempt <= 10 or not isinstance(reason, str) or not reason.strip() or len(reason) > 240 or any(ord(c)<32 for c in reason):
+            raise ValueError('Explicit safe reconciliation required')
+        with self.transaction():
+            record = self.get(run)
+            if record['status'] != 'needs_input':
+                raise ValueError('Only paused runs allow usage reconciliation')
+            row = self.db.execute('SELECT * FROM usage_attempts WHERE run_id=? AND task_id=? AND attempt=?', (run, task, attempt)).fetchone()
+            if row is None or row['state'] != 'unknown':
+                raise ValueError('Only unknown usage may be reconciled')
+            flow = json.loads(record['workflow'])
+            source = next(t for t in flow['tasks'] if t['id'] == task)
+            metrics = priced_snapshot(flow, source, snapshot)
+            previous = json.loads(row['metrics']) if row['metrics'] else None
+            if previous is not None and (metrics['sequence'] < previous['sequence'] or any(metrics[key] is not None and previous[key] is not None and metrics[key] < previous[key] for key in COUNTERS + ('cost_nano_usd',))):
+                raise ValueError('Reconciliation cannot refund observed spend')
+            payload = json.dumps(metrics, sort_keys=True)
+            self.db.execute('INSERT INTO usage_reconciliations(run_id,task_id,attempt,at,old_metrics,new_metrics,reason) VALUES(?,?,?,?,?,?,?)', (run,task,attempt,time.time(),row['metrics'],payload,reason))
+            self.db.execute("UPDATE usage_attempts SET state='complete',metrics=?,sequence=? WHERE run_id=? AND task_id=? AND attempt=?", (payload,metrics['sequence'],run,task,attempt))
+            self.event(run, 'usage_reconciled', task)
+            if usage_exceeded(flow,self.usage_rows(run),task):
+                self.fail_run(run,'usage_budget_exhausted')

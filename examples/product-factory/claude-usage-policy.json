@@ -1,0 +1,31 @@
+{
+  "max_tokens": 600000,
+  "max_cost_usd": "12.00",
+  "stages": {
+    "product-define": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "product-market": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "product-compare": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "product-revenue": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "product-acquisition": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "product-mvp": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    }
+  },
+  "pricing": {}
+}
