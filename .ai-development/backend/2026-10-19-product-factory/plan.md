@@ -1,6 +1,6 @@
 # PF plan v001
 
-Source spec: [spec](spec.md); [frozen contract](../../../../docs/product-factory/contract.md). Scope: bounded engineering loop. Планирование окончено до application edits; build авторизован отдельным прямым запросом пользователя в том же сообщении.
+Source spec: [spec](spec.md); [frozen contract](../../../docs/product-factory/contract.md). Scope: bounded engineering loop. Планирование окончено до application edits; build авторизован отдельным прямым запросом пользователя в том же сообщении.
 
 | Task | Owner / scope | Dependencies | DoD |
 |---|---|---|---|
