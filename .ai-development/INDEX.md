@@ -53,3 +53,4 @@
 | backend/2026-10-19-product-pipeline/0006 | accepted | Private stable verifier receipts | [record](backend/2026-10-19-product-pipeline/decisions/0006-stable-receipts.md); пересмотр typed storage |
 | backend/2026-10-19-product-pipeline/0007 | accepted | Bounded idea input / ignored memory fingerprint | [record](backend/2026-10-19-product-pipeline/decisions/0007-boundaries.md); пересмотр integrity scope |
 | backend/2026-10-19-product-pipeline/0008 | accepted | Pinned local context/decision source refs | [record](backend/2026-10-19-product-pipeline/decisions/0008-local-evidence.md); пересмотр source objects |
+| backend/2026-10-19-model-budgets/0001 | accepted | Model routing и невозвратные allocations до старта | [record](backend/2026-10-19-model-budgets/decisions/0001-routing-budget.md); пересмотр по quality/cost evals |

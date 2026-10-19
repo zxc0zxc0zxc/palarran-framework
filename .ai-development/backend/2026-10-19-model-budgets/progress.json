@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "plan_id": "model-budgets",
+  "plan_revision": "v001",
+  "source_commit": "9e514d4",
+  "execution_id": "model-budgets-v001",
+  "integration_commit": null,
+  "tasks": [
+    {
+      "id": "POLICY",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "",
+      "checks": []
+    },
+    {
+      "id": "ADAPTER",
+      "plan_revision": "v001",
+      "owner": "agent-runner",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "",
+      "checks": []
+    },
+    {
+      "id": "CORE",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "",
+      "checks": []
+    },
+    {
+      "id": "ACCEPT",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [
+        "POLICY",
+        "ADAPTER",
+        "CORE"
+      ],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "",
+      "checks": []
+    }
+  ],
+  "gates": [
+    {
+      "id": "INTEGRATED-DOD",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Execution pending"
+    },
+    {
+      "id": "LAB-SLO",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Execution pending"
+    }
+  ]
+}
