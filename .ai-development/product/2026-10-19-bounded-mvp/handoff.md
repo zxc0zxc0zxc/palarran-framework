@@ -1,0 +1,13 @@
+# Handoff — accepted product MVP v001
+
+Read decisions0001..0005 and plan.md. Current user task completed as a bounded research/planning artifact, not application implementation or market validation. Recommendation validate.8public candidates,0qualified;15unknowns(12critical),6conditional requirements/AC and5not_run experiments. Price€9 remains stimulus; under explicit support/time assumptions contribution is negative.
+
+Canonical pipeline4e2d304322d74fdf812cb60daee8fa68, original context/source/baseline unchanged. Final MVP hash75e9e4731894c98b2a09d18be572d6034c4e8c27c19ee0c919acfa70a830c3ec. Planning files and full source/ADR/input chain verified in command-only audit61f1686e6c854f0499c27c7c67389794; fingerprint201c656097ec8797c9acecada5a5bd5f0e6aaa3981253cb2507f46167024147c. Find canonical results in private-state/worktrees/<audit-id> under the same private sibling product-hypothesis-2026-10-19-161243 run directory. Never confuse this verified artifact with the failed generation run6edc9c6f0fee4a05bffd6093473a7ed3: its stage budget stop/unknown receipt is preserved.
+
+Entry points: MVP-PLAN.md, BOUNDED-MVP-REPORT.md, BOUNDED-MVP-BUDGET.json, BOUNDED-MVP-VERIFICATION.json. They remain external/private, not repository files. Original individual reports/policies/locations/control scripts retained. Hypothesis/market/original compare draft byte identity verified. The only post-model repair was ADR YAML frontmatter + exact hash, with original history preserved.
+
+Current request accounting: allowance2.97USD, observed lowerbound2.249723USD, reserves2.8535466USD, remaining scheduling allowance0.1164534USD. Combined original envelope unchanged; reserved total11.880968USD/4900908tokens.13unknown attempts mean actual total/invoice remains unknown; no automatic reconciliation, retries, fresh budget or source regeneration. Quote/cost/candidate freshness must be reviewed for future tasks.
+
+Runtime fixes0e4ff4fe/147c7fef,226offline tests+validator+factory acceptance passed. User requested no higher monetary/token ceilings; only task-local tool-history delivery window changed to prevent truncation, numeric spending guards stayed active. Known technical-refusal usage charged exactly; unknowns stay reserved.
+
+Next work is a human review of proposed ICP/gates/budget/candidate qualifications. Outreach, account creation, ad purchase, implementation/deployment and collection of real client data were not authorized or executed. Future UX/SDD planning must bind exact product revision and distinguish proposed tests from observed acceptance. Do not start engineering merely because artifact/schema audit passed.

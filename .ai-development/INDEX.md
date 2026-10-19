@@ -74,3 +74,4 @@
 | product/2026-10-19-bounded-mvp/0002 | accepted | Cleanup denial requires proved group absence; reuse verified compare without replay | [record](product/2026-10-19-bounded-mvp/decisions/0002-cleanup.md); unknown remains unknown |
 | product/2026-10-19-bounded-mvp/0003 | accepted | Smaller completion allocations with deterministic public fetch, all failed costs retained | [record](product/2026-10-19-bounded-mvp/decisions/0003-frugal-completion.md); no further model retries |
 | product/2026-10-19-bounded-mvp/0004 | accepted | Complete tool-history delivery within unchanged spending guards | [record](product/2026-10-19-bounded-mvp/decisions/0004-context-delivery.md); prior refusal charged exactly |
+| product/2026-10-19-bounded-mvp/0005 | accepted | Independently accepted revenue; acquisition/MVP only, lower final cap | [record](product/2026-10-19-bounded-mvp/decisions/0005-revenue-checkpoint.md); no replay |
