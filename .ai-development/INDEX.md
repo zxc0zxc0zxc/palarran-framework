@@ -44,3 +44,4 @@
 | product/2026-10-19-product-skills/0003 | accepted | Product / Claim ledger и раздельные наблюдения, self-report, vendor estimates и сценарии | [record](product/2026-10-19-product-skills/decisions/0003-evidence.md); пересмотр по research run |
 | product/2026-10-19-product-skills/0004 | accepted | Product / Каталог API и capability check вместо фиктивного подключения | [record](product/2026-10-19-product-skills/decisions/0004-providers.md); пересмотр по research run |
 | product/2026-10-19-product-skills/0005 | accepted | Product / Project-local revisions, canonical ADR и явный handoff к UX/SDD | [record](product/2026-10-19-product-skills/decisions/0005-handoff.md); пересмотр по research run |
+| product/2026-10-19-product-skills/0006 | accepted | Product namespace / portable delivery | [record](product/2026-10-19-product-skills/decisions/0006-packaging.md); пересмотр host manifest |

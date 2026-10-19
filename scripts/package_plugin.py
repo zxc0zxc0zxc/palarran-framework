@@ -9,6 +9,11 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
+    "product": {
+        "manifest": "plugins/product/plugin.json",
+        "skills": ["product-define", "product-market", "product-compare", "product-revenue", "product-acquisition"],
+        "docs": ["docs/skills", "docs/product"],
+    },
     "backend": {
         "manifest": "plugins/backend/plugin.json",
         "skills": ["backend-plan", "backend-build"],
@@ -99,6 +104,12 @@ def build_package(namespace, output, root=ROOT):
             "templates/backend/execution-agent.md", "templates/backend/build-verification.md",
             "templates/backend/build-handoff.md", "scripts/backend_progress.py",
             "scripts/execution_progress.py",
+        ]
+    if namespace == "product":
+        resources = [
+            "templates/ai-development/decision.md", "templates/product/brief.md",
+            "templates/product/research.md", "templates/product/competitors.md",
+            "templates/product/economics.md", "templates/product/channels.md",
         ]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():

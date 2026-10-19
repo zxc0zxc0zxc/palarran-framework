@@ -208,3 +208,17 @@ MCP-серверы будут добавляться отдельными кат
 ## Product Factory runtime
 
 [Документация, контракт и запуск](docs/product-factory/README.md): bounded engineering loop с durable SQLite state, Git worktree, CLI agents и независимыми проверками. [SDD план v001](.ai-development/backend/2026-10-19-product-factory/plan.md).
+
+## Product research skills
+
+[Документация и кейсы](docs/product/README.md) созданы до скиллов: startup cases Superhuman, Buffer, Airbnb, Ahrefs; практики GitLab, Amazon, Google и Microsoft. Пять независимых команд:
+
+- `/product:define {идея}` — ICP/JTBD, MVP/business model и проверяемые продуктовые гипотезы.
+- `/product:market {рынок}` — demand, сегменты, trends/volume и scope TAM/SAM/SOM.
+- `/product:compare {продукт}` — конкуренты/замены и обоснованное позиционирование.
+- `/product:revenue {аналоги}` — disclosed metrics, estimates и отдельные scenarios.
+- `/product:acquisition {аналоги}` — paid search/social, native/creator, organic/referral и future channel tests.
+
+Codex: `$product-define`, `$product-market`, `$product-compare`, `$product-revenue`, `$product-acquisition`; discoverable через `.agents/skills/`. Claude plugin: `python3 scripts/package_plugin.py product --output /tmp/ai-tools-product`, затем `claude --plugin-dir /tmp/ai-tools-product`. Внутри checkout доступны project slash adapters.
+
+Каждый skill обязан читать профильные кейсы/guide и сохранять evidence/решения в target `.ai-development/product/`. [Data/API catalog](docs/product/data-sources.md) описывает access/coverage/fallback; реальных credentials/integrations в пакете нет. Research не запускает рекламу, outreach или разработку.
