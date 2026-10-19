@@ -8,7 +8,7 @@ from pathlib import Path
 import time
 import uuid
 
-from .accounting import nano, usage_report, usd
+from .accounting import nano, usage_report, usd, carry_totals
 from .budgets import summary
 from .protocol import handoff_path, instruction, read_handoff
 from .spec import validate
@@ -62,7 +62,7 @@ def status(state, run_id):
         try:
             from .product_artifacts import load_json, pipeline_dir
             flow = json.loads(record['workflow'])
-            marker = flow['tasks'][0]['prompt'].splitlines()[0]
+            marker = next(t['prompt'] for t in flow['tasks'] if t.get('adapter') != 'command').splitlines()[0]
             if not marker.startswith('PRODUCT_PIPELINE_TASK '):
                 raise ValueError('Unknown product workflow')
             meta = json.loads(marker.split(' ', 1)[1])
@@ -131,9 +131,9 @@ def work(state, run_id):
                     if accounting:
                         observed = usage_report(flow, store.usage_rows(run_id), store.tasks(run_id))
                         stage = next(s for s in observed['stages'] if s['task_id'] == task_id)
-                        run_remaining = nano(flow['usage_policy']['max_cost_usd']) - sum((json.loads(r['metrics']) if r['metrics'] else {}).get('cost_nano_usd', 0) for r in store.usage_rows(run_id))
+                        run_remaining = nano(flow['usage_policy']['max_cost_usd']) - carry_totals(flow['usage_policy'])[1] - sum((json.loads(r['metrics']) if r['metrics'] else {}).get('cost_nano_usd', 0) for r in store.usage_rows(run_id))
                         stage_remaining = nano(stage['max_cost_usd']) - sum((a['metrics'] or {}).get('cost_nano_usd', 0) for a in stage['attempts'])
-                        argv, prompt = invocation(task, workspace, profile=profile, telemetry=True, max_cost_usd=usd(min(run_remaining, stage_remaining)))
+                        argv, prompt = invocation(task, workspace, profile=profile, telemetry=True, max_cost_usd=usd(min(run_remaining, stage_remaining)), output_limit=limits['output_bytes'])
                     else:
                         argv, prompt = invocation(task, workspace, profile=profile) if profile is not None else invocation(task, workspace)
                     if task['adapter'] != 'command':
@@ -141,6 +141,8 @@ def work(state, run_id):
                         if profile is not None:
                             prompt += '\nBudgeted worker role: ' + task['model_role'] + '. Use only the assigned model and scope. Do not spawn nested agents, invoke other model CLIs/APIs, or escalate models. Ordinary authorized tools are allowed. If the assigned scope/model is unsuitable, request needs_input using the handoff.\n'
                         prompt += instruction(handoff, claim['context'])
+                        if argv[0] not in flow['policy']['executables']:
+                            raise ValueError('Derived transport executable denied')
                         if profile is not None and len(prompt.encode('utf-8')) > flow['ai_policy']['max_prompt_bytes']:
                             raise ValueError('Full prompt exceeds AI budget')
                     commands = [(argv, prompt)] + [(argv, '') for argv in task['verify']]
@@ -152,7 +154,7 @@ def work(state, run_id):
                         success = False; break
                     execution_options = {}
                     if accounting and index == 0:
-                        execution_options = dict(usage_adapter=task['adapter'], on_usage=lambda snapshot: store.record_usage(run_id, task_id, token, snapshot))
+                        execution_options = dict(usage_adapter='codex-app-server' if task.get('transport') == 'app-server' else task['adapter'], on_usage=lambda snapshot: store.record_usage(run_id, task_id, token, snapshot))
                         agent_called = True
                     outcome = execute(argv, workspace, timeout=remaining, output_limit=limits['output_bytes'], env=env, heartbeat=heartbeat, stdin_text=stdin_text, **execution_options)
                     results.append(asdict(outcome))

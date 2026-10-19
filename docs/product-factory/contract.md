@@ -38,3 +38,5 @@ def invocation(task, workspace, *, profile=None, telemetry=False, max_cost_usd=N
 ```
 
 Coordinator owns `spec.py` (`validate(dict)->dict` returns normalized deep copy), `store.py` (`Store(path)`, run/task durable state), `engine.py` (`create(state, workflow, target)->run_id`, `work(state, run_id)->status`, `status(state, run_id)->dict`), CLI `python3 -m orchestrator`. Independent tests lane owns only `tests/test_factory_contract.py`; core owns other tests. CLI detailed options: [operations](operations.md).
+
+Codex task optional `transport:"app-server"` требует usage_policy/model profile. Trusted Python bridge executable также обязан быть в executable allowlist; server descendant остаётся в supervised process group. Legacy transport без поля не меняется. Usage policy optional `carry` описан в usage-accounting.md; workflow digest pinning сохраняется. Continuation добавляет command-only import/packet gates, не расходующие model launches; source skill context/prefix сохраняются.

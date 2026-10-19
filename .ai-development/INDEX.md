@@ -65,3 +65,5 @@
 | backend/2026-10-19-cli-diagnostics/0002 | accepted | Observable step trace and reviewed few-shot cards | [record](backend/2026-10-19-cli-diagnostics/decisions/0002-observable-cases.md); review after actual runs |
 | backend/2026-10-19-cli-diagnostics/0003 | accepted | Observed canary allocation and guarded live recovery | [record](backend/2026-10-19-cli-diagnostics/decisions/0003-canary-recovery.md); no automatic third canary |
 | backend/2026-10-19-cli-diagnostics/0004 | accepted | Duplicate nested Codex tool payload separated from strict billing envelope | [record](backend/2026-10-19-cli-diagnostics/decisions/0004-web-event-parsing.md); validate with web probe |
+| backend/2026-10-19-incremental-context/0001 | accepted | Incremental App Server usage, compact packets and inherited-budget continuation | [record](backend/2026-10-19-incremental-context/decisions/0001-runtime.md); review actual probes/usage |
+| backend/2026-10-19-incremental-context/0002 | accepted | Original$12 with explicit historical reserves and reviewed token allocation | [record](backend/2026-10-19-incremental-context/decisions/0002-budget-review.md); no billing upper-bound claim |

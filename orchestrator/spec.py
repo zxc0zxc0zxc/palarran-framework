@@ -61,7 +61,7 @@ def validate(value):
         raise ValueError('Expected 1..100 tasks')
     ids = []
     for task in tasks:
-        _object(task, ('id', 'verify'), ('depends_on', 'adapter', 'argv', 'prompt', 'executable', 'replay_safe', 'verify_stable', 'model_role', 'model_calls'))
+        _object(task, ('id', 'verify'), ('depends_on', 'adapter', 'argv', 'prompt', 'executable', 'replay_safe', 'verify_stable', 'model_role', 'model_calls', 'transport'))
         if not isinstance(task['id'], str) or not ID.fullmatch(task['id']) or task['id'] == '__final__':
             raise ValueError('Invalid task identity')
         ids.append(task['id'])
@@ -69,6 +69,8 @@ def validate(value):
         task.setdefault('adapter', 'command')
         task.setdefault('replay_safe', False)
         _strings(task['depends_on']); _unique(task['depends_on'])
+        if 'transport' in task and (task['adapter'] != 'codex' or task['transport'] != 'app-server' or 'usage_policy' not in result):
+            raise ValueError('Incremental transport requires Codex accounting')
         if type(task['replay_safe']) is not bool or type(task.get('verify_stable', False)) is not bool or task['adapter'] not in policy['adapters']:
             raise ValueError('Task policy denied')
         if not isinstance(task['verify'], list) or not task['verify']:

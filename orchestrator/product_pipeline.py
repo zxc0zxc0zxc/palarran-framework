@@ -25,7 +25,7 @@ TASK_GUIDANCE = {
 }
 
 
-def build(idea, skills_root, adapter, executable, *, python=None, limits=None, env=None, pipeline_id=None, baseline=None, ai_policy=None, usage_policy=None):
+def build(idea, skills_root, adapter, executable, *, python=None, limits=None, env=None, pipeline_id=None, baseline=None, ai_policy=None, usage_policy=None, transport=None):
     if not isinstance(idea, str) or not idea.strip() or len(idea.encode('utf-8')) > 32768 or '\x00' in idea:
         raise ValueError('A nonempty bounded UTF-8 idea is required')
     if not isinstance(baseline, str) or not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', baseline):
@@ -74,6 +74,10 @@ def build(idea, skills_root, adapter, executable, *, python=None, limits=None, e
         ])
         tasks.append(dict(id='product-' + stage, depends_on=[] if not position else ['product-' + STAGES[position - 1]], adapter=adapter, executable=executable, prompt=prompt,
                           verify=[[python, str(verifier), '--root', '.', '--pipeline', pipeline_id, '--stage', stage, '--context-sha', context_sha, '--skills-root', str(skills_root)]], replay_safe=False, verify_stable=True, model_role='planning', model_calls=1))
+    if transport is not None:
+        if adapter != 'codex' or transport != 'app-server':
+            raise ValueError('Unsupported product transport')
+        for task in tasks: task['transport'] = transport
     workflow = dict(version=1, name='product-pipeline', plan_revision='product-v001', limits=values,
                     policy=dict(executables=list(dict.fromkeys([python, executable])), adapters=[adapter], env=environment), tasks=tasks)
     workflow['ai_policy'] = copy.deepcopy(ai_policy) if ai_policy is not None else default_policy(adapter)

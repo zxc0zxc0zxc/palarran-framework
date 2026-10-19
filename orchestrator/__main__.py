@@ -55,8 +55,21 @@ def main(argv=None):
     p.add_argument('--run-seconds', type=float, default=7200)
     p.add_argument('--task-seconds', type=float, default=900)
     p.add_argument('--max-attempts', type=int, default=2)
+    p.add_argument('--transport', choices=['app-server'], help='Codex incremental usage transport')
+    p = sub.add_parser('product-continue', help='Import verified research prefix without regenerating it')
+    for name in ('state', 'target', 'source', 'skills-root', 'usage-policy'):
+        p.add_argument('--'+name, required=True, type=Path)
+    p.add_argument('--pipeline', required=True)
+    p.add_argument('--budget-ceiling', required=True, help='Explicit original monetary ceiling; not a fresh budget')
+    p.add_argument('--through', required=True, choices=['define','market','compare','revenue','acquisition'])
+    p.add_argument('--route', required=True, choices=['b2b','b2c'])
+    p.add_argument('--agent', required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command == 'product-continue':
+            from .product_continue import create_continuation
+            run=create_continuation(args.state,args.target,args.source,args.pipeline,args.through,args.skills_root,args.agent,read_object(args.usage_policy,65536),route=args.route,budget_ceiling=args.budget_ceiling)
+            print(json.dumps({'run_id':run,'budget':status(args.state,run)['budget'],'usage':status(args.state,run)['usage']}));return 0
         if args.command == 'product-create':
             from .product_pipeline import create_product
             fd = os.open(str(args.idea_file), os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
@@ -68,6 +81,7 @@ def main(argv=None):
                 raise ValueError('Idea exceeds byte budget')
             idea = data.decode('utf-8')
             options = {}
+            if args.transport is not None: options['transport'] = args.transport
             for name in ('ai_policy', 'usage_policy'):
                 file = getattr(args, name)
                 if file is not None:

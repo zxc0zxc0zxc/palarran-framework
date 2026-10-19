@@ -65,6 +65,9 @@ class Diagnostics:
             self.terminal = kind
         if kind in ('error', 'turn.failed'):
             self.codes.add('provider_error')
+            code = record.get('code')
+            if isinstance(code, str) and code in {'bridge_line_limit','bridge_output_limit','bridge_thread_mismatch','bridge_turn_mismatch','bridge_incomplete_turn','bridge_duplicate_key','bridge_protocol_error'}:
+                self.codes.add(code)
             self._classify(record.get('message'))
             error = record.get('error')
             if isinstance(error, dict):

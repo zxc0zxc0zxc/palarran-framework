@@ -75,7 +75,7 @@ class UsageStream:
     """Consume JSONL chunks and emit only allowlisted cumulative usage counters."""
 
     def __init__(self, adapter):
-        _require(adapter in ('codex', 'claude'))
+        _require(adapter in ('codex', 'claude', 'codex-app-server'))
         self.adapter = adapter
         self._buffer = bytearray()
         self._lines = 0
@@ -94,7 +94,7 @@ class UsageStream:
         for value in (input_tokens, cached, output):
             _counter(value)
         if creation is None:
-            _require(self.adapter == 'codex')
+            _require(self.adapter in ('codex', 'codex-app-server'))
         else:
             _counter(creation)
         _require(cached + (creation or 0) <= input_tokens and input_tokens + output <= MAX_TOKENS)
@@ -130,14 +130,37 @@ class UsageStream:
         # CLI tool payloads can contain duplicate nested discriminators. They
         # never carry authoritative accounting. Envelope keys remain unique;
         # all turn/usage/result trees below are still recursively strict.
-        if self.adapter == 'codex' and kind in ('item.started', 'item.updated', 'item.completed'):
+        if self.adapter in ('codex', 'codex-app-server') and kind in ('item.started', 'item.updated', 'item.completed'):
             return []
         try:
             record = {key: _strict(value) for key, value in record.items()}
         except UsageFormatError as error:
             self.failure_code = error.code
             raise ValueError(_ERROR) from None
-        if self.adapter == 'codex':
+        if self.adapter == 'codex-app-server' and kind == 'usage.updated':
+            _require(self._active and isinstance(record.get('usage'), dict))
+            usage = record['usage']
+            _require(set(usage) == {'input_tokens', 'cached_input_tokens', 'cache_creation_input_tokens', 'output_tokens', 'reasoning_output_tokens', 'total_tokens'})
+            incoming = _counter(usage['input_tokens']); cached = _counter(usage['cached_input_tokens'])
+            output = _counter(usage['output_tokens']); creation = usage['cache_creation_input_tokens']
+            reasoning = usage['reasoning_output_tokens']
+            _require(_counter(usage['total_tokens']) == incoming + output)
+            if creation is not None: _counter(creation)
+            if reasoning is not None: _counter(reasoning)
+            _require(incoming >= self._input and cached >= self._cached and output >= self._output)
+            _require(creation is None or self._creation is None or creation >= self._creation)
+            _require(reasoning is None or self._reasoning is None or reasoning >= self._reasoning)
+            creation = None if creation is None or (self._sequence and self._creation is None) else creation
+            reasoning = None if reasoning is None or (self._sequence and self._reasoning is None) else reasoning
+            result = self._snapshot(incoming, cached, creation, output, reasoning, None)
+            self._input, self._cached, self._output = incoming, cached, output
+            self._creation, self._reasoning = creation, reasoning
+            return [result]
+        if self.adapter == 'codex-app-server' and kind == 'turn.completed':
+            _require(self._active and self._sequence > 0 and set(record) == {'type'})
+            self._active = False
+            return []
+        if self.adapter in ('codex', 'codex-app-server'):
             if kind == 'turn.started':
                 _require(not self._active)
                 self._active = True

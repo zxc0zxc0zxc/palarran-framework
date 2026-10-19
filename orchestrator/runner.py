@@ -7,6 +7,8 @@ import os
 import selectors
 import signal
 import subprocess
+import sys
+from pathlib import Path
 import time
 from dataclasses import dataclass
 from typing import Optional
@@ -25,11 +27,17 @@ class Result:
     diagnostics: Optional[dict] = None
 
 
-def invocation(task, workspace, *, profile=None, telemetry=False, max_cost_usd=None):
+def invocation(task, workspace, *, profile=None, telemetry=False, max_cost_usd=None, output_limit=1048576):
     """Build a noninteractive argv; prompts travel over stdin, never argv."""
     adapter = task.get("adapter", "command")
     if adapter == "command":
         return list(task["argv"]), ""
+    if adapter == "codex" and task.get("transport") == "app-server":
+        if profile is None or not telemetry:
+            raise ValueError("App server requires model profile and accounting")
+        return [str(Path(sys.executable).resolve()), str(Path(__file__).with_name("codex_bridge.py").resolve()),
+                "--executable", task["executable"], "--cwd", str(workspace),
+                "--model", profile["model"], "--effort", profile["effort"], "--stream-limit", str(output_limit)], task["prompt"]
     if adapter == "codex":
         argv = [task["executable"], "exec", "--ephemeral", "--sandbox",
                 "workspace-write", "-c", 'approval_policy="never"', "-C",

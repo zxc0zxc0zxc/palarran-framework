@@ -46,8 +46,28 @@ def default_usage_policy(tasks):
 
 
 def validate_usage_policy(policy, tasks, ai_policy):
-    if not isinstance(policy, dict) or set(policy) != {'max_tokens', 'max_cost_usd', 'stages', 'pricing'} or ai_policy is None:
+    if not isinstance(policy, dict) or set(policy) not in ({'max_tokens', 'max_cost_usd', 'stages', 'pricing'}, {'max_tokens', 'max_cost_usd', 'stages', 'pricing', 'carry'}) or ai_policy is None:
         raise ValueError('Usage policy requires routing and exact fields')
+    carry = policy.get('carry', [])
+    if not isinstance(carry, list) or len(carry) > 64:
+        raise ValueError('Invalid inherited budget')
+    sources = set()
+    for entry in carry:
+        fields = {'source', 'observed_tokens', 'observed_cost_usd', 'reserved_tokens', 'reserved_cost_usd', 'unknown'}
+        if not isinstance(entry, dict) or set(entry) != fields:
+            raise ValueError('Invalid inherited budget entry')
+        if not isinstance(entry['source'], str) or not re.fullmatch(r'[A-Za-z0-9_./-]{1,160}', entry['source']) or entry['source'] in sources or type(entry['unknown']) is not bool:
+            raise ValueError('Invalid inherited budget source')
+        sources.add(entry['source'])
+        observed_tokens = entry['observed_tokens']
+        if not _integer(entry['reserved_tokens']) or (observed_tokens is None and not entry['unknown']) or (observed_tokens is not None and not _integer(observed_tokens)) or entry['reserved_tokens'] < (observed_tokens or 0):
+            raise ValueError('Inherited tokens cannot be refunded')
+        if entry['observed_cost_usd'] is None and not entry['unknown']:
+            raise ValueError('Known inherited money needs a receipt')
+        observed = amount(entry['observed_cost_usd']) if entry['observed_cost_usd'] is not None else Decimal(0)
+        reserved = amount(entry['reserved_cost_usd'])
+        if reserved < observed or (not entry['unknown'] and (reserved != observed or entry['reserved_tokens'] != observed_tokens)):
+            raise ValueError('Inherited money cannot be refunded')
     stages = policy['stages']
     agents = {task['id']: task for task in tasks if task['adapter'] != 'command'}
     if not agents or not isinstance(stages, dict) or set(stages) != set(agents):
@@ -127,6 +147,12 @@ def zero_snapshot(flow, task):
     return result
 
 
+def carry_totals(policy):
+    entries = policy.get('carry', [])
+    return (sum(e['reserved_tokens'] for e in entries),
+            sum(nano(e['reserved_cost_usd']) for e in entries))
+
+
 def usage_report(flow, rows, tasks):
     policy = flow.get('usage_policy')
     if policy is None:
@@ -153,25 +179,33 @@ def usage_report(flow, rows, tasks):
         details.append(dict(task_id=task['id'], complete=known, observed_tokens=tokens, observed_cost_usd=usd(cost),
                             total_tokens=tokens if known else None, cost_usd=usd(cost) if known else None,
                             observed_counters=counters, max_tokens=caps['max_tokens'], max_cost_usd=caps['max_cost_usd'], attempts=attempts))
-    known = all(s['complete'] for s in details)
+    attempts_complete = all(s['complete'] for s in details)
+    carry = policy.get('carry', [])
+    known = attempts_complete and not any(e['unknown'] for e in carry)
+    carry_tokens, carry_cost = carry_totals(policy)
     tokens = sum(s['observed_tokens'] for s in details)
     cost = sum((json.loads(row['metrics']) if row['metrics'] else {}).get('cost_nano_usd', 0) for row in rows)
     # Report aggregates may exceed the policy's individual USD input bound; no float math.
     sources = {a['metrics']['cost_source'] for s in details for a in s['attempts'] if a['metrics']}
-    return dict(enabled=True, complete=known, observed_tokens=tokens, observed_cost_usd=usd(cost),
+    return dict(enabled=True, complete=known, attempts_complete=attempts_complete, carry=carry,
+                reserved_total_tokens=tokens + carry_tokens, reserved_total_cost_usd=usd(cost + carry_cost),
+                available_reserved_tokens=max(0, policy['max_tokens']-tokens-carry_tokens),
+                available_reserved_cost_usd=usd(max(0, nano(policy['max_cost_usd'])-cost-carry_cost)),
+                observed_tokens=tokens, observed_cost_usd=usd(cost),
                 total_tokens=tokens if known else None, cost_usd=usd(cost) if known else None,
                 pricing=policy['pricing'], observed_counters={key: None if any(s['observed_counters'][key] is None for s in details) else sum(s['observed_counters'][key] for s in details) for key in COUNTERS},
-                cost_source=next(iter(sources)) if len(sources) == 1 else ('mixed' if sources else 'not_started'),
+                cost_source=next(iter(sources)) if len(sources) == 1 else ('mixed' if sources else ('inherited_reserve' if carry else 'not_started')),
                 max_tokens=policy['max_tokens'], max_cost_usd=policy['max_cost_usd'],
-                remaining_tokens=max(0, policy['max_tokens']-tokens) if known else None,
-                remaining_cost_usd=usd(max(0, nano(policy['max_cost_usd'])-cost)) if known else None, stages=details)
+                remaining_tokens=max(0, policy['max_tokens']-tokens-carry_tokens) if known else None,
+                remaining_cost_usd=usd(max(0, nano(policy['max_cost_usd'])-cost-carry_cost)) if known else None, stages=details)
 
 
 def usage_exceeded(flow, rows, task_id=None):
     policy = flow.get('usage_policy')
     if policy is None:
         return False
-    tokens = cost = stage_tokens = stage_cost = 0
+    tokens, cost = carry_totals(policy)
+    stage_tokens = stage_cost = 0
     for row in rows:
         metrics = json.loads(row['metrics']) if row['metrics'] else {}
         tokens += metrics.get('total_tokens', 0); cost += metrics.get('cost_nano_usd', 0)
