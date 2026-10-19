@@ -55,3 +55,4 @@
 | backend/2026-10-19-product-pipeline/0008 | accepted | Pinned local context/decision source refs | [record](backend/2026-10-19-product-pipeline/decisions/0008-local-evidence.md); пересмотр source objects |
 | backend/2026-10-19-model-budgets/0001 | accepted | Model routing и невозвратные allocations до старта | [record](backend/2026-10-19-model-budgets/decisions/0001-routing-budget.md); пересмотр по quality/cost evals |
 | backend/2026-10-19-model-budgets/0002 | accepted | Managed worker без nested model/agent запусков | [record](backend/2026-10-19-model-budgets/decisions/0002-worker-scope.md); пересмотр при provider gateway |
+| backend/2026-10-19-usage-accounting/0001 | accepted | Реальные usage receipts, stage/run caps, durable ledger и fail-closed reconciliation | [record](backend/2026-10-19-usage-accounting/decisions/0001-accounting.md); пересмотр по provider evals |
