@@ -2,19 +2,19 @@
   "schema_version": 1,
   "plan_id": "product-pipeline",
   "plan_revision": "v001",
-  "source_commit": "5c0624fe6603d73c4dc9a8a7e7438f9c0b160dae",
+  "source_commit": "ac6ffc0",
   "execution_id": "product-pipeline-v001",
   "integration_commit": null,
   "tasks": [
     {
       "id": "ARTIFACTS",
       "plan_revision": "v001",
-      "owner": "coordinator",
-      "status": "pending",
+      "owner": "agent-product-artifacts",
+      "status": "in_progress",
       "depends_on": [],
       "code_commits": [],
       "integration_commit": null,
-      "reason": "Not dispatched",
+      "reason": "Contract frozen; owned lane implementation ready for integration",
       "checks": [
         {
           "id": "T-ARTIFACTS",
@@ -30,11 +30,11 @@
       "id": "BUILDER",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "pending",
+      "status": "in_progress",
       "depends_on": [],
       "code_commits": [],
       "integration_commit": null,
-      "reason": "Not dispatched",
+      "reason": "Contract frozen; owned lane implementation ready for integration",
       "checks": [
         {
           "id": "T-BUILDER",

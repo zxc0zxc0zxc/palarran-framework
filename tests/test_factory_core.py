@@ -68,6 +68,32 @@ class FactoryCoreTests(unittest.TestCase):
         self.assertEqual([t['status'] for t in report['tasks']], ['verified', 'verified'])
         self.assertEqual(report['fingerprint'], fingerprint(report['workspace']))
 
+    def test_stable_receipt_detects_coordinated_approved_output_rewrite(self):
+        flow = workflow()
+        flow['tasks'][0]['verify_stable'] = True
+        flow['tasks'][0]['verify'] = [command("from pathlib import Path; print(Path('result.txt').read_text())")]
+        flow['tasks'].append(dict(id='rewrite', depends_on=['write'], argv=command("from pathlib import Path; Path('result.txt').write_text('different-but-valid')"), verify=[command('pass')]))
+        run = self.new(flow)
+        self.assertEqual(work(self.state, run), 'failed')
+        self.assertEqual(status(self.state, run)['tasks'][-1]['status'], 'failed')
+
+    def test_legacy_snapshot_without_stable_flag_remains_executable(self):
+        import hashlib
+        run = self.new()
+        with closing(Store(self.state)) as store:
+            flow = json.loads(store.get(run)['workflow'])
+            for task in flow['tasks']:
+                task.pop('verify_stable', None)
+            snapshot = json.dumps(flow, sort_keys=True, allow_nan=False)
+            store.db.execute('UPDATE runs SET workflow=?,workflow_sha256=? WHERE id=?', (snapshot, hashlib.sha256(snapshot.encode()).hexdigest(), run))
+        self.assertEqual(work(self.state, run), 'verified')
+
+    def test_stable_flag_requires_bool(self):
+        for value in (0, 1, None, 'true', []):
+            flow = workflow(); flow['tasks'][0]['verify_stable'] = value
+            with self.assertRaises(ValueError):
+                validate(flow)
+
     def test_final_gate_detects_later_regression(self):
         flow = workflow()
         flow['tasks'].append(dict(id='break', depends_on=['write'], argv=command("from pathlib import Path; Path('result.txt').write_text('broken')"), verify=[command('assert True')]))

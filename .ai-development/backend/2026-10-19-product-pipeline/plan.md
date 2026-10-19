@@ -26,8 +26,8 @@ Implemented 0/3; integrated 0/3; verified 0/3.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] ARTIFACTS | pending | coordinator | - | Not dispatched |
-| [ ] BUILDER | pending | coordinator | - | Not dispatched |
+| [ ] ARTIFACTS | in_progress | agent-product-artifacts | - | Contract frozen; owned lane implementation ready for integration |
+| [ ] BUILDER | in_progress | coordinator | - | Contract frozen; owned lane implementation ready for integration |
 | [ ] ACCEPT | pending | coordinator | - | Not dispatched |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |

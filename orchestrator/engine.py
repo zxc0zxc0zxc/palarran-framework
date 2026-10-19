@@ -14,7 +14,7 @@ from .store import Store, TERMINAL
 from .workspaces import fingerprint, prepare
 
 
-def create(state, workflow, target):
+def create(state, workflow, target, *, initialize=None):
     snapshot = validate(workflow)
     state, target = Path(state).absolute(), Path(target).resolve(strict=True)
     resolved = state.resolve()
@@ -23,6 +23,8 @@ def create(state, workflow, target):
     run = uuid.uuid4().hex
     with closing(Store(state)) as store:
         workspace, baseline = prepare(state, target, run)
+        if initialize is not None:
+            initialize(workspace)
         store.add(run, snapshot, workspace, baseline)
     return run
 
@@ -57,10 +59,9 @@ def work(state, run_id):
     from .runner import execute, invocation
     with closing(_store(state)) as store:
         record = store.get(run_id)
-        flow = validate(json.loads(record['workflow']))
-        canonical = json.dumps(flow, sort_keys=True, allow_nan=False)
-        if hashlib.sha256(canonical.encode()).hexdigest() != record['workflow_sha256']:
+        if hashlib.sha256(record['workflow'].encode()).hexdigest() != record['workflow_sha256']:
             raise ValueError('Workflow snapshot integrity failure')
+        flow = validate(json.loads(record['workflow']))
         limits = flow['limits']
         while True:
             claim = store.claim(run_id)
@@ -88,7 +89,16 @@ def work(state, run_id):
             try:
                 if task_id == '__final__':
                     before = fingerprint(workspace)
-                    commands = [(argv, '') for task in flow['tasks'] for argv in task['verify']]
+                    commands = []
+                    stable_receipts = []
+                    completed = {row['id']: row for row in store.tasks(run_id)}
+                    for source in flow['tasks']:
+                        observed = json.loads(completed[source['id']]['result'] or '[]')
+                        if source['verify_stable'] and len(observed) != len(source['verify']) + 1:
+                            raise ValueError('Missing stable receipts')
+                        for check_index, argv in enumerate(source['verify']):
+                            commands.append((argv, ''))
+                            stable_receipts.append(observed[check_index + 1]['output_sha256'] if source['verify_stable'] else None)
                 else:
                     task = next(t for t in flow['tasks'] if t['id'] == task_id)
                     argv, prompt = invocation(task, workspace)
@@ -104,6 +114,8 @@ def work(state, run_id):
                         success = False; break
                     outcome = execute(argv, workspace, timeout=remaining, output_limit=limits['output_bytes'], env=env, heartbeat=heartbeat, stdin_text=stdin_text)
                     results.append(asdict(outcome))
+                    if task_id == '__final__' and stable_receipts[index] is not None and outcome.output_sha256 != stable_receipts[index]:
+                        success = False; break
                     if outcome.returncode != 0 or outcome.reason != 'exited':
                         success = False; break
                     if index == 0 and handoff is not None:

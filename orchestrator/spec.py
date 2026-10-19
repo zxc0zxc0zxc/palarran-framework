@@ -58,15 +58,16 @@ def validate(value):
         raise ValueError('Expected 1..100 tasks')
     ids = []
     for task in tasks:
-        _object(task, ('id', 'verify'), ('depends_on', 'adapter', 'argv', 'prompt', 'executable', 'replay_safe'))
+        _object(task, ('id', 'verify'), ('depends_on', 'adapter', 'argv', 'prompt', 'executable', 'replay_safe', 'verify_stable'))
         if not isinstance(task['id'], str) or not ID.fullmatch(task['id']) or task['id'] == '__final__':
             raise ValueError('Invalid task identity')
         ids.append(task['id'])
         task.setdefault('depends_on', [])
         task.setdefault('adapter', 'command')
         task.setdefault('replay_safe', False)
+        task.setdefault('verify_stable', False)
         _strings(task['depends_on']); _unique(task['depends_on'])
-        if type(task['replay_safe']) is not bool or task['adapter'] not in policy['adapters']:
+        if type(task['replay_safe']) is not bool or type(task['verify_stable']) is not bool or task['adapter'] not in policy['adapters']:
             raise ValueError('Task policy denied')
         if not isinstance(task['verify'], list) or not task['verify']:
             raise ValueError('Independent verifiers required')

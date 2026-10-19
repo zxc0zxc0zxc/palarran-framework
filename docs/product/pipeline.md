@@ -44,7 +44,7 @@ Source bundle из пяти SKILL.md, docs/product, shared memory guide и templ
   stages/mvp/report.md                 # итоговый MVP-план и verdict
 ```
 
-Общий target INDEX и product INDEX обновляются без стирания existing entries. Каждый stage создаёт собственные E/claim/unknown IDs и ADR; ссылки на prior IDs разрешены, копировать их с новым смыслом нельзя. После прошедшего gate stage immutable: downstream только читает. Draft до gate можно исправить после needs_input с сохранением предыдущего attempt в history; accepted ADR не стирать. Observed failure без replay-safe → failed, новая revision/run для пересмотра scope; expired lease → reconciliation existing runtime.
+Общий target INDEX и product INDEX обновляются без стирания existing entries. Каждый stage создаёт собственные E/claim/unknown IDs и ADR; ссылки на prior IDs разрешены, копировать их с новым смыслом нельзя. Private runtime receipt фиксирует canonical manifest hash: финальный stable rerun отклоняет даже согласованную перезапись hash chain. После прошедшего gate stage immutable: downstream только читает. Draft до gate можно исправить после needs_input с сохранением предыдущего attempt в history; accepted ADR не стирать. Observed failure без replay-safe → failed, новая revision/run для пересмотра scope; expired lease → reconciliation existing runtime.
 
 ## Финальное решение
 
