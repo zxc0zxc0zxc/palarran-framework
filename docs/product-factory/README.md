@@ -23,3 +23,7 @@ python3 -m unittest discover -s tests -p 'test_factory_*.py' -v
 ```
 
 [Шаблон backend agent](../../examples/product-factory/backend-agent.json) требует замены executable/skill/feature paths и verifiers на actual source DoD. Он не запускается автоматически. Для Claude заменить adapter/executable/allowlists; собственный login и разрешённые env настраиваются вне Git. Runtime добавляет explicit handoff: implemented разрешает независимые checks, needs_input приостанавливает run. Provider CLI не вызывается smoke-тестом.
+
+## Product research pipeline
+
+[Product pipeline](../product/pipeline.md) связывает пять product skills и итоговый synthesis MVP в существующем bounded runtime; engineering workflow API совместим.

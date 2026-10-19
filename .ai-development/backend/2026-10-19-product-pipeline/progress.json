@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "plan_id": "product-pipeline",
+  "plan_revision": "v001",
+  "source_commit": "5c0624fe6603d73c4dc9a8a7e7438f9c0b160dae",
+  "execution_id": "product-pipeline-v001",
+  "integration_commit": null,
+  "tasks": [
+    {
+      "id": "ARTIFACTS",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched",
+      "checks": [
+        {
+          "id": "T-ARTIFACTS",
+          "required": true,
+          "status": "NOT_RUN",
+          "subject_commit": null,
+          "evidence": [],
+          "reason": "Not executed"
+        }
+      ]
+    },
+    {
+      "id": "BUILDER",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched",
+      "checks": [
+        {
+          "id": "T-BUILDER",
+          "required": true,
+          "status": "NOT_RUN",
+          "subject_commit": null,
+          "evidence": [],
+          "reason": "Not executed"
+        }
+      ]
+    },
+    {
+      "id": "ACCEPT",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [
+        "ARTIFACTS",
+        "BUILDER"
+      ],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched",
+      "checks": [
+        {
+          "id": "T-ACCEPT",
+          "required": true,
+          "status": "NOT_RUN",
+          "subject_commit": null,
+          "evidence": [],
+          "reason": "Not executed"
+        }
+      ]
+    }
+  ],
+  "gates": [
+    {
+      "id": "INTEGRATED-DOD",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Not executed"
+    },
+    {
+      "id": "LAB-SLO",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Not executed"
+    }
+  ]
+}

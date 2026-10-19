@@ -1,6 +1,6 @@
 # Product workflow, память и handoff
 
-Начать с [общей памяти](../skills/decision-memory.md), target README и product/UX/backend/frontend indexes/accepted ADR. Installed skill checkout и target project — разные roots. Исследования/решения/выходы пишутся в target, не внутрь plugin. `product-factory` runtime на этом этапе не меняется и автоматически не получает новый product loop.
+Начать с [общей памяти](../skills/decision-memory.md), target README и product/UX/backend/frontend indexes/accepted ADR. Installed skill checkout и target project — разные roots. Исследования/решения/выходы пишутся в target, не внутрь plugin. Standalone invocation не запускает другие stages. Явный [pipeline](pipeline.md) последовательно связывает пять skills в existing runtime и synthesis; бесконечный product loop не включается.
 
 ```mermaid
 flowchart TD
