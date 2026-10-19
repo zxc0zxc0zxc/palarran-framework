@@ -213,6 +213,10 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
             except Exception:
                 diagnostics.usage_failure(getattr(usage_stream, "failure_code", None))
                 reason = "usage_error"
+    except (OSError, ValueError):
+        # A transport/supervisor fault must retain the last receipt and an
+        # enum-only outcome instead of escaping into a metadata-free pause.
+        reason = "supervisor_io_error"
     finally:
         _kill_group(process)
         selector.close()

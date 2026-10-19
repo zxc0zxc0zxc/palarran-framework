@@ -1,10 +1,12 @@
 """Real stdio subprocess protocol fixtures; no live provider usage."""
 import json
 import os
+import selectors
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from orchestrator.runner import invocation, execute
 from orchestrator.usage import UsageStream
 
@@ -81,3 +83,10 @@ for line in sys.stdin:
         result,receipts=self.run_fixture('dedup')
         self.assertTrue(result.usage_complete)
         self.assertEqual([r['total_tokens'] for r in receipts],[110,210])
+
+    def test_supervisor_fault_retains_safe_outcome(self):
+        with patch.object(selectors.DefaultSelector, 'select', side_effect=OSError('PRIVATE failure')):
+            result, receipts = self.run_fixture()
+        self.assertEqual(result.reason, 'supervisor_io_error')
+        self.assertFalse(result.usage_complete)
+        self.assertNotIn('PRIVATE', repr(result))

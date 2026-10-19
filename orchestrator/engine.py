@@ -179,7 +179,14 @@ def work(state, run_id):
                     success = False
                 if not paused:
                     store.finish(run_id, task_id, token, success, results, subject)
-            except (OSError, ValueError):
+            except (OSError, ValueError) as error:
+                # Public code locations only; never exception text/locals/arguments.
+                import traceback
+                frames = traceback.extract_tb(error.__traceback__)
+                owned = [f for f in frames if Path(f.filename).parent == Path(__file__).parent]
+                results.append(dict(reason='supervisor_exception', error_type=type(error).__name__,
+                    site=(Path(owned[-1].filename).name + ':' + str(owned[-1].lineno)) if owned else 'external'))
+                store.record_outcomes(run_id, task_id, token, results)
                 # Do not persist exception text: paths/process errors may contain secrets.
                 if accounting:
                     store.complete_usage(run_id, task_id, token, complete=False, not_started=not agent_called)
