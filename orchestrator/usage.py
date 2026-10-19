@@ -121,8 +121,15 @@ class UsageStream:
                 self._active = False
                 return [snapshot]
         elif kind == 'result':
-            _require(self._sequence == 0 and not record.get('is_error', False))
-            _require(record.get('subtype', 'success') == 'success')
+            _require(self._sequence == 0)
+            subtype = record.get('subtype', 'success')
+            _require(subtype in ('success', 'error_max_budget_usd', 'error_max_turns'))
+            _require(type(record.get('is_error', False)) is bool)
+            # Documented budget/turn failures still report the crossing request's
+            # full modelUsage and cost. Transport exit determines task failure;
+            # accounting must preserve that spend before it handles the exit.
+            if subtype == 'success':
+                _require(not record.get('is_error', False))
             models = record.get('modelUsage')
             _require(isinstance(models, dict) and bool(models))
             incoming = cached = creation = output = 0

@@ -93,12 +93,30 @@ class UsageStreamTests(unittest.TestCase):
 
     def test_known_errors_fail_closed(self):
         for data in (claude(subtype='error_during_execution'), claude(is_error=True),
-                     claude(subtype='error_max_budget_usd'), encoded(dict(type='error', error='SECRET'))):
+                     claude(subtype='error_unknown_failure'), encoded(dict(type='error', error='SECRET'))):
             with self.assertRaises(ValueError) as caught:
                 self.parse('claude', data)
             self.assertNotIn('SECRET', str(caught.exception))
         with self.assertRaises(ValueError):
             self.parse('codex', encoded(dict(type='turn.failed', error='SECRET')))
+
+    def test_documented_limit_failure_preserves_full_spend_once(self):
+        for subtype in ('error_max_budget_usd', 'error_max_turns'):
+            data = claude(subtype=subtype, is_error=True, cost=2.5)
+            receipts = self.parse('claude', data)
+            self.assertEqual(len(receipts), 1)
+            self.assertEqual(receipts[0]['total_tokens'], 19)
+            self.assertEqual(receipts[0]['reported_cost_nano_usd'], 2500000000)
+            with self.assertRaises(ValueError):
+                self.parse('claude', data + data)
+
+    def test_failed_result_without_complete_receipt_stays_unknown(self):
+        for fields in ({'subtype':'error_during_execution', 'is_error':True},
+                       {'subtype':'error_max_budget_usd', 'is_error':True, 'modelUsage':{}},
+                       {'subtype':'error_max_turns', 'is_error':True, 'total_cost_usd':None},
+                       {'subtype':'error_max_turns', 'is_error':'true'}):
+            with self.subTest(fields=fields), self.assertRaises(ValueError):
+                self.parse('claude', claude(**fields))
 
     def test_missing_claude_counters_model_map_and_cost(self):
         for fields in ({'modelUsage':{}}, {'modelUsage':None}, {'modelUsage':{'m':{'inputTokens':1}}},
