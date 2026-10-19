@@ -2,29 +2,30 @@
   "schema_version": 1,
   "plan_id": "product-factory",
   "plan_revision": "v001",
-  "source_commit": "ec9e2cfb2eb7bc88d78605d6256aed666fdf49f4",
+  "source_commit": "81c135d",
   "execution_id": "pf-v001",
-  "integration_commit": "aec80041e9d8dcf2b8ecffaabaa420132f35e52f",
+  "integration_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
   "tasks": [
     {
       "id": "RUNNER",
       "plan_revision": "v001",
       "owner": "agent-runner",
-      "status": "integrated",
+      "status": "verified",
       "depends_on": [],
       "code_commits": [
         "2b2ca37"
       ],
-      "integration_commit": "aec80041e9d8dcf2b8ecffaabaa420132f35e52f",
-      "reason": "Integrated; final acceptance pending",
+      "integration_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+      "reason": "",
       "checks": [
         {
           "id": "T-RUNNER",
           "required": true,
-          "status": "NOT_RUN",
-          "subject_commit": null,
-          "evidence": [],
-          "reason": "Not executed"
+          "status": "PASS",
+          "subject_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+          "evidence": [
+            ".ai-development/backend/2026-10-19-product-factory/verification.md"
+          ]
         }
       ]
     },
@@ -32,21 +33,22 @@
       "id": "CONTRACT-TEST",
       "plan_revision": "v001",
       "owner": "agent-contract-tests",
-      "status": "integrated",
+      "status": "verified",
       "depends_on": [],
       "code_commits": [
         "aec8004"
       ],
-      "integration_commit": "aec80041e9d8dcf2b8ecffaabaa420132f35e52f",
-      "reason": "Integrated; final acceptance pending",
+      "integration_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+      "reason": "",
       "checks": [
         {
           "id": "T-CONTRACT-TEST",
           "required": true,
-          "status": "NOT_RUN",
-          "subject_commit": null,
-          "evidence": [],
-          "reason": "Not executed"
+          "status": "PASS",
+          "subject_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+          "evidence": [
+            ".ai-development/backend/2026-10-19-product-factory/verification.md"
+          ]
         }
       ]
     },
@@ -54,21 +56,23 @@
       "id": "CORE",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "in_progress",
+      "status": "verified",
       "depends_on": [],
       "code_commits": [
-        "1a0df1c"
+        "1a0df1c",
+        "e0b526c"
       ],
-      "integration_commit": null,
-      "reason": "Implementation and acceptance in progress",
+      "integration_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+      "reason": "",
       "checks": [
         {
           "id": "T-CORE",
           "required": true,
-          "status": "NOT_RUN",
-          "subject_commit": null,
-          "evidence": [],
-          "reason": "Not executed"
+          "status": "PASS",
+          "subject_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+          "evidence": [
+            ".ai-development/backend/2026-10-19-product-factory/verification.md"
+          ]
         }
       ]
     },
@@ -76,19 +80,26 @@
       "id": "ACCEPT",
       "plan_revision": "v001",
       "owner": "coordinator",
-      "status": "in_progress",
-      "depends_on": [],
-      "code_commits": [],
-      "integration_commit": null,
-      "reason": "Implementation and acceptance in progress",
+      "status": "verified",
+      "depends_on": [
+        "RUNNER",
+        "CONTRACT-TEST",
+        "CORE"
+      ],
+      "code_commits": [
+        "e0b526c"
+      ],
+      "integration_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+      "reason": "",
       "checks": [
         {
           "id": "T-ACCEPT",
           "required": true,
-          "status": "NOT_RUN",
-          "subject_commit": null,
-          "evidence": [],
-          "reason": "Not executed"
+          "status": "PASS",
+          "subject_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+          "evidence": [
+            ".ai-development/backend/2026-10-19-product-factory/verification.md"
+          ]
         }
       ]
     }
@@ -97,10 +108,11 @@
     {
       "id": "INTEGRATED-DOD",
       "required": true,
-      "status": "NOT_RUN",
-      "subject_commit": null,
-      "evidence": [],
-      "reason": "Not executed"
+      "status": "PASS",
+      "subject_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+      "evidence": [
+        ".ai-development/backend/2026-10-19-product-factory/verification.md"
+      ]
     }
   ]
 }

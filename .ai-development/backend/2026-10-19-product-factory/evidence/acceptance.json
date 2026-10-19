@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "subject_commit": "e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3",
+  "date": "2026-10-19",
+  "python": "3.9.6",
+  "sqlite": "3.54.0",
+  "platform": "Darwin arm64",
+  "samples": 100,
+  "control_plane_p95_ms": 0.726,
+  "threshold_ms": 100,
+  "smoke_seconds": 0.295,
+  "smoke": "PASS",
+  "control_plane": "PASS",
+  "offline_tests": 104,
+  "offline_suite": "PASS",
+  "live_providers": "NOT_RUN",
+  "operational_sla": "NOT_RUN"
+}

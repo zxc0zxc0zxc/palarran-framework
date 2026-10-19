@@ -16,19 +16,19 @@ Concurrency разработки max 3. Agents own temporary worktrees, temp DB/
 <!-- backend-progress:start -->
 
 Plan: product-factory / v001; execution: pf-v001.
-Integration commit: aec80041e9d8dcf2b8ecffaabaa420132f35e52f. Status: **INCOMPLETE**.
-Implemented 2/4; integrated 2/4; verified 0/4.
+Integration commit: e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3. Status: **VERIFIED**.
+Implemented 4/4; integrated 4/4; verified 4/4.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] RUNNER | integrated | agent-runner | aec80041e9d8dcf2b8ecffaabaa420132f35e52f | Integrated; final acceptance pending |
-| [ ] CONTRACT-TEST | integrated | agent-contract-tests | aec80041e9d8dcf2b8ecffaabaa420132f35e52f | Integrated; final acceptance pending |
-| [ ] CORE | in_progress | coordinator | - | Implementation and acceptance in progress |
-| [ ] ACCEPT | in_progress | coordinator | - | Implementation and acceptance in progress |
+| [x] RUNNER | verified | agent-runner | e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3 | - |
+| [x] CONTRACT-TEST | verified | agent-contract-tests | e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3 | - |
+| [x] CORE | verified | coordinator | e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3 | - |
+| [x] ACCEPT | verified | coordinator | e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3 | - |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |
 |---|---|---|---|---|
-| INTEGRATED-DOD | True | NOT_RUN | - | Not executed |
+| INTEGRATED-DOD | True | PASS | e0b526cb73d48aafaf46f9eb9afbeeb2a93462e3 | .ai-development/backend/2026-10-19-product-factory/verification.md |
 
 Structural validation is not proof of test execution, Git ancestry or operational SLA.
 
