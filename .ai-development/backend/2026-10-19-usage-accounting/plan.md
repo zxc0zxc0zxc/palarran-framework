@@ -17,20 +17,20 @@ DoD: all R critical tests, schema v1->v2 migration preserving snapshot hashes/ol
 <!-- backend-progress:start -->
 
 Plan: usage-accounting / v002; execution: usage-accounting-v001.
-Integration commit: -. Status: **INCOMPLETE**.
-Implemented 2/4; integrated 2/4; verified 0/4.
+Integration commit: a87d212c60b7d80ed729b0ec01bb8137a39c341b. Status: **VERIFIED**.
+Implemented 4/4; integrated 4/4; verified 4/4.
 
 | Task | State | Owner | Integration commit | Remaining / reason |
 |---|---|---|---|---|
-| [ ] PARSER | integrated | agent-parser | 8e53642 | - |
-| [ ] RUNNER | integrated | agent-runner | 8e53642 | - |
-| [ ] CORE | in_progress | coordinator | - | - |
-| [ ] ACCEPT | pending | coordinator | - | - |
+| [x] PARSER | verified | agent-parser | a87d212c60b7d80ed729b0ec01bb8137a39c341b | - |
+| [x] RUNNER | verified | agent-runner | a87d212c60b7d80ed729b0ec01bb8137a39c341b | - |
+| [x] CORE | verified | coordinator | a87d212c60b7d80ed729b0ec01bb8137a39c341b | - |
+| [x] ACCEPT | verified | coordinator | a87d212c60b7d80ed729b0ec01bb8137a39c341b | - |
 
 | Gate | Required | Status | Subject commit | Evidence / remaining |
 |---|---|---|---|---|
-| INTEGRATED-DOD | True | NOT_RUN | - | Execution pending |
-| LAB-SLO | True | NOT_RUN | - | Execution pending |
+| INTEGRATED-DOD | True | PASS | a87d212c60b7d80ed729b0ec01bb8137a39c341b | .ai-development/backend/2026-10-19-usage-accounting/verification.md |
+| LAB-SLO | True | PASS | a87d212c60b7d80ed729b0ec01bb8137a39c341b | .ai-development/backend/2026-10-19-usage-accounting/verification.md |
 
 Structural validation is not proof of test execution, Git ancestry or operational SLA.
 

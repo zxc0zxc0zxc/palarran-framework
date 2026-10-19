@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "subject_commit": "a87d212c60b7d80ed729b0ec01bb8137a39c341b",
+  "samples": 100,
+  "operation": "claim_receipt_complete_finish",
+  "p95_ms": 12.42,
+  "threshold_ms": 100,
+  "outcome": "PASS",
+  "live_providers": "NOT_RUN"
+}
