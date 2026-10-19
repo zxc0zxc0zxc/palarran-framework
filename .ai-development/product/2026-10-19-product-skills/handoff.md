@@ -23,4 +23,4 @@ API catalog проверен 2026-10-19: Google Trends alpha approval, акту�
 
 Следующая сессия читает общий INDEX, product catalog, accepted ADR и actual target README. Можно вызвать один product skill с бизнесом/регионом/аналогами; он создаёт target-specific report/evidence/revisions. Пока есть только reusable authoring capability: нет готового product idea, measured demand, private competitor revenue или proven CAC.
 
-Release commit/CI фиксируются после публикации; docs baseline сохранён отдельно для проверки порядка.
+Release implementation commit `bdf536839e3ae47b4b6117dff07f64bb5b85708b`; [GitHub CI 39270035157](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39270035157) PASS (offline suite + runtime baseline acceptance + Terraform validation). Working tree clean после публикации; source docs baseline `07af290` предшествует skills commit в Git history. Финальная metadata запись не меняет runtime/skill behavior.
