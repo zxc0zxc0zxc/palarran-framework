@@ -9,6 +9,16 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
+    "agent": {
+        "manifest": "plugins/agent/plugin.json",
+        "skills": ["agent-eval"],
+        "docs": ["docs/skills", "docs/agent"],
+    },
+    "ml": {
+        "manifest": "plugins/ml/plugin.json",
+        "skills": ["ml-plan", "ml-hypotheses", "ml-model", "ml-data", "ml-cost", "ml-train", "ml-benchmark"],
+        "docs": ["docs/skills", "docs/ml"],
+    },
     "product": {
         "manifest": "plugins/product/plugin.json",
         "skills": ["product-define", "product-market", "product-compare", "product-revenue", "product-acquisition", "product-b2b", "product-b2c"],
@@ -113,6 +123,19 @@ def build_package(namespace, output, root=ROOT):
             "templates/product/pipeline-mvp.md",
             "templates/product/b2b-sales.md", "templates/product/b2c-growth.md",
         ]
+    if namespace == "ml":
+        resources = [
+            "templates/ai-development/decision.md", "templates/ml/experiment.md",
+            "templates/ml/data-card.md", "templates/ml/benchmark.md",
+            "templates/ml/progress.example.json", "templates/ml/cost.example.json",
+            "templates/ml/pipeline-stage.example.json",
+            "scripts/ml_cost.py", "scripts/ml_data.py", "templates/ml/data-plan.md",
+            "templates/ml/data-prepare.example.json", "templates/ml/token-audit.example.json",
+            "templates/ml/data-mixture.example.json", "templates/ml/data-preparation.example.json",
+        ]
+    if namespace == "agent":
+        resources = ["templates/ai-development/decision.md", "templates/agent-eval/protocol.md"]
+    resources += ["templates/agents/root.md", "templates/agents/module.md"]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():
         paths.append(root / command["source"])

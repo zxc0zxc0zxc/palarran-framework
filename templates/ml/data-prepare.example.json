@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "seed": 73,
+  "split_weights": {
+    "train": "0.8",
+    "validation": "0.1",
+    "test": "0.1"
+  }
+}

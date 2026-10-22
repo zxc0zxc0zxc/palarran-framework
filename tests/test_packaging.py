@@ -17,7 +17,7 @@ SPEC.loader.exec_module(packager)
 class PackagingTest(unittest.TestCase):
     def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
-            for namespace, expected in [("product", 7), ("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
+            for namespace, expected in [("agent", 1), ("ml", 7), ("product", 7), ("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
                 package = packager.build_package(namespace, Path(directory) / namespace).resolve()
                 manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
                 self.assertEqual(manifest["name"], namespace)
@@ -41,6 +41,31 @@ class PackagingTest(unittest.TestCase):
                     tokens = json.loads((package / "templates/ui/tokens.example.json").read_text())
                     self.assertEqual(tokens["schema_version"], 1)
                     self.assertTrue((package / "skills/ux-design/SKILL.md").is_file())
+                if namespace == "agent":
+                    self.assertTrue((package / "templates/agent-eval/protocol.md").is_file())
+                    self.assertTrue((package / "docs/agent/eval/contract.md").is_file())
+                    self.assertFalse((package / "orchestrator").exists())
+                if namespace == "ml":
+                    self.assertEqual(set(manifest["commands"]), {"plan", "hypotheses", "model", "data", "cost", "train", "benchmark"})
+                    self.assertFalse((package / "orchestrator").exists())
+                    self.assertFalse((package / "docs/product").exists())
+                    for resource in ("data-plan.md", "data-prepare.example.json", "token-audit.example.json", "data-mixture.example.json", "data-preparation.example.json"):
+                        self.assertTrue((package / "templates/ml" / resource).is_file())
+                    source = Path(directory).resolve() / 'public-synthetic.jsonl'
+                    source.write_text(json.dumps(dict(id='fixture',group_id='fixture',source_id='synthetic-owned',domain='general',language='en',license='CC0-1.0',rights_status='approved',rights_approval='fixture-owner',text='Synthetic public fixture.'))+'\n')
+                    output = Path(directory).resolve() / 'packaged-data-profile.json'
+                    data_check = subprocess.run([sys.executable,str(package/'scripts/ml_data.py'),'profile','--input',str(source),'--output',str(output)],capture_output=True,text=True)
+                    self.assertEqual(data_check.returncode,0,data_check.stderr)
+                    self.assertEqual(json.loads(output.read_text())['records'],1)
+                    self.assertIsNone(json.loads(output.read_text())['tokens'])
+                    checked = subprocess.run([
+                        sys.executable, str(package / "scripts/ml_cost.py"),
+                        str(package / "templates/ml/cost.example.json"),
+                    ], capture_output=True, text=True)
+                    self.assertEqual(checked.returncode, 0, checked.stderr)
+                    report = json.loads(checked.stdout)
+                    self.assertIsNone(report["within_budget"])
+                    self.assertFalse(report["launch_authorized"])
                 if namespace == "product":
                     self.assertEqual(set(manifest["commands"]), {"define", "market", "compare", "revenue", "acquisition", "b2b", "b2c"})
                     self.assertTrue((package / "docs/product/cases/revenue-economics.md").is_file())

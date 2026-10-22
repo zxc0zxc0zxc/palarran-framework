@@ -21,3 +21,7 @@ plans/
 
 # Private local orchestrator state, including workflow snapshots.
 .factory-state/
+
+# Derived local Graphify index, isolated tool environment and staging.
+.graphify/
+graphify-out/

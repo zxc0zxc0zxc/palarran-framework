@@ -32,6 +32,8 @@ class Store:
         version = self.db.execute('PRAGMA user_version').fetchone()[0]
         if version not in (0, 1, 2):
             self.db.close(); raise ValueError('Unsupported database schema')
+        from .runtime_context import install as install_context
+        install_context(self.db)
         self.db.executescript('''
         CREATE TABLE IF NOT EXISTS runs (
             id TEXT PRIMARY KEY, workflow TEXT NOT NULL, workflow_sha256 TEXT NOT NULL,
@@ -66,6 +68,8 @@ class Store:
         PRAGMA user_version=2;
         ''')
         self.db.execute('PRAGMA foreign_keys=ON')
+        from .ml_resources import install
+        install(self.db)
 
     def close(self):
         self.db.close()
@@ -113,6 +117,8 @@ class Store:
                         self.db.execute("UPDATE tasks SET status='needs_input',token=NULL,reason='expired_lease_unknown_outcome' WHERE run_id=? AND id=?", (run, task['id']))
                         self.db.execute("UPDATE runs SET status='needs_input',reason='expired_lease_unknown_outcome' WHERE id=?", (run,))
                         self.db.execute("UPDATE usage_attempts SET state='unknown' WHERE run_id=? AND task_id=? AND state='active'", (run, task['id']))
+                        from .ml_resources import mark_unknown
+                        mark_unknown(self, run)
                         self.event(run, 'lease_expired', task['id'])
                     return None
             if now >= record['created'] + flow['limits']['run_seconds']:
@@ -125,6 +131,10 @@ class Store:
                 deps = source['depends_on'] if source else [t['id'] for t in flow['tasks']]
                 if any(states[dep] != 'verified' for dep in deps):
                     continue
+                if 'ml_policy' in flow:
+                    from .ml_resources import gate
+                    if not gate(self, run, source, flow):
+                        return None
                 if source is not None and source['adapter'] != 'command' and 'usage_policy' in flow:
                     receipts = self.usage_rows(run)
                     if usage_exceeded(flow, receipts, task['id']):
@@ -136,6 +146,9 @@ class Store:
                 if task['attempts'] >= flow['limits']['max_attempts']:
                     self.fail_run(run, 'attempt_limit'); return None
                 token = uuid.uuid4().hex
+                if 'ml_policy' in flow:
+                    from .ml_resources import reserve
+                    reserve(self, run, source, task['attempts'] + 1, token, flow)
                 self.db.execute("UPDATE tasks SET status='running',attempts=attempts+1,token=?,lease_until=?,reason='' WHERE run_id=? AND id=?", (token, now + flow['limits']['lease_seconds'], run, task['id']))
                 self.db.execute("UPDATE runs SET status='running',reason='' WHERE id=?", (run,))
                 if source is not None and source['adapter'] != 'command' and 'usage_policy' in flow:
@@ -148,6 +161,8 @@ class Store:
         self.db.execute("UPDATE runs SET status='failed',reason=? WHERE id=?", (reason, run))
         self.db.execute("UPDATE tasks SET status='failed',token=NULL,reason=? WHERE run_id=? AND status IN ('pending','running')", (reason, run))
         self.db.execute("UPDATE usage_attempts SET state='unknown' WHERE run_id=? AND state='active'", (run,))
+        from .ml_resources import mark_unknown
+        mark_unknown(self, run)
         self.event(run, reason)
 
     def heartbeat(self, run, task, token):
@@ -172,9 +187,10 @@ class Store:
             # A budget callback revokes the lease before execute returns. Permit
             # one metadata-only write for that exact charged attempt; never
             # restore its lease, change usage or overwrite a retained outcome.
-            if record['status'] == 'failed' and record['reason'] == 'usage_budget_exhausted':
-                receipt = self.db.execute('SELECT token FROM usage_attempts WHERE run_id=? AND task_id=? AND attempt=?', (run, task, row['attempts'])).fetchone()
-                if row['status'] != 'failed' or row['reason'] != 'usage_budget_exhausted' or row['result'] is not None or receipt is None or receipt['token'] != token:
+            if record['status'] == 'failed' and record['reason'] in ('usage_budget_exhausted', 'ml_budget_exhausted'):
+                table = 'ml_resource_attempts' if record['reason'] == 'ml_budget_exhausted' else 'usage_attempts'
+                receipt = self.db.execute('SELECT token FROM ' + table + ' WHERE run_id=? AND task_id=? AND attempt=?', (run, task, row['attempts'])).fetchone()
+                if row['status'] != 'failed' or row['reason'] != record['reason'] or row['result'] is not None or receipt is None or receipt['token'] != token:
                     return False
             else:
                 if record['status'] != 'running' or row['status'] != 'running' or row['token'] != token or row['lease_until'] <= time.time():
@@ -250,6 +266,8 @@ class Store:
             self.db.execute("UPDATE runs SET status='cancelled',reason='operator_cancelled' WHERE id=?", (run,))
             self.db.execute("UPDATE tasks SET status='cancelled',token=NULL,reason='operator_cancelled' WHERE run_id=? AND status!='verified'", (run,))
             self.db.execute("UPDATE usage_attempts SET state='unknown' WHERE run_id=? AND state='active'", (run,))
+            from .ml_resources import mark_unknown
+            mark_unknown(self, run)
             self.event(run, 'cancelled')
 
     def events(self, run):

@@ -91,3 +91,40 @@ for line in sys.stdin:
         self.assertEqual(result.reason, 'supervisor_io_error')
         self.assertFalse(result.usage_complete)
         self.assertNotIn('PRIVATE', repr(result))
+
+
+class MeasurementAnswerTests(unittest.TestCase):
+    def run_measurement(self, kind='answer'):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            fixture = AppServerTests().fixture(root, 'valid')
+            code = fixture.read_text().replace("r['params']['sandbox']=='workspace-write'", "r['params']['sandbox']=='read-only'")
+            if kind == 'tool':
+                extra = "  send({'method':'item/started','params':{'item':{'type':'commandExecution'}}})\n"
+            else:
+                text = json.dumps({'ok': True}) if kind == 'answer' else 'non-JSON public response'
+                extra = "  send({'method':'item/completed','params':{'item':{'id':'public','type':'agentMessage','phase':'final_answer','text':" + repr(text) + "}}})\n"
+                extra += "  send({'method':'item/completed','params':{'item':{'id':'hidden','type':'reasoning','text':'PRIVATE_REASONING_SENTINEL'}}})\n"
+            code = code.replace("  send({'method':'turn/completed'", extra + "  send({'method':'turn/completed'")
+            fixture.write_text(code)
+            from orchestrator import codex_bridge
+            answer = root / 'answer.json'
+            argv = [sys.executable, str(Path(codex_bridge.__file__)), '--executable', str(fixture), '--cwd', str(root),
+                    '--model', 'test', '--effort', 'low', '--answer-file', str(answer)]
+            receipts = []
+            outcome = execute(argv, root, timeout=5, output_limit=65536, env={'PATH': os.environ['PATH']},
+                              heartbeat=lambda: True, stdin_text='Return only JSON; no tools.',
+                              usage_adapter='codex-app-server', on_usage=lambda v: receipts.append(v) or True)
+            return outcome, answer.read_text() if answer.exists() else None, receipts
+
+    def test_capture_only_bounded_public_json_answer(self):
+        result, answer, receipts = self.run_measurement()
+        self.assertEqual(result.returncode, 0); self.assertTrue(result.usage_complete)
+        self.assertEqual(json.loads(answer), {'ok': True})
+        self.assertNotIn('PRIVATE_REASONING', answer + repr(result) + repr(receipts))
+
+    def test_tool_call_and_malformed_final_answer_fail_closed(self):
+        for kind in ('tool', 'malformed'):
+            result, answer, receipts = self.run_measurement(kind)
+            self.assertIsNone(answer); self.assertFalse(result.usage_complete)
+            self.assertNotEqual(result.returncode, 0)

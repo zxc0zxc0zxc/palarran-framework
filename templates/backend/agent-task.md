@@ -24,3 +24,7 @@ Owner/merge order, conflicting touch-set resolution, mandatory retest on integra
 ## Execution tracking
 
 Canonical progress.json and plan execution section are coordinator-owned. This task starts pending; code-ready, integrated and verified are separate statuses with commit/evidence binding. Return scoped lane reports; do not race shared progress/index writes. Backend build links the actual outcome back to this TASK ID/source revision.
+
+## Runtime context handoff
+
+Для последующего runtime dispatch: context.paths = подтверждённые target-relative owned files/directories из этого touch set; context.query = ключевые symbols/контракт задачи; mode = graph. Это только данные будущей task, не запуск/reindex/install и не новый budget. Root/module AGENTS передаются автоматически; missing/stale graph даёт scoped source fallback.

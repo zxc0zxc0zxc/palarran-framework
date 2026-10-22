@@ -1,0 +1,39 @@
+{
+  "backend": "local",
+  "total_usd": "3",
+  "train": {
+    "argv": [
+      "/ABSOLUTE/python3",
+      "/ABSOLUTE/ai-tools/examples/ml-pipeline/local_job.py",
+      "train"
+    ],
+    "files": [
+      "/ABSOLUTE/python3",
+      "/ABSOLUTE/ai-tools/examples/ml-pipeline/local_job.py"
+    ],
+    "reserve_usd": "1",
+    "rate_usd_per_second": "0",
+    "fixed_usd": "0",
+    "max_seconds": 10,
+    "rate_source": "local-synthetic-fixture-cash-only-excludes-hardware-and-power",
+    "rate_as_of": "2026-10-22"
+  },
+  "evaluate": {
+    "argv": [
+      "/ABSOLUTE/python3",
+      "/ABSOLUTE/ai-tools/examples/ml-pipeline/local_job.py",
+      "evaluate"
+    ],
+    "files": [
+      "/ABSOLUTE/python3",
+      "/ABSOLUTE/ai-tools/examples/ml-pipeline/local_job.py"
+    ],
+    "reserve_usd": "1",
+    "rate_usd_per_second": "0",
+    "fixed_usd": "0",
+    "max_seconds": 10,
+    "rate_source": "local-synthetic-fixture-cash-only-excludes-hardware-and-power",
+    "rate_as_of": "2026-10-22"
+  },
+  "data_mode": "non_text"
+}

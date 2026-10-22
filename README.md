@@ -1,6 +1,24 @@
 # AI tools
 
-Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX, UI, frontend и backend; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
+Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX, UI, frontend, backend, product и ML; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
+
+## ML: эксперименты, данные и обучение
+
+Сначала [документация](docs/ml/README.md): профильные guides с research cases, контрактами, схемами и [первичными источниками](docs/ml/sources.md). Основа — Карпати (Recipe, nanochat, llm.c), Lilian Weng, Sebastian Raschka, Chip Huyen, Hamel Husain, Google, LoRA/QLoRA и HELM; для каждого есть применимость и ограничения переноса.
+
+| Команда | Назначение |
+| --- | --- |
+| `/ml:plan {задача}` | План эксперимента, метрики, gates, бюджет и DoD |
+| `/ml:hypotheses {проблема}` | Гипотезы, baseline, абляции и критерии опровержения |
+| `/ml:model {план}` | Модель/стек, no-training baseline и метод обучения |
+| `/ml:data {план}` | Поиск/права/качество/split; `--prepare` для разрешённой подготовки |
+| `/ml:cost {план}` | Modal estimate low/base/high, резервы и неизвестные расходы |
+| `/ml:train {план}` | Ограниченный запуск и метрики; `--plan` без запуска, `--status` read-only |
+| `/ml:benchmark {checkpoint/план}` | Независимая проверка frozen protocol; `--plan` только план |
+
+Codex: `$ml-plan`, `$ml-hypotheses`, `$ml-model`, `$ml-data`, `$ml-cost`, `$ml-train`, `$ml-benchmark`. Claude: `python3 scripts/package_plugin.py ml --output /tmp/ai-tools-ml`, затем `claude --plugin-dir /tmp/ai-tools-ml`; выбирайте новый output, существующий не перезаписывается. Пакет содержит docs, skills, templates и offline `scripts/ml_cost.py` без Modal SDK.
+
+Поддерживаются tabular/time series/CV/audio/retrieval/LLM. Обучение не default, если достаточно простого baseline. Память/версии/прогресс — в target `.ai-development/ml/`; все попытки разделяют бюджет. Paid pilot/training/judges требуют конкретного разрешённого scope/budget. [Runtime pipeline](docs/ml/pipeline.md) связывает семь skills, approval конкретного плана и контролируемые local или [Modal Sandbox](docs/ml/modal-adapter.md) fit/evaluation tasks. Create ничего не исполняет; remote cancellation и billing reserves сохраняются независимо от worker.
 
 ## Infrastructure planning
 
@@ -156,7 +174,7 @@ Backend package v0.2 содержит backend-plan/backend-build, оба slash a
 
 До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
 
-Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех одиннадцати и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
+Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех существующих и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
 
 ## Подключение из другого проекта
 
@@ -248,3 +266,19 @@ Create только подготавливает run, work вызывает ус
 Runtime сохраняет безопасные категории CLI ошибок и наблюдаемые step events даже при `usage_unknown`/budget stop. Сырые сообщения/команды/ответы и private reasoning не сохраняются; unknown расход не становится нулём. [Контракт диагностики и decision trace](docs/product-factory/usage-accounting.md).
 
 Для существенных решений агент может сохранить публичный `decision-trace.json` рядом с handoff. `python3 -m orchestrator.decision_trace --trace /path/decision-trace.json --output /path/review.html` создаёт адаптивную подсветку результатов и якоря шагов. Outcome требует отдельного evidence review; few-shot используется только после очистки и ревью, автоматически в prompts не добавляется.
+
+## Контекст агента и карта кода
+
+[Правила AGENTS.md](docs/skills/agents-authoring.md) задают короткие root/module инструкции; [Graphify](docs/skills/graph-context.md) даёт локальный code-only индекс без LLM calls. Команды setup/index/status/query: `python3 scripts/graph_context.py --help`. Кэш/venv остаются в ignored `.graphify/`, подробные решения — в target `.ai-development/`. Процент реальной экономии токенов пока не измерен.
+
+Runtime также [автоматически передаёт module AGENTS и Graphify/source context](docs/product-factory/runtime-context.md) по task.context.paths, сохраняя prompt/token/USD лимиты. Контрольный paired замер и ограничения: [.ai-development/backend/2026-10-22-runtime-context/comparison.json](.ai-development/backend/2026-10-22-runtime-context/comparison.json).
+
+## Agent eval
+
+`/agent:eval {задача или suite} [--plan]` — независимый полигон plan/build/review/context с учётом tokens/cost/time. [Документация](docs/agent/eval/README.md); harness tests offline, model runs требуют отдельного scope/budget.
+
+ML data: [научная база и инструменты](docs/ml/data/README.md) для планирования корпуса, очистки/grouped splits, joint domain/language token mixtures и full-answer integrity; `/ml:data` сохраняет research/--plan границы.
+
+### ML text preparation gate
+
+[Real tokenizer/collator → whole-example mixture → blocking training gate](docs/ml/data/pipeline.md). Новые ML execution policies явно задают data_mode=text|non_text. Optional tokenizer только локальный, tests без облака; Modal text transport пока unsupported.

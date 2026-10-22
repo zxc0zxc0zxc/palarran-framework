@@ -28,7 +28,7 @@ def read_object(path, limit):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Bounded local engineering workflow runtime')
     sub = parser.add_subparsers(dest='command', required=True)
-    for command in ('create', 'work', 'status', 'events', 'export', 'cancel', 'resolve', 'usage-reconcile'):
+    for command in ('create', 'work', 'status', 'events', 'export', 'cancel', 'modal-recover', 'resolve', 'usage-reconcile'):
         p = sub.add_parser(command)
         p.add_argument('--state', required=True, type=Path)
         if command == 'create':
@@ -64,8 +64,43 @@ def main(argv=None):
     p.add_argument('--through', required=True, choices=['define','market','compare','revenue','acquisition'])
     p.add_argument('--route', required=True, choices=['b2b','b2c'])
     p.add_argument('--agent', required=True)
+    p = sub.add_parser('ml-create', help='Prepare a bounded ML pipeline; no agents or training are executed')
+    for name in ('state', 'target', 'idea-file', 'ai-policy', 'usage-policy', 'execution-policy'):
+        p.add_argument('--' + name, required=True, type=Path)
+    p.add_argument('--skills-root', type=Path, default=Path(__file__).resolve().parents[1])
+    p.add_argument('--adapter', required=True, choices=['codex', 'claude'])
+    p.add_argument('--agent', required=True)
+    p.add_argument('--transport', choices=['app-server'])
+    for command in ('ml-approve', 'ml-reconcile'):
+        p = sub.add_parser(command)
+        p.add_argument('--state', required=True, type=Path)
+        p.add_argument('--run', required=True)
+        if command == 'ml-approve':
+            p.add_argument('--prefix-sha', required=True)
+        else:
+            p.add_argument('--task', required=True, choices=['ml-fit', 'ml-evaluate'])
+            p.add_argument('--attempt', required=True, type=int)
+            p.add_argument('--cost-usd', required=True)
+            p.add_argument('--processes-stopped', action='store_true')
     args = parser.parse_args(argv)
     try:
+        if args.command in ('ml-approve', 'ml-reconcile'):
+            from .ml_resources import approve, reconcile
+            with closing(_store(args.state)) as store:
+                if args.command == 'ml-approve':
+                    approve(store, args.run, args.prefix_sha)
+                else:
+                    reconcile(store, args.run, args.task, args.attempt, args.cost_usd, args.processes_stopped)
+            print(json.dumps(status(args.state, args.run), indent=2)); return 0
+        if args.command == 'ml-create':
+            from .ml_pipeline import create_ml
+            from .product_artifacts import read_bytes
+            idea = read_bytes(args.idea_file.parent.resolve(), args.idea_file.name, 32768).decode('utf-8')
+            options = {'transport': args.transport} if args.transport is not None else {}
+            run = create_ml(args.state, idea, args.target, args.skills_root, args.adapter, args.agent,
+                            read_object(args.execution_policy, 65536), read_object(args.ai_policy, 65536),
+                            read_object(args.usage_policy, 65536), **options)
+            print(json.dumps(status(args.state, run), indent=2)); return 0
         if args.command == 'product-continue':
             from .product_continue import create_continuation
             run=create_continuation(args.state,args.target,args.source,args.pipeline,args.through,args.skills_root,args.agent,read_object(args.usage_policy,65536),route=args.route,budget_ceiling=args.budget_ceiling)
@@ -99,10 +134,17 @@ def main(argv=None):
         elif args.command == 'events':
             with closing(_store(args.state)) as store:
                 print(json.dumps(store.events(args.run), indent=2)); return 0
-        elif args.command in ('cancel', 'resolve', 'usage-reconcile'):
+        elif args.command in ('cancel', 'modal-recover', 'resolve', 'usage-reconcile'):
             with closing(_store(args.state)) as store:
                 if args.command == 'cancel':
-                    store.cancel(args.run)
+                    remote = json.loads(store.get(args.run)['workflow']).get('ml_policy', {}).get('backend') == 'modal'
+                    if not remote or store.get(args.run)['status'] not in ('cancelled', 'failed', 'verified'):
+                        store.cancel(args.run)
+                    from .modal_adapter import recover
+                    recover(store, args.run, cancel=True)
+                elif args.command == 'modal-recover':
+                    from .modal_adapter import recover
+                    recover(store, args.run)
                 elif args.command == 'usage-reconcile':
                     store.reconcile_usage(args.run, args.task, args.attempt, read_object(args.usage_file, 4096), args.reason, args.processes_stopped)
                 else:

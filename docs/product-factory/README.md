@@ -26,4 +26,10 @@ python3 -m unittest discover -s tests -p 'test_factory_*.py' -v
 
 ## Product research pipeline
 
+ML эксперименты также поддерживаются отдельным [ML pipeline](../ml/pipeline.md): семь planning skills → конкретный approval → supervised local/Modal training → independent benchmark. Private resource ledger дополняет AI usage accounting; [Modal adapter](../ml/modal-adapter.md) сохраняет identity, metrics, cancellation proof и billing reserves.
+
 [Product pipeline](../product/pipeline.md) связывает пять product skills и итоговый synthesis MVP в существующем bounded runtime; engineering workflow API совместим.
+
+## Agent evaluations
+
+[Agent eval](../agent/eval/README.md) компилирует frozen suite в existing runtime workflow с independent final gates, private usage ledger и safe quality/cost/time report. CLI: `python3 -m orchestrator.agent_eval --help`.

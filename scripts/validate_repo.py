@@ -7,6 +7,8 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = {
+    "agent-eval": ("agent", "eval"),
+    **{f"ml-{command}": ("ml", command) for command in ("plan", "hypotheses", "model", "data", "cost", "train", "benchmark")},
     **{f"product-{command}": ("product", command) for command in ("define", "market", "compare", "revenue", "acquisition", "b2b", "b2c")},
     **{f"infra-plan-{level}": ("infra-plan", level) for level in ("low", "med", "high")},
     **{f"ci-cd-{provider}": ("ci-cd", provider) for provider in ("github", "gitlab")},
@@ -37,11 +39,29 @@ BACKEND_BUILD_GUIDES = ["README.md", "source-progress.md", "worktrees.md", "impl
                         "verification.md", "reliability.md", "workflow.md", "sources.md"]
 PRODUCT_GUIDES = ["README.md", "evidence.md", "workflow.md", "data-sources.md", "sources.md", "cases/README.md", "pipeline.md", "pipeline-contract.md"]
 PRODUCT_CASES = {'define': 'product-discovery.md', 'market': 'market-validation.md', 'compare': 'competitive-positioning.md', 'revenue': 'revenue-economics.md', 'acquisition': 'acquisition-growth.md', 'b2b': 'b2b-first-customers.md', 'b2c': 'b2c-frugal-growth.md'}
-IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch"}
+ML_GUIDES = ["README.md", "workflow.md", "contracts.md", "cases.md", "sources.md", "pipeline.md", "pipeline-contract.md"]
+ML_PROFILES = {
+    "plan": ["plan.md", "hypotheses.md"], "hypotheses": ["hypotheses.md"],
+    "model": ["model.md"], "data": ["data.md"] + ["data/"+name+".md" for name in ("README", "planning", "cleaning", "mixtures", "answer-integrity", "tools", "evaluation", "sources", "pipeline")], "cost": ["cost.md", "modal.md"],
+    "train": ["train.md", "metrics.md", "cost.md", "modal.md", "data/pipeline.md"],
+    "benchmark": ["benchmark.md", "metrics.md"],
+}
+IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch", ".graphify", "graphify-out"}
 
 
 def validate(root=ROOT):
     errors = []
+    module_roots = ('orchestrator', 'scripts', 'tests', 'skills', 'docs', 'templates', 'plugins', 'examples')
+    for name, limit in [('AGENTS.md', 6144)] + [(area + '/AGENTS.md', 4096) for area in module_roots]:
+        path = root / name
+        if not path.is_file() or path.is_symlink():
+            errors.append('Missing regular instruction file: ' + name)
+        elif not path.read_text().strip() or path.stat().st_size > limit:
+            errors.append('Instruction budget exceeded or empty: ' + name)
+    for name in ('docs/skills/agents-authoring.md', 'docs/skills/graph-context.md', 'docs/skills/domain-contracts.md',
+                 'templates/agents/root.md', 'templates/agents/module.md'):
+        if not (root / name).is_file():
+            errors.append('Missing context contract: ' + name)
     markdown = sorted(path for path in root.rglob("*.md") if not set(path.relative_to(root).parts).intersection(IGNORED))
     for file in markdown:
         body = file.read_text()
@@ -67,7 +87,11 @@ def validate(root=ROOT):
             errors.append(f"Invalid skill frontmatter: {name}")
         if "../../docs/skills/decision-memory.md" not in body:
             errors.append(f"{name}: missing shared decision-memory contract")
-        if namespace == "product":
+        if namespace == "agent":
+            base, guides = "agent/eval", ["README.md", "sources.md", "methodology.md", "contract.md", "operations.md"]
+        elif namespace == "ml":
+            base, guides = "ml", ML_GUIDES + ML_PROFILES[command]
+        elif namespace == "product":
             base, guides = "product", PRODUCT_GUIDES + [f"{command}.md", "cases/" + PRODUCT_CASES[command]]
             if command in {"b2b", "b2c", "acquisition"}:
                 guides += ["go-to-market.md", "pricing.md", "go-to-market-sources.md"]
@@ -107,7 +131,7 @@ def validate(root=ROOT):
         profile = (root / "docs/infra/plan" / f"{level}.md").read_text()
         if profile.count("```mermaid") < 2:
             errors.append(f"Profile {level} needs data and delivery diagrams")
-    for namespace, relative in [("product", "plugins/product/plugin.json"), ("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json"), ("frontend", "plugins/frontend/plugin.json"), ("backend", "plugins/backend/plugin.json")]:
+    for namespace, relative in [("agent", "plugins/agent/plugin.json"), ("ml", "plugins/ml/plugin.json"), ("product", "plugins/product/plugin.json"), ("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json"), ("frontend", "plugins/frontend/plugin.json"), ("backend", "plugins/backend/plugin.json")]:
         manifest = json.loads((root / relative).read_text())
         expected = {command for ns, command in SKILLS.values() if ns == namespace}
         if manifest.get("name") != namespace or set(manifest.get("commands", {})) != expected:

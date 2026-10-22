@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "pipeline_id": "REPLACE_WITH_RUNTIME_PIPELINE_ID",
+  "stage": "hypotheses",
+  "context_sha256": "REPLACE_WITH_CANONICAL_CONTEXT_HASH",
+  "inputs": {},
+  "report": {
+    "path": ".ai-development/ml/pipeline-ID/stages/hypotheses/report.md",
+    "sha256": "REPLACE_WITH_REPORT_BYTES_HASH"
+  },
+  "evidence": [
+    {"id": "E-example", "claim": "Illustrative unmeasured hypothesis", "source": "target context", "classification": "hypothesis"}
+  ],
+  "decisions": [
+    {"id": "D-example", "path": ".ai-development/ml/pipeline-ID/decisions/0001-example.md", "sha256": "REPLACE_WITH_DECISION_BYTES_HASH"}
+  ],
+  "hypotheses": ["H-example"],
+  "lineage": {},
+  "unknowns": [
+    {"id": "U-rights", "critical": true, "disposition": "unresolved", "evidence_ids": []}
+  ],
+  "status": "planned"
+}

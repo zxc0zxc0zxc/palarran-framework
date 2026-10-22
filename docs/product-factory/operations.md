@@ -36,3 +36,7 @@ python3 -m orchestrator resolve --state /path/to/private-state --run RUN_ID --ta
 ```
 
 Reconcile не допускает уменьшения наблюдённых counters/cost и не пополняет launch allocation; превышенный budget остаётся terminal. Бюджет не защищает от невидимых внутренних requests до первого usage event. Claude получает дополнительный `--max-budget-usd` для remaining stage/run estimate, но его overshoot не скрывается. Financial invoice и quota subscription отдельно от этих telemetry.
+
+## Контекст перед AI dispatch
+
+Для module tasks задайте context.paths из SDD ownership и короткий context.query. Root/ancestor AGENTS будут переданы автоматически; fresh Graphify cache target используется только при совпадении workspace snapshot, иначе bounded source fallback. Setup/index не выполняются автоматически. Status показывает metadata receipt без текстов; [полный контракт](runtime-context.md).

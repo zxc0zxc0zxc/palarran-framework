@@ -38,7 +38,7 @@ def emit(value):
     print(json.dumps(value, separators=(',', ':')), flush=True)
 
 
-def run(executable, cwd, model, effort, prompt, stream_limit=1048576):
+def run(executable, cwd, model, effort, prompt, stream_limit=1048576, answer_file=None):
     # Inherit the supervisor's process group so cancellation kills the server too.
     process = subprocess.Popen([executable, 'app-server', '--listen', 'stdio://'],
                                cwd=cwd, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -52,6 +52,7 @@ def run(executable, cwd, model, effort, prompt, stream_limit=1048576):
     latest = None
     started = False
     completed = False
+    public_answer = None
     events = raw_bytes = 0
 
     def send(method, params, ident=None):
@@ -111,7 +112,7 @@ def run(executable, cwd, model, effort, prompt, stream_limit=1048576):
                         if message['id'] == 1:
                             send('initialized', {})
                             send('thread/start', dict(model=model, cwd=cwd, ephemeral=True,
-                                approvalPolicy='never', sandbox='workspace-write',
+                                approvalPolicy='never', sandbox='read-only' if answer_file else 'workspace-write',
                                 config={'model_reasoning_effort': effort, 'tool_output_token_limit': 100000}), 2)
                         elif message['id'] == 2:
                             thread = response['thread']['id']
@@ -156,6 +157,16 @@ def run(executable, cwd, model, effort, prompt, stream_limit=1048576):
                             result = params['turn']
                             if not turn or result.get('id') != turn or result.get('status') != 'completed' or latest is None:
                                 raise ValueError('Incomplete turn')
+                            if answer_file is not None:
+                                if public_answer is None or len(public_answer.encode()) > 4096:
+                                    raise ValueError('Invalid benchmark answer')
+                                answer = json.loads(public_answer, object_pairs_hook=Object, parse_constant=constant)
+                                strict(answer)
+                                if not isinstance(answer, dict):
+                                    raise ValueError('Benchmark JSON object required')
+                                fd = os.open(answer_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+                                with os.fdopen(fd, 'w') as output:
+                                    output.write(json.dumps(answer, ensure_ascii=False) + '\n')
                             emit(dict(type='turn.completed')); completed = True
                             break
                     elif method == 'error':
@@ -166,6 +177,15 @@ def run(executable, cwd, model, effort, prompt, stream_limit=1048576):
                         categories = {'commandExecution':'command_execution','webSearch':'web_search',
                                       'fileChange':'file_change','agentMessage':'agent_message','mcpToolCall':'mcp_tool_call'}
                         kind = categories.get(item.get('type')) if isinstance(item, dict) else None
+                        if answer_file is not None:
+                            if kind in ('command_execution', 'web_search', 'file_change', 'mcp_tool_call'):
+                                raise ValueError('Benchmark tool call forbidden')
+                            if item.get('type') == 'agentMessage' and method == 'item/completed' and item.get('phase') in (None, 'final_answer'):
+                                strict(item)
+                                message_text = item.get('text')
+                                if not isinstance(message_text, str) or len(message_text.encode()) > 4096:
+                                    raise ValueError('Benchmark answer bound')
+                                public_answer = message_text
                         if kind:
                             safe = {'type':kind}
                             code = item.get('exitCode')
@@ -190,13 +210,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for key in ('executable', 'cwd', 'model', 'effort'):
         parser.add_argument('--' + key, required=True)
+    parser.add_argument('--answer-file', help='Private JSON-only read-only/no-tools measurement result, never reasoning')
     parser.add_argument('--stream-limit', type=int, default=1048576)
     args = parser.parse_args()
     prompt = sys.stdin.buffer.read(1048577)
     if not 1024 <= args.stream_limit <= 10485760 or len(prompt) > 1048576 or not os.path.isabs(args.executable) or not Path(args.cwd).is_absolute():
         return 2
+    if args.answer_file is not None and not Path(args.answer_file).is_absolute():
+        return 2
     try:
-        return run(args.executable, args.cwd, args.model, args.effort, prompt.decode('utf-8'), args.stream_limit)
+        return run(args.executable, args.cwd, args.model, args.effort, prompt.decode('utf-8'), args.stream_limit, args.answer_file)
     except (OSError, ValueError, KeyError, TypeError, RecursionError) as error:
         codes = {'Server line bound':'bridge_line_limit', 'Server output bound':'bridge_output_limit',
                  'Usage thread mismatch':'bridge_thread_mismatch', 'Usage turn mismatch':'bridge_turn_mismatch',

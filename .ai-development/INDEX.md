@@ -75,3 +75,20 @@
 | product/2026-10-19-bounded-mvp/0003 | accepted | Smaller completion allocations with deterministic public fetch, all failed costs retained | [record](product/2026-10-19-bounded-mvp/decisions/0003-frugal-completion.md); no further model retries |
 | product/2026-10-19-bounded-mvp/0004 | accepted | Complete tool-history delivery within unchanged spending guards | [record](product/2026-10-19-bounded-mvp/decisions/0004-context-delivery.md); prior refusal charged exactly |
 | product/2026-10-19-bounded-mvp/0005 | accepted | Independently accepted revenue; acquisition/MVP only, lower final cap | [record](product/2026-10-19-bounded-mvp/decisions/0005-revenue-checkpoint.md); no replay |
+| ml/2026-10-20-ml-skills/0001 | accepted | Seven documentation-first ML stages and bounded Modal execution | [record](ml/2026-10-20-ml-skills/decisions/0001-scope.md); review after authorized pilot |
+| ml/2026-10-22-runtime-pipeline/0001 | accepted | Bounded ML compiler, immutable lineage, common budget and explicit execution approval | [record](ml/2026-10-22-runtime-pipeline/decisions/0001-pipeline.md); revisit with remote backend contract |
+| ml/2026-10-22-modal-adapter/0001 | accepted | Named Modal Sandbox, durable remote intent, bounded metrics/cancellation and retained billing reserves | [record](ml/2026-10-22-modal-adapter/decisions/0001-adapter.md); review after authorized canary |
+| repository/2026-10-22-graph-context/0001 | accepted | Local code-only Graphify + scoped AGENTS and source-grounded bounded context | [record](repository/2026-10-22-graph-context/decisions/0001-context.md); revisit after comparable token measurements |
+| backend/2026-10-22-runtime-context/0001 | accepted | Automatic scoped Graphify/AGENTS delivery + two-call inherited-budget token comparison | [record](backend/2026-10-22-runtime-context/decisions/0001-delivery.md); revisit after paired measurement |
+
+| backend/2026-10-23-agent-eval/0001 | accepted | Agent eval / frozen suite, independent gates, existing usage ledger, offline-only tests | [record](backend/2026-10-23-agent-eval/decisions/0001-eval.md); пересмотр после real trials |
+
+| ml/2026-10-23-data-preparation/0001 | accepted | Data-first planning, joint domain/language mixture, no-truncation tensor audit и private local tools | [record](ml/2026-10-23-data-preparation/decisions/0001-data-tools.md); пересмотр после authorized data/tokenizer pilot |
+
+| ml/2026-10-23-pipeline-data-gate/0001 | accepted | Real tokenizer/collator, whole-example mixture и mandatory local training gate | [record](ml/2026-10-23-pipeline-data-gate/decisions/0001-gate.md); remote text transport отдельно |
+
+| ml/2026-10-23-pipeline-data-gate/0002 | accepted | Explicit text/non_text declaration prevents accidental gate omission | [record](ml/2026-10-23-pipeline-data-gate/decisions/0002-explicit-mode.md); legacy snapshots preserved |
+
+| ml/2026-10-23-pipeline-data-gate/0003 | accepted | Completion provenance before EOT, positive-cell exposure and deterministic interleaving | [record](ml/2026-10-23-pipeline-data-gate/decisions/0003-integrity.md); semantic review remains separate |
+
+| ml/2026-10-23-training-debug-design/0001 | accepted | Task-aware training/validation diagnostics, tracked heuristics, fixed generation probes и terminal report/recovery design | [record](ml/2026-10-23-training-debug-design/decisions/0001-debug-contract.md); implementation pending offline DoD |

@@ -18,7 +18,7 @@ jobs:
       - name: Exercise disposable runtime and control-plane SLO
         run: python3 scripts/factory_acceptance.py
       - name: Compile Python files
-        run: python3 -m py_compile scripts/infra_inventory.py scripts/validate_repo.py scripts/package_plugin.py scripts/backend_progress.py scripts/execution_progress.py orchestrator/*.py
+        run: python3 -m py_compile scripts/infra_inventory.py scripts/validate_repo.py scripts/package_plugin.py scripts/backend_progress.py scripts/execution_progress.py scripts/ml_cost.py orchestrator/*.py
   terraform:
     runs-on: ubuntu-latest
     steps:

@@ -118,3 +118,7 @@ Backend build фиксирует source plan/revision, actual code commits и ta
 Frontend и backend build используют [общий execution progress protocol](execution-progress.md): canonical ledger и derived section исходного плана, implemented/integrated/verified отдельно, subject commit/evidence/remaining tasks и actual source revision. Frontend дополнительно фиксирует UX/UI/API refs и required browser/responsive/visual/flow gates; backend SLA-window не наследуется автоматически. Coordinator один пишет shared plan/progress/index, source changes инвалидируют affected old PASS.
 
 `/frontend:plan` сохраняет spec/plan/API contract proposals/test matrix/DoD/future agent packets и pending progress в target frontend area либо linked canonical spec convention. Decisions и source revisions используются следующим `/frontend:build`; plan-ready не означает implementation verified и не разрешает автоматическую реализацию.
+
+## Инструкции проекта и ограниченный контекст
+
+Перед изменением кода читать root и применимые module AGENTS; при разрешённой реализации обновлять их по [agents-authoring](agents-authoring.md) на основании реального проекта. Plan-only/read-only не разрешает изменение target instructions или установку инструментов. [Graph context](graph-context.md) — optional bounded fresh navigation с последующей проверкой original sources; graph не заменяет canonical ADR, mandatory docs или approval. Не читать весь graph/все соседние AGENTS в prompt. Если инструменты/индекс отсутствуют, использовать scoped search без автоматического install/LLM extraction.

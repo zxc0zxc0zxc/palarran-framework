@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "sample_kind": "synthetic-fixture-no-real-tokenizer",
+  "tool_sha256": "b273b2e335dab44dc52b85c0ffc9857068a0b6dc74b171a4303feed89580f4df",
+  "prepare": {
+    "schema_version": 1,
+    "artifact_type": "ml-data-prepare-summary",
+    "status": "prepared_requires_review",
+    "input_records": 6,
+    "accepted_records": 4,
+    "excluded_records": 2,
+    "slices": [
+      {
+        "domain": "general",
+        "language": "en",
+        "before": 2,
+        "after": 1,
+        "excluded": 1
+      },
+      {
+        "domain": "general",
+        "language": "ru",
+        "before": 2,
+        "after": 1,
+        "excluded": 1
+      },
+      {
+        "domain": "specialist",
+        "language": "en",
+        "before": 1,
+        "after": 1,
+        "excluded": 0
+      },
+      {
+        "domain": "specialist",
+        "language": "ru",
+        "before": 1,
+        "after": 1,
+        "excluded": 0
+      }
+    ],
+    "excluded_by_reason": {
+      "rights_not_approved": 1,
+      "exact_duplicate": 1
+    },
+    "audits": {
+      "near_duplicates": "NOT_RUN",
+      "language_detection": "NOT_RUN",
+      "semantic_quality": "NOT_RUN",
+      "pii": "NOT_RUN",
+      "benchmark_contamination": "NOT_RUN"
+    },
+    "training_ready": false
+  },
+  "tensor_audit": {
+    "schema_version": 1,
+    "artifact_type": "ml-token-audit",
+    "status": "PASS",
+    "dataset_sha256": "3b3e7ec232f8034633ad6cce5908dd75a457c13beb95733f798cb3c93928af4b",
+    "token_file_sha256": "0daaea32393079dcc433006bc2bcaa34bb09ac7d5007622c00f4d9908fe85c3b",
+    "policy_sha256": "59089144295715ad9cf493d143967d9ee4c4aaea24455c3bfcd24f1beb6d79e7",
+    "token_basis": "provided-unpacked-tensors",
+    "tokenization_verified": false,
+    "training_ready": false,
+    "expected_records": 4,
+    "observed_records": 4,
+    "valid_records": 4,
+    "issues": {},
+    "cells": [
+      {
+        "split": "train",
+        "domain": "general",
+        "language": "en",
+        "records": 1,
+        "input_tokens": 4,
+        "target_tokens": 2,
+        "target_length_histogram": {
+          "2": 1
+        }
+      },
+      {
+        "split": "train",
+        "domain": "general",
+        "language": "ru",
+        "records": 1,
+        "input_tokens": 4,
+        "target_tokens": 2,
+        "target_length_histogram": {
+          "2": 1
+        }
+      },
+      {
+        "split": "train",
+        "domain": "specialist",
+        "language": "en",
+        "records": 1,
+        "input_tokens": 4,
+        "target_tokens": 2,
+        "target_length_histogram": {
+          "2": 1
+        }
+      },
+      {
+        "split": "train",
+        "domain": "specialist",
+        "language": "ru",
+        "records": 1,
+        "input_tokens": 4,
+        "target_tokens": 2,
+        "target_length_histogram": {
+          "2": 1
+        }
+      }
+    ],
+    "target_length_histogram": {
+      "2": 4
+    },
+    "issues_by_slice": [],
+    "remaining_gates": [
+      "actual-tokenizer-template-collator",
+      "semantic-quality",
+      "privacy-near-contamination",
+      "sampler",
+      "trained-general-length-regression"
+    ],
+    "report_sha256": "4e5d8623e7b1d6d582c72a4fec72ee01b910a1bfc4ecfbb84d6a82c11771a7f9"
+  },
+  "mixture": {
+    "schema_version": 1,
+    "artifact_type": "ml-data-mixture-plan",
+    "status": "feasible",
+    "recipe_sha256": "8e4572b8a2678bf7e53595d18164d736cd4147cd7ad1b733d461f4985f889093",
+    "audit_sha256": "4e5d8623e7b1d6d582c72a4fec72ee01b910a1bfc4ecfbb84d6a82c11771a7f9",
+    "dataset_sha256": "3b3e7ec232f8034633ad6cce5908dd75a457c13beb95733f798cb3c93928af4b",
+    "seed": 73,
+    "total_tokens": 8,
+    "cells": [
+      {
+        "domain": "general",
+        "language": "en",
+        "target_tokens": 2,
+        "available_tokens": 4,
+        "max_repeats": "1",
+        "uncovered_exposure_tokens": 0,
+        "required_unique_tokens": 2,
+        "missing_unique_tokens": 0,
+        "effective_passes": "0.5"
+      },
+      {
+        "domain": "general",
+        "language": "ru",
+        "target_tokens": 2,
+        "available_tokens": 4,
+        "max_repeats": "1",
+        "uncovered_exposure_tokens": 0,
+        "required_unique_tokens": 2,
+        "missing_unique_tokens": 0,
+        "effective_passes": "0.5"
+      },
+      {
+        "domain": "specialist",
+        "language": "en",
+        "target_tokens": 2,
+        "available_tokens": 4,
+        "max_repeats": "1",
+        "uncovered_exposure_tokens": 0,
+        "required_unique_tokens": 2,
+        "missing_unique_tokens": 0,
+        "effective_passes": "0.5"
+      },
+      {
+        "domain": "specialist",
+        "language": "ru",
+        "target_tokens": 2,
+        "available_tokens": 4,
+        "max_repeats": "1",
+        "uncovered_exposure_tokens": 0,
+        "required_unique_tokens": 2,
+        "missing_unique_tokens": 0,
+        "effective_passes": "0.5"
+      }
+    ],
+    "blockers": [],
+    "training_ready": false,
+    "sampler_executed": false,
+    "tokenization_verified": false,
+    "remaining_gates": [
+      "actual-tokenizer-template-collator",
+      "semantic-quality",
+      "privacy-near-contamination",
+      "sampler",
+      "trained-general-length-regression"
+    ]
+  },
+  "training": "NOT_RUN",
+  "model_quality": "NOT_RUN"
+}

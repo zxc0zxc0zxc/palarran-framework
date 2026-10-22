@@ -1,0 +1,73 @@
+{
+  "backend": "modal",
+  "total_usd": "3",
+  "train": {
+    "argv": [
+      "/ABSOLUTE/TRUSTED/PYTHON",
+      "/ABSOLUTE/REPO/orchestrator/modal_adapter.py",
+      "train"
+    ],
+    "files": [
+      "/ABSOLUTE/TRUSTED/PYTHON",
+      "/ABSOLUTE/REPO/orchestrator/modal_adapter.py"
+    ],
+    "reserve_usd": "1",
+    "rate_usd_per_second": "REPLACE_WITH_ALL_IN_SANDBOX_RATE",
+    "fixed_usd": "REPLACE_WITH_BOUNDED_STORAGE_AND_TRANSFER_ESTIMATE",
+    "max_seconds": 10,
+    "rate_source": "REPLACE_WITH_REVIEWED_SANDBOX_TARIFF_SOURCE",
+    "rate_as_of": "2026-10-22",
+    "modal": {
+      "app": "existing-ml-app",
+      "environment": "main",
+      "image_id": "im-REPLACE",
+      "volume": "existing-ml-artifacts",
+      "gpu": "T4",
+      "cpu": 1,
+      "memory_mb": 2048,
+      "argv": [
+        "python",
+        "/owned/modal_job.py",
+        "train"
+      ],
+      "poll_seconds": 2,
+      "rpc_seconds": 5,
+      "stop_seconds": 20
+    }
+  },
+  "evaluate": {
+    "argv": [
+      "/ABSOLUTE/TRUSTED/PYTHON",
+      "/ABSOLUTE/REPO/orchestrator/modal_adapter.py",
+      "evaluate"
+    ],
+    "files": [
+      "/ABSOLUTE/TRUSTED/PYTHON",
+      "/ABSOLUTE/REPO/orchestrator/modal_adapter.py"
+    ],
+    "reserve_usd": "1",
+    "rate_usd_per_second": "REPLACE_WITH_ALL_IN_SANDBOX_RATE",
+    "fixed_usd": "REPLACE_WITH_BOUNDED_STORAGE_AND_TRANSFER_ESTIMATE",
+    "max_seconds": 10,
+    "rate_source": "REPLACE_WITH_REVIEWED_SANDBOX_TARIFF_SOURCE",
+    "rate_as_of": "2026-10-22",
+    "modal": {
+      "app": "existing-ml-app",
+      "environment": "main",
+      "image_id": "im-REPLACE",
+      "volume": "existing-ml-artifacts",
+      "gpu": "T4",
+      "cpu": 1,
+      "memory_mb": 2048,
+      "argv": [
+        "python",
+        "/owned/modal_job.py",
+        "evaluate"
+      ],
+      "poll_seconds": 2,
+      "rpc_seconds": 5,
+      "stop_seconds": 20
+    }
+  },
+  "data_mode": "non_text"
+}

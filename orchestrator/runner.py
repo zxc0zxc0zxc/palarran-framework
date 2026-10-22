@@ -112,8 +112,12 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
     if usage_adapter is not None:
         try:
             # Legacy executions neither import nor instantiate telemetry code.
-            from .usage import UsageStream
-            usage_stream = UsageStream(usage_adapter)
+            if usage_adapter == 'ml-resource':
+                from .ml_resources import CostStream
+                usage_stream = CostStream()
+            else:
+                from .usage import UsageStream
+                usage_stream = UsageStream(usage_adapter)
         except Exception:
             return Result(127, "usage_error", digest.hexdigest(), 0,
                           time.monotonic() - started, False)

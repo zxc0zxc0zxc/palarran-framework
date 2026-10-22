@@ -29,7 +29,7 @@ def _unique(value):
 
 def validate(value):
     """Return an independent normalized snapshot, or raise ValueError."""
-    _object(value, ('version', 'name', 'plan_revision', 'limits', 'policy', 'tasks'), ('ai_policy', 'usage_policy'))
+    _object(value, ('version', 'name', 'plan_revision', 'limits', 'policy', 'tasks'), ('ai_policy', 'usage_policy', 'ml_policy'))
     result = copy.deepcopy(value)
     if type(result['version']) is not int or result['version'] != 1:
         raise ValueError('Unsupported workflow version')
@@ -61,7 +61,7 @@ def validate(value):
         raise ValueError('Expected 1..100 tasks')
     ids = []
     for task in tasks:
-        _object(task, ('id', 'verify'), ('depends_on', 'adapter', 'argv', 'prompt', 'executable', 'replay_safe', 'verify_stable', 'model_role', 'model_calls', 'transport'))
+        _object(task, ('id', 'verify'), ('depends_on', 'adapter', 'argv', 'prompt', 'executable', 'replay_safe', 'verify_stable', 'model_role', 'model_calls', 'transport', 'context'))
         if not isinstance(task['id'], str) or not ID.fullmatch(task['id']) or task['id'] == '__final__':
             raise ValueError('Invalid task identity')
         ids.append(task['id'])
@@ -88,6 +88,11 @@ def validate(value):
             if 'argv' in task or not isinstance(task.get('prompt'), str) or not task['prompt'].strip() or '\x00' in task['prompt']:
                 raise ValueError('AI prompt required; argv forbidden')
             executable = task.get('executable')
+        if 'context' in task:
+            if task['adapter'] == 'command':
+                raise ValueError('Command tasks cannot request AI context')
+            from .runtime_context import validate as validate_context
+            validate_context(task['context'])
         if executable not in policy['executables']:
             raise ValueError('Task executable denied')
     if 'ai_policy' in result and result['ai_policy'] is None:
@@ -110,4 +115,7 @@ def validate(value):
             visiting.remove(node); visited.add(node)
     for node in graph:
         visit(node)
+    if 'ml_policy' in result or result['name'] == 'ml-pipeline':
+        from .ml_resources import validate_policy as validate_ml_policy
+        validate_ml_policy(result)
     return result

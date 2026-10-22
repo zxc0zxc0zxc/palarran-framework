@@ -1,5 +1,7 @@
 # Workflow v1 и контракт модулей
 
+ML pipeline добавляет optional `ml_policy` ([ML contract](../ml/pipeline-contract.md)): общий USD ceiling, resource allocations, private approvals и usage rows. Без этого поля generic/product workflows работают по прежнему контракту. Дополнительные SQLite tables `ml_resource_attempts`, `ml_approvals`, `ml_resource_reconciliations`, `ml_modal_jobs`, `ml_modal_metrics` создаются additive без изменения существующих таблиц/receipts. Existing database version 2 остаётся читаемой.
+
 Workflow — JSON object, только перечисленные поля; неизвестные поля запрещены. Все IDs `[A-Za-z0-9_-]{1,64}`, уникальны. Optional `usage_policy` определён в [usage accounting contract](usage-accounting.md): durable attempt ledger/schema v2, stdout usage callbacks, stage/run token/USD guards и явная unknown reconciliation. Optional `ai_policy` и task `model_role`/`model_calls` определены в [model budget contract](model-budgets.md); отсутствие policy сохраняет legacy поведение. Нужны `version:1`, `name`, `plan_revision`, `tasks`, `limits`, `policy`. Task count 1..100; DAG без циклов/неизвестных/повторных dependencies. Все числовые значения конечны, положительны, bool не number.
 
 `limits`: `run_seconds` (<=86400), `task_seconds` (<=3600), `lease_seconds` (>=3, <=300), `max_attempts` (1..10), `output_bytes` (1024..10485760). Лимит run включает ожидание и простои после create. CPU/memory/network и денежные лимиты этим runtime не гарантируются. При невозможности hard monetary cap запускать provider в отдельно ограниченном account; не выдавать wall time за стоимость.
@@ -40,3 +42,7 @@ def invocation(task, workspace, *, profile=None, telemetry=False, max_cost_usd=N
 Coordinator owns `spec.py` (`validate(dict)->dict` returns normalized deep copy), `store.py` (`Store(path)`, run/task durable state), `engine.py` (`create(state, workflow, target)->run_id`, `work(state, run_id)->status`, `status(state, run_id)->dict`), CLI `python3 -m orchestrator`. Independent tests lane owns only `tests/test_factory_contract.py`; core owns other tests. CLI detailed options: [operations](operations.md).
 
 Codex task optional `transport:"app-server"` требует usage_policy/model profile. Trusted Python bridge executable также обязан быть в executable allowlist; server descendant остаётся в supervised process group. Legacy transport без поля не меняется. Usage policy optional `carry` описан в usage-accounting.md; workflow digest pinning сохраняется. Continuation добавляет command-only import/packet gates, не расходующие model launches; source skill context/prefix сохраняются.
+
+## Runtime context
+
+Optional task.context и automatic scoped AGENTS/Graphify delivery определены в [runtime-context](runtime-context.md). Они не меняют model/usage policies, handoff и independent final gates. Private context bindings/receipts создаются additive.

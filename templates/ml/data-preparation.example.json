@@ -1,0 +1,24 @@
+{
+  "python": "/absolute/existing/runtime/python",
+  "source": "/private/data/source.jsonl",
+  "tokenizer": "/private/model/tokenizer.json",
+  "template": "/private/model/literal-template.json",
+  "split": "/private/data/split.json",
+  "mixture": "/private/data/mixture.json",
+  "tokenizers_version": "0.22.1",
+  "objective": "assistant",
+  "max_sequence_tokens": 4096,
+  "end_token_ids": [
+    999
+  ],
+  "pad_token_id": 999,
+  "batch_size": 2,
+  "length_bins": [
+    128,
+    512,
+    2048,
+    4096
+  ],
+  "max_share_deviation": "0.02",
+  "max_output_bytes": 67108864
+}

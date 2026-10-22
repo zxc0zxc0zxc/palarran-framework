@@ -1,43 +1,34 @@
-# Repository instructions
+# Инструкции ai-tools
 
-- Public code and identifiers are English; project guides and user-facing skill instructions are Russian.
-- `docs/infra/plan/` is the mandatory source of truth for infrastructure skills. Update affected guides and adapters together when behavior changes.
-- Distinguish vendor statements from our architectural recommendations. Cite primary sources near recommendations; keep source dates and applicability in `sources.md`.
-- Infrastructure examples are inert until adapted to a target. Never introduce real addresses, secrets, state files or credentials into Git.
-- For infra skills, `--plan` means no target access, cloud API calls or remote state refresh. Default mode allows read-only inventory; deployment requires authorization for the concrete plan.
-- Run `python3 scripts/validate_repo.py` and the offline unit suite after changing skills or inventory code. Never run a live infrastructure apply as a test.
+Библиотека skills/docs/adapters и bounded Python orchestrator. Public code/identifiers — English; project guides и skill instructions — русский. Существующие незакоммиченные изменения сохранять.
 
-- `docs/ci-cd/` is the mandatory source of truth for GitHub/GitLab CI/CD skills. CI/CD work never requests SSH target access; use GitOps, scoped deployment APIs or an existing trusted pull-controller. Documentation-only requests do not authorize creating skills, installing agents or activating application deployment pipelines.
+## Перед задачей
 
-- Before every task, read `.ai-development/INDEX.md` and relevant accepted decisions/context; verify assumptions against current evidence. Follow `docs/skills/decision-memory.md` for every skill and future skill.
-- Every accepted choice must have a concise rationale/evidence/alternatives/consequences recorded in target-project `.ai-development/<area>/<task>/decisions/` before dependent changes. Update the index and handoff; preserve superseded history and reuse prior records as context. Never store secrets/raw logs there. Scratch is temporary; durable decisions are not auto-deleted.
-- Skill checkout and target project are different roots. Write project memory/results in the target, never the installed package. `.delivery/` owns current machine/environment config; `.ai-development/` owns the rationale.
+- Прочитать `.ai-development/INDEX.md`, связанные accepted ADR и сверить предпосылки с кодом. Решения до зависимых изменений записывать по [decision-memory](docs/skills/decision-memory.md); обновлять index/handoff, сохранять superseded history.
+- Прочитать AGENTS затронутых модулей из карты ниже, даже если сессия запущена из root. Root-to-CWD discovery не загружает автоматически все соседние модули.
+- Для любой профильной задачи/skill обязательно читать соответствующий раздел [domain-contracts](docs/skills/domain-contracts.md) и указанные там mandatory guides. Правило действует и при работе вне каталога docs/skills.
+- Новые AGENTS писать по [authoring guide](docs/skills/agents-authoring.md): реальные границы/команды, краткие проверяемые инварианты, без копирования root.
 
-- `docs/ux/` is the mandatory source of truth for `/ux:design`: business description or target README, 3–4 distinct researched products (default 4), evidence-backed account/screenshot analysis, per-screen adaptive diagrams/states and concise UI copy. UX does not prescribe visual style or application implementation.
-- UX concepts/revisions and the screen catalog persist in target `.ai-development/ux/`; accepted rationale belongs in canonical decision records. Read them before subsequent tasks, and do not claim screenshot inference/user testing/adaptive implementation as observed fact.
+## Общие инварианты
 
-- `docs/ui/` is mandatory for `/ui:design`: bind to source UX revision/screens/states; offer ten established systems plus custom references, with no invented popularity rank. Study canonical/main plus at least two additional visual references. Preserve UX behavior and short copy; propose UX changes explicitly.
-- UI delivers responsive visual previews, semantic tokens/components and real render evidence when tools allow; missing mandatory checks means draft, not verified. If the design needs bitmap imagery, generate it using available image tools and include it with asset provenance/responsive crops; never fabricate observed reference screenshots. Persist UI concepts/assets/revisions and rationale in target `.ai-development/ui/` and reuse them in later tasks.
+- Сначала документация и primary dated sources, затем реализация. Vendor claims, наблюдения, оценки и гипотезы различать.
+- Planning/read-only не разрешает application edits, installs, worktrees, cloud/SSH/DB/API execution, training или deploy; профильные исключения только по соответствующему контракту и фактическому scope пользователя.
+- Не хранить secrets, credentials, raw logs, customer data, state или checkpoints в Git. `.delivery/` — текущая конфигурация; target `.ai-development/` — rationale/результаты. Skill checkout и target — разные roots.
+- Нет implied разрешения на paid APIs/training, outreach, публикацию, ad spend или deploy. Сохранять общий бюджет через failures/restarts. Unknown outcome — reconciliation, не replay; budget не увеличивать автоматически. Estimate/provider usage/invoice различать.
+- Handoff/exit/build не равны verification. Independent checks и exact subject/evidence обязательны; missing checks = partial/NOT RUN, не PASS. Operational SLA и market validation не выводятся из local tests.
+- Graphify — optional local code-only navigation: [graph contract](docs/skills/graph-context.md). Использовать bounded fresh query, затем original files/AGENTS/ADR. При stale/missing — scoped search; не читать полный graph в prompt и не включать semantic/cloud extraction без отдельного scope/budget.
 
-- `docs/frontend/` is mandatory for `/frontend:build`: bind implementation to source UX/UI revisions and all in-scope screens/states, preserve existing stack and source behavior/style, and persist implementation decisions/coverage in target `.ai-development/frontend/`.
-- Frontend completion requires actual browser interaction and viewed render evidence across responsive layouts, with mocks distinguished from real API outcomes. Build alone is insufficient; unavailable mandatory browser/runtime/integration checks mean partial/unverified. Reuse UI images; generate required missing bitmap assets with provenance. No deployment or unrelated backend rewrite implied.
+## Модули и проверки
 
-- `docs/backend/plan/` is mandatory for `/backend:plan`: planning only, contextual foundation/stack/contracts before feature design if backend is absent. Specify scale-aware architecture/data/cache/performance, numerical SLA proposal + SLI/SLO/recovery, edge/invariant test matrix, rollout/recovery and SDD requirements/tasks/DoD traceability.
-- Backend planning writes only planning/spec/contract/decision artifacts, reads local context and researches sources; no application changes, dependency installs, app/test/load/migration execution, live SSH/cloud/DB calls, branch/worktree creation or implementation-agent dispatch. Worktree parallelism is a future DAG with contract/file ownership, isolated runtime resources and integration gates. Persist rationale/spec context in target `.ai-development/backend/`.
+| Каталог | Контекст |
+| --- | --- |
+| orchestrator | [Runtime/leases/accounting/providers](orchestrator/AGENTS.md) |
+| scripts | [CLI, inventory, validators, packaging](scripts/AGENTS.md) |
+| tests | [Offline contracts и fixtures](tests/AGENTS.md) |
+| skills | [Skill authoring и mandatory guides](skills/AGENTS.md) |
+| docs | [Источники и профильные контракты](docs/AGENTS.md) |
+| templates | [Инертные примеры и target memory](templates/AGENTS.md) |
+| plugins | [Portable namespaces](plugins/AGENTS.md) |
+| examples | [Local/remote examples](examples/AGENTS.md) |
 
-- `docs/backend/build/` and `docs/backend/progress.md` are mandatory for `/backend:build`: execute a specific SDD plan using ready parallel agents in isolated worktrees/resources, then review/integrate sequentially and verify linked edge/invariant/API/DB/reliability/DoD gates. Distinguish lab acceptance from an operational SLA window; missing evidence is partial, not PASS.
-- Update canonical target `progress.json` and the marked execution section of the source plan at dispatch, implementation, integration, checks and blockers. Keep plan revision/commits/evidence and remaining tasks; only coordinator edits shared progress/index. Planning initializes pending status and may validate/sync these artifacts locally, but still runs no application implementation/tests or worktrees.
-
-- Frontend build also uses SDD execution: explicit plan/spec revision plus UX/UI/API refs, requirement/screen/state/task/test/DoD traceability. If no execution plan exists, prepare a scoped one from existing UX/UI before app edits; missing UX/UI is not permission to redesign.
-- Frontend ready tasks run in isolated owned agent worktrees after shared layout/token/router/type ownership freeze, then sequential integration and actual integrated browser acceptance. Persist canonical progress.json and source plan's frontend-progress section with revision/commits/remaining tasks. Use shared docs/skills/execution-progress.md and scripts/execution_progress.py --area frontend; legacy backend helper/markers remain compatible.
-
-- `docs/frontend/plan/` is mandatory for `/frontend:plan`: planning only from actual UX/UI/project context, SDD/API contracts with existing/proposed capabilities, feature-specific edge tests, responsive/browser DoD and future worktree task DAG/ownership/isolation. Initialize pending progress in the source plan and preserve decisions for build.
-- Frontend planning reads local context/official references and writes planning artifacts only. No app/config/dependency edits, installs/codegen/image generation, application tests/browser/API/live infrastructure execution, branch/worktree creation or implementation-agent dispatch. Local structural validation/sync of plan artifacts is allowed; `/frontend:build` is separate execution scope.
-
-- `docs/product-factory/` defines the bounded orchestrator runtime contract. Keep workflow parser, docs, examples and offline tests aligned. Runtime state is private and separate from target repositories. An agent exit or handoff is not verification: independent commands and final subject fingerprint are required. Unknown lease outcome requires reconciliation; never auto-replay it or bypass provider permissions. Run `python3 scripts/factory_acceptance.py` after runtime changes, in addition to the offline suite. Local acceptance does not prove operational SLA or live provider integration.
-
-- `docs/product/` and the relevant `docs/product/cases/` guide are mandatory before every product skill. Explain case applicability and separate company/founder/vendor claims from observed evidence and our hypotheses/scenarios. Product research persists target revisions, E-IDs, canonical decisions and handoffs. Unknown revenue/attribution remains unknown; research completion is not market validation. Provider documentation is not a connected API; no account creation, paid calls without budget, outreach, publishing, ad launch or engineering execution is implied.
-
-- Explicit product pipeline tasks additionally require `docs/product/pipeline.md` and `pipeline-contract.md`: preserve cumulative source/decision IDs and immutable verified artifacts, use typed stage manifests and independent stable receipts, retain all unknown dispositions in final MVP synthesis. Artifact verification is not market validation; unresolved critical questions cannot yield a plan verdict. No application edits, Git commits, automatic build/deploy or ad spend within a target product research run.
-
-- `docs/product/go-to-market.md`, `b2b.md`, `b2c.md`, `pricing.md` and dated `go-to-market-sources.md` are mandatory for first-customer planning. Plan sellability before implementation and refresh after polish. B2B prospects must be small with size/ownership evidence; unknown size is conditional. Unknown cash budget means cap 0; unknown/placeholder price is not free inventory. Research never sends outreach or purchases advertising. B2B/B2C profiles run within the existing acquisition attempt when pipeline-assigned; preserve stage count and model budgets.
+После code/skills/inventory изменений: `python3 scripts/validate_repo.py` и `python3 -m unittest discover -s tests -v`. После runtime изменений дополнительно `python3 scripts/factory_acceptance.py`. Никогда не проверять через live infrastructure apply или paid ML launch. Подробные профильные проверки сохраняются в domain-contracts.

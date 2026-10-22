@@ -1,0 +1,17 @@
+{
+  "artifact_type": "ml-data-gate-verification",
+  "revision": "ml-v002-data-gate",
+  "full_suite": {
+    "status": "PASS",
+    "tests": 354,
+    "seconds": 231.085,
+    "skipped": 0
+  },
+  "tokenizers_version": "0.22.1",
+  "validator": "PASS",
+  "factory_acceptance": "PASS",
+  "paid_provider_launches": "NOT_RUN",
+  "remote_text_transport": "NOT_IMPLEMENTED",
+  "llm_training": "NOT_RUN",
+  "skill_creator_quick_validate": "NOT_RUN_missing_PyYAML"
+}
