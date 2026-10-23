@@ -1,6 +1,6 @@
 # Product Factory: первый runtime
 
-Цель — превратить конкретный SDD workflow в восстанавливаемый engineering run. Product discovery, маркетинговые гипотезы и feedback loop остаются следующим уровнем; runtime не выдумывает работу ради продолжения цикла.
+Runtime превращает конкретный SDD workflow в восстанавливаемый engineering run. Поверх него реализованы отдельные [product research → MVP-plan](../product/pipeline.md) и [ML](../ml/pipeline.md) pipelines. Долгоживущий автономный market-feedback loop остаётся следующим уровнем; runtime не выдумывает работу ради продолжения цикла.
 
 Читать последовательно: [архитектура](architecture.md), [контракт](contract.md), [эксплуатация](operations.md), [источники](sources.md). План собственной реализации: [SDD v001](../../.ai-development/backend/2026-10-19-product-factory/plan.md).
 

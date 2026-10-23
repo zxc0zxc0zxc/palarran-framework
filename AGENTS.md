@@ -2,6 +2,11 @@
 
 Библиотека skills/docs/adapters и bounded Python orchestrator. Public code/identifiers — English; project guides и skill instructions — русский. Существующие незакоммиченные изменения сохранять.
 
+## Навигация
+
+- [README: карта входа](README.md#agent-entry), [индекс документации](docs/README.md), [каталог скиллов](skills/README.md), [общие contracts](docs/skills/README.md).
+- Graphify navigation: [freshness → bounded query → original source](docs/skills/graph-context.md); diagram/graph не даёт разрешения на действия.
+
 ## Перед задачей
 
 - Прочитать `.ai-development/INDEX.md`, связанные accepted ADR и сверить предпосылки с кодом. Решения до зависимых изменений записывать по [decision-memory](docs/skills/decision-memory.md); обновлять index/handoff, сохранять superseded history.

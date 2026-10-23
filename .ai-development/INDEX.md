@@ -92,3 +92,5 @@
 | ml/2026-10-23-pipeline-data-gate/0003 | accepted | Completion provenance before EOT, positive-cell exposure and deterministic interleaving | [record](ml/2026-10-23-pipeline-data-gate/decisions/0003-integrity.md); semantic review remains separate |
 
 | ml/2026-10-23-training-debug-design/0001 | accepted | Task-aware training/validation diagnostics, tracked heuristics, fixed generation probes и terminal report/recovery design | [record](ml/2026-10-23-training-debug-design/decisions/0001-debug-contract.md); implementation pending offline DoD |
+
+| repository/2026-10-23-navigation/0001 | accepted | Formal README, agent/docs/skill indexes, graph routing и factual GitHub badges | [record](repository/2026-10-23-navigation/decisions/0001-navigation.md); update with inventory/capabilities |

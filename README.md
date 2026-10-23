@@ -1,284 +1,146 @@
 # AI tools
 
-Монорепозиторий скиллов, инженерной документации и MCP-серверов. Наборы: инфраструктура, CI/CD, UX, UI, frontend, backend, product и ML; каждый скилл сохраняет объяснения решений и использует их как контекст следующих задач.
+[![Validate AI tools](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml)
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](docs/product-factory/README.md)
+[![Skills: 26](https://img.shields.io/badge/skills-26-2563EB)](skills/README.md)
+[![Graphify: optional](https://img.shields.io/badge/Graphify-optional-6F42C1)](docs/skills/graph-context.md)
 
-## ML: эксперименты, данные и обучение
+Библиотека инженерных скиллов, документации и ограниченного Python-runtime для AI-агентов. Покрывает продуктовые исследования, UX/UI, frontend/backend, CI/CD, инфраструктуру, ML и оценку агентов. Подход: **источники → план/контракты → разрешённая реализация → независимая проверка → сохранённые решения**.
 
-Сначала [документация](docs/ml/README.md): профильные guides с research cases, контрактами, схемами и [первичными источниками](docs/ml/sources.md). Основа — Карпати (Recipe, nanochat, llm.c), Lilian Weng, Sebastian Raschka, Chip Huyen, Hamel Husain, Google, LoRA/QLoRA и HELM; для каждого есть применимость и ограничения переноса.
+В репозитории **26 скиллов и 9 plugin namespaces**. Скиллы переносимы между проектами; runtime связывает их с версиями артефактов, бюджетами и проверками. MCP-серверы — запланированное направление, реализаций в текущем checkout нет.
 
-| Команда | Назначение |
+**Индексы:** [документация](docs/README.md) · [все скиллы и команды](skills/README.md) · [общие правила](docs/skills/README.md) · [инструкции агентам](AGENTS.md) · [решения проекта](.ai-development/INDEX.md).
+
+## Содержание
+
+- [Вход для агента](#agent-entry)
+- [Каталог направлений](#catalog)
+- [Подключение скиллов](#skills-usage)
+- [Runtime и состояние возможностей](#runtime)
+- [Правила графов](#graphs)
+- [Структура репозитория](#layout)
+- [Проверки и сопровождение](#checks)
+
+<a id="agent-entry"></a>
+## Вход для агента
+
+1. Прочитать [AGENTS.md](AGENTS.md), [.ai-development/INDEX.md](.ai-development/INDEX.md) и связанные accepted ADR. Сверить решения с текущим кодом.
+2. По [карте модулей в AGENTS](AGENTS.md#модули-и-проверки) прочитать инструкции **всех затрагиваемых модулей**. Запуск из root не загружает автоматически инструкции соседних каталогов.
+3. Выбрать профиль в [domain-contracts](docs/skills/domain-contracts.md), перейти к [документации](docs/README.md) и нужному SKILL.md через [каталог скиллов](skills/README.md). Mandatory guides читаются до профильных решений.
+4. Для навигации по коду применить [graph contract](docs/skills/graph-context.md): fresh bounded query или scoped search, затем original files. Граф не заменяет AGENTS, ADR, контракты и проверки.
+5. До зависимых изменений сохранить объяснение решения по [decision-memory](docs/skills/decision-memory.md). Обновлять версию/прогресс плана и handoff; `implemented`, `verified`, `deployed` и market validation имеют разные основания.
+
+**Skill checkout и target project — разные корни.** Код продукта, его решения и результаты принадлежат target; `.ai-development/` этого репозитория хранит историю разработки ai-tools. Private runtime state, исходные данные, тензоры, credentials и checkpoints в Git не сохраняются.
+
+<a id="catalog"></a>
+## Каталог направлений
+
+| Направление | Документация | Основной результат |
+| --- | --- | --- |
+| Infrastructure | [low / med / high](docs/infra/plan/README.md) | План VPS/Compose, K3s/GitOps или HA Kubernetes; `--plan` без target access |
+| CI/CD | [GitHub / GitLab](docs/ci-cd/README.md) | Быстрые pipelines для Go, PHP, Next.js/TypeScript, Python, Rust; автоматический deploy без CI SSH |
+| UX | [Исследование и проектирование](docs/ux/README.md) | Референсы, адаптивные journeys/screens/states и диаграммы |
+| UI | [Визуальная система](docs/ui/README.md) | UX-bound responsive preview, tokens/components, 10 систем или свои референсы |
+| Frontend | [Plan](docs/frontend/plan/README.md) / [build](docs/frontend/README.md) | SDD, API-контракты, адаптивная реализация и browser acceptance |
+| Backend | [Plan](docs/backend/plan/README.md) / [build](docs/backend/build/README.md) | Архитектура/данные/SLO, SDD, edge/invariant tests, DoD и progress |
+| Product | [Исследования и первые клиенты](docs/product/README.md) | Гипотеза, рынок, аналоги, экономика, каналы, B2B/B2C и обоснованный MVP-план |
+| ML | [Эксперименты](docs/ml/README.md) / [данные](docs/ml/data/README.md) | Гипотезы, модель/метод, данные, стоимость, bounded train и benchmark |
+| Agent eval | [Полигон](docs/agent/eval/README.md) | Независимая оценка задачи, токенов, стоимости и времени |
+
+Каждый профиль содержит первичные источники, границы применимости и templates. [Каталог скиллов](skills/README.md) связывает slash-команду с переносимым именем и точным SKILL.md. Операционные разрешения задаются конкретной задачей; установка скилла не запускает training, cloud, deploy, рекламу или outreach.
+
+<a id="skills-usage"></a>
+## Подключение скиллов
+
+**В этом checkout:** Codex discovery использует [.agents/skills](.agents/skills), project slash adapters лежат в [.claude/commands](.claude/commands). Пример переносимого вызова: `$frontend-plan {фича}` или `$infra-plan-med --plan`. Slash-имена в каталоге обозначают namespace/адаптер; не все hosts предоставляют их как встроенные команды.
+
+**В другом проекте:** собрать нужный self-contained Claude plugin в новый output:
+
+```sh
+python3 scripts/package_plugin.py frontend --output /tmp/ai-tools-frontend-v001
+claude --plugin-dir /tmp/ai-tools-frontend-v001
+```
+
+Namespaces: `infra-plan`, `ci-cd`, `ux`, `ui`, `frontend`, `backend`, `product`, `ml`, `agent`. Dependencies входят в выбранный пакет; существующий output не перезаписывается. Пакет не содержит target memory, runtime state или graph cache. Корневой [.claude-plugin manifest](.claude-plugin/plugin.json) предоставляет только `infra-plan`; остальные namespace собираются отдельно.
+
+Для другого host читайте соответствующий SKILL.md и сохраняйте относительную структуру docs/templates/scripts. Копирования одного SKILL.md недостаточно: missing mandatory docs — blocker, требуется найти полный checkout/package.
+
+<a id="runtime"></a>
+## Runtime и состояние возможностей
+
+[Product Factory](docs/product-factory/README.md) — bounded Python orchestrator: durable SQLite state, owned Git worktrees, CLI workers, независимые verifiers, token/USD accounting и recovery. Основа: Python ≥3.9, POSIX и Git; optional providers/tokenizers/Graphify устанавливаются отдельно в соответствующем scope.
+
+```sh
+python3 -m orchestrator --help
+```
+
+Создание run подготавливает state/worktree; `work` пересекает границу исполнения и может вызывать разрешённые CLI/providers. Продукты живут в отдельных target repositories, private state — вне target. Запуски/повторы сохраняют общий бюджет; unknown outcome требует reconciliation.
+
+| Возможность | Состояние и вход |
 | --- | --- |
-| `/ml:plan {задача}` | План эксперимента, метрики, gates, бюджет и DoD |
-| `/ml:hypotheses {проблема}` | Гипотезы, baseline, абляции и критерии опровержения |
-| `/ml:model {план}` | Модель/стек, no-training baseline и метод обучения |
-| `/ml:data {план}` | Поиск/права/качество/split; `--prepare` для разрешённой подготовки |
-| `/ml:cost {план}` | Modal estimate low/base/high, резервы и неизвестные расходы |
-| `/ml:train {план}` | Ограниченный запуск и метрики; `--plan` без запуска, `--status` read-only |
-| `/ml:benchmark {checkpoint/план}` | Независимая проверка frozen protocol; `--plan` только план |
+| Engineering execution | [Реализован](docs/product-factory/contract.md): bounded DAG, leases, independent final checks |
+| Product pipeline | [Реализован](docs/product/pipeline.md): research stages → MVP-план, без автоматического build/deploy |
+| ML pipeline | [Реализован](docs/ml/pipeline.md): planning → approval → fit/evaluate; local и bounded Modal adapter |
+| Text data gate | [Реализован локально](docs/ml/data/pipeline.md): tokenizer/collator, целые ответы, actual mixture и blocking gate; Modal text transport unsupported |
+| Контекст агента | [Реализован](docs/product-factory/runtime-context.md): scoped AGENTS, optional fresh graph и source fallback |
+| Оценка агентов | [Реализован harness](docs/agent/eval/README.md): frozen tasks/graders, учёт расходов; модельное качество требует отдельного измерения |
+| Диагностика обучения | [Спроектирована](docs/ml/debugging/README.md): task metrics, heuristics, generation snapshots, terminal reports; [runtime integration pending](docs/ml/debugging/integration-plan.md) |
 
-Codex: `$ml-plan`, `$ml-hypotheses`, `$ml-model`, `$ml-data`, `$ml-cost`, `$ml-train`, `$ml-benchmark`. Claude: `python3 scripts/package_plugin.py ml --output /tmp/ai-tools-ml`, затем `claude --plugin-dir /tmp/ai-tools-ml`; выбирайте новый output, существующий не перезаписывается. Пакет содержит docs, skills, templates и offline `scripts/ml_cost.py` без Modal SDK.
+Подробнее: [model budgets](docs/product-factory/model-budgets.md), [usage accounting](docs/product-factory/usage-accounting.md), [ML accounting/approvals](docs/ml/pipeline-contract.md), [Modal cancellation/recovery](docs/ml/modal-adapter.md). Local/fake-provider tests не являются live integration или operational SLA.
 
-Поддерживаются tabular/time series/CV/audio/retrieval/LLM. Обучение не default, если достаточно простого baseline. Память/версии/прогресс — в target `.ai-development/ml/`; все попытки разделяют бюджет. Paid pilot/training/judges требуют конкретного разрешённого scope/budget. [Runtime pipeline](docs/ml/pipeline.md) связывает семь skills, approval конкретного плана и контролируемые local или [Modal Sandbox](docs/ml/modal-adapter.md) fit/evaluation tasks. Create ничего не исполняет; remote cancellation и billing reserves сохраняются независимо от worker.
+<a id="graphs"></a>
+## Правила графов
 
-## Infrastructure planning
+### Кодовый граф: Graphify
 
-Начать с [карты документации](docs/infra/plan/README.md). Профили:
+Canonical правила: [graph-context](docs/skills/graph-context.md); автоматическая передача контекста: [runtime-context](docs/product-factory/runtime-context.md).
 
-| Вызов | Профиль | Типовая основа |
-|---|---|---|
-| `/infra-plan:low` | [Небольшой VPS](docs/infra/plan/low.md) | Linux + Docker Compose + HTTPS proxy |
-| `/infra-plan:med` | [VDS / средняя инфраструктура](docs/infra/plan/med.md) | K3s + GitHub Actions + Argo CD |
-| `/infra-plan:high` | [Большая инфраструктура](docs/infra/plan/high.md) | HA Kubernetes + GitOps + отдельный data plane |
+- Граф — optional local **code-only** индекс связей. До запроса читаются применимые AGENTS/ADR; после него — исходные файлы. INFERRED edges проверяются в коде, отсутствие узла не доказывает отсутствие зависимости.
+- Проверить freshness, выполнить bounded query по symbols/task paths. Missing/stale cache → scoped search; не устанавливать или перестраивать graph автоматически ради выполнения задачи.
+- Не включать весь graph.json в prompt. Mandatory docs, API/UX/UI contracts и verification не сокращаются ради числа токенов.
+- `.graphify/` и `graphify-out/` — локальные ignored данные. Секреты, `.delivery`, `.ai-development`, dependencies, artifacts, symlinks и документы не входят в AST corpus; документы читаются напрямую.
+- Semantic/cloud/media extraction и project executables не запускаются этим workflow. Setup/index допустимы только в явно разрешённом scope; команды — в [полном guide](docs/skills/graph-context.md#использование).
 
-Добавьте `--plan` для планирования по характеристикам без подключения к машине. Без флага скилл собирает SSH-параметры, обследует сервер без изменения конфигурации, создаёт план с конкретными файлами и предлагает исправления либо развёртывание. Доступ к серверу не означает разрешение его менять.
-
-### Использование с агентами
-
-- **Claude Code:** загрузите checkout как плагин: `claude --plugin-dir /absolute/path/to/ai-tools`. Manifest `.claude-plugin/plugin.json` явно задаёт команды `/infra-plan:low`, `/infra-plan:med`, `/infra-plan:high`; аргументы передаются через `$ARGUMENTS`. Внутри этого checkout также доступны проектные команды из `.claude/commands/infra-plan/`; плагин нужен для подключения из другого проекта.
-- **Codex:** скиллы называются `$infra-plan-low`, `$infra-plan-med`, `$infra-plan-high` (двоеточие не используется в именах переносимых скиллов). Проектное обнаружение — через `.agents/skills/`, где лежат ссылки на `skills/`. Например: `$infra-plan-med --plan`. Slash-алиасы не объявляются встроенными командами Codex.
-- **Другой агент:** прочитайте соответствующий `skills/infra-plan-*/SKILL.md`, передайте аргументы и следуйте обязательной документации. При копировании скилла переносите также `docs/infra/plan/`, `templates/infra/` и `scripts/infra_inventory.py`, сохраняя структуру; удобнее подключать весь checkout.
-
-Скиллы требуют чтения документации этого репозитория. Если она недоступна, агент должен сообщить об этом и запросить её расположение, а не генерировать план по памяти.
-
-### Что уже есть
-
-- [Общий workflow и границы действий](docs/infra/plan/workflow.md).
-- [Безопасность, ingress/egress](docs/infra/plan/security-network.md), [деплой и IaC](docs/infra/plan/delivery-iac.md), [данные и эксплуатация](docs/infra/plan/storage-operations.md).
-- [Шаблон результата](docs/infra/plan/plan-template.md), [первичные источники](docs/infra/plan/sources.md), [разбор открытых кейсов](docs/infra/plan/decisions.md).
-- [Адаптируемые конфигурации](templates/infra/README.md): Compose/Caddy, Kubernetes NetworkPolicy/AppProject и Terraform для нового сервера Hetzner. Это заготовки для конкретного плана, а не обещание универсального production deploy.
-- Обследование: `python3 scripts/infra_inventory.py --ssh-alias my-server`. Только уже проверенный SSH host key и ключ/agent; пароль вводится пользователем в интерактивной SSH-сессии, не в аргументах или чате.
-
-## CI/CD pipelines
-
-Готовы два скилла с обязательным чтением [базы знаний](docs/ci-cd/README.md):
-
-| Slash-команда | Переносимый скилл | Для чего |
-|---|---|---|
-| `/ci-cd:github` | [ci-cd-github](skills/ci-cd-github/SKILL.md) | Создание/исправление/оптимизация GitHub Actions |
-| `/ci-cd:gitlab` | [ci-cd-gitlab](skills/ci-cd-gitlab/SKILL.md) | Создание/исправление/оптимизация GitLab CI/CD |
-
-В Codex вызывайте `$ci-cd-github` или `$ci-cd-gitlab` в проекте с подключённым скиллом. Пример запроса: `$ci-cd-github Настрой CI/CD для этого Go + Next.js проекта, автоматический test и кнопку prod`. Plan-only запрос создаёт план; запрос реализации — адаптированные workflows/config и проверки.
-
-Поддерживаются Go, PHP, TypeScript/Next.js, Python и Rust, включая mixed monorepo. Скиллы требуют fast-feedback/test/cache budgets, protected release evidence, автоматический deploy без SSH, optional выбор dev/test/prod и безопасное хранение конфигурации стендов в `.delivery/`. Они не обещают готовый runtime без существующего controller/API/identity и не активируют application pipeline самим фактом установки.
-
-- [Общий workflow](docs/ci-cd/workflow.md), [GitHub](docs/ci-cd/github.md)/[GitLab](docs/ci-cd/gitlab.md).
-- [Фактура Google, Meta, Netflix, Microsoft и AWS](docs/ci-cd/evidence.md) и пять [stack guides](docs/ci-cd/stacks).
-- [Оптимизация](docs/ci-cd/performance.md), [security](docs/ci-cd/security.md), [deploy architecture](docs/ci-cd/architecture.md), [контракт результата](docs/ci-cd/skill-contract.md).
-
-## UX design
-
-[`/ux:design {описание}`](skills/ux-design/SKILL.md) исследует бизнес и проектирует адаптивный UX приложения. В Codex — `$ux-design {описание}`. Без описания читает README/product docs **целевого проекта**.
-
-- Ищет несколько похожих известных продуктов: default 4, minimum 3 с объяснением ограничения. Исследует одинаковые journeys; закрытые кабинеты — по найденным и просмотренным screenshots/официальным walkthrough с датой/platform/evidence.
-- Уточняет неясный бизнес-процесс, затем проверяет reuse существующих экранов/блоков/состояний до создания новых.
-- Для каждого экрана сохраняет functional desktop/mobile layout diagrams, states/actions/back/recovery, tablet/content adaptation и короткие пояснения. UI copy краткая, visual style/CSS в scope не входят.
-- Concepts/revisions, catalog, evidence и rationale сохраняются в target `.ai-development/ux/` для ревью и следующих задач. Не выдаёт desk review за user testing и статические схемы за проверенную вёрстку.
-
-[База знаний](docs/ux/README.md) → [поиск](docs/ux/research.md) → [анализ](docs/ux/analysis.md) → [диаграммы](docs/ux/diagrams.md) → [адаптация](docs/ux/responsive.md) → [workflow](docs/ux/workflow.md). [Шаблоны](templates/ux) и [критерии review](docs/ux/review.md).
-
-Для другого проекта собрать отдельный plugin namespace:
+При наличии подготовленного индекса:
 
 ```sh
-python3 scripts/package_plugin.py ux --output artifacts/plugins/ux
-claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ux
+python3 scripts/graph_context.py status --root .
+python3 scripts/graph_context.py query --root . --question "ml_resource_attempts" --budget 1200
 ```
 
-## UI design
+Dirty/untracked changes, moves и deletes учитываются freshness check. Новый код требует explicit refresh либо source fallback. [Одна зафиксированная paired-проверка](.ai-development/backend/2026-10-22-runtime-context/comparison.md) описывает конкретный кейс; универсальная экономия токенов из неё не следует.
 
-[`/ui:design {направление/референсы}`](skills/ui-design/SKILL.md) создаёт визуальный дизайн поверх наших UX-концептов. В Codex — `$ui-design`. Сначала читает UX revision, screens/states и принятые решения; сохраняет их поведение и короткий copy.
+### Архитектурные и процессные схемы
 
-- Выбор из 10 известных систем: **Material 3 (Google), Liquid Glass (Apple), Fluent 2 (Microsoft), Carbon (IBM), Atlassian, Polaris (Shopify), Spectrum (Adobe), Lightning (Salesforce), Ant Design, Primer (GitHub)**. Это меню, не измеренный рейтинг популярности. Отдельный вариант — **свои референсы**: ссылки, картинки, локальные файлы, Figma; можно сочетать с системой.
-- Canonical/main source + минимум 2 дополнительных visual refs; наблюдения и наши адаптации отделены. [Каталог с источниками](docs/ui/design-codes.md).
-- Результат — адаптивное runnable preview всех in-scope screens/states, tokens и components: narrow/mobile/tablet/desktop, contrast/focus/overflow и fallback для glass/motion. Если дизайну нужна картинка — **генерирует её и включает в preview**, сохраняет asset record и crops. Без нужного tool — draft с явным gap.
-- Concepts/revisions, research/assets и объяснения решений остаются в target `.ai-development/ui/`; source UX changes оформляются отдельно. Production implementation/deploy не подразумеваются вызовом дизайн-скилла.
+Mermaid diagrams в планах и документации описывают topology/flows/task DAG. Указывать revision, actors/trust boundaries, ingress/egress/data stores там, где применимо, и status: proposal либо observed с evidence. Актуализировать вместе с контрактом/планом. Diagram, live trace и code index — разные артефакты. Методики: [UX diagrams](docs/ux/diagrams.md), [infra plan](docs/infra/plan/plan-template.md), [SDD execution progress](docs/skills/execution-progress.md).
 
-[Документация](docs/ui/README.md) → [референсы](docs/ui/references.md) → [UX mapping](docs/ui/ux-binding.md) → [foundations](docs/ui/foundations.md) → [адаптивность](docs/ui/responsive.md) → [визуальный результат](docs/ui/visual-output.md) → [workflow](docs/ui/workflow.md). [Шаблоны](templates/ui).
+<a id="layout"></a>
+## Структура репозитория
 
-```sh
-python3 scripts/package_plugin.py ui --output artifacts/plugins/ui
-claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ui
-```
+| Путь | Ответственность |
+| --- | --- |
+| [skills](skills/README.md) | Переносимые SKILL.md и обязательные ссылки |
+| [docs](docs/README.md) | Canonical guides, источники и контракты |
+| [orchestrator](orchestrator/AGENTS.md) | Runtime, leases, accounting, providers и verifiers |
+| [scripts](scripts/AGENTS.md) | Inventory, packaging, validators и local helpers |
+| [templates](templates/AGENTS.md) | Инертные примеры и формы target artifacts |
+| [examples](examples/AGENTS.md) | Disposable/offline workflows и provider examples |
+| [tests](tests/AGENTS.md) | Offline contracts, fake providers и fault injection |
+| [plugins](plugins/AGENTS.md) | Portable namespace manifests |
+| [.agents/skills](.agents/skills) / [.claude/commands](.claude/commands) | Host discovery и adapters |
+| [.ai-development](.ai-development/INDEX.md) | Решения, планы, evidence и handoffs ai-tools |
 
-UI package содержит обязательную UI/UX базу и UX skill как dependency. Slash namespace — `/ui:design`; UX методика доступна внутри пакета, отдельный `/ux:design` подключается UX plugin.
-
-## Frontend feature planning
-
-[`/frontend:plan {фича}`](skills/frontend-plan/SKILL.md) — отдельное планирование по UX/UI и контексту проекта. В Codex — `$frontend-plan {фича}`.
-
-- Фиксирует plan/spec/UX/UI/API revisions, SDD requirements/AC/screens/states и reuse/foundation choices.
-- Описывает API schemas/errors/auth/retry/cancellation/cache и связь с UI states; existing capabilities отделяет от proposals и backend prerequisites.
-- Планирует feature-specific edges, responsive/browser проверки, task/feature DoD и future agent/worktree DAG с ownership/resources/integration gates.
-- Сохраняет решения, spec/plan/contracts/test matrix/task packets и pending progress прямо в source plan для отдельного `/frontend:build`.
-- Не меняет app/dependencies, не запускает application tests/browser/API/image generation/deploy и не создаёт worktrees/implementation agents. Structural validation/sync плановых artifacts разрешены.
-
-[Planning docs](docs/frontend/plan/README.md), [контекст](docs/frontend/plan/source-context.md), [API contracts](docs/frontend/plan/api-contracts.md), [edge cases/DoD](docs/frontend/plan/edge-cases.md), [workflow](docs/frontend/plan/workflow.md).
-
-## Frontend build
-
-[`/frontend:build {путь/ID плана или scope/пути к UX/UI}`](skills/frontend-build/SKILL.md) реализует наши UX/UI-концепты по SDD-плану в коде целевого приложения. В Codex — `$frontend-build`.
-
-- Использует существующий SDD plan либо сначала создаёт execution spec/plan из UX/UI: requirements/AC/screens/states → tasks/tests → DoD, с версиями plan/UX/UI/API.
-- Независимые ready tasks выполняют internal agents в отдельных worktrees/branches; shared tokens/layout/router/types/lockfile имеют одного owner. Интеграция последовательная, browser review — на общем коде.
-- **Обновляет прогресс прямо в исходном плане:** plan revision/commit, pending/in_progress/implemented/integrated/verified/blocked/deferred, что сделано и что осталось. Canonical ledger и [общий helper](scripts/execution_progress.py) сохраняют причины и evidence для resume.
-
-- Фиксирует обе source revisions и mapping screens/states → routes/components/tests; сохраняет existing stack, tokens/assets и короткий copy.
-- Реализует реальные действия и API contracts, все in-scope состояния; mocks и недостающие интеграции обозначает явно.
-- Адаптивность обязательна: narrow/mobile/tablet/desktop, long content/zoom/focus/overflow, material/motion fallbacks. Нужные готовые картинки переиспользует, отсутствующие — генерирует.
-- Запускает приложение и **проверяет в браузере** действия, состояния, разные размеры окна, console/network; снимает и смотрит screenshots, сравнивает с UI, исправляет дефекты. Build без browser acceptance не считается verified.
-- Сохраняет решения, coverage, browser evidence и handoff в target `.ai-development/frontend/` для следующих задач. Deployment отдельно по scope.
-
-[Документация](docs/frontend/README.md) → [SDD/agents/DoD](docs/frontend/sdd-agents.md) → [progress](docs/frontend/progress.md) → [source contract](docs/frontend/source-contract.md) → [реализация](docs/frontend/implementation.md) → [адаптивность](docs/frontend/responsive.md) → [browser acceptance](docs/frontend/browser-verification.md) → [quality](docs/frontend/quality.md). [Шаблоны](templates/frontend).
-
-```sh
-python3 scripts/package_plugin.py frontend --output artifacts/plugins/frontend
-claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/frontend
-```
-
-Frontend package v0.3 содержит frontend/UI/UX базу, четыре skills и shared progress helper/templates; команды — `/frontend:plan` и `/frontend:build`, upstream slash namespaces подключаются отдельными plugins. Для пересборки выбрать новый output, например `artifacts/plugins/frontend-v0.3`. Это набор инструкций для реализации, не приложение ai-tools.
-
-## Backend feature planning
-
-[`/backend:plan {фича}`](skills/backend-plan/SKILL.md) — только план разработки, внедрения и тестирования по текущему контексту проекта и применимым primary sources. В Codex — `$backend-plan {фича}`.
-
-- Сначала reuse existing backend либо foundation: architecture/stack/modules/formats/contracts/data/infra fit. Затем SDD feature spec и конкретный task plan.
-- [Архитектурная база](docs/backend/plan/architecture.md): монолит, модульный монолит, API/worker, микросервисы, serverless; многомодульность отдельно от числа deployables, условия перехода и operational cost.
-- Отдельные guides: [данные/DB](docs/backend/plan/data.md), [кеширование](docs/backend/plan/caching.md), [performance](docs/backend/plan/performance.md), [SLA/SLI/SLO](docs/backend/plan/reliability.md), [edge tests](docs/backend/plan/testing.md), [rollout/recovery](docs/backend/plan/delivery.md).
-- Обязательный SLA proposal с числовыми целями/нагрузкой/окном, измерением/error budget и applicable RTO/RPO; targets по инфраструктуре, без договорных обещаний от имени владельца.
-- [SDD для агентов](docs/backend/plan/sdd-agents.md): requirement → AC/invariant → design/contract → task → test → DoD. Future worktree DAG, ownership/shared-file conflicts, isolation и integration gates; small scope может иметь обоснованный serial path.
-- Сохраняет решения/spec context в target `.ai-development/backend/`. Не меняет app, не устанавливает зависимости, не запускает tests/migrations/live APIs/deploy и не создаёт worktrees/implementation agents.
-
-[Карта документации](docs/backend/plan/README.md), [выбор foundation/stack](docs/backend/plan/foundation-stack.md), [контракты/snippets](docs/backend/plan/contracts.md), [workflow](docs/backend/plan/workflow.md), [источники Google, Shopify, Uber, Amazon, Meta, Stripe и другие](docs/backend/plan/sources.md), [шаблоны](templates/backend).
-
-```sh
-python3 scripts/package_plugin.py backend --output artifacts/plugins/backend
-claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/backend
-```
-
-Backend package v0.2 содержит backend-plan/backend-build, оба slash adapters, обязательную базу и progress helper. Plan-ready означает согласованность спецификации, а не доказанный SLA или выполненную реализацию.
-
-## Backend implementation
-
-[`/backend:build {путь/ID плана}`](skills/backend-build/SKILL.md) реализует конкретную SDD revision. В Codex — `$backend-build`.
-
-- Независимые ready задачи выполняет internal agents в отдельных Git worktrees/branches, с absolute cwd и isolated DB/ports/cache/queue; coordinator последовательно review/integrates и проверяет общий результат.
-- Реализует contracts/data/invariants и linked edge/concurrency/integration/fault tests, проверяет actual API/DB outcomes и source DoD.
-- Проверяет SLI instrumentation и load/SLO thresholds; operational SLA за полное окно учитывает отдельно. Missing evidence означает partial, не выдуманный SLA PASS.
-- **Прямо в исходном плане обновляет прогресс:** plan ID/revision/commit, pending → in_progress → implemented → integrated → verified, blockers/deferred и remaining gates. Code-ready не равно verified.
-- Canonical `progress.json` и [helper](scripts/backend_progress.py) проверяют статус/evidence/DAG и синхронизируют только marked execution section плана; accepted rationale и reports сохраняются в target `.ai-development/backend/` для resume.
-
-[Документация build](docs/backend/build/README.md), [общий progress contract](docs/backend/progress.md), [agent worktrees](docs/backend/build/worktrees.md), [tests/DoD](docs/backend/build/verification.md), [SLA/SLO](docs/backend/build/reliability.md), [шаблоны](templates/backend). `/backend:plan` остаётся planning-only; создаёт pending ledger, но ничего не реализует. Local build не подразумевает production deploy/live migration.
-
-При пересборке backend plugin выбрать новый output directory, например `artifacts/plugins/backend-v0.2`. Namespace содержит `/backend:plan` и `/backend:build`; другие plugins не меняются.
-
-## Общее правило всех скиллов: объяснение и память решений
-
-До работы агент читает `.ai-development/INDEX.md` **целевого проекта** и связанные accepted решения. Каждый новый принятый выбор объясняет в `.ai-development/<area>/<task>/decisions/` до зависимого изменения: контекст, альтернативы, источники, rationale, последствия и проверка. В конце обновляет индекс/handoff. Старые решения сохраняются, изменения связаны через `supersedes`, повторное применение — через `reuses`.
-
-Полный [общий контракт](docs/skills/decision-memory.md) обязателен для всех существующих и новых скиллов. [Шаблон ADR](templates/ai-development/decision.md), [живой индекс этого репозитория](.ai-development/INDEX.md). Task workspace ограничен задачей; только scratch временный, accepted records не удаляются автоматически. Ни секреты, ни raw logs/inventory в журнал не попадают. `.delivery/` хранит конфигурацию, журнал — причины выбора.
-
-## Подключение из другого проекта
-
-Project slash-adapters лежат в `.claude/commands/`. Для переносимого plugin namespace CI/CD собрать самодостаточный пакет (необходим Python >= 3.9):
-
-```sh
-python3 scripts/package_plugin.py ci-cd --output artifacts/plugins/ci-cd
-claude --plugin-dir /absolute/path/to/ai-tools/artifacts/plugins/ci-cd
-```
-
-Пакет содержит свой manifest `ci-cd`, два скилла и обязательные документы/templates; команды — `/ci-cd:github` и `/ci-cd:gitlab`. Корневой plugin `infra-plan` сохранён. Для изолированного infra-пакета: `python3 scripts/package_plugin.py infra-plan --output artifacts/plugins/infra-plan`.
-
-Сборщик не перезаписывает существующий output: при повторной сборке выберите новый каталог. Он не переносит `.ai-development/` исходного проекта, secrets, `.terraform/` или внешние symlinks. Причины решений создаются в **target project**, не внутри package cache. Копирование одного `SKILL.md` без базы знаний недостаточно.
-
-## Проверка
+<a id="checks"></a>
+## Проверки и сопровождение
 
 ```sh
 python3 scripts/validate_repo.py
 python3 -m unittest discover -s tests -v
+python3 scripts/factory_acceptance.py
 ```
 
-CI проверяет документы, ссылки внутри репозитория, скиллы, скрипты и Terraform. Remote apply и подключения к реальной инфраструктуре в CI не выполняются.
+[CI workflow](.github/workflows/validate.yml) проверяет contracts/links/packages, offline tests, runtime lab и Terraform schema без live apply. Для real tokenizer integration tests требуется уже подготовленная среда через `AI_TOOLS_TOKENIZER_PYTHON`; без неё соответствующие checks — SKIP/NOT RUN. Tests не устанавливают tools и не запускают paid providers.
 
-## Структура
+CI badge связан с `validate.yml`/`main` по [официальному GitHub format](https://docs.github.com/en/actions/how-tos/monitor-workflows/add-a-status-badge); прочие badges статические и описывают inventory/capabilities. Локальная проверка не утверждает текущий статус удалённого CI.
 
-```text
-skills/               # Переносимые инструкции агентам
-.agents/skills/       # Проектное обнаружение Codex
-.claude/commands/     # Slash-адаптеры
-.claude-plugin/       # Manifest namespace infra-plan
-docs/infra/plan/     # Обязательная база знаний для infra-plan
-docs/ci-cd/          # Обязательная база CI/CD скиллов
-docs/skills/         # Общие правила всех скиллов
-docs/ux/             # Бизнес-анализ, research и экранные UX-схемы
-docs/ui/             # Дизайн-системы, visual refs, адаптивный UI
-docs/frontend/       # Реализация UX/UI и browser acceptance
-docs/backend/plan/   # Архитектура, данные, SLA и SDD feature planning
-docs/backend/build/  # Реализация, agent worktrees, проверки и progress
-.ai-development/     # Решения и контекст этого проекта
-plugins/             # Manifests для сборки отдельных namespace
-templates/           # Infrastructure, UX, UI, frontend, backend и ADR templates
-scripts/             # Обследование и проверки
-```
-
-MCP-серверы будут добавляться отдельными каталогами по мере появления реализаций.
-
-Форматы интеграции сверены с [официальным руководством Codex skills](https://learn.chatgpt.com/docs/build-skills) и [Claude plugin commands](https://code.claude.com/docs/en/plugins-reference#commands).
-
-## Product Factory runtime
-
-[Документация, контракт и запуск](docs/product-factory/README.md): bounded engineering loop с durable SQLite state, Git worktree, CLI agents и независимыми проверками. [SDD план v001](.ai-development/backend/2026-10-19-product-factory/plan.md).
-
-## Product research skills
-
-[Документация и кейсы](docs/product/README.md) созданы до скиллов: startup cases Superhuman, Buffer, Airbnb, Ahrefs; практики GitLab, Amazon, Google и Microsoft. Семь независимых команд:
-
-- `/product:define {идея}` — ICP/JTBD, MVP/business model и проверяемые продуктовые гипотезы.
-- `/product:market {рынок}` — demand, сегменты, trends/volume и scope TAM/SAM/SOM.
-- `/product:compare {продукт}` — конкуренты/замены и обоснованное позиционирование.
-- `/product:revenue {аналоги}` — disclosed metrics, estimates и отдельные scenarios.
-- `/product:acquisition {аналоги}` — paid search/social, native/creator, organic/referral и future channel tests.
-- `/product:b2b {продукт}` — небольшие первые клиенты, bounded offer и sales/outreach plan.
-- `/product:b2c {продукт}` — узкая аудитория, дешёвые каналы, цены и growth tests.
-
-Codex: `$product-define`, `$product-market`, `$product-compare`, `$product-revenue`, `$product-acquisition`, `$product-b2b`, `$product-b2c`; discoverable через `.agents/skills/`. Claude plugin: `python3 scripts/package_plugin.py product --output /tmp/ai-tools-product`, затем `claude --plugin-dir /tmp/ai-tools-product`. Внутри checkout доступны project slash adapters.
-
-Каждый skill обязан читать профильные кейсы/guide и сохранять evidence/решения в target `.ai-development/product/`. [Data/API catalog](docs/product/data-sources.md) описывает access/coverage/fallback; реальных credentials/integrations в пакете нет. Research не запускает рекламу, outreach или разработку.
-
-### Единый product pipeline
-
-[Pipeline guide](docs/product/pipeline.md): пять основных research stages с B2B/B2C профилем внутри acquisition и synthesis через product-define → обоснованный MVP-план с source/decision traceability. Структура проверяется отдельно от истинности market claims; plan/validate/pivot/stop допустимы, build не запускается.
-
-```sh
-python3 -m orchestrator product-create --idea-file examples/product-factory/product-idea.md --target /path/to/product --state /path/to/private-state --adapter codex --agent /absolute/path/to/codex
-python3 -m orchestrator work --state /path/to/private-state --run RUN_ID
-```
-
-Create только подготавливает run, work вызывает установленный авторизованный CLI. Источники/версии/ADR передаются typed artifacts; private stable receipts и final gates отклоняют подмену ранних выводов. Итог в owned worktree `.ai-development/product/pipeline-ID/stages/mvp/report.md` и `stage.json`. Нужные уточнения останавливают run через needs_input/resolve. API accounts/paid calls автоматически не подключаются.
-
-### Первые клиенты до разработки
-
-- `/product:b2b {продукт}` — маленькие независимые компании, проверяемые кандидаты, bounded offer и sales/outreach plan.
-- `/product:b2c {продукт}` — узкая аудитория, бесплатные/дешёвые каналы, российские и иностранные кейсы, цены и план тестов.
-
-Сначала [документация](docs/product/go-to-market.md); cash cap без бюджета — 0, неизвестный прайс не бесплатность. После polish обновляем тот же план по revision продукта. Product plugin содержит 7 скиллов; runtime использует B2B/B2C внутри acquisition, сохраняя 6 stages и прежние лимиты. Только research/planning, без отправки outreach и закупки рекламы.
-
-### Диагностика и объяснения решений
-
-Runtime сохраняет безопасные категории CLI ошибок и наблюдаемые step events даже при `usage_unknown`/budget stop. Сырые сообщения/команды/ответы и private reasoning не сохраняются; unknown расход не становится нулём. [Контракт диагностики и decision trace](docs/product-factory/usage-accounting.md).
-
-Для существенных решений агент может сохранить публичный `decision-trace.json` рядом с handoff. `python3 -m orchestrator.decision_trace --trace /path/decision-trace.json --output /path/review.html` создаёт адаптивную подсветку результатов и якоря шагов. Outcome требует отдельного evidence review; few-shot используется только после очистки и ревью, автоматически в prompts не добавляется.
-
-## Контекст агента и карта кода
-
-[Правила AGENTS.md](docs/skills/agents-authoring.md) задают короткие root/module инструкции; [Graphify](docs/skills/graph-context.md) даёт локальный code-only индекс без LLM calls. Команды setup/index/status/query: `python3 scripts/graph_context.py --help`. Кэш/venv остаются в ignored `.graphify/`, подробные решения — в target `.ai-development/`. Процент реальной экономии токенов пока не измерен.
-
-Runtime также [автоматически передаёт module AGENTS и Graphify/source context](docs/product-factory/runtime-context.md) по task.context.paths, сохраняя prompt/token/USD лимиты. Контрольный paired замер и ограничения: [.ai-development/backend/2026-10-22-runtime-context/comparison.json](.ai-development/backend/2026-10-22-runtime-context/comparison.json).
-
-## Agent eval
-
-`/agent:eval {задача или suite} [--plan]` — независимый полигон plan/build/review/context с учётом tokens/cost/time. [Документация](docs/agent/eval/README.md); harness tests offline, model runs требуют отдельного scope/budget.
-
-ML data: [научная база и инструменты](docs/ml/data/README.md) для планирования корпуса, очистки/grouped splits, joint domain/language token mixtures и full-answer integrity; `/ml:data` сохраняет research/--plan границы.
-
-### ML text preparation gate
-
-[Real tokenizer/collator → whole-example mixture → blocking training gate](docs/ml/data/pipeline.md). Новые ML execution policies явно задают data_mode=text|non_text. Optional tokenizer только локальный, tests без облака; Modal text transport пока unsupported.
+При изменении библиотеки сначала читать [AGENTS](AGENTS.md) и [общие contracts](docs/skills/README.md), сохранять rationale до зависимых изменений. При новом skill/namespace/module обновлять соответствующий индекс, discovery/manifest/packager/validator и счётчик badges; implemented и planned возможности сохранять различимыми.
