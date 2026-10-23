@@ -70,6 +70,8 @@ class Store:
         self.db.execute('PRAGMA foreign_keys=ON')
         from .ml_resources import install
         install(self.db)
+        from .ml_diagnostics import install as install_diagnostics
+        install_diagnostics(self.db)
 
     def close(self):
         self.db.close()

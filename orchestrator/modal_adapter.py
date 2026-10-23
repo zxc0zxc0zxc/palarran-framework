@@ -59,6 +59,12 @@ class SDKProvider:
                          block_network=True, volumes={'/artifacts': volume},
                          env={'AI_TOOLS_REQUEST_JSON': json.dumps(request, separators=(',', ':'))})
 
+    def diagnostics(self,name,limit):
+        try:
+            return b''.join(self.chunks(name+'/diagnostics/events.jsonl',limit))
+        except (self.modal.exception.NotFoundError,FileNotFoundError):
+            return b''
+
     def lookup(self, name):
         return self.call(self.modal.Sandbox.from_name, self.config['app'], name,
                          environment_name=self.config['environment'], include_terminated=True)
@@ -177,6 +183,8 @@ def execute(store, run, task, token, attempt, request, heartbeat, timeout, provi
     from .product_artifacts import read_bytes
     payload['lineage_content'] = {key: read_bytes(workspace, ref['path'], 1048576).decode('utf-8') for key, ref in payload['lineage'].items()}
     payload['output_dir'] = '/artifacts/' + name
+    if 'diagnostics' in payload:
+        payload['diagnostics']['directory']=payload['output_dir']+'/diagnostics'
     fit = store.db.execute("SELECT name FROM ml_modal_jobs WHERE run_id=? AND task_id='ml-fit' AND terminal=0 ORDER BY attempt DESC LIMIT 1", (run,)).fetchone()
     payload['checkpoint_path'] = '/artifacts/' + fit['name'] + '/checkpoint.bin' if fit else None
     try:
@@ -191,6 +199,10 @@ def execute(store, run, task, token, attempt, request, heartbeat, timeout, provi
             spent = estimate(store, run, task, attempt, item, started)
             if not heartbeat() or time.monotonic() - clock >= timeout or spent >= nano(item['reserve_usd']):
                 raise ValueError('Remote execution stopped by supervisor')
+            if 'diagnostics' in payload:
+                from .ml_diagnostics import poll as diagnostic_poll
+                raw=provider.diagnostics(name,policy['diagnostics']['max_bytes'])
+                require(diagnostic_poll(store,run,task,token,raw=raw))
             code = provider.poll(job)
             if code is not None:
                 require(type(code) is int)
@@ -200,6 +212,9 @@ def execute(store, run, task, token, attempt, request, heartbeat, timeout, provi
             if previous:
                 save(store, run, task, attempt, metrics=json.dumps(previous, sort_keys=True))
             time.sleep(config['poll_seconds'])
+        if 'diagnostics' in payload:
+            from .ml_diagnostics import poll as diagnostic_poll
+            require(diagnostic_poll(store,run,task,token,raw=provider.diagnostics(name,policy['diagnostics']['max_bytes']),terminal=True))
         require(code == 0)
         # Last committed metric snapshot and outputs survive Sandbox termination in Volume.
         previous = metrics_snapshot(provider.metrics(name), previous)

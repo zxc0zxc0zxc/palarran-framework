@@ -32,7 +32,7 @@
 | Product | [Research skills](product/README.md) | [Cases](product/cases/README.md), [data sources](product/data-sources.md), [pipeline](product/pipeline.md); MVP planning, не automatic app build |
 | ML | [Experiment workflow](ml/README.md) | [Contracts](ml/contracts.md), [plan](ml/plan.md), [sources](ml/sources.md), [model](ml/model.md), [train](ml/train.md), [benchmark](ml/benchmark.md) |
 | ML data | [Data preparation](ml/data/README.md) | [Mixes](ml/data/mixtures.md), [answer integrity](ml/data/answer-integrity.md), [local tools](ml/data/tools.md), [runtime gate](ml/data/pipeline.md) |
-| ML diagnostics | [Training debugging](ml/debugging/README.md) | [Metrics](ml/debugging/task-metrics.md), [heuristics](ml/debugging/heuristics.md), [generations](ml/debugging/generations.md), [reports](ml/debugging/reports.md); [implementation pending](ml/debugging/integration-plan.md) |
+| ML diagnostics | [Training debugging](ml/debugging/README.md) | [Metrics](ml/debugging/task-metrics.md), [heuristics](ml/debugging/heuristics.md), [generations](ml/debugging/generations.md), [reports](ml/debugging/reports.md); [runtime-v001 / remaining gates](ml/debugging/runtime.md) |
 
 ## Runtime и оценка
 
@@ -49,3 +49,5 @@
 Сначала scope и обязательные guides, затем linked research sources с датами/версиями, после — применимость к target. Templates находятся в [templates](../templates), примеры — в [examples](../examples). Диаграммы proposals не observed topology; sample outputs и offline fixtures не live verification. Профильные ссылки читаются из target/installed package по его containment, не из случайного соседнего проекта.
 
 Этот полный индекс не включается целиком в domain-only plugin: пакет содержит только выбранную базу и её dependencies. Portable common entry — [docs/skills/README.md](skills/README.md).
+
+Scientific reports: [`/science:preprint`](../skills/science-preprint/SKILL.md), [документация](science/README.md).

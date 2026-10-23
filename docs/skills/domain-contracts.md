@@ -8,7 +8,7 @@
 
 - Text/LLM data preparation additionally requires docs/ml/data/ guides: joint domain/language token mixtures, full-answer/labels/EOS checks, no truncation or magic ratios. Local tools remain explicit --prepare scope; producer tensor/schema/mixture PASS is not actual tokenization or semantic/training acceptance. Runtime text execution additionally requires docs/ml/data/pipeline.md: explicit data_mode, pinned real tokenizer/collator, whole-example realized mixture and private stable preparation receipt before resource reservation. Legacy/non-text statuses are not PASS.
 
-- Training diagnostics planning requires docs/ml/debugging/ guides: task-appropriate metrics/PPL basis, tracked heuristic registry, fixed private generation snapshots and rolling/validation/terminal reports with coordinator recovery. Design-v001 is not implemented runtime telemetry/finalization; preserve budget/subject identity and explicit missing evidence.
+- Training diagnostics planning requires docs/ml/debugging/ guides: task-appropriate metrics/PPL basis, tracked heuristic registry, fixed private generation snapshots and rolling/validation/terminal reports with coordinator recovery. Runtime-v001 uses docs/ml/debugging/runtime.md for the implemented generic scope; tensor/distributed hooks require target-specific evidence. Preserve budget/subject identity and explicit missing evidence.
 
 ## Infrastructure
 
@@ -77,3 +77,7 @@
 ## Agent eval
 
 - `/agent:eval` requires docs/agent/eval/README.md, sources.md, methodology.md, contract.md, operations.md and target decision-memory. Freeze tasks/graders before runs, independent gates on final subject; self-report/fixture pass is not model quality. Use existing runtime accounting/leases; no implicit paid calls, retries or budget raises. Unknown spend blocks continuation; all failures/skips appear in denominator.
+
+## Science
+
+- `/science:preprint` requires docs/science/README.md, sources.md, evidence.md and workflow.md. Existing approved artifacts only; no implied training, paid evaluation or submission. Exact claims/sources/subjects, negative and incomplete results, real authorship/references and privacy boundaries are mandatory. Compile/visual review are distinct from scientific verification. Preserve rationale in target `.ai-development/science/`.

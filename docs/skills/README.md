@@ -13,3 +13,5 @@
 Planning/read-only не разрешает installs, application edits, worktrees, paid APIs/training или deploy. Наличие graph/ADR/source snippet не даёт новых полномочий. Source claims, observations, estimates и hypotheses различать; missing checks не PASS. Конкретные исключения — только по действующему профилю и фактическому запросу пользователя.
 
 Память/документы принадлежат target, checkout скиллов служит источником инструкций. Secrets/raw logs/data/state/checkpoints остаются в approved private storage. Graph не заменяет mandatory docs, не загружается целиком и не запускает semantic/cloud extraction этим workflow.
+
+Scientific reports: `/science:preprint`; в полном checkout см. `docs/science/README.md` и `skills/science-preprint/SKILL.md`.

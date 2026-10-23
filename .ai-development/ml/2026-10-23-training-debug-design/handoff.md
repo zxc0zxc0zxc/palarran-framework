@@ -17,3 +17,7 @@ PASS: repository validator (links, mandatory docs, portable refs), portable pack
 Runtime code/skills/CLI не менялись. Collectors/scorers/heuristic controller/generation hooks/finalizer/recovery пока NOT IMPLEMENTED; все DBG-01..06 pending. Полный runtime suite не запускался повторно ради documentation-only changes; предыдущие 354 tests относятся к data-gate задаче, не evidence нового diagnostics runtime. Нет paid APIs/GPU/training/model/data downloads/provider execution или изменения бюджета/state.
 
 Следующий scope: строгие versioned schemas/preflight, durable stream collector и normalizers, затем tracked rules/probes, report finalizer/recovery и offline failure injections. Переиспользовать существующие leases/financial ledger, bounded Modal channel мигрировать версионно; нынешний finite metrics snapshot не final report. Подробности [implementation DAG](../../../docs/ml/debugging/integration-plan.md).
+
+## Последующее исполнение
+
+Исторический documentation-only результат выше сохранён. Текущий implemented scope и ограничения: [diagnostics-runtime handoff](../2026-10-23-diagnostics-runtime/handoff.md).

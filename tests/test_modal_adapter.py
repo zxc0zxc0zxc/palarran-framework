@@ -238,3 +238,37 @@ class SDKContractTest(unittest.TestCase):
         self.assertEqual(creation['cpu'], (1, 1))
         self.assertEqual(creation['volumes'], {'/artifacts': volume})
         self.assertFalse(calls[0][2]['create_if_missing'])
+
+class ModalDiagnosticsTest(unittest.TestCase):
+    setUp = pipeline_fixture.MLPipelineTest.setUp
+    new = pipeline_fixture.MLPipelineTest.new
+    ready = pipeline_fixture.MLPipelineTest.ready
+    allow = pipeline_fixture.MLPipelineTest.allow
+    modal = ModalPipelineTest.modal
+
+    def test_bounded_remote_stream_is_bound_to_checkpoint_and_report(self):
+        import time
+        from test_ml_diagnostics import policy
+        from scripts import ml_data as data
+        config=self.modal();config['diagnostics']=policy('regression')
+        class DiagnosticProvider(FakeProvider):
+            def diagnostics(self,name,limit):
+                job=self.jobs[name];packet=job.request['diagnostics'];p=packet['policy']
+                subject=hashlib.sha256(b'owned checkpoint').hexdigest();events=[]
+                def emit(kind,step,split,payload):
+                    events.append(dict(version=1,pipeline_id=packet['pipeline_id'],task_id=packet['task_id'],attempt=packet['attempt'],sequence=len(events)+1,kind=kind,step=step,split=split,subject=subject,policy_sha256=packet['policy_sha256'],payload=payload,at=time.time()))
+                emit('metric',0,'validation',dict(metric='quality',value=.001,support=16,eval_id='dev'))
+                if packet['task_id']=='ml-fit':
+                    for step in (0,10):
+                        emit('generation',step,'diagnostic',dict(probe_id='json',decoding_sha256=data.digest(p['decoding']),output='{"prediction":'+str(step)+'}',token_ids=[step],finish_cause='configured_stop'))
+                # Stable bytes across polls are required; timestamps must not be regenerated.
+                if not hasattr(job,'stream'):job.stream=''.join(data.canonical(e)+'\n' for e in events).encode()
+                return job.stream[:limit]
+        run,flow=self.ready(config);self.allow(run)
+        with patch('orchestrator.modal_adapter.SDKProvider',DiagnosticProvider):
+            self.assertEqual(work(self.state,run),'verified')
+        info=status(self.state,run)['ml']['training_report']
+        self.assertEqual(info['status'],'complete')
+        result=json.loads(Path(info['path']).read_text())
+        self.assertEqual(len(result['generations']),2)
+        self.assertIsNone(result['costs']['resources']['invoice_usd'])

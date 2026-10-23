@@ -38,7 +38,10 @@ def validate_policy(flow):
     require(isinstance(policy, dict))
     require(flow['name'] == 'ml-pipeline' and 'usage_policy' in flow and 'ai_policy' in flow)
     required = {'pipeline_id', 'context_sha256', 'skills_root', 'artifact_root', 'total_usd', 'backend', 'resources'}
-    require(required <= set(policy) <= required | {'data_preparation','data_mode'})
+    require(required <= set(policy) <= required | {'data_preparation','data_mode','diagnostics'})
+    if 'diagnostics' in policy:
+        from .ml_diagnostics import validate_policy
+        validate_policy(policy['diagnostics'])
     if 'data_mode' in policy:
         require(policy['data_mode'] in ('text','non_text'))
         require(('data_preparation' in policy) == (policy['data_mode'] == 'text'))
@@ -143,6 +146,10 @@ def gate(store, run, source, flow):
         if ident in policy['resources']:
             require(any(t['id'] == 'ml-prepare' and t['status'] == 'verified' for t in store.tasks(run)))
             packet(policy)
+    if 'diagnostics' in policy:
+        from .ml_artifacts import reference
+        config=json.loads(reference(workspace,prefix['lineage']['config']))
+        require(config.get('diagnostics_sha256')==canonical_sha(policy['diagnostics']))
     if any(u['critical'] and u['disposition'] == 'unresolved' for u in prefix['unknowns']):
         store.db.execute("UPDATE tasks SET status='needs_input',reason='ml_critical_unknown' WHERE run_id=? AND id=?", (run, ident))
         store.db.execute("UPDATE runs SET status='needs_input',reason='ml_critical_unknown' WHERE id=?", (run,))
@@ -181,10 +188,8 @@ def verify_receipts(store, run, flow):
             require(len(outcomes) == 2 and outcomes[1]['output_sha256'] == expected)
         elif task['status'] == 'verified' and task['id'] == 'ml-fit':
             prefix = validate_prefix(store.get(run)['workspace'], policy)
-            subject = canonical_sha({'prefix': prefix['digest'], 'checkpoint': checkpoint_hash(policy)})
-            if 'data_preparation' in policy:
-                from .ml_data_gate import packet
-                subject = canonical_sha(dict(prefix=prefix['digest'],checkpoint=checkpoint_hash(policy),prepared_data=packet(policy)))
+            from .ml_artifacts import fit_subject
+            subject = fit_subject(prefix,policy)
             expected = hashlib.sha256(('PASS ' + subject + '\n').encode()).hexdigest()
             outcomes = json.loads(task['result'] or '[]')
             require(len(outcomes) == 2 and outcomes[1]['output_sha256'] == expected)

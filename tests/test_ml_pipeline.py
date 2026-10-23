@@ -47,6 +47,8 @@ def write_stage(root, policy, stage):
         value = {'description': 'owned synthetic fixture ' + name}
         if 'data_preparation' in context and name in ('data','tokenizer','config'):
             value['preparation_sha256'] = canonical_sha(context['data_preparation'])
+        if name=='config' and 'diagnostics' in context:
+            value['diagnostics_sha256']=context['diagnostics']['sha256']
         if name == 'protocol':
             value = dict(primary=dict(name='mse', direction='min', threshold=0.01, minimum_delta=0.1),
                          guardrails=[], required_checks=['finite_predictions'])

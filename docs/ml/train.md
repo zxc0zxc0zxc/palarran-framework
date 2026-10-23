@@ -29,4 +29,4 @@ DoD training: все planned attempts отражены, terminal state/checkpoin
 
 ## Диагностика как часть launch packet
 
-Обязательно применять [debugging design](debugging/README.md): до старта задать task metrics/эвристики/cadence/budget, committed start stub, private fixed-generation probes и report/recovery policy. План обязан обеспечить отчёт при completed/stop/failure/unknown; checkpoint + exit code отчёт не заменяют. Наличие этих документов не включает collector/finalizer автоматически: проверить actual implementation и [pending integration DoD](debugging/integration-plan.md) в target.
+Обязательно применять [debugging design](debugging/README.md): до старта задать task metrics/эвристики/cadence/budget, committed start stub, private fixed-generation probes и report/recovery policy. План обязан обеспечить отчёт при completed/stop/failure/unknown; checkpoint + exit code отчёт не заменяют. Наличие этих документов не включает collector/finalizer автоматически: проверить actual implementation и [реализованный scope и оставшиеся проверки](debugging/integration-plan.md) в target.

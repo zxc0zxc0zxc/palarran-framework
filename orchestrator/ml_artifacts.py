@@ -27,7 +27,7 @@ def directory(root, pipeline):
 
 def source_digest(root):
     root = Path(root).resolve()
-    names = {'docs/skills/decision-memory.md', 'scripts/ml_data.py', 'orchestrator/ml_data_gate.py'}
+    names = {'docs/skills/decision-memory.md', 'scripts/ml_data.py', 'orchestrator/ml_data_gate.py', 'orchestrator/ml_diagnostics.py', 'scripts/science_preprint.py'}
     for base in ('docs/ml', 'templates/ml'):
         for path in (root / base).rglob('*'):
             require(not path.is_symlink())
@@ -215,6 +215,17 @@ def evaluation(root, policy):
     return result
 
 
+def fit_subject(prefix,policy):
+    body=dict(prefix=prefix['digest'],checkpoint=checkpoint_hash(policy))
+    if 'data_preparation' in policy:
+        from orchestrator.ml_data_gate import packet
+        body['prepared_data']=packet(policy)
+    if 'diagnostics' in policy:
+        from orchestrator.ml_diagnostics import stream_subject
+        body['diagnostics']=stream_subject(policy,checkpoint=body['checkpoint'])
+    return canonical_sha(body)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', required=True)
@@ -226,10 +237,7 @@ def main():
         prefix = validate_prefix(args.root, policy, args.stage if args.stage in STAGES else 'benchmark')
         subject = prefix['digest']
         if args.stage == 'fit':
-            subject = canonical_sha({'prefix': subject, 'checkpoint': checkpoint_hash(policy)})
-            if 'data_preparation' in policy:
-                from orchestrator.ml_data_gate import packet
-                subject = canonical_sha(dict(prefix=prefix['digest'],checkpoint=checkpoint_hash(policy),prepared_data=packet(policy)))
+            subject = fit_subject(prefix,policy)
         elif args.stage == 'evaluate':
             subject = canonical_sha({'prefix': subject, 'evaluation': evaluation(args.root, policy)})
             if 'data_preparation' in policy:

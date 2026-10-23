@@ -1,6 +1,6 @@
 # Дизайн диагностики обучения
 
-**Статус: design-v001.** Это обязательный проектный контракт для планирования train/validation и будущей реализации в runtime. Автоматические collectors, генерации, эвристический controller и terminal-report finalizer этим документом не реализованы. Существующий data gate проверяет подготовку, а не динамику обучения.
+**Статус: runtime-v001.** [Runtime contract](runtime.md) реализует optional frozen diagnostics policy, bounded collectors, tracked rules, immutable generation snapshots и rolling/terminal reports. Data gate отдельно проверяет подготовку данных. Task/framework scorers и безопасная фиксация tensor state остаются ответственностью конкретного trainer hook; полный design шире generic runtime.
 
 Цель — ответить: обучается ли модель корректно, улучшает ли нужную задачу, сохраняет ли полезное поведение и во что обходится результат. Loss остаётся одним из сигналов. Снижение loss/PPL при росте ошибок, обрывов или регрессий не считается успехом.
 

@@ -28,7 +28,7 @@ def read_object(path, limit):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Bounded local engineering workflow runtime')
     sub = parser.add_subparsers(dest='command', required=True)
-    for command in ('create', 'work', 'status', 'events', 'export', 'cancel', 'modal-recover', 'resolve', 'usage-reconcile'):
+    for command in ('create', 'work', 'status', 'events', 'export', 'cancel', 'ml-report', 'modal-recover', 'resolve', 'usage-reconcile'):
         p = sub.add_parser(command)
         p.add_argument('--state', required=True, type=Path)
         if command == 'create':
@@ -84,6 +84,11 @@ def main(argv=None):
             p.add_argument('--processes-stopped', action='store_true')
     args = parser.parse_args(argv)
     try:
+        if args.command=='ml-report':
+            from .ml_diagnostics import refresh
+            with closing(_store(args.state)) as store:
+                result=refresh(store,args.run)
+            print(json.dumps(result,indent=2));return 0
         if args.command in ('ml-approve', 'ml-reconcile'):
             from .ml_resources import approve, reconcile
             with closing(_store(args.state)) as store:
@@ -91,6 +96,8 @@ def main(argv=None):
                     approve(store, args.run, args.prefix_sha)
                 else:
                     reconcile(store, args.run, args.task, args.attempt, args.cost_usd, args.processes_stopped)
+                from .ml_diagnostics import refresh
+                refresh(store,args.run)
             print(json.dumps(status(args.state, args.run), indent=2)); return 0
         if args.command == 'ml-create':
             from .ml_pipeline import create_ml
@@ -149,6 +156,9 @@ def main(argv=None):
                     store.reconcile_usage(args.run, args.task, args.attempt, read_object(args.usage_file, 4096), args.reason, args.processes_stopped)
                 else:
                     store.resolve(args.run, args.task, args.reason, args.processes_stopped)
+            with closing(_store(args.state)) as store:
+                from .ml_diagnostics import refresh
+                refresh(store,args.run)
         report = status(args.state, args.run)
         print(json.dumps(report, indent=2))
         if args.command == 'work':

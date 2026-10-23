@@ -13,3 +13,7 @@ Implemented revision: **design-v001 (documentation only)**. Runtime implementati
 - [x] Portable templates, mandatory docs routing, validator/packaging checks.
 
 Следующие execution tasks DBG-01..06: **все pending**, подробности [integration plan](../../../docs/ml/debugging/integration-plan.md). Никаких implemented/runtime PASS по заполненному документу.
+
+## Последующее исполнение
+
+Исторический documentation-only результат выше сохранён. Текущий implemented scope и ограничения: [diagnostics-runtime handoff](../2026-10-23-diagnostics-runtime/handoff.md).

@@ -40,3 +40,7 @@ Reconcile не допускает уменьшения наблюдённых co
 ## Контекст перед AI dispatch
 
 Для module tasks задайте context.paths из SDD ownership и короткий context.query. Root/ancestor AGENTS будут переданы автоматически; fresh Graphify cache target используется только при совпадении workspace snapshot, иначе bounded source fallback. Setup/index не выполняются автоматически. Status показывает metadata receipt без текстов; [полный контракт](runtime-context.md).
+
+## Training diagnostics / reports
+
+Optional frozen `execution_policy.diagnostics` подключает [runtime diagnostics](../ml/debugging/runtime.md) (в ML-разделе — `debugging/runtime.md`). Fit/evaluate instrumentation пишет private bounded stream, coordinator отслеживает rules и собирает report/gallery/CSV/SVG. При terminal/stop/failure — immutable report revision; `python3 -m orchestrator ml-report --state /private/state --run RUN` восстанавливает report без training/provider calls. `status` read-only. Optional `preprint=true` экспортирует LaTeX evidence draft без AI call, compile/submission NOT RUN. Legacy без diagnostics получает partial report, не diagnostics PASS.

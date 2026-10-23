@@ -30,3 +30,5 @@ description: "Спланировать или выполнить независ�
 Versioned benchmark protocol/report, independent commands/subject evidence, uncertainty/slices/cost и verdict, progress/plan/ADR/handoff. Никакой автоматической публикации модели.
 
 В конце кратко сообщи итог, основание, actual checks/NOT RUN, расходы и unknowns где применимо, remaining gates и ссылки на результаты/решения. Planning не execution, training не benchmark, benchmark не production/market validation. Не создавать аккаунты, не отправлять данные tracker, не запускать paid APIs/jobs или deploy/publication вне конкретного scope/budget. Общий лимит и неизвестные расходы сохраняются между attempts.
+
+Для runtime diagnostics прочитай [runtime contract](../../docs/ml/debugging/runtime.md). Freeze metrics/rules/probes до approval, проверяй exact checkpoint subject; terminal/recovery reports и optional LaTeX export не запускают новые модели. Missing required observations блокирует acceptance, legacy без diagnostics не объявляй coverage.

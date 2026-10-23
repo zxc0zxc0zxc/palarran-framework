@@ -57,6 +57,8 @@ def status(state, run_id):
     report['usage'] = usage_report(json.loads(record['workflow']), receipts, tasks)
     if ml_report is not None:
         report['ml'] = ml_report
+        from .ml_diagnostics import report_info
+        report['ml']['training_report'] = report_info(stored_flow['ml_policy'])
         report['ml']['ai_observed_usd'] = report['usage']['observed_cost_usd']
         from decimal import Decimal
         report['ml']['combined_observed_basis_usd'] = format(Decimal(report['ml']['ai_observed_usd']) + Decimal(report['ml']['resource_observed_basis_usd']), '.9f')
@@ -99,7 +101,7 @@ def status(state, run_id):
     return report
 
 
-def work(state, run_id):
+def _work(state, run_id):
     from .runner import execute, invocation
     with closing(_store(state)) as store:
         record = store.get(run_id)
@@ -128,11 +130,22 @@ def work(state, run_id):
             workspace = record['workspace']
             claimed_at = time.time()
             resource_started = None
+            diagnostic_packet = None
+            last_diagnostic_poll = 0.0
+            last_diagnostic_report = 0.0
             def heartbeat():
+                nonlocal last_diagnostic_poll, last_diagnostic_report
                 if resource_started is not None:
                     from .ml_resources import tick
                     if not tick(store, run_id, task_id, token, time.monotonic() - resource_started):
                         return False
+                if diagnostic_packet is not None and time.monotonic()-last_diagnostic_poll >= 0.5:
+                    from .ml_diagnostics import poll, refresh
+                    last_diagnostic_poll=time.monotonic()
+                    if not poll(store,run_id,task_id,token): return False
+                    if time.monotonic()-last_diagnostic_report >= 30:
+                        refresh(store,run_id)
+                        last_diagnostic_report=time.monotonic()
                 return store.heartbeat(run_id, task_id, token)
             env = {key: os.environ[key] for key in flow['policy']['env'] if key in os.environ}
             tmp = Path(state) / 'tmp' / run_id / task_id / str(claim['attempt'])
@@ -185,6 +198,9 @@ def work(state, run_id):
                             if archived.exists():
                                 raise ValueError('Existing attempt history cannot be overwritten')
                             previous.rename(archived)
+                        if 'diagnostics' in flow['ml_policy']:
+                            from .ml_diagnostics import start
+                            diagnostic_packet=start(store,run_id,task_id,claim['attempt'])
                         prompt = json.dumps(dict(workspace=workspace, pipeline_id=flow['ml_policy']['pipeline_id'],
                             context_sha256=flow['ml_policy']['context_sha256'], lineage=prepared['lineage'],
                             artifact_root=flow['ml_policy']['artifact_root'], phase=task_id))
@@ -195,6 +211,8 @@ def work(state, run_id):
                             request = json.loads(prompt)
                             request['prepared_data'] = prepared_packet(flow['ml_policy'])
                             prompt = json.dumps(request)
+                    if diagnostic_packet is not None:
+                        request=json.loads(prompt);request['diagnostics']=diagnostic_packet;prompt=json.dumps(request)
                     if task['adapter'] != 'command':
                         from .runtime_context import assemble, record as record_context
                         source = store.db.execute('SELECT root FROM runtime_context_sources WHERE run_id=?', (run_id,)).fetchone()
@@ -234,6 +252,10 @@ def work(state, run_id):
                     else:
                         outcome = execute(argv, workspace, timeout=remaining, output_limit=limits['output_bytes'], env=env, heartbeat=heartbeat, stdin_text=stdin_text, **execution_options)
                     if resource and index == 0:
+                        if diagnostic_packet is not None:
+                            from .ml_diagnostics import poll
+                            if not poll(store,run_id,task_id,token,terminal=True): success=False
+                            diagnostic_packet = None
                         from .ml_resources import tick, complete
                         tick(store, run_id, task_id, token, time.monotonic() - resource_started)
                         resource_started = None
@@ -251,7 +273,7 @@ def work(state, run_id):
                             success = False; break
                     if task_id == '__final__' and stable_receipts[index] is not None and outcome.output_sha256 != stable_receipts[index]:
                         success = False; break
-                    if outcome.returncode != 0 or outcome.reason != 'exited':
+                    if not success or outcome.returncode != 0 or outcome.reason != 'exited':
                         success = False; break
                     if index == 0 and handoff is not None:
                         if read_handoff(handoff) == 'needs_input':
@@ -281,3 +303,16 @@ def work(state, run_id):
                     complete(store, run_id, task_id, token, False)
                 store.finish(run_id, task_id, token, False, results)
         return store.get(run_id)['status']
+
+
+def work(state,run_id):
+    """Always produce a bounded artifact-only report, including failed/paused runs."""
+    try:
+        return _work(state,run_id)
+    finally:
+        with closing(_store(state)) as store:
+            try:
+                from .ml_diagnostics import refresh
+                refresh(store,run_id)
+            except (OSError,ValueError,KeyError,TypeError):
+                store.event(run_id,'ml_report_unavailable')

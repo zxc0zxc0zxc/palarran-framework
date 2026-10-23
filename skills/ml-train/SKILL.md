@@ -34,3 +34,5 @@ Actual run/attempt manifest, sanitized metrics/cost/checkpoints/evidence, progre
 ## Text pipeline preparation gate
 
 При подготовке text training в runtime обязательно прочитай [реальный tokenizer/collator gate](../../docs/ml/data/pipeline.md). Новый execution policy: `data_mode=text` и frozen `data_preparation`; `non_text` допустим только по реальному типу данных, не для обхода gate. Data/tokenizer/config lineage содержат `preparation_sha256` из context. Не запускай trainer при failed/unknown gate и не подменяй real tokenization producer tensors audit. Raw/tokenized data остаются private. Exact-prefix approval разрешает только pinned conditional execution, бюджет не повышается. Local text backend only; Modal text transport unsupported, не загружай датасет или запускай платный smoke для обхода ограничения.
+
+Для runtime diagnostics прочитай [runtime contract](../../docs/ml/debugging/runtime.md). Freeze metrics/rules/probes до approval, проверяй exact checkpoint subject; terminal/recovery reports и optional LaTeX export не запускают новые модели. Missing required observations блокирует acceptance, legacy без diagnostics не объявляй coverage.

@@ -2,12 +2,12 @@
 
 [![Validate AI tools](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](docs/product-factory/README.md)
-[![Skills: 26](https://img.shields.io/badge/skills-26-2563EB)](skills/README.md)
+[![Skills: 27](https://img.shields.io/badge/skills-27-2563EB)](skills/README.md)
 [![Graphify: optional](https://img.shields.io/badge/Graphify-optional-6F42C1)](docs/skills/graph-context.md)
 
 Библиотека инженерных скиллов, документации и ограниченного Python-runtime для AI-агентов. Покрывает продуктовые исследования, UX/UI, frontend/backend, CI/CD, инфраструктуру, ML и оценку агентов. Подход: **источники → план/контракты → разрешённая реализация → независимая проверка → сохранённые решения**.
 
-В репозитории **26 скиллов и 9 plugin namespaces**. Скиллы переносимы между проектами; runtime связывает их с версиями артефактов, бюджетами и проверками. MCP-серверы — запланированное направление, реализаций в текущем checkout нет.
+В репозитории **27 скиллов и 10 plugin namespaces**. Скиллы переносимы между проектами; runtime связывает их с версиями артефактов, бюджетами и проверками. MCP-серверы — запланированное направление, реализаций в текущем checkout нет.
 
 **Индексы:** [документация](docs/README.md) · [все скиллы и команды](skills/README.md) · [общие правила](docs/skills/README.md) · [инструкции агентам](AGENTS.md) · [решения проекта](.ai-development/INDEX.md).
 
@@ -46,6 +46,7 @@
 | Product | [Исследования и первые клиенты](docs/product/README.md) | Гипотеза, рынок, аналоги, экономика, каналы, B2B/B2C и обоснованный MVP-план |
 | ML | [Эксперименты](docs/ml/README.md) / [данные](docs/ml/data/README.md) | Гипотезы, модель/метод, данные, стоимость, bounded train и benchmark |
 | Agent eval | [Полигон](docs/agent/eval/README.md) | Независимая оценка задачи, токенов, стоимости и времени |
+| Science | [Отчёты-статьи](docs/science/README.md) | LaTeX draft по экспериментам, claim-to-evidence, limitations и reproducibility |
 
 Каждый профиль содержит первичные источники, границы применимости и templates. [Каталог скиллов](skills/README.md) связывает slash-команду с переносимым именем и точным SKILL.md. Операционные разрешения задаются конкретной задачей; установка скилла не запускает training, cloud, deploy, рекламу или outreach.
 
@@ -61,7 +62,7 @@ python3 scripts/package_plugin.py frontend --output /tmp/ai-tools-frontend-v001
 claude --plugin-dir /tmp/ai-tools-frontend-v001
 ```
 
-Namespaces: `infra-plan`, `ci-cd`, `ux`, `ui`, `frontend`, `backend`, `product`, `ml`, `agent`. Dependencies входят в выбранный пакет; существующий output не перезаписывается. Пакет не содержит target memory, runtime state или graph cache. Корневой [.claude-plugin manifest](.claude-plugin/plugin.json) предоставляет только `infra-plan`; остальные namespace собираются отдельно.
+Namespaces: `infra-plan`, `ci-cd`, `ux`, `ui`, `frontend`, `backend`, `product`, `ml`, `agent`, `science`. Dependencies входят в выбранный пакет; существующий output не перезаписывается. Пакет не содержит target memory, runtime state или graph cache. Корневой [.claude-plugin manifest](.claude-plugin/plugin.json) предоставляет только `infra-plan`; остальные namespace собираются отдельно.
 
 Для другого host читайте соответствующий SKILL.md и сохраняйте относительную структуру docs/templates/scripts. Копирования одного SKILL.md недостаточно: missing mandatory docs — blocker, требуется найти полный checkout/package.
 
@@ -84,7 +85,7 @@ python3 -m orchestrator --help
 | Text data gate | [Реализован локально](docs/ml/data/pipeline.md): tokenizer/collator, целые ответы, actual mixture и blocking gate; Modal text transport unsupported |
 | Контекст агента | [Реализован](docs/product-factory/runtime-context.md): scoped AGENTS, optional fresh graph и source fallback |
 | Оценка агентов | [Реализован harness](docs/agent/eval/README.md): frozen tasks/graders, учёт расходов; модельное качество требует отдельного измерения |
-| Диагностика обучения | [Спроектирована](docs/ml/debugging/README.md): task metrics, heuristics, generation snapshots, terminal reports; [runtime integration pending](docs/ml/debugging/integration-plan.md) |
+| Диагностика обучения | [Runtime-v001](docs/ml/debugging/runtime.md): bounded metrics/rules, full generation snapshots, rolling/terminal reports, optional LaTeX export; [границы покрытия](docs/ml/debugging/integration-plan.md) |
 
 Подробнее: [model budgets](docs/product-factory/model-budgets.md), [usage accounting](docs/product-factory/usage-accounting.md), [ML accounting/approvals](docs/ml/pipeline-contract.md), [Modal cancellation/recovery](docs/ml/modal-adapter.md). Local/fake-provider tests не являются live integration или operational SLA.
 
@@ -144,3 +145,5 @@ python3 scripts/factory_acceptance.py
 CI badge связан с `validate.yml`/`main` по [официальному GitHub format](https://docs.github.com/en/actions/how-tos/monitor-workflows/add-a-status-badge); прочие badges статические и описывают inventory/capabilities. Локальная проверка не утверждает текущий статус удалённого CI.
 
 При изменении библиотеки сначала читать [AGENTS](AGENTS.md) и [общие contracts](docs/skills/README.md), сохранять rationale до зависимых изменений. При новом skill/namespace/module обновлять соответствующий индекс, discovery/manifest/packager/validator и счётчик badges; implemented и planned возможности сохранять различимыми.
+
+Scientific reports: [`/science:preprint`](skills/science-preprint/SKILL.md), [документация](docs/science/README.md).

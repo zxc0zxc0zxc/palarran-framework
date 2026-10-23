@@ -30,7 +30,7 @@ def build(idea, skills_root, adapter, executable, execution_policy, ai_policy, u
     require(isinstance(baseline, str) and len(baseline) in (40, 64) and all(c in '0123456789abcdef' for c in baseline))
     require(isinstance(ai_policy, dict) and isinstance(usage_policy, dict))
     require(isinstance(execution_policy, dict) and {'backend', 'total_usd', 'train', 'evaluate', 'data_mode'} <= set(execution_policy)
-            <= {'backend', 'total_usd', 'train', 'evaluate', 'data_mode', 'data_preparation'})
+            <= {'backend', 'total_usd', 'train', 'evaluate', 'data_mode', 'data_preparation', 'diagnostics'})
     require(execution_policy['data_mode'] in ('text','non_text'))
     require(('data_preparation' in execution_policy) == (execution_policy['data_mode'] == 'text'))
     require(execution_policy['backend'] in ('local', 'modal'))
@@ -62,12 +62,17 @@ def build(idea, skills_root, adapter, executable, execution_policy, ai_policy, u
         require(execution_policy['backend'] == 'local')
         from .ml_data_gate import freeze
         policy['data_preparation'] = freeze(execution_policy['data_preparation'])
+    if 'diagnostics' in execution_policy:
+        from .ml_diagnostics import validate_policy
+        policy['diagnostics'] = copy.deepcopy(validate_policy(execution_policy['diagnostics']))
     context = dict(schema_version=1, pipeline_id=pipeline_id, idea=idea, baseline=baseline,
                    source_digest=source_digest(skills_root),
                    budget=dict(total_usd=policy['total_usd'], ai_usd=usage_policy['max_cost_usd'], resources=resources),
                    policy_sha256=canonical_sha({'ml': policy, 'ai': ai_policy, 'usage': usage_policy, 'commands': commands}))
     if 'data_preparation' in policy:
         context['data_preparation'] = policy['data_preparation']
+    if 'diagnostics' in policy:
+        context['diagnostics']=dict(sha256=canonical_sha(policy['diagnostics']),profile=policy['diagnostics']['profile'],metrics=policy['diagnostics']['metrics'],rules=policy['diagnostics']['rules'],probe_ids=[x['id'] for x in policy['diagnostics']['probes']])
     policy['context_sha256'] = canonical_sha(context)
     policy_json = json.dumps(policy, sort_keys=True)
     verifier = str(skills_root / 'orchestrator/ml_artifacts.py')
@@ -83,6 +88,7 @@ def build(idea, skills_root, adapter, executable, execution_policy, ai_policy, u
             'Pinned context: ' + relative + '/context.json; canonical SHA256 ' + policy['context_sha256'] + '.',
             'Read preceding verified manifests/reports/ADRs under ' + relative + '/stages/: ' + ', '.join(STAGES[:i]) + '. Reuse all cumulative evidence/decision/hypothesis IDs, unknowns and immutable lineage refs. Do not regenerate preceding stages.',
             GUIDANCE[stage],
+            'When context includes diagnostics, bind config lineage diagnostics_sha256 to that hash; plan metrics, calibrated rules, probe cadence and same-budget overhead. Do not invent measured thresholds.',
             'If context contains data_preparation, read its frozen metadata only (no raw data), and include preparation_sha256=canonical SHA of that policy in each data/tokenizer/config lineage JSON. Explain template/model compatibility and mixture choices. Missing compatibility is a critical unknown, never invent approval.',
             'Write Russian report.md and strict stage.json under ' + relative + '/stages/' + stage + '/. Each stage manifest binds all preceding canonical hashes. Save rationale before dependent choices in ' + relative + '/decisions/ and index each D-ID in target .ai-development/INDEX.md; preserve existing records. Use explicit rationale in the decision body.',
             'The exact schema is in pipeline-contract.md; canonical_sha helper is in orchestrator/ml_artifacts.py. No invented measurements or secrets/raw data/reasoning traces. No ML artifact is authorized to launch compute.',
@@ -110,7 +116,7 @@ def build(idea, skills_root, adapter, executable, execution_policy, ai_policy, u
     bounds = dict(run_seconds=7200, task_seconds=900, lease_seconds=30, max_attempts=2, output_bytes=1048576)
     if limits:
         bounds.update(copy.deepcopy(limits))
-    flow = dict(version=1, name='ml-pipeline', plan_revision='ml-v002-data-gate', limits=bounds,
+    flow = dict(version=1, name='ml-pipeline', plan_revision='ml-v003-diagnostics', limits=bounds,
                 policy=dict(executables=list(dict.fromkeys([python, executable] + [c[0] for c in commands.values()] +
                             ([policy['data_preparation']['python']] if 'data_preparation' in policy else []))),
                             adapters=[adapter, 'command'], env=copy.deepcopy(env) if env is not None else ['PATH', 'HOME']),
@@ -141,4 +147,9 @@ def create_ml(state, idea, target, skills_root, adapter, executable, execution_p
                 path.write_text('# ML decision index\n')
         (base / 'context.json').write_text(json.dumps(context, ensure_ascii=False, indent=2) + '\n')
         artifacts.mkdir(mode=0o700, parents=True, exist_ok=False)
-    return create(state, flow, target, initialize=initialize)
+    run=create(state, flow, target, initialize=initialize)
+    from contextlib import closing
+    from .store import Store
+    from .ml_diagnostics import refresh
+    with closing(Store(state)) as store: refresh(store,run)
+    return run

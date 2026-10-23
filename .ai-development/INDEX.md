@@ -91,6 +91,9 @@
 
 | ml/2026-10-23-pipeline-data-gate/0003 | accepted | Completion provenance before EOT, positive-cell exposure and deterministic interleaving | [record](ml/2026-10-23-pipeline-data-gate/decisions/0003-integrity.md); semantic review remains separate |
 
-| ml/2026-10-23-training-debug-design/0001 | accepted | Task-aware training/validation diagnostics, tracked heuristics, fixed generation probes и terminal report/recovery design | [record](ml/2026-10-23-training-debug-design/decisions/0001-debug-contract.md); implementation pending offline DoD |
+| ml/2026-10-23-training-debug-design/0001 | accepted | Task-aware training/validation diagnostics, tracked heuristics, fixed generation probes и terminal report/recovery design | [record](ml/2026-10-23-training-debug-design/decisions/0001-debug-contract.md); design history; runtime-v001 scope in diagnostics-runtime/0001 |
 
 | repository/2026-10-23-navigation/0001 | accepted | Formal README, agent/docs/skill indexes, graph routing и factual GitHub badges | [record](repository/2026-10-23-navigation/decisions/0001-navigation.md); update with inventory/capabilities |
+
+| ml/2026-10-23-diagnostics-runtime/0001 | accepted | Durable training diagnostics + task rules + terminal/recovery report pipeline | [record](ml/2026-10-23-diagnostics-runtime/decisions/0001-runtime.md) |
+| ml/2026-10-23-diagnostics-runtime/0002 | accepted | Evidence-backed science:preprint / portable LaTeX export | [record](ml/2026-10-23-diagnostics-runtime/decisions/0002-preprint.md) |

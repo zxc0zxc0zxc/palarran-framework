@@ -31,3 +31,7 @@ Private tables resource attempts/approvals имеют run/task/attempt/token, re
 ## Local text data gate
 
 [Реальный tokenizer/collator и mandatory preparation gate](data/pipeline.md). Explicit data_preparation policy; legacy non-text не получает фиктивный PASS.
+
+## Training diagnostics / reports
+
+Optional frozen `execution_policy.diagnostics` подключает [runtime diagnostics](debugging/runtime.md) (в ML-разделе — `debugging/runtime.md`). Fit/evaluate instrumentation пишет private bounded stream, coordinator отслеживает rules и собирает report/gallery/CSV/SVG. При terminal/stop/failure — immutable report revision; `python3 -m orchestrator ml-report --state /private/state --run RUN` восстанавливает report без training/provider calls. `status` read-only. Optional `preprint=true` экспортирует LaTeX evidence draft без AI call, compile/submission NOT RUN. Legacy без diagnostics получает partial report, не diagnostics PASS.
