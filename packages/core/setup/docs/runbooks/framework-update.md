@@ -29,6 +29,10 @@ The updater compares old upstream hashes, local bytes and incoming upstream hash
 
 Local modes and file/directory collisions also matter; do not reduce the preflight to text differences. Export/install cannot use a customized carried library as public source. The update keeps a pristine release separately so that health never executes preserved local scripts or customized project MCP declarations.
 
+## Bootstrap integrity
+
+The installed setup/update entrypoints disable Python bytecode writes before importing path-discovery helpers. Running a no-op update must not add `__pycache__` files to the managed library; those files would alter the exact transaction signature and correctly block rollback. Do not bypass rollback ownership checks or ignore unexpected files. Offline subprocess regressions use `python -E` so inherited Python environment settings cannot hide an import-order defect. See [Python `sys.dont_write_bytecode`](https://docs.python.org/3/library/sys.html#sys.dont_write_bytecode) and [`-E`](https://docs.python.org/3/using/cmdline.html#cmdoption-E).
+
 ## Offline plan
 
 Use a trusted complete incoming source rather than an installed/customized launcher. All arguments are reviewed local non-secret paths:
