@@ -1,4 +1,6 @@
 """Budget arithmetic and uncertainty must work without Modal/network dependencies."""
+
+from scripts.palarran_paths import source_path
 import copy
 from decimal import Decimal
 import importlib.util
@@ -9,14 +11,14 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("ml_cost", ROOT / "scripts/ml_cost.py")
+SPEC = importlib.util.spec_from_file_location("ml_cost", source_path(ROOT, 'scripts/ml_cost.py'))
 cost = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(cost)
 
 
 class CostTest(unittest.TestCase):
     def setUp(self):
-        self.config = json.loads((ROOT / "templates/ml/cost.example.json").read_text())
+        self.config = json.loads((source_path(ROOT, 'templates/ml/cost.example.json')).read_text())
 
     def test_unknown_costs_remain_unknown_and_never_authorize_launch(self):
         result = cost.estimate(self.config)
@@ -83,8 +85,8 @@ class CostTest(unittest.TestCase):
             json.loads('{"budget_usd": "1", "budget_usd": "100"}', object_pairs_hook=cost.unique_object)
 
     def test_real_cli_example_is_explicitly_incomplete(self):
-        result = subprocess.run([sys.executable, str(ROOT / "scripts/ml_cost.py"),
-                                 str(ROOT / "templates/ml/cost.example.json")],
+        result = subprocess.run([sys.executable, str(source_path(ROOT, 'scripts/ml_cost.py')),
+                                 str(source_path(ROOT, 'templates/ml/cost.example.json'))],
                                 capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIsNone(json.loads(result.stdout)["within_budget"])

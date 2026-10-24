@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "engineering-memory": {
+      "command": "/usr/bin/python3",
+      "args": ["-B", "/ABSOLUTE/palarran/scripts/memory_ops.py", "mcp"]
+    }
+  }
+}

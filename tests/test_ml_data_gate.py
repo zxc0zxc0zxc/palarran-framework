@@ -1,4 +1,6 @@
 """Real optional tokenizer tests. No installation, Hub, cloud, GPU or paid calls."""
+
+from scripts.palarran_paths import source_path
 from contextlib import closing
 import copy
 import json
@@ -129,7 +131,7 @@ class RealDataGateTest(unittest.TestCase):
             pad_token_id=eos,batch_size=2,length_bins=[16,128],max_share_deviation='0.9',max_output_bytes=1024*1024)
         self.execution['data_preparation'] = self.config
         self.execution['data_mode'] = 'text'
-        self.job = ROOT/'examples/ml-pipeline/text_job.py'
+        self.job = source_path(ROOT, 'examples/ml-pipeline/text_job.py')
         for name in ('train','evaluate'):
             self.execution[name]['argv'][1] = str(self.job)
             self.execution[name]['files'][1] = str(self.job)

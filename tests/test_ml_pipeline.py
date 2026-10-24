@@ -1,4 +1,6 @@
 """Real worker chains with synthetic agents and local fit/eval, never paid providers."""
+
+from scripts.palarran_paths import source_path
 from contextlib import closing
 import copy
 import hashlib
@@ -37,7 +39,7 @@ def write_stage(root, policy, stage):
     from orchestrator.product_artifacts import HEADINGS
     decision.write_text('---\nid: ' + canonical + '\nstatus: accepted\ndecision_basis: agent-judgment\n---\n\n' + ident + '\n\n' +
                         '\n\n'.join('## ' + heading + '\n\nSynthetic fixture rationale, alternatives and bounded consequences.' for heading in HEADINGS))
-    with (root / '.ai-development/INDEX.md').open('a') as stream:
+    with (root / '.palarran/INDEX.md').open('a') as stream:
         stream.write(ident + '\n')
         stream.write(canonical + '\n')
     lineage = dict(previous['lineage'])
@@ -89,7 +91,7 @@ class MLPipelineTest(unittest.TestCase):
             'print(json.dumps({"type":"turn.started"}))',
             'print(json.dumps({"type":"turn.completed","usage":{"input_tokens":100,"cached_input_tokens":0,"cache_creation_input_tokens":0,"output_tokens":20}}),flush=True)',
         ]) + '\n'); self.agent.chmod(0o700)
-        self.job = ROOT / 'examples/ml-pipeline/local_job.py'
+        self.job = source_path(ROOT, 'examples/ml-pipeline/local_job.py')
         self.execution = dict(backend='local', total_usd='3', data_mode='non_text', **{
             name: dict(argv=[PYTHON, str(self.job), name], files=[PYTHON, str(self.job)], reserve_usd='1',
                        rate_usd_per_second='0.001', fixed_usd='0', max_seconds=10,
@@ -257,7 +259,7 @@ class MLPipelineTest(unittest.TestCase):
             'manifest=write_stage(Path.cwd().resolve(),marker,marker["stage"])\n'
             'if marker["stage"]=="hypotheses":\n'
             ' manifest["unknowns"]=[{"id":"U-data-rights","critical":True,"disposition":"unresolved","evidence_ids":[]}]\n'
-            ' p=Path.cwd()/".ai-development/ml"/("pipeline-"+marker["pipeline_id"])/"stages/hypotheses/stage.json"\n'
+            ' p=Path.cwd()/".palarran/ml"/("pipeline-"+marker["pipeline_id"])/"stages/hypotheses/stage.json"\n'
             ' p.write_text(json.dumps(manifest))'
         )
         self.agent.write_text(self.agent.read_text().replace(needle, replacement))

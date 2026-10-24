@@ -1,4 +1,6 @@
 """Offline improvement evidence; fixtures are never reported as real model quality."""
+
+from scripts.palarran_paths import source_path
 import copy
 import importlib.util
 import json
@@ -14,7 +16,7 @@ import test_factory_core as fixture
 
 PYTHON=str(Path(sys.executable).resolve())
 ROOT=Path(__file__).resolve().parents[1]
-SPEC=importlib.util.spec_from_file_location('goal_grader',ROOT/'examples/agent-improve/check_ml_goal.py')
+SPEC=importlib.util.spec_from_file_location('goal_grader',source_path(ROOT, 'examples/agent-improve/check_ml_goal.py'))
 grader=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(grader)
 
 
@@ -111,7 +113,7 @@ print(json.dumps({'type':'turn.completed','usage':{'input_tokens':100,'cached_in
         answer=self.base/'answer.json'
         values=grader.EXPECTED['short_confirmation']
         answer.write_text(json.dumps(dict(zip(('decision','goal_id','basis','launch_ready','preservation_tests'),values))))
-        def code(p):return subprocess.run([PYTHON,str(ROOT/'examples/agent-improve/check_ml_goal.py'),'short_confirmation',str(p)],capture_output=True).returncode
+        def code(p):return subprocess.run([PYTHON,str(source_path(ROOT, 'examples/agent-improve/check_ml_goal.py')),'short_confirmation',str(p)],capture_output=True).returncode
         self.assertEqual(code(answer),0)
         link=self.base/'link.json';link.symlink_to(answer)
         self.assertEqual(code(link),2)

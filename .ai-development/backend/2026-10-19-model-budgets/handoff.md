@@ -1,9 +1,0 @@
-# Handoff: model-budgets v001
-
-4/4 tasks verified on a71e24bc6db19a962e6e0a7117596006a9c930ca; adapter ac11d9e. [Plan/progress](plan.md), [verification](verification.md), [routing decision](decisions/0001-routing-budget.md), [worker scope](decisions/0002-worker-scope.md). [Code CI SUCCESS](https://github.com/zxc0zxc0zxc/ai-tools/actions/runs/39274825360). Docs first bfa24dd; owned model-routing lane integrated sequentially, clean archive requested.
-
-Implemented: planning/implementation/simple profiles, immutable up-front per-task calls and run caps, explicit model/effort flags, weighted launch units, prompt/time bounds, non-refundable durable charge before launch, retry isolation, safe preflight/status/export. Product default six planning tasks, 6 launches/30 units, one each. Custom --ai-policy file before create; examples for both adapters and implementation workflow. Commands/final verifiers use no model. Legacy workflows explicitly unmanaged. Source context/artifact schema and SQLite schema unchanged.
-
-155 offline tests PASS, repo validator PASS, py_compile/diff PASS, acceptance PASS (p95 1.04ms/100 samples vs <=100ms, smoke .394s). No provider calls performed; actual account access, quality/economy, subscription and monetary caps, operational SLA NOT_RUN/unavailable. Requested model is not backend attestation; nested calls prohibited by instruction, not sandbox. Existing product runs keep their original snapshots, no automatic migration/refund.
-
-Next task reads INDEX/ADRs and current policy, then performs explicitly budgeted representative provider evaluations before changing tier defaults. Token/USD ledger or provider gateway is separate scope; never relabel units as dollars or infer subscription percentage. No remaining implementation tasks for v001 local contract.

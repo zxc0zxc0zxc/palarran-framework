@@ -1,4 +1,6 @@
 """Synthetic CPU-only data checks; no real tokenizer, downloads, models or provider calls."""
+
+from scripts.palarran_paths import source_path
 import copy
 import json
 import os
@@ -247,7 +249,7 @@ class DataToolsTest(unittest.TestCase):
 
     def test_no_overwrite_no_stdout_payload_and_no_following_symlink_fifo(self):
         source=self.jsonl([record(content='RAW_PRIVATE_SENTINEL_739')]);out=self.path('profile.json')
-        argv=[sys.executable,str(ROOT/'scripts/ml_data.py'),'profile','--input',str(source),'--output',str(out)]
+        argv=[sys.executable,str(source_path(ROOT, 'scripts/ml_data.py')),'profile','--input',str(source),'--output',str(out)]
         result=subprocess.run(argv,capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr);self.assertNotIn('RAW_PRIVATE_SENTINEL',result.stdout+result.stderr)
         original=out.read_bytes();result=subprocess.run(argv,capture_output=True,text=True)
@@ -264,7 +266,7 @@ class DataToolsTest(unittest.TestCase):
         source=self.jsonl([record(),record('r2',content='second')]);folder=self.path('cli-prepared')
         cfg=self.path('config.json');cfg.write_text(json.dumps(config()))
         def cli(command,*args):
-            return subprocess.run([sys.executable,str(ROOT/'scripts/ml_data.py'),command]+list(args),capture_output=True,text=True)
+            return subprocess.run([sys.executable,str(source_path(ROOT, 'scripts/ml_data.py')),command]+list(args),capture_output=True,text=True)
         prepared=cli('prepare','--input',str(source),'--config',str(cfg),'--output',str(folder))
         self.assertEqual(prepared.returncode,0,prepared.stderr)
         records,_=data.verify_prepared(folder);token_file=self.jsonl([tensors(v) for v in records.values()])

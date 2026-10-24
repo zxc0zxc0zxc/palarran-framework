@@ -1,0 +1,211 @@
+{
+  "name": "palarran",
+  "version": "0.4.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Evidence-driven skills, shared research memory and bounded agent workflows",
+  "homepage": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "repository": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "commands": {
+    "setup": {
+      "source": "packages/core/setup/commands/setup.md",
+      "argumentHint": "{target?} [--client codex|claude|both] [--plan]"
+    },
+    "memory:recall": {
+      "source": "packages/memory/knowledge/commands/recall.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "memory:learn": {
+      "source": "packages/memory/knowledge/commands/learn.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "vps:inspect": {
+      "source": "packages/infrastructure/vps/commands/inspect.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "vps:manage": {
+      "source": "packages/infrastructure/vps/commands/manage.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "mcp:build": {
+      "source": "packages/core/agents/commands/build.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "agent:improve": {
+      "source": "packages/validation/agents/commands/improve.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "app:verify": {
+      "source": "packages/validation/application/commands/verify.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "science:preprint": {
+      "source": "packages/science/preprint/commands/preprint.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "agent:eval": {
+      "source": "packages/validation/agents/commands/eval.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "ml:plan": {
+      "source": "packages/machine-learning/experiments/commands/plan.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "ml:hypotheses": {
+      "source": "packages/machine-learning/experiments/commands/hypotheses.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "ml:model": {
+      "source": "packages/machine-learning/experiments/commands/model.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "ml:data": {
+      "source": "packages/machine-learning/experiments/commands/data.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "ml:cost": {
+      "source": "packages/machine-learning/experiments/commands/cost.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "ml:train": {
+      "source": "packages/machine-learning/experiments/commands/train.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "ml:benchmark": {
+      "source": "packages/machine-learning/experiments/commands/benchmark.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "product:define": {
+      "source": "packages/product/research/commands/define.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "product:market": {
+      "source": "packages/product/research/commands/market.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "product:compare": {
+      "source": "packages/product/research/commands/compare.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "product:revenue": {
+      "source": "packages/product/research/commands/revenue.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "product:acquisition": {
+      "source": "packages/product/research/commands/acquisition.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "product:b2b": {
+      "source": "packages/product/research/commands/b2b.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "product:b2c": {
+      "source": "packages/product/research/commands/b2c.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "infra:plan": {
+      "source": "packages/infrastructure/planning/commands/plan.md",
+      "argumentHint": "{low|med|high} [--plan]"
+    },
+    "ci-cd": {
+      "source": "packages/infrastructure/delivery/commands/ci-cd.md",
+      "argumentHint": "{github|gitlab} [--plan]"
+    },
+    "ux:design": {
+      "source": "packages/design/ux/commands/design.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "ui:design": {
+      "source": "packages/design/ui/commands/design.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "frontend:build": {
+      "source": "packages/code/frontend/commands/build.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "frontend:plan": {
+      "source": "packages/code/frontend/commands/plan.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "backend:plan": {
+      "source": "packages/code/backend/commands/plan.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "backend:build": {
+      "source": "packages/code/backend/commands/build.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "memorize": {
+      "source": "packages/memory/memorize/commands/memorize.md",
+      "argumentHint": "{short|long} {note} [--plan]"
+    },
+    "remember": {
+      "source": "packages/memory/remember/commands/remember.md",
+      "argumentHint": "{query} [--plan]"
+    },
+    "memorize:session": {
+      "source": "packages/memory/sessions/commands/palarran-memorize-session.md",
+      "argumentHint": "[--long] [--plan]"
+    },
+    "remember:session": {
+      "source": "packages/memory/sessions/commands/palarran-remember-session.md",
+      "argumentHint": "[--long] @file [--plan]"
+    },
+    "vacuum": {
+      "source": "packages/memory/vacuum/commands/vacuum.md",
+      "argumentHint": "[--long] [--plan]"
+    },
+    "infrastructure:incident": {
+      "source": "packages/infrastructure/incident/commands/incident.md",
+      "argumentHint": "{what happened} [--plan]"
+    },
+    "docs:artifact": {
+      "source": "packages/docs/documentation/commands/artifact.md"
+    },
+    "core:coop": {
+      "source": "packages/core/coop/commands/coop.md",
+      "argumentHint": "[--alert {message}] [--plan]"
+    },
+    "security:infrastructure": {
+      "source": "packages/security/infrastructure/commands/infrastructure.md",
+      "argumentHint": "{target/context?} [--plan]"
+    },
+    "security:ingress": {
+      "source": "packages/security/ingress/commands/ingress.md",
+      "argumentHint": "{target/context?} [--plan]"
+    },
+    "security:log": {
+      "source": "packages/security/log/commands/log.md",
+      "argumentHint": "{target/context?} [--plan]"
+    },
+    "security:egress": {
+      "source": "packages/security/egress/commands/egress.md",
+      "argumentHint": "{target/context?} [--plan]"
+    },
+    "security:code": {
+      "source": "packages/security/code/commands/code.md",
+      "argumentHint": "{target/context?} [--plan]"
+    },
+    "security:cve": {
+      "source": "packages/security/cve/commands/cve.md",
+      "argumentHint": "{target/context?} [--plan]"
+    },
+    "git:commit": {
+      "source": "./packages/code/git/commands/commit.md",
+      "argumentHint": "{stage?} [--plan]"
+    },
+    "git:history": {
+      "source": "./packages/code/git/commands/history.md",
+      "argumentHint": "@file [--plan]"
+    },
+    "git:conflicts": {
+      "source": "./packages/code/git/commands/conflicts.md",
+      "argumentHint": "{target-branch} [--plan]"
+    },
+    "git:mr": {
+      "source": "./packages/code/git/commands/mr.md",
+      "argumentHint": "[--plan]"
+    }
+  }
+}

@@ -34,7 +34,7 @@ class ContinuationTests(unittest.TestCase):
         self.assertEqual(context,self.context)
         self.assertEqual([t['id'] for t in flow['tasks'] if t['adapter']=='codex'],['product-market','product-compare','product-revenue','product-acquisition','product-mvp'])
         self.assertEqual(flow['ai_policy']['max_calls'],5)
-        prefix='.ai-development/product/pipeline-'+self.pid+'/stages/define/stage.json'
+        prefix='.palarran/product/pipeline-'+self.pid+'/stages/define/stage.json'
         self.assertEqual(data[prefix],(self.source/prefix).read_bytes())
         name,body=packet(self.source,self.pid,'market',canonical_sha(context),self.skills,'b2b')
         self.assertIn(b'Canonical prefix index',body);self.assertLessEqual(len(body),196608)
@@ -73,7 +73,7 @@ class ContinuationTests(unittest.TestCase):
         from orchestrator.import_guard import check
         target=self.base/'target'
         subprocess.run(['git','clone','-q','--no-hardlinks',str(self.source),str(target)],check=True)
-        extra='.ai-development/product/pipeline-'+self.pid+'/stages/define/evidence.md'
+        extra='.palarran/product/pipeline-'+self.pid+'/stages/define/evidence.md'
         (self.source/extra).write_text('Original evidence appendix')
         provider=self.base/'fake-server';calls=self.base/'called-stages.txt'
         provider.write_text('#!'+sys.executable+'\n'+'''import json,sys,re
@@ -107,7 +107,7 @@ for line in sys.stdin:
         self.assertEqual(report['budget']['charged_calls'],5)
         self.assertEqual(report['product']['recommendation'],'plan')
         self.assertEqual((root/extra).read_bytes(),(self.source/extra).read_bytes())
-        receipt='.ai-development/product/pipeline-'+self.pid+'/imports/prefix.json'
+        receipt='.palarran/product/pipeline-'+self.pid+'/imports/prefix.json'
         import hashlib
         digest=hashlib.sha256((root/receipt).read_bytes()).hexdigest()
         check(root,receipt,digest)

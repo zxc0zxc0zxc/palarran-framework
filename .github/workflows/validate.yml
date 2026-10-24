@@ -1,4 +1,4 @@
-name: Validate AI tools
+name: Validate Palarran
 on:
   push:
   pull_request:
@@ -7,10 +7,23 @@ permissions:
 jobs:
   offline:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+      - name: Prepare patched SQLite only when the runner library is unsupported
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python3 -c 'from packages.core.coordination.service import supported_sqlite; import sys; sys.exit(0 if supported_sqlite() else 1)'; then
+            exit 0
+          fi
+          source_archive="${RUNNER_TEMP}/palarran-sqlite-3510300.zip"
+          sqlite_output="${RUNNER_TEMP}/palarran-sqlite-3510300"
+          curl --fail --silent --show-error --proto '=https' --tlsv1.2 --max-time 60 --output "$source_archive" https://sqlite.org/2026/sqlite-amalgamation-3510300.zip
+          python3 packages/core/coordination/build_sqlite.py --build --archive "$source_archive" --output "$sqlite_output"
+          printf 'LD_LIBRARY_PATH=%s\n' "$sqlite_output" >> "$GITHUB_ENV"
       - name: Validate repository contracts and local links
         run: python3 scripts/validate_repo.py
       - name: Test inventory, packaging and runtime offline
@@ -21,6 +34,7 @@ jobs:
         run: python3 -m py_compile scripts/infra_inventory.py scripts/validate_repo.py scripts/package_plugin.py scripts/backend_progress.py scripts/execution_progress.py scripts/ml_cost.py orchestrator/*.py
   terraform:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:

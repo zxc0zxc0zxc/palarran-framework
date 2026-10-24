@@ -1,0 +1,13 @@
+# Explain a file's recorded history
+
+`/palarran:git:history @file` explains who changed the file, what changed and which reasons are actually recorded. Read the [shared Git contract](README.md). Resolve the supplied file relative to the chosen repository, preserving literal filename semantics, rename/deletion paths and worktree scope. Reject paths escaping the target or ambiguous multi-project matches. Do not execute file contents, filters or external diff helpers to read history.
+
+Start with a bounded, literal-path log, such as the equivalent of `git --no-pager --literal-pathspecs log --follow --max-count=20 --format=fuller -- <file>`. Disable external diff/textconv execution for patch inspection, select only relevant commits, and expand the bound only for a concrete missing transition. `--follow` is for one file; it is rename detection, not a perfect identity graph. For copies, split/merge histories, generated files, shallow clones or missing objects, disclose the ambiguity/missing history rather than silently fetching or calling the search exhaustive.
+
+Separate author identity/date from committer identity/date and preserve source timestamps/timezones. Explain observed changes from exact commits/diffs; blame gives the last recorded change to selected lines, not original invention, business ownership or intent. Inspect merge parents when the relevant behavior arrived through integration. The current dirty working tree is a separate uncommitted layer, never attributed to the last recorded author.
+
+Read the selected commit's full message and parsed trailers. Follow Feature/ADR IDs to the target private index/accepted decisions, with bounded relevant long-term recall when enabled. Verify that a decision applies to this commit/behavior; a later rationale or similarly named feature is not automatically the original author's reason. Do not load the full private archive, expose author contact details unnecessarily or publish private decision text externally.
+
+Return a compact timeline with commit, author/committer distinction where useful, date, observed change, **stated rationale with source** and unresolved gaps. If the message/linked decision does not explain why, say **rationale unknown**. A plausible explanation inferred from a diff must not fill that field; any separate hypothesis is clearly labelled and optional. A generic subject such as “fix” does not establish performance/security/business intent.
+
+Save the requested explanation and accepted decisions/handoff in target private Git context, linking exact commits and bounded evidence. No commits, config edits, remote fetch, rebase or history rewrite follow from this read-only task. Historical evidence may be incomplete even when every inspected command succeeds.

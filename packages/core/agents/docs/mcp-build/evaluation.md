@@ -1,0 +1,7 @@
+# Independent verification
+
+Before implementation freeze user tasks, tool-selection expectations, required outcomes and negative cases. Following [Anthropic cases](sources.md), verify real task achievement, not argument shape alone. Calibrate graders against good/bad/boundary outcomes; preserve prior tasks through /palarran:agent:eval and /palarran:agent:improve when editing tools. Never expose hidden holdout to the fixer or call development cases independent holdout.
+
+Minimum: initialization/list/call wire, schemas/unknown fields/types/Unicode/empty/not-found/errors, required IDs, deterministic ordering/pagination/stale cursors, output bytes/completeness, denied access/timeout/unknown mutations within actual scope. For SDKs, verify actual installed-SDK-client interoperability separately from raw JSON-RPC lab evidence. Business integrations need API/DB postconditions and /palarran:app:verify where applicable, not exit0 alone.
+
+Reference tests start a real subprocess without model/network/SDK, checking compact/detailed bytes and full get. This is protocol/fixture evidence; model tool selection, reasoning, token/cost gains, production auth and host support remain NOT_RUN. Reports include tool/source revision, cases/denominator, attempts, elapsed/bytes, missing dependencies/checks and explicit limits. Do not replace missing errors/server failures with successful empty lists. Preserve budget/historical unknowns; invoking a skill does not authorize paid evaluation.

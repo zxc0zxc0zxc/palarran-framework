@@ -1,0 +1,239 @@
+{
+  "name": "palarran-hosted",
+  "services": {
+    "graph": {
+      "platform": "linux/amd64",
+      "restart": "unless-stopped",
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "networks": [
+        "private"
+      ],
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "5m",
+          "max-file": "3"
+        }
+      },
+      "stop_grace_period": "30s",
+      "image": "neo4j:2026.10.1@sha256:f238979f3c80da6f383f2e4fe91be4dc3580d7ee3b7edec83d0b8783c53b74a4",
+      "user": "7474:7474",
+      "read_only": false,
+      "mem_limit": "2g",
+      "cpus": 2,
+      "pids_limit": 256,
+      "environment": {
+        "NEO4J_AUTH_FILE": "/run/palarran-secrets/auth",
+        "NEO4J_server_memory_heap_initial__size": "256m",
+        "NEO4J_server_memory_heap_max__size": "512m",
+        "NEO4J_server_memory_pagecache_size": "512m",
+        "NEO4J_db_transaction_timeout": "10s"
+      },
+      "tmpfs": [
+        "/tmp:rw,nosuid,nodev,size=64m,mode=1777"
+      ],
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "${PALARRAN_PRIVATE_ROOT:?Set a new private deployment root}/secrets/graph",
+          "target": "/run/palarran-secrets",
+          "read_only": true,
+          "bind": {
+            "create_host_path": false
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${PALARRAN_PRIVATE_ROOT:?Set a new private deployment root}/state/graph-data",
+          "target": "/data",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${PALARRAN_PRIVATE_ROOT:?Set a new private deployment root}/state/graph-logs",
+          "target": "/logs",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false
+          }
+        }
+      ]
+    },
+    "memory": {
+      "platform": "linux/amd64",
+      "restart": "unless-stopped",
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "networks": [
+        "access",
+        "private"
+      ],
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "5m",
+          "max-file": "3"
+        }
+      },
+      "stop_grace_period": "30s",
+      "image": "palarran-memory:${PALARRAN_SOURCE_REV:?Set approved source revision}",
+      "build": {
+        "context": "${PALARRAN_SOURCE_ROOT:?Set approved source root}",
+        "dockerfile": "packages/memory/knowledge/Dockerfile",
+        "args": {
+          "SOURCE_REV": "${PALARRAN_SOURCE_REV:?Set approved source revision}"
+        }
+      },
+      "user": "10001:10001",
+      "read_only": true,
+      "mem_limit": "256m",
+      "cpus": 1,
+      "pids_limit": 64,
+      "ports": [
+        "127.0.0.1:18791:18791"
+      ],
+      "tmpfs": [
+        "/tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777"
+      ],
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "${PALARRAN_PRIVATE_ROOT:?Set a new private deployment root}/secrets/memory",
+          "target": "/run/palarran-secrets",
+          "read_only": true,
+          "bind": {
+            "create_host_path": false
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${PALARRAN_PRIVATE_ROOT:?Set a new private deployment root}/state/artifacts",
+          "target": "/data/artifacts",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false
+          }
+        }
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "python3",
+          "-B",
+          "/app/container.py",
+          "memory",
+          "health"
+        ],
+        "interval": "15s",
+        "timeout": "4s",
+        "retries": 4,
+        "start_period": "20s"
+      },
+      "depends_on": {
+        "graph": {
+          "condition": "service_started"
+        }
+      },
+      "init": true,
+      "pull_policy": "never"
+    },
+    "coordination": {
+      "platform": "linux/amd64",
+      "restart": "unless-stopped",
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "networks": [
+        "access"
+      ],
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "5m",
+          "max-file": "3"
+        }
+      },
+      "stop_grace_period": "30s",
+      "image": "palarran-coordination:${PALARRAN_SOURCE_REV:?Set approved source revision}",
+      "build": {
+        "context": "${PALARRAN_SOURCE_ROOT:?Set approved source root}",
+        "dockerfile": "packages/core/coordination/Dockerfile",
+        "args": {
+          "SOURCE_REV": "${PALARRAN_SOURCE_REV:?Set approved source revision}"
+        }
+      },
+      "user": "10002:10002",
+      "read_only": true,
+      "mem_limit": "256m",
+      "cpus": 1,
+      "pids_limit": 64,
+      "ports": [
+        "127.0.0.1:18792:18792"
+      ],
+      "tmpfs": [
+        "/tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777"
+      ],
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "${PALARRAN_PRIVATE_ROOT:?Set a new private deployment root}/secrets/coordination",
+          "target": "/run/palarran-secrets",
+          "read_only": true,
+          "bind": {
+            "create_host_path": false
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${PALARRAN_PRIVATE_ROOT:?Set a new private deployment root}/state/coordination",
+          "target": "/data/coordination",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false
+          }
+        }
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD",
+          "python3",
+          "-B",
+          "/app/container.py",
+          "coordination",
+          "health"
+        ],
+        "interval": "15s",
+        "timeout": "4s",
+        "retries": 4,
+        "start_period": "20s"
+      },
+      "init": true,
+      "pull_policy": "never"
+    }
+  },
+  "networks": {
+    "private": {
+      "driver": "bridge",
+      "internal": true
+    },
+    "access": {
+      "driver": "bridge",
+      "internal": false
+    }
+  }
+}

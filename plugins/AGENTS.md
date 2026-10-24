@@ -1,7 +1,7 @@
 # Plugin namespaces
 
-Наследует root. Public manifests/identifiers English; пользовательские инструкции — русский.
+Inherits root. Canonical public manifests, identifiers and skill instructions use English; interaction/new artifact preferences follow project/global .palarran/config.json.
 
-- Namespace command указывает на существующий .claude adapter и canonical skill. Синхронно обновить scripts/validate_repo.py, scripts/package_plugin.py и packaging tests при изменении состава.
-- Package самодостаточен по mandatory docs/templates, без ссылок наружу, target ADR/state/secrets и .graphify artifacts. Не включать optional Graphify dependency в runtime по умолчанию.
-- User-owned config/agent installation/активация не подразумеваются изменением manifest. Проверки offline, без install hooks/cloud или paid APIs.
+- Namespace commands point to existing .claude adapters/canonical skills. Update scripts/validate_repo.py, scripts/package_plugin.py and packaging tests together when membership changes.
+- Packages include self-contained mandatory docs/templates without outside links, target ADR/state/secrets or .graphify artifacts. Optional Graphify dependencies are not default runtime requirements.
+- Manifest changes do not imply user-owned configuration/agent installation/activation. Checks are offline, without install hooks/cloud/paid APIs.

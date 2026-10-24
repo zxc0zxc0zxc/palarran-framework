@@ -1,0 +1,235 @@
+{
+  "version": 1,
+  "source": "scripts/package_plugin.py",
+  "packages": [
+    {
+      "id": "setup",
+      "status": "available",
+      "plugin": "palarran-setup",
+      "description": "Install, update and check the project connection.",
+      "skills": [
+        "palarran-setup"
+      ],
+      "requires": [],
+      "service_prerequisites": "Local library; checks an existing global memory connection"
+    },
+    {
+      "id": "product",
+      "status": "available",
+      "plugin": "palarran-product",
+      "description": "Product definition, market evidence, competitors, revenue and first customers.",
+      "skills": [
+        "palarran-product-define",
+        "palarran-product-market",
+        "palarran-product-compare",
+        "palarran-product-revenue",
+        "palarran-product-acquisition",
+        "palarran-product-b2b",
+        "palarran-product-b2c"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "ux",
+      "status": "available",
+      "plugin": "palarran-ux",
+      "description": "Responsive business flows, screen states and interaction diagrams.",
+      "skills": [
+        "palarran-ux-design"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "ui",
+      "status": "available",
+      "plugin": "palarran-ui",
+      "description": "Responsive visual concepts, design systems, tokens and generated assets.",
+      "skills": [
+        "palarran-ui-design",
+        "palarran-ux-design"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "frontend",
+      "status": "available",
+      "plugin": "palarran-frontend",
+      "description": "SDD feature planning and browser-verified interface implementation.",
+      "skills": [
+        "palarran-frontend-plan",
+        "palarran-frontend-build",
+        "palarran-ui-design",
+        "palarran-ux-design"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "backend",
+      "status": "available",
+      "plugin": "palarran-backend",
+      "description": "Architecture, API/data contracts, SDD implementation and reliability checks.",
+      "skills": [
+        "palarran-backend-plan",
+        "palarran-backend-build"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "infra",
+      "status": "available",
+      "plugin": "palarran-infra",
+      "description": "Scale-aware VPS/Compose, K3s and Kubernetes infrastructure planning.",
+      "skills": [
+        "palarran-infra-plan",
+        "palarran-infrastructure-incident"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "ci-cd",
+      "status": "available",
+      "plugin": "palarran-ci-cd",
+      "description": "GitHub/GitLab delivery for Go, PHP, Next.js, Python and Rust.",
+      "skills": [
+        "palarran-ci-cd"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "vps",
+      "status": "available",
+      "plugin": "palarran-vps",
+      "description": "Read-only host inspection and concrete authorized server/app-stack operations.",
+      "skills": [
+        "palarran-vps-inspect",
+        "palarran-vps-manage"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local skills; SSH target only for authorized operations"
+    },
+    {
+      "id": "ml",
+      "status": "available",
+      "plugin": "palarran-ml",
+      "description": "Hypotheses, experiment/model/data/cost planning, supervised training and benchmarks.",
+      "skills": [
+        "palarran-ml-plan",
+        "palarran-ml-hypotheses",
+        "palarran-ml-model",
+        "palarran-ml-data",
+        "palarran-ml-cost",
+        "palarran-ml-train",
+        "palarran-ml-benchmark"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local planning; training needs explicit scope/budget/provider"
+    },
+    {
+      "id": "science",
+      "status": "available",
+      "plugin": "palarran-science",
+      "description": "Evidence-grounded LaTeX experiment reporting.",
+      "skills": [
+        "palarran-science-preprint"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "app",
+      "status": "available",
+      "plugin": "palarran-app",
+      "description": "Independent business acceptance through browser, API and read-only DB checks.",
+      "skills": [
+        "palarran-app-verify"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "agent",
+      "status": "available",
+      "plugin": "palarran-agent",
+      "description": "Frozen task evaluations and regression-driven skill improvements.",
+      "skills": [
+        "palarran-agent-eval",
+        "palarran-agent-improve"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "mcp",
+      "status": "available",
+      "plugin": "palarran-mcp",
+      "description": "Task-oriented agent tools, compact results, security and evaluations.",
+      "skills": [
+        "palarran-mcp-build"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local project; no service installed"
+    },
+    {
+      "id": "memory",
+      "status": "available",
+      "plugin": "palarran-memory",
+      "description": "Quick notes, VPS context, structured session handoffs, recall and reviewed cleanup.",
+      "skills": [
+        "palarran-memory-recall",
+        "palarran-memory-learn",
+        "palarran-memorize",
+        "palarran-remember",
+        "palarran-memorize-session",
+        "palarran-remember-session",
+        "palarran-vacuum"
+      ],
+      "requires": [
+        "setup"
+      ],
+      "service_prerequisites": "Local notes; optional configured private VPS memory"
+    }
+  ],
+  "planned": [
+    {
+      "id": "git",
+      "design": "docs/git/README.md"
+    },
+    {
+      "id": "docs",
+      "design": "docs/documentation/README.md"
+    }
+  ]
+}

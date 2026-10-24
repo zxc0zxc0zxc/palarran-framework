@@ -1,4 +1,6 @@
 """Offline global secret boundary and fixed-origin MCP metadata checks."""
+
+from scripts.palarran_paths import source_path
 import io
 import json
 import os
@@ -39,7 +41,7 @@ class Opener:
 class KeenableAuthTest(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name).resolve()
-        self.folder=self.root/'.zxc0zxc0zxc';self.folder.mkdir(mode=0o700)
+        self.folder=self.root/'.palarran';self.folder.mkdir(mode=0o700)
         self.env=self.folder/'.env';self.env.write_text('MEMORY_AGENT_TOKEN=unrelated-fixture\nKEENABLE_API_KEY=keen_'+'x'*40+'\n');self.env.chmod(0o600)
     def tearDown(self):self.temp.cleanup()
 
@@ -79,7 +81,7 @@ class KeenableAuthTest(unittest.TestCase):
     def test_plan_never_reads_key_or_connects_and_errors_do_not_leak(self):
         self.env.write_text('INVALID=fixture\n')
         env=dict(os.environ,HOME=str(self.root))
-        base=[sys.executable,str(ROOT/'scripts/keenable_auth.py')]
+        base=[sys.executable,str(source_path(ROOT, 'scripts/keenable_auth.py'))]
         result=subprocess.run(base+['doctor','--plan'],env=env,capture_output=True,text=True)
         self.assertEqual(result.returncode,0);self.assertEqual(json.loads(result.stdout)['network'],False)
         result=subprocess.run(base+['headers'],env=env,capture_output=True,text=True)

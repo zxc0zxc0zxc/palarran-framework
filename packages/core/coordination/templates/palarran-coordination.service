@@ -1,0 +1,26 @@
+# Inert system unit. Install only after reviewing paths, user, source revision and backup plan.
+[Unit]
+Description=Palarran private agent coordination
+After=network.target
+
+[Service]
+Type=simple
+User=palarran-coordination
+Group=palarran-coordination
+WorkingDirectory=/opt/palarran-coordination/current
+ExecStart=/usr/bin/python3 -B /opt/palarran-coordination/current/service.py --db /var/lib/palarran-coordination/coordination.sqlite --credentials /etc/palarran-coordination/credentials.json --port 18792
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/palarran-coordination
+RestrictAddressFamilies=AF_INET AF_UNIX
+MemoryMax=128M
+TasksMax=32
+
+[Install]
+WantedBy=multi-user.target

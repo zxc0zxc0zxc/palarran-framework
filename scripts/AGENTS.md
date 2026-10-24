@@ -1,13 +1,13 @@
-# Скрипты
+# Scripts
 
-Наследует root; обязательные источники по trigger — docs/skills/domain-contracts.md. CLI и identifiers English, сообщения/гайд для skills — русский.
+Inherits root; mandatory sources by trigger are in packages/core/agents/docs/domain-contracts.md. Canonical public CLI messages, identifiers and skill guides use English; interaction/new artifact preferences follow project/global .palarran/config.json.
 
-- Validators/inventory/cost helpers должны работать offline; отсутствие/unknown цены не считать нулём. --plan не допускает refresh/target access/provider calls.
-- Packaging самодостаточен: включать только явные public resources; не копировать target memory, .graphify/venv/cache, .delivery, .env, state или внешние symlinks. При новых ресурсах обновить packager и packaging tests.
-- execution_progress совместим с frontend/backend legacy markers, сохраняет revision/commits/evidence и remaining tasks; один coordinator обновляет общий progress/index.
-- graph_context использует pinned optional graphifyy в target-local venv, code-only staging, scrubbed env, bounded output и dirty/untracked freshness. Не вызывать graphify install, cloud, semantic/media pass или project executables.
-- CLI side effects должны быть явными. Не перезаписывать чужие файлы или генерировать target AGENTS в planning scope.
-- keenable_auth headers выводит secret только во внутренний канал Codex; не показывать stdout. check offline, doctor metadata-only без tools/call; fixed HTTPS origin/no redirects.
-- project_setup setup выбирает install/update по receipt; partial/corrupt state не усыновлять. Fresh setup тоже проверяет память; MEMORY_NOT_READY не означает отмену записи.
+- Validators/inventory/cost helpers must work offline; missing/unknown prices are not zero. --plan permits no refresh/target access/provider calls.
+- Packaging is self-contained: explicit public resources only; never copy target memory, .graphify/venv/cache, .delivery, .env, state or external symlinks. Update packagers/packaging tests for new resources.
+- execution_progress preserves frontend/backend legacy-marker compatibility, revisions/commits/evidence and remaining tasks; one coordinator updates shared progress/index.
+- graph_context uses pinned optional graphifyy in target-local venvs, code-only staging, scrubbed environments, bounded outputs and dirty/untracked freshness. Never invoke Graphify installs, cloud, semantic/media passes or project executables.
+- CLI side effects must be explicit. Never overwrite others' files or generate target AGENTS within planning scope.
+- keenable_auth headers exposes secrets only to Codex's internal channel; never display stdout. check is offline, doctor metadata-only without tools/call; fixed HTTPS origin/no redirects.
+- project_setup setup selects install/update by receipt; never adopt partial/corrupt states. Fresh setup also checks memory; MEMORY_NOT_READY does not mean writes were undone.
 - project_setup update: old/local/new ownership, configs untouched, --plan offline; pending transaction blocks replay. Rollback checks exact current state before restore; memory doctor uses pristine public release, not carried project code.
-- Проверка: scripts/validate_repo.py и offline unit suite; изменение runtime-facing behavior — также scripts/factory_acceptance.py. Платных/live проверок не делать.
+- Checks: scripts/validate_repo.py and offline unit suite; runtime-facing behavior changes additionally require scripts/factory_acceptance.py. No paid/live checks.
