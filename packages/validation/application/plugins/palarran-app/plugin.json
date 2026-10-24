@@ -1,0 +1,16 @@
+{
+  "name": "palarran-app",
+  "version": "0.3.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Evidence-driven skills, shared research memory and bounded agent workflows",
+  "homepage": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "repository": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "commands": {
+    "verify": {
+      "source": "packages/validation/application/commands/verify.md",
+      "argumentHint": "{task/context} [profile flags]"
+    }
+  }
+}

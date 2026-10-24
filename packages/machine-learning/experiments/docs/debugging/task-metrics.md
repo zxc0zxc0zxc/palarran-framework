@@ -1,0 +1,36 @@
+# Task, training and validation metrics
+
+## Shared rules
+
+Profiles freeze `prediction_unit`, objective, primary decision metric, practical delta, guardrails, slices, aggregation/units and frequency. [sklearn evaluation](https://scikit-learn.org/1.7/modules/model_evaluation.html) defines scoring; the specific choice depends on error costs and data. One primary aids selection; do not hide other metrics behind a composite. Measure train quality on a diagnostic train subset separately from noisy online objectives; dropout, augmentation, regularization and sampling may legitimately make training loss higher than dev loss.
+
+Validation uses `eval` mode and no gradients, fixed preprocessing/context/decoding, then restores training mode; declare seed/augmentation policies. Do not update batchnorm statistics on dev. Report expected/evaluated/failed denominators, finite checks and per-slice support. An unavailable mandatory slice is inconclusive, not zero error. Repeated dev access serves selection; do not inspect final holdouts every iteration.
+
+## Autoregressive LM: NLL and perplexity
+
+Define actual scored positions **after causal shift**, attention/assistant masks, context policy and exclusions. Let `S` sum `-ln p(target|context)` over those positions only and `N` count them. `mean_nll_nats=S/N`, `perplexity=exp(mean_nll_nats)` for N>0 and finite results. Sum `S` and `N` across batches/ranks/windows, then exponentiate after global division. Do not average batch/rank PPL or divide by all input tokens; do not double-count overlap/padding/repeated distributed evaluation samples.
+
+Preserve S/N, tokenizer/template/window/stride/position policy and scope `causal-corpus` or `assistant-conditional`. Assistant-conditional PPL is not equivalent to full-corpus PPL. Exclude prompt/pad by objective; real EOS sharing the PAD ID remains supervised through masks. For long corpora overlapping context is conditioning only; count targets once. [HF PPL](https://huggingface.co/docs/transformers/v4.57.1/en/perplexity) describes tokenization/stride effects. Do not blindly take the denominator from pre-shift `labels != -100`: actual model loss may exclude the first position. Preserve a tiny-fixture check of N.
+
+Do not call `exp(total_training_loss)` PPL for label-smoothed/auxiliary-regularized objectives, DPO/reward loss, masked-LM pseudo-likelihood or diffusion. A separate unregularized autoregressive CE evaluation is needed. On exp overflow: PPL=null, status=nonfinite/overflow; retain finite NLL and the event, not an arbitrary maximum. PPL is a monotonic NLL transformation, not independent quality evidence. Compare compatible tokenization/target/context bases; lower PPL alone does not establish generation improvement. Micro PPL is exp(global S/N); macro slice scores are separately named indicators with explicit weights, not an unnamed mean PPL.
+
+## Profile selection
+
+| Task profile | Beyond objective / loss | Guardrails and meaning | Do not apply blindly |
+| --- | --- | --- | --- |
+| Causal LM / SFT / chat | Dev NLL+conditional/corpus PPL; task success by versioned rubric/executable checks | Correctness/completeness, schema success, length-stop rate, repetition, general/domain/language regressions, output-length distribution | PPL is not semantic correctness; length is not completeness |
+| Code / structured output | Compile/test/parse/schema success, execution timeout, observed pass@1; pass@k only with declared independent sampling/estimator | Test coverage/scope, expected samples, sandbox failures, long-code completeness | Do not label best-of-k pass@1; [Chen et al.](https://arxiv.org/abs/2107.03374v2) supports functional evaluation, not test-adequacy guarantees |
+| Classification / probabilities | Macro/per-class F1 or precision/recall at a business threshold; task-appropriate AP/ROC-AUC; log loss/Brier and reliability plots | Confusion counts, rare-class recall, false-positive cost, class prevalence; calibration support/bins | Accuracy hides imbalance; AP is not trapezoidal PR-AUC; [calibration](https://scikit-learn.org/1.7/modules/calibration.html) is more than Brier |
+| Regression / forecasting | MAE/RMSE and residual quantiles; relative-to-naive/seasonal baseline, probabilistic interval coverage/width | Per-horizon/group residuals, bias, extreme-target failures, chronological leakage | MAPE is unstable near zero; R² is not a universal business metric; PPL is inapplicable |
+| Retrieval / ranking / embeddings | Recall@k/MRR/nDCG@k on a frozen candidate pool + task-specific false-match rate | Queries without relevant documents, coverage, relevance labels, multilingual/length slices | Match k/candidate sets/query weights; lower contrastive loss does not prove retrieval gains |
+| Detection / segmentation / ASR | Task-native IoU/mAP/Dice or corpus WER/CER with corresponding annotations | Class/size/noise/language slices, substitutions/deletions/insertions, empty/reference-normalization policy | Token-LM PPL does not replace whole-system quality; silent drops alter denominators |
+| Image generation / diffusion | Fixed-seed image grids, conditional correctness/human rubric; FID only on comparable dataset/N/preprocessing | Prompt fidelity, diversity/memorization/invalid output, feature-extractor version | Denoising loss is not image quality; [FID basis](https://lightning.ai/docs/torchmetrics/stable/image/frechet_inception_distance.html) is not universal across domains |
+| Preference / DPO / RL (when applicable) | Held-out preference/task success, chosen/rejected scores and reward components; mathematically defined policy/reference divergence | Length/refusal/reward exploitation, constraint violations, episode support; base-model regressions | Higher reward need not mean more useful; DPO scalar is not perplexity, entropy collapse is not always failure |
+
+Choose task-specific scorers with version/license/input contracts before launch; this list does not implement every metric automatically. For LLM scores prefer deterministic executable/local checks where suitable; model judges require budget/privacy authorization, rubric/calibration/disagreement and separately recorded costs. One regex does not detect factual hallucinations. [Hamel](https://hamel.dev/blog/posts/evals/) motivates error analysis, not a universal LLM judge.
+
+## Minimum validation report
+
+Subject/step/checkpoint hash and differences from best/previous/base; coverage and N; primary + guardrails with numerator/denominator and uncertainty method; domain/language/length/rare slices; incomplete/error counts; diagnostic generation refs; time and cost. Pair comparisons on the same units, with uncertainty at the correct dependence unit (for example user/group; correlated tokens are not independent observations). Seed variability is separate from sample uncertainty. Do not hide small/empty slices behind an overall micro metric.
+
+Required charts: train/dev objective with units/basis, task primary and regression slices; for LMs log-scale PPL/NLL when valid, useful targets/s, cumulative cost with separate estimate/provider series, stop/restart/config-change markers. Do not smoothly connect gaps; preserve plot config/data hashes and report subject. No synthetic curves masquerading as real training.

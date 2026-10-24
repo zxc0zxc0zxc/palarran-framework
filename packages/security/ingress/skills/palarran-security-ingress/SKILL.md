@@ -1,0 +1,16 @@
+---
+name: palarran-security-ingress
+description: Audit application input and ingress trust boundaries across forms, routes, parsers, uploads, webhooks and proxies. Use for /palarran:security:ingress; review/report only, no automatic fixes or live probes.
+---
+
+# Ingress security audit
+
+Read the [profile guide](../../docs/README.md), [dated primary sources](../../docs/sources.md), [shared audit/evidence contract](../../../shared/docs/contract.md), [domain contracts](../../../../core/agents/docs/domain-contracts.md), [decision memory](../../../../core/agents/docs/decision-memory.md) and [global memory](../../../../core/agents/docs/global-memory.md). Identify the actual target, root/package AGENTS, project locale, private INDEX and applicable accepted decisions; library and target are different roots.
+
+Use `/palarran:security:ingress {scope?}`. Resolve an omitted scope from actual project context, then state finite surfaces and gaps. `--plan` permits local inspection and inert private coverage/test planning only: no application/scanner execution, remote/search-provider calls, fixes, installs or probes. Default audit is scoped readonly source/configuration review plus public-source research. Reuse concrete existing test/remote permissions when present; do not infer them from a proposed test.
+
+1. Bind exact revision/dirty snapshot, framework/runtime and known deployment configuration. Build the guide's route/entry-point ledger covering forms, controllers/actions/APIs, RPC/WebSockets, uploads/imports, webhooks, headers/cookies and non-browser producers. Trace input→parser/schema→principal→object/property/function authorization→sink→response, including alternate/direct-backend paths. Unknown inventory is a gap.
+2. Inspect server-side types/semantics, byte/depth/collection/expanded-size bounds, canonicalization and sink-specific protections. Review CSRF/CORS against the actual auth model, proxy identity/header trust, HTTP framing/parser disagreement, upload confinement and webhook signatures/replay/idempotency. Client validation, a WAF, signed data or a login check alone is insufficient.
+3. Use guide sources and installed-stack official documentation for each recommendation. Separate code/config evidence, provider claims and deployment assumptions. Pattern matches are candidates until contextual review; never run smuggling/SSRF/unsafe-file/exploit/load traffic automatically. Correlate overlaps with code/CVE profiles using stable finding IDs.
+4. Produce the shared structured report and short readable summary with coverage PASS/FAIL/NOT_RUN/NA, confidence confirmed/suspected, contextual severity, exact evidence/source references, remediation proposals and safe retest steps. No tests means NOT_RUN; source confirmation does not imply runtime reproduction. A valid report schema is not a security PASS.
+5. Save accepted rationale before dependent choices, private report revisions, index and handoff under target `.palarran/security/<task>/`. Narrative follows `languages.docs`; identifiers/enums stay English. Record actual checks, excluded surfaces and next owner. No application edits, scanner installs, secret/code uploads, paid calls or external publication are implied; verified portable learning follows existing owner policy separately.

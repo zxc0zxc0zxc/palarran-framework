@@ -1,0 +1,11 @@
+# Scenarios and independence
+
+Before execution read target product/UX/API/DB requirements, accepted decisions and release revision. For every R-ID define actor/role, Given/When/Then, expected business outcome, observable browser state, API schema/postcondition and DB invariant. Complement happy paths with permissions, invalid/empty input, duplicate submit/idempotency, reload/persistence, async/failure/retry and responsive/keyboard cases within actual scope. Do not require invented features.
+
+A reviewer sets checkers/criteria; builders cannot alter them to pass. Hashes bind artifacts to the approved suite, but same-host evaluator code is no security boundary against hostile builders. Keep suite/pins/private evidence outside builder-writable trees; only the tested app changes normal DB/app state through allowed scenarios. Never insert the expected DB row directly through the evaluator instead of UI/API action.
+
+UI success → independent API read-back → readonly DB check must share one test entity/tenant/run_id and the required app version. Check source files before/after and live version endpoint; wrong process/port/build/DB means INCONCLUSIVE, not acceptance of an old process. A revision endpoint is a trusted app assertion, not cryptographic remote attestation. Fresh random run IDs prevent accidental old-data PASS; if unsupported, define another checked correlation protocol before execution.
+
+Freeze scenarios before running. Missing required layers mean NOT_RUN; explicit not_applicable needs domain rationale and visible scope. A static site may lack DB/API; that is a bounded browser result, not full-stack PASS. Missing browser access cannot be replaced with fetch/DOM parsing. Record mock results, emulation, actual engine, screenshot captured and screenshot viewed separately.
+
+Reproduction: exact scenario/R-ID, subject/environment, fixture identifier, failed step/expected predicate, observed evidence hashes, declared effects, remaining NOT_RUN. Automatic assertions do not judge taste/semantic completeness of arbitrary UIs. Independent manual visual/domain review remains a separate gate when needed. Never increase timeouts/ignore errors/update baselines merely to get green.

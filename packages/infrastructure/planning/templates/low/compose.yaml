@@ -1,0 +1,85 @@
+name: infra-low
+services:
+  proxy:
+    image: ${CADDY_IMAGE:?Set a verified Caddy image pinned by digest}
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set the real app domain}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 192m
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  app:
+    image: ${APP_IMAGE:?Set app image pinned by digest}
+    user: "10001:10001"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: [/tmp:size=64m,mode=1777]
+    environment:
+      DB_HOST: db
+      DB_NAME: app
+      DB_USER: app
+      DB_PASSWORD_FILE: /run/secrets/db_password
+    secrets: [db_password]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks: [edge, data]
+    mem_limit: 512m
+    cpus: 1.0
+    healthcheck:
+      test: [CMD, /app/healthcheck]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  db:
+    image: ${POSTGRES_IMAGE:?Set a verified PostgreSQL 17 image pinned by digest}
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_admin_password
+    secrets: [db_password, db_admin_password]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-app.sql:/docker-entrypoint-initdb.d/10-app.sql:ro
+    networks: [data]
+    security_opt: [no-new-privileges:true]
+    shm_size: 128m
+    mem_limit: 768m
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U postgres -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+networks:
+  edge: {}
+  data:
+    internal: true
+volumes:
+  postgres_data: {}
+  caddy_data: {}
+  caddy_config: {}
+secrets:
+  db_password:
+    file: ${DB_PASSWORD_FILE:?Set absolute path to a protected password file outside Git}
+  db_admin_password:
+    file: ${DB_ADMIN_PASSWORD_FILE:?Set absolute path to a protected admin password file outside Git}

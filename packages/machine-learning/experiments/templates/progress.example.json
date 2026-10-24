@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiment_id": "example-only",
+  "plan_revision": "draft",
+  "plan_sha256": null,
+  "status": "planned",
+  "tasks": [
+    {"id": "T-001", "status": "pending", "subject_sha256": null, "evidence": [], "remaining": ["freeze baseline protocol"]}
+  ],
+  "runs": [],
+  "budget": {"currency": "USD", "ceiling": null, "provider_reported": null, "unresolved_reserve": null},
+  "remaining_gates": ["rights", "correctness", "pilot", "training", "independent_benchmark"]
+}

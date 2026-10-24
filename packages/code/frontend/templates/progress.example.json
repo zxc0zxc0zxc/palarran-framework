@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "plan_id": "example-frontend",
+  "plan_revision": "v001",
+  "source_commit": "0000000",
+  "execution_id": "not-started",
+  "integration_commit": null,
+  "tasks": [
+    {
+      "id": "TASK-01",
+      "plan_revision": "v001",
+      "owner": "coordinator",
+      "status": "pending",
+      "depends_on": [],
+      "code_commits": [],
+      "integration_commit": null,
+      "reason": "Not dispatched; replace example IDs and source_commit with actual plan context",
+      "checks": [
+        {
+          "id": "T-UI-01",
+          "required": true,
+          "status": "NOT_RUN",
+          "subject_commit": null,
+          "evidence": [],
+          "reason": "Planning only"
+        }
+      ]
+    }
+  ],
+  "gates": [
+    {
+      "id": "PROJECT-CHECKS",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Integrated build/typecheck/test checks not run"
+    },
+    {
+      "id": "BROWSER-RESPONSIVE",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Actual integrated interactions/states and responsive review not run"
+    },
+    {
+      "id": "VISUAL-FIDELITY",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Rendered source UI comparison and required asset review not run"
+    },
+    {
+      "id": "FLOW-INTEGRATION",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Source journeys and real API/read-back checks according to scope not run"
+    },
+    {
+      "id": "FEATURE-DOD",
+      "required": true,
+      "status": "NOT_RUN",
+      "subject_commit": null,
+      "evidence": [],
+      "reason": "Full source scope and DoD not verified"
+    }
+  ]
+}

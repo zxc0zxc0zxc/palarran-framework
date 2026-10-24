@@ -1,0 +1,31 @@
+{
+  "max_tokens": 600000,
+  "max_cost_usd": "12.00",
+  "stages": {
+    "palarran-product-define": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "palarran-product-market": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "palarran-product-compare": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "palarran-product-revenue": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "palarran-product-acquisition": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    },
+    "product-mvp": {
+      "max_tokens": 100000,
+      "max_cost_usd": "2.00"
+    }
+  },
+  "pricing": {}
+}

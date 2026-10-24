@@ -1,0 +1,8 @@
+# All example values must be verified/adapted before a real plan/apply.
+name        = "example-app"
+server_type = "REPLACE_SERVER_TYPE"
+location    = "REPLACE_LOCATION"
+image       = "ubuntu-24.04"
+ssh_key_ids = ["REPLACE_EXISTING_PUBLIC_SSH_KEY_ID"]
+admin_cidrs = ["192.0.2.10/32"] # Documentation range: replace with your VPN/admin CIDR.
+ssh_port    = 22

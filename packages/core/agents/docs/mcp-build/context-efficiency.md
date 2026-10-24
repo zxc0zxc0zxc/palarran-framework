@@ -1,0 +1,9 @@
+# Context and programmatic processing
+
+Following [E-MCP-001/002](sources.md), remove unnecessary fields, hops and repeated instructions first, then measure the same task. Choose concise/detailed or field projection for the task. Do not truncate key facts, references/IDs or complete results without an incompleteness marker. Pagination/continuation and a separate full get beat silent ellipses. A byte limit does not measure tokens: token comparisons need tokenizer/model/context-cache evidence; billing stays in the existing ledger.
+
+Small libraries need compact tools/list and clear descriptions. Large libraries may use client-side search/deferred schema loading where hosts actually support it; separately evaluate task-corpus selection and tool-selection quality. Anthropic's `defer_loading` and Programmatic Tool Calling are not mandatory MCP server properties. Adding a field cannot promise arbitrary-client support. The reference server has two tools and no provider tool-search API.
+
+Perform programmatic filtering/aggregation with trusted typed code in an authorized runtime: full intermediate records need not reach the model. Bound access/volume/time/concurrency, preserve provenance/dependency order; do not provide arbitrary eval/shell/SQL/fetch for “universality.” Independent outcome checks remain necessary for programmatic calls. Reference implementation executes no submitted code and exposes no arbitrary batch executor.
+
+Compare source/output protocol bytes, full/projected completeness, calls/retries/errors/latency and task completion. Separately measure actual model tokens/cache/cost in authorized trials. Schema matches/fewer bytes do not prove better solutions; structuredContent+text compatibility duplication counts in actual wire budget. Account for backend cost/unknown outcomes separately.

@@ -1,0 +1,43 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+artifacts/
+plans/
+.env
+.env.*
+!.env.example
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform/
+*.tfvars
+!*.tfvars.example
+*.pem
+*.key
+
+# Private project journals and agent-client state; never distribute task history.
+.palarran/
+.ai-development/
+.codex/
+.claude/
+.claude-plugin/
+.agents/
+.etc/
+.ai-tools/
+.cursor/
+.windsurf/
+.continue/
+.roo/
+.kilocode/
+.opencode/
+.gemini/
+.aider*
+.delivery/
+
+# Private local orchestrator state, including workflow snapshots.
+.factory-state/
+
+# Derived local Graphify index, isolated tool environment and staging.
+.graphify/
+graphify-out/

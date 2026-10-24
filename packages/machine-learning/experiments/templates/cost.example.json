@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "currency": "USD",
+  "rate_source": "illustrative-only-not-a-provider-quote",
+  "rate_as_of": "2026-10-20",
+  "product": "functions",
+  "budget_usd": "12",
+  "gpu_count": 1,
+  "billed_cpu_cores": "2",
+  "billed_memory_gib": "8",
+  "rates_per_second": {"gpu": "0.001", "cpu_core": "0.00001", "memory_gib": "0.000002"},
+  "scenarios": {
+    "low": {"seconds_per_attempt": "300", "attempts": 1},
+    "base": {"seconds_per_attempt": "600", "attempts": 1},
+    "high": {"seconds_per_attempt": "900", "attempts": 2}
+  },
+  "extras_usd": {"evaluation": "1", "storage": null, "egress": null},
+  "contingency_fraction": "0.2"
+}

@@ -1,0 +1,545 @@
+{
+  "version": 1,
+  "packages": [
+    {
+      "id": "core",
+      "title": "Core",
+      "description": "Shared agent foundations, runtime, setup and safe package discovery.",
+      "requires": [],
+      "capabilities": [
+        {
+          "id": "agents",
+          "status": "implemented",
+          "description": "Agent tooling and MCP construction."
+        },
+        {
+          "id": "parallelism",
+          "status": "implemented",
+          "description": "Bounded task ownership and independent worker coordination."
+        },
+        {
+          "id": "security",
+          "status": "implemented",
+          "description": "Permission, privacy and unknown-outcome boundaries."
+        },
+        {
+          "id": "orchestration",
+          "status": "implemented",
+          "description": "Durable bounded engineering execution."
+        },
+        {
+          "id": "pipelines",
+          "status": "implemented",
+          "description": "Composed product and ML stage workflows."
+        },
+        {
+          "id": "setup",
+          "status": "implemented",
+          "description": "Guarded project installation and updates."
+        },
+        {
+          "id": "packages",
+          "status": "implemented",
+          "description": "Declarative package catalog and dependency closure."
+        },
+        {
+          "id": "coordination",
+          "status": "implemented",
+          "description": "Optional private cross-machine coordination, not external-action enforcement."
+        },
+        {
+          "id": "coop",
+          "status": "implemented",
+          "description": "Repository-scoped cooperative agent receiver and alerts."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-setup",
+          "path": "packages/core/setup/skills/palarran-setup/SKILL.md",
+          "legacy_path": "skills/palarran-setup/SKILL.md"
+        },
+        {
+          "name": "palarran-mcp-build",
+          "path": "packages/core/agents/skills/palarran-mcp-build/SKILL.md",
+          "legacy_path": "skills/palarran-mcp-build/SKILL.md"
+        },
+        {
+          "name": "palarran-core-coop",
+          "path": "packages/core/coop/skills/palarran-core-coop/SKILL.md",
+          "legacy_path": "skills/palarran-core-coop/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "memory",
+      "title": "Memory",
+      "description": "Local notes, session context and optional reviewed cross-project knowledge.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "memorize",
+          "status": "implemented",
+          "description": "Bounded quick notes and reviewed owner context."
+        },
+        {
+          "id": "remember",
+          "status": "implemented",
+          "description": "Context retrieval with applicability checks."
+        },
+        {
+          "id": "sessions",
+          "status": "implemented",
+          "description": "Saved-session handoff and recovery."
+        },
+        {
+          "id": "knowledge",
+          "status": "implemented",
+          "description": "Reviewed engineering-case learning and recall."
+        },
+        {
+          "id": "vacuum",
+          "status": "implemented",
+          "description": "Review and cleanup of explicitly disposable intermediates."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-memorize",
+          "path": "packages/memory/memorize/skills/palarran-memorize/SKILL.md",
+          "legacy_path": "skills/palarran-memorize/SKILL.md"
+        },
+        {
+          "name": "palarran-remember",
+          "path": "packages/memory/remember/skills/palarran-remember/SKILL.md",
+          "legacy_path": "skills/palarran-remember/SKILL.md"
+        },
+        {
+          "name": "palarran-memorize-session",
+          "path": "packages/memory/sessions/skills/palarran-memorize-session/SKILL.md",
+          "legacy_path": "skills/palarran-memorize-session/SKILL.md"
+        },
+        {
+          "name": "palarran-remember-session",
+          "path": "packages/memory/sessions/skills/palarran-remember-session/SKILL.md",
+          "legacy_path": "skills/palarran-remember-session/SKILL.md"
+        },
+        {
+          "name": "palarran-memory-learn",
+          "path": "packages/memory/knowledge/skills/palarran-memory-learn/SKILL.md",
+          "legacy_path": "skills/palarran-memory-learn/SKILL.md"
+        },
+        {
+          "name": "palarran-memory-recall",
+          "path": "packages/memory/knowledge/skills/palarran-memory-recall/SKILL.md",
+          "legacy_path": "skills/palarran-memory-recall/SKILL.md"
+        },
+        {
+          "name": "palarran-vacuum",
+          "path": "packages/memory/vacuum/skills/palarran-vacuum/SKILL.md",
+          "legacy_path": "skills/palarran-vacuum/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "product",
+      "title": "Product",
+      "description": "Evidence-backed product definition, market and customer planning.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "research",
+          "status": "implemented",
+          "description": "Product, competitors, economics, acquisition and first-customer research."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-product-define",
+          "path": "packages/product/research/skills/palarran-product-define/SKILL.md",
+          "legacy_path": "skills/palarran-product-define/SKILL.md"
+        },
+        {
+          "name": "palarran-product-market",
+          "path": "packages/product/research/skills/palarran-product-market/SKILL.md",
+          "legacy_path": "skills/palarran-product-market/SKILL.md"
+        },
+        {
+          "name": "palarran-product-compare",
+          "path": "packages/product/research/skills/palarran-product-compare/SKILL.md",
+          "legacy_path": "skills/palarran-product-compare/SKILL.md"
+        },
+        {
+          "name": "palarran-product-revenue",
+          "path": "packages/product/research/skills/palarran-product-revenue/SKILL.md",
+          "legacy_path": "skills/palarran-product-revenue/SKILL.md"
+        },
+        {
+          "name": "palarran-product-acquisition",
+          "path": "packages/product/research/skills/palarran-product-acquisition/SKILL.md",
+          "legacy_path": "skills/palarran-product-acquisition/SKILL.md"
+        },
+        {
+          "name": "palarran-product-b2b",
+          "path": "packages/product/research/skills/palarran-product-b2b/SKILL.md",
+          "legacy_path": "skills/palarran-product-b2b/SKILL.md"
+        },
+        {
+          "name": "palarran-product-b2c",
+          "path": "packages/product/research/skills/palarran-product-b2c/SKILL.md",
+          "legacy_path": "skills/palarran-product-b2c/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "design",
+      "title": "Design",
+      "description": "Adaptive UX concepts and visual UI design.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "ux",
+          "status": "implemented",
+          "description": "Business-flow research and per-screen adaptive concepts."
+        },
+        {
+          "id": "ui",
+          "status": "implemented",
+          "description": "Reference-grounded visual systems and reviewed assets."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-ux-design",
+          "path": "packages/design/ux/skills/palarran-ux-design/SKILL.md",
+          "legacy_path": "skills/palarran-ux-design/SKILL.md"
+        },
+        {
+          "name": "palarran-ui-design",
+          "path": "packages/design/ui/skills/palarran-ui-design/SKILL.md",
+          "legacy_path": "skills/palarran-ui-design/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "code",
+      "title": "Code",
+      "description": "Specification-driven frontend and backend planning and implementation.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "frontend",
+          "status": "implemented",
+          "description": "Adaptive interface planning, implementation and browser acceptance."
+        },
+        {
+          "id": "backend",
+          "status": "implemented",
+          "description": "Scale-aware backend SDD, delivery and independent checks."
+        },
+        {
+          "id": "git",
+          "status": "planned",
+          "description": "Git workflow design guides; dedicated skills are not implemented yet."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-frontend-plan",
+          "path": "packages/code/frontend/skills/palarran-frontend-plan/SKILL.md",
+          "legacy_path": "skills/palarran-frontend-plan/SKILL.md"
+        },
+        {
+          "name": "palarran-frontend-build",
+          "path": "packages/code/frontend/skills/palarran-frontend-build/SKILL.md",
+          "legacy_path": "skills/palarran-frontend-build/SKILL.md"
+        },
+        {
+          "name": "palarran-backend-plan",
+          "path": "packages/code/backend/skills/palarran-backend-plan/SKILL.md",
+          "legacy_path": "skills/palarran-backend-plan/SKILL.md"
+        },
+        {
+          "name": "palarran-backend-build",
+          "path": "packages/code/backend/skills/palarran-backend-build/SKILL.md",
+          "legacy_path": "skills/palarran-backend-build/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "machine-learning",
+      "title": "Machine Learning",
+      "description": "Bounded experiment design, data, training and independent benchmarks.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "experiments",
+          "status": "implemented",
+          "description": "Hypotheses, model/data/cost choices, training and verification."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-ml-plan",
+          "path": "packages/machine-learning/experiments/skills/palarran-ml-plan/SKILL.md",
+          "legacy_path": "skills/palarran-ml-plan/SKILL.md"
+        },
+        {
+          "name": "palarran-ml-hypotheses",
+          "path": "packages/machine-learning/experiments/skills/palarran-ml-hypotheses/SKILL.md",
+          "legacy_path": "skills/palarran-ml-hypotheses/SKILL.md"
+        },
+        {
+          "name": "palarran-ml-model",
+          "path": "packages/machine-learning/experiments/skills/palarran-ml-model/SKILL.md",
+          "legacy_path": "skills/palarran-ml-model/SKILL.md"
+        },
+        {
+          "name": "palarran-ml-data",
+          "path": "packages/machine-learning/experiments/skills/palarran-ml-data/SKILL.md",
+          "legacy_path": "skills/palarran-ml-data/SKILL.md"
+        },
+        {
+          "name": "palarran-ml-cost",
+          "path": "packages/machine-learning/experiments/skills/palarran-ml-cost/SKILL.md",
+          "legacy_path": "skills/palarran-ml-cost/SKILL.md"
+        },
+        {
+          "name": "palarran-ml-train",
+          "path": "packages/machine-learning/experiments/skills/palarran-ml-train/SKILL.md",
+          "legacy_path": "skills/palarran-ml-train/SKILL.md"
+        },
+        {
+          "name": "palarran-ml-benchmark",
+          "path": "packages/machine-learning/experiments/skills/palarran-ml-benchmark/SKILL.md",
+          "legacy_path": "skills/palarran-ml-benchmark/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "docs",
+      "title": "Docs",
+      "description": "Human-readable documentation and portable review artifacts.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "documentation",
+          "status": "implemented",
+          "description": "Human-readable HTML delivery artifacts grounded in source evidence."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-docs-artifact",
+          "path": "packages/docs/documentation/skills/palarran-docs-artifact/SKILL.md",
+          "legacy_path": "skills/palarran-docs-artifact/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "science",
+      "title": "Science",
+      "description": "Evidence-grounded scientific reporting from existing experiments.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "preprint",
+          "status": "implemented",
+          "description": "Reviewable LaTeX articles with claim-to-evidence mapping."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-science-preprint",
+          "path": "packages/science/preprint/skills/palarran-science-preprint/SKILL.md",
+          "legacy_path": "skills/palarran-science-preprint/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "validation",
+      "title": "Validation",
+      "description": "Independent application acceptance and measured agent evaluation.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "agents",
+          "status": "implemented",
+          "description": "Frozen agent evaluations and controlled skill-improvement comparisons."
+        },
+        {
+          "id": "application",
+          "status": "implemented",
+          "description": "Actual browser, API and readonly database acceptance."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-agent-eval",
+          "path": "packages/validation/agents/skills/palarran-agent-eval/SKILL.md",
+          "legacy_path": "skills/palarran-agent-eval/SKILL.md"
+        },
+        {
+          "name": "palarran-agent-improve",
+          "path": "packages/validation/agents/skills/palarran-agent-improve/SKILL.md",
+          "legacy_path": "skills/palarran-agent-improve/SKILL.md"
+        },
+        {
+          "name": "palarran-app-verify",
+          "path": "packages/validation/application/skills/palarran-app-verify/SKILL.md",
+          "legacy_path": "skills/palarran-app-verify/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "title": "Infrastructure",
+      "description": "Infrastructure design, delivery, VPS operations and scoped incidents.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "planning",
+          "status": "implemented",
+          "description": "Scale-aware inert infrastructure plans and inventory."
+        },
+        {
+          "id": "delivery",
+          "status": "implemented",
+          "description": "GitHub/GitLab CI/CD and authorized delivery."
+        },
+        {
+          "id": "vps",
+          "status": "implemented",
+          "description": "Explicitly scoped host inventory and management."
+        },
+        {
+          "id": "incident",
+          "status": "implemented",
+          "description": "Separately assigned infrastructure incident-response skill."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-infra-plan",
+          "path": "packages/infrastructure/planning/skills/palarran-infra-plan/SKILL.md",
+          "legacy_path": "skills/palarran-infra-plan/SKILL.md"
+        },
+        {
+          "name": "palarran-ci-cd",
+          "path": "packages/infrastructure/delivery/skills/palarran-ci-cd/SKILL.md",
+          "legacy_path": "skills/palarran-ci-cd/SKILL.md"
+        },
+        {
+          "name": "palarran-vps-inspect",
+          "path": "packages/infrastructure/vps/skills/palarran-vps-inspect/SKILL.md",
+          "legacy_path": "skills/palarran-vps-inspect/SKILL.md"
+        },
+        {
+          "name": "palarran-vps-manage",
+          "path": "packages/infrastructure/vps/skills/palarran-vps-manage/SKILL.md",
+          "legacy_path": "skills/palarran-vps-manage/SKILL.md"
+        },
+        {
+          "name": "palarran-infrastructure-incident",
+          "path": "packages/infrastructure/incident/skills/palarran-infrastructure-incident/SKILL.md",
+          "legacy_path": "skills/palarran-infrastructure-incident/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "description": "Evidence-based infrastructure, application, logging, egress and current vulnerability audits.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "infrastructure",
+          "status": "implemented",
+          "description": "Identity, privileges, network exposure and infrastructure controls."
+        },
+        {
+          "id": "ingress",
+          "status": "implemented",
+          "description": "Untrusted inputs, forms, routes, webhooks and request boundaries."
+        },
+        {
+          "id": "log",
+          "status": "implemented",
+          "description": "Sensitive data, noise, access, retention and integrity in logs."
+        },
+        {
+          "id": "egress",
+          "status": "implemented",
+          "description": "Outbound requests, responses, exports and third-party disclosure."
+        },
+        {
+          "id": "code",
+          "status": "implemented",
+          "description": "Authentication, authorization, tenant isolation and unsafe code paths."
+        },
+        {
+          "id": "cve",
+          "status": "implemented",
+          "description": "Fresh advisory research matched to actual technology and version inventory."
+        },
+        {
+          "id": "shared",
+          "status": "implemented",
+          "description": "Private audit evidence contract and offline report validation."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-security-infrastructure",
+          "path": "packages/security/infrastructure/skills/palarran-security-infrastructure/SKILL.md",
+          "legacy_path": "skills/palarran-security-infrastructure/SKILL.md"
+        },
+        {
+          "name": "palarran-security-ingress",
+          "path": "packages/security/ingress/skills/palarran-security-ingress/SKILL.md",
+          "legacy_path": "skills/palarran-security-ingress/SKILL.md"
+        },
+        {
+          "name": "palarran-security-log",
+          "path": "packages/security/log/skills/palarran-security-log/SKILL.md",
+          "legacy_path": "skills/palarran-security-log/SKILL.md"
+        },
+        {
+          "name": "palarran-security-egress",
+          "path": "packages/security/egress/skills/palarran-security-egress/SKILL.md",
+          "legacy_path": "skills/palarran-security-egress/SKILL.md"
+        },
+        {
+          "name": "palarran-security-code",
+          "path": "packages/security/code/skills/palarran-security-code/SKILL.md",
+          "legacy_path": "skills/palarran-security-code/SKILL.md"
+        },
+        {
+          "name": "palarran-security-cve",
+          "path": "packages/security/cve/skills/palarran-security-cve/SKILL.md",
+          "legacy_path": "skills/palarran-security-cve/SKILL.md"
+        }
+      ]
+    }
+  ]
+}

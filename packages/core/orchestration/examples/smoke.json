@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "name": "smoke",
+  "plan_revision": "v001",
+  "limits": {
+    "run_seconds": 60,
+    "task_seconds": 10,
+    "lease_seconds": 5,
+    "max_attempts": 2,
+    "output_bytes": 65536
+  },
+  "policy": {
+    "executables": [
+      "/usr/bin/python3"
+    ],
+    "adapters": [
+      "command"
+    ],
+    "env": []
+  },
+  "tasks": [
+    {
+      "id": "write",
+      "depends_on": [],
+      "argv": [
+        "/usr/bin/python3",
+        "-c",
+        "from pathlib import Path; Path('factory-smoke.txt').write_text('verified\\n')"
+      ],
+      "verify": [
+        [
+          "/usr/bin/python3",
+          "-c",
+          "from pathlib import Path; assert Path('factory-smoke.txt').read_text() == 'verified\\n'"
+        ]
+      ],
+      "replay_safe": true
+    }
+  ]
+}

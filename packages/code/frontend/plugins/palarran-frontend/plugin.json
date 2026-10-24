@@ -1,0 +1,20 @@
+{
+  "name": "palarran-frontend",
+  "version": "0.3.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Evidence-driven skills, shared research memory and bounded agent workflows",
+  "homepage": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "repository": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "commands": {
+    "build": {
+      "source": "packages/code/frontend/commands/build.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "plan": {
+      "source": "packages/code/frontend/commands/plan.md",
+      "argumentHint": "{task/context} [profile flags]"
+    }
+  }
+}

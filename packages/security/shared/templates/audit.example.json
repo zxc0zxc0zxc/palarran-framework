@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "profile": "code",
+  "subject": {
+    "project": "synthetic-audit-fixture",
+    "revision": "0000000000000000000000000000000000000000",
+    "snapshot_sha256": null,
+    "environment": "synthetic"
+  },
+  "inspected_at": "2026-10-24T12:00:00Z",
+  "sources": [
+    {
+      "id": "S-001",
+      "title": "OWASP API1:2023: object-level authorization",
+      "publisher": "OWASP",
+      "url": "https://api-security.owasp.org/editions/2023/en/0xa1-broken-object-level-authorization/",
+      "published_at": null,
+      "accessed_at": "2026-10-24T11:00:00Z"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "E-001",
+      "kind": "synthetic",
+      "reference": "fixtures/tenant-access.json",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "summary": "Illustrative source review only; no live application or real tenant data."
+    }
+  ],
+  "coverage": [
+    {
+      "id": "C-001",
+      "area": "Object access is scoped to the authenticated tenant",
+      "status": "FAIL",
+      "evidence_ids": [
+        "E-001"
+      ],
+      "rationale": "Synthetic fixture omits the owner predicate; runtime exploitability was not tested."
+    },
+    {
+      "id": "C-002",
+      "area": "Two-account runtime retest",
+      "status": "NOT_RUN",
+      "evidence_ids": [],
+      "rationale": "This inert example has no application server."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F-001",
+      "title": "Possible missing object-owner check",
+      "severity": "high",
+      "confidence": "suspected",
+      "coverage_ids": [
+        "C-001"
+      ],
+      "evidence_ids": [
+        "E-001"
+      ],
+      "source_ids": [
+        "S-001"
+      ],
+      "impact": "If the fixture reflected a reachable real route, another tenant might read an object; the example proves no live exposure.",
+      "remediation": "Bind the data lookup to trusted tenant identity and preserve admin exceptions explicitly.",
+      "verification": "In an authorized synthetic test environment, use two owned accounts and assert the second account cannot read or update the first account object."
+    }
+  ],
+  "advisories": [],
+  "limitations": [
+    "Synthetic schema example and illustrative timestamps/hashes; no target audit, advisory freshness check or production test was run."
+  ],
+  "privacy_reviewed": true
+}

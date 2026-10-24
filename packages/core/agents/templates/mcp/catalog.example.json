@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "name": "support_catalog",
+  "namespace": "support",
+  "records": [
+    {"id": "deployment-guide", "title": "Deployment guide", "text": "Synthetic fixture. Validate the reviewed release before promoting it. Rollback uses the previously verified release.", "tags": ["deployment", "release"]},
+    {"id": "error-guide", "title": "Error guide", "text": "Synthetic fixture. Preserve the request identifier and reproduce the failure in a disposable test environment.", "tags": ["diagnostics"]}
+  ]
+}

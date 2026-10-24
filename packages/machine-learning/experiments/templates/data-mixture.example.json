@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "total_tokens": 1000,
+  "seed": 73,
+  "cells": [
+    {
+      "domain": "general",
+      "language": "en",
+      "weight": "0.4",
+      "max_repeats": "1"
+    },
+    {
+      "domain": "general",
+      "language": "ru",
+      "weight": "0.3",
+      "max_repeats": "1"
+    },
+    {
+      "domain": "specialist",
+      "language": "en",
+      "weight": "0.2",
+      "max_repeats": "1"
+    },
+    {
+      "domain": "specialist",
+      "language": "ru",
+      "weight": "0.1",
+      "max_repeats": "1"
+    }
+  ],
+  "minimum_domain_shares": {
+    "general": "0.5"
+  },
+  "minimum_language_shares": {
+    "ru": "0.3"
+  }
+}

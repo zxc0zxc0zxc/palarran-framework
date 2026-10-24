@@ -1,0 +1,21 @@
+{
+  "project": "synthetic-example",
+  "case": {
+    "type": "pattern",
+    "title": "Idempotent event consumers",
+    "problem": "Duplicate effects after message redelivery",
+    "root_cause": "At-least-once delivery without atomic deduplication",
+    "solution": "Coordinate the event identity record with business writes",
+    "applies_when": ["Non-idempotent consumer side effects"],
+    "limitations": ["Atomicity must include the actual side effect or an outbox"],
+    "tags": ["events", "idempotency"],
+    "source": {
+      "repo": "synthetic-example",
+      "commit": "0000000000000000000000000000000000000000",
+      "adr": ".palarran/example/decisions/0001.md"
+    },
+    "evidence": ["Synthetic example only; replace with actual test subject and result"],
+    "privacy_reviewed": true
+  },
+  "artifacts": []
+}
