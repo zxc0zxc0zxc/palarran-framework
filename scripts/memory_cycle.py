@@ -92,8 +92,10 @@ def scrub(value, secrets=()):
         require(re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', token) is not None or not (re.search('[A-Z]', token) and re.search('[0-9]', token)))
 
 
-def fingerprint(case):
-    def norm(s): return ' '.join(unicodedata.normalize('NFKC', s).casefold().split())
+def fingerprint(case, exact=False):
+    def norm(s):
+        if exact: return s
+        return ' '.join(unicodedata.normalize('NFKC', s).casefold().split())
     core = {k: norm(case[k]) for k in ('type', 'problem', 'root_cause', 'solution')}
     core.update({k: sorted(set(norm(s) for s in case[k])) for k in ('applies_when', 'limitations')})
     return hashlib.sha256(encode(core)).hexdigest()
@@ -196,7 +198,7 @@ def finish(target, value, home=None, client=None, plan=False):
         if prior:
             if prior['phase'] != 'published': return dict(status='RECONCILIATION_REQUIRED', fingerprint=lesson, id=prior['id'])
             stored = client('get', dict(project=project, id=digest(prior['id'])))
-            require(stored['status'] == 'global' and fingerprint(stored['case']) == lesson and stored.get('next_feedback_offset') is None and not any(f['outcome'] == 'refuted' for f in stored.get('feedback', [])))
+            require(stored['status'] == 'global' and fingerprint(stored['case']) == lesson and fingerprint(stored['case'], exact=True) == fingerprint(case, exact=True) and stored.get('next_feedback_offset') is None and not any(f['outcome'] == 'refuted' for f in stored.get('feedback', [])))
             return dict(status='DUPLICATE', id=prior['id'], fingerprint=lesson, writes=0)
         matches = client('search', dict(project=project, query=lesson, limit=5))['items']
         require(type(matches) is list and len(matches) <= 5)
@@ -204,6 +206,7 @@ def finish(target, value, home=None, client=None, plan=False):
         for item in matches:
             stored = client('get', dict(project=project, id=digest(item['id'])))
             if fingerprint(stored['case']) == lesson:
+                require(fingerprint(stored['case'], exact=True) == fingerprint(case, exact=True))
                 require(stored['status'] == 'global' and not any(f['outcome'] == 'refuted' for f in stored.get('feedback', [])) and not item.get('has_refutations'))
                 found.append(item['id'])
         require(len(found) <= 1)

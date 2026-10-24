@@ -70,6 +70,18 @@ class MemoryCycleTest(unittest.TestCase):
         self.assertEqual([v[0] for v in self.api.calls[count:]],['get'])
         self.assertEqual((self.home/'.zxc0zxc0zxc/memory-cycle.json').stat().st_mode & 0o777,0o600)
 
+    def test_normalized_collision_cannot_merge_case_sensitive_instructions(self):
+        first=self.finish(); changed=copy.deepcopy(self.value)
+        changed['case']['solution']=changed['case']['solution'].swapcase()
+        self.assertEqual(cycle.fingerprint(changed['case']),cycle.fingerprint(self.value['case']))
+        before=len(self.api.calls)
+        with self.assertRaises(Exception): self.finish(changed)
+        self.assertEqual([c[0] for c in self.api.calls[before:]], ['get'])
+        self.assertEqual(len(self.api.rows), 1)
+        (self.home/'.zxc0zxc0zxc/memory-cycle.json').unlink()
+        with self.assertRaises(Exception): self.finish(changed)
+        self.assertEqual(self.api.rows[first['id']]['status'], 'global')
+
     def test_remote_exact_duplicate_without_local_ledger(self):
         first=self.finish(); (self.home/'.zxc0zxc0zxc/memory-cycle.json').unlink()
         count=len(self.api.calls); result=self.finish()
