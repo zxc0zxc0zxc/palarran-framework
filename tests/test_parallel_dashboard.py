@@ -4,12 +4,13 @@ import hashlib
 import http.client
 import json
 import os
+import sqlite3
 from pathlib import Path
 import tempfile
 import threading
 import unittest
 
-from packages.core.parallelism.dashboard import (LocalReport, Snapshot, dashboard_server,
+from packages.core.parallelism.dashboard import (LocalReport, LocalIntegrationReport, Snapshot, dashboard_server,
     demo_report, markdown, project_report, project_integration)
 
 
@@ -134,8 +135,29 @@ class PanelTests(unittest.TestCase):
         self.assertNotIn('token', projected)
         snapshot = Snapshot(self.reader, 'demo', integration_reader=lambda:report).get()
         self.assertEqual('blocked', snapshot['integration']['status'])
+        self.assertIn('PR readiness established: False', markdown(snapshot))
         with self.assertRaises(ValueError):
             project_integration(report, 'other')
+    def test_readonly_integration_state(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp).resolve() / 'integration.sqlite'
+            state = dict(run_id='demo', status='integrating', base_commit='a'*40,
+                         head='b'*40, items=[], final_checks=[])
+            with sqlite3.connect(path) as db:
+                db.execute('CREATE TABLE queue(id INTEGER PRIMARY KEY, data TEXT)')
+                db.execute('CREATE TABLE operations(id TEXT, status TEXT)')
+                db.execute('INSERT INTO queue VALUES(1,?)', (json.dumps(state),))
+            path.chmod(0o600)
+            before = hashlib.sha256(path.read_bytes()).hexdigest()
+            reader = LocalIntegrationReport(path)
+            report = reader.report()
+            self.assertEqual('integrating', report['status'])
+            self.assertFalse(report['pr_ready'])
+            snapshot = Snapshot(self.reader, 'demo', integration_reader=reader.report).get()
+            self.assertEqual('demo', snapshot['integration']['run_id'])
+            self.assertEqual(before, hashlib.sha256(path.read_bytes()).hexdigest())
+            self.assertFalse(Path(str(path)+'.lock').exists())
+
     def test_nonloopback_rejected(self):
         for host in ('0.0.0.0','192.0.2.1','localhost'):
             with self.assertRaises(ValueError):

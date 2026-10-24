@@ -39,7 +39,7 @@ server = dashboard_server(snapshot, port=18794)
 server.serve_forever()
 ```
 
-`reader.get_run(run_id)` and `queue.report()` must address the same authoritative run. The callback result is allowlisted to integration status, exact source/integrated commits, blocked items, gate subjects/status/evidence hashes and readiness. Mismatched runs or unavailable integration produce unknown readiness. There is no implicit queue construction or second mutable ledger. `pr_ready` is a report from the independent integration gate; the panel performs no Git operation. The CLI currently omits this callback, so its integration section explicitly says “Not connected.”
+`reader.get_run(run_id)` and `queue.report()` must address the same authoritative run. The callback result is allowlisted to integration status, exact source/integrated commits, blocked items, gate subjects/status/evidence hashes and readiness. Mismatched runs or unavailable integration produce unknown readiness. There is no implicit queue construction or second mutable ledger. `pr_ready` is a report from the independent integration gate; the panel performs no Git operation. For CLI use, add `--integration-state /absolute/private/integration.sqlite`. It opens the existing queue with read-only SQLite and calls the canonical report without its mutating constructor, lock, recovery or migration logic. The queue report checks exact Git candidate identity before readiness; this performs local read-only Git inspection. Both source run IDs must match. Omit this flag to show “Not connected.”
 
 For Codex/Claude or terminal use:
 
