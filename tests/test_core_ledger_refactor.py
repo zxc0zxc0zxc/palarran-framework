@@ -320,6 +320,24 @@ class LedgerPortTests(unittest.TestCase):
                 raise Interrupt()
         self.assertEqual(self.dispatcher.get_run(BASE['run_id'])['status'], 'ready')
 
+    def test_public_reports_keep_exact_builtin_string_keys_and_statuses(self):
+        run_id = BASE['run_id']
+        for report in (self.dispatcher.get_run(run_id), self.dispatcher.tick(run_id)):
+            self.assertIs(type(report['status']), str)
+            self.assertTrue(all(type(key) is str for key in report))
+        task = self.dispatcher.claim_task(run_id, 'task')
+        result = self.dispatcher.finish_task(
+            run_id, 'task', task['attempt_id'],
+            {'status': 'submitted', 'subject': 'fixture', 'tokens': 1,
+             'cost_micros': 1, 'usage_known': True, 'stopped': True},
+            lambda _, receipt: {'passed': True, 'subject': receipt['subject'],
+                                'independent': True, 'evidence': 'Offline exact result'},
+        )
+        self.assertIs(type(result['status']), str)
+        cancelled = self.dispatcher.cancel(run_id)
+        self.assertIs(type(cancelled['status']), str)
+        self.assertTrue(all(type(key) is str for key in cancelled))
+
     def test_unknown_outcome_retains_reserve_across_reopen_and_cancel(self):
         task = self.dispatcher.claim_task(BASE['run_id'], 'task')
         result = self.dispatcher.finish_task(BASE['run_id'], 'task', task['attempt_id'],
