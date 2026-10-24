@@ -117,6 +117,20 @@ class HeadlessTests(unittest.TestCase):
         with self.assertRaises(ValueError):harness.HeadlessHarness({},environment={'API_KEY':'never'})
         with self.assertRaises(ValueError):self.adapter('pass').execute(dict(self.task,task_id='unregistered'),heartbeat=lambda:None,cancel=threading.Event())
 
+    def test_missing_session_is_rejected_before_launch(self):
+        adapter=self.adapter('raise AssertionError("must not launch")')
+        with self.assertRaises(ValueError):adapter.execute(dict(self.task,session_id=None),heartbeat=lambda:None,cancel=threading.Event())
+
+    def test_final_stop_claim_cannot_hide_live_descendant(self):
+        marker=self.root/'child-pid'
+        code='import subprocess,sys\np=subprocess.Popen([sys.executable,"-c","import time;time.sleep(20)"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)\n'
+        code+='open('+repr(str(marker))+',"w").write(str(p.pid))\n'
+        code+='print('+repr(json.dumps(dict(receipt(),protocol=harness.PROTOCOL)))+')\n'
+        result=self.adapter(code).execute(self.task,heartbeat=lambda:None,cancel=threading.Event())
+        self.assertEqual(result['status'],'unknown');self.assertFalse(result['usage_known'])
+        self.assertEqual(result['tokens'],1)
+        # Unknown stop evidence is allowed for orphan zombies; never success.
+
     def test_usage_budget_callback_stops_without_resetting_observed_cost(self):
         code='import json,time\nprint(json.dumps(dict(protocol="palarran.managed.v1",type="usage",tokens=11,cost_micros=6)),flush=True)\ntime.sleep(10)'
         adapter=self.adapter(code)
