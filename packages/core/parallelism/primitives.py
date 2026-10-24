@@ -11,7 +11,12 @@ def integer(value, name, minimum=0):
     return value
 
 def text(value, name, limit=4096):
-    if not isinstance(value, str) or not value or len(value.encode()) > limit or any(ord(c) < 32 for c in value):
+    if (
+        not isinstance(value, str)
+        or not value
+        or len(value.encode()) > limit
+        or any((ord(c) < 32 for c in value))
+    ):
         raise ValueError('Invalid ' + name)
     return value
 
@@ -22,12 +27,23 @@ def identifier(value):
 
 def path(value):
     text(value, 'owned path', 512)
-    if '\\' in value or ':' in value or any(c in value for c in '*?[') or value.startswith('/') or any(p in ('', '.', '..') for p in value.split('/')):
+    if (
+        '\\' in value
+        or ':' in value
+        or any((c in value for c in '*?['))
+        or value.startswith('/')
+        or any((p in ('', '.', '..') for p in value.split('/')))
+    ):
         raise ValueError('Expected a literal relative file path')
     return value
 
 def strings(values, name, limit=128):
-    if type(values) is not list or len(values) > limit or any(type(v) is not str for v in values) or len(set(values)) != len(values):
+    if (
+        type(values) is not list
+        or len(values) > limit
+        or any((type(v) is not str for v in values))
+        or len(set(values)) != len(values)
+    ):
         raise ValueError('Invalid ' + name)
     for value in values:
         text(value, name, 512)

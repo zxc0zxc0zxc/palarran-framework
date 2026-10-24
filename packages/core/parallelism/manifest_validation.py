@@ -1,4 +1,7 @@
-"""Pure manifest validation in source, repository, budget, task and DAG order."""
+"""Ordered manifest guards; worktree guards also observe local filesystem safety.
+
+No database, process, network or training actions occur during validation.
+"""
 import json
 from pathlib import Path
 import re
@@ -132,7 +135,10 @@ def _validate_parent(task, by_id):
             raise ValueError('Child cannot change dispatch mode')
         if task.get('budget_phase', 'execution') != ancestor.get('budget_phase', 'execution'):
             raise ValueError('Child cannot change allocation phase')
-        if any(not set(task[k]) <= set(ancestor[k]) for k in ('resources', 'tools', 'actions')) or any(not any(f == p or f.startswith(p + '/') for p in ancestor['files']) for f in task['files']):
+        if (
+            any((not set(task[k]) <= set(ancestor[k]) for k in ('resources', 'tools', 'actions')))
+            or any((not any((f == p or f.startswith(p + '/') for p in ancestor['files'])) for f in task['files']))
+        ):
             raise ValueError('Child cannot widen parent permissions')
         if any(task['limits'][k] > ancestor['limits'][k] for k in ('tokens', 'cost_micros', 'seconds')):
             raise ValueError('Child cannot widen parent limits')

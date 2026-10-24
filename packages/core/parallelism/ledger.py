@@ -90,7 +90,11 @@ class SQLiteLedger:
             tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
             application = db.execute('PRAGMA application_id').fetchone()[0]
             if tables:
-                if application != 0x50414C50 or not {'runs', 'tasks', 'events'} <= tables or 'started' not in {r[1] for r in db.execute('PRAGMA table_info(tasks)')}:
+                if (
+                    application != 1346456656
+                    or not {'runs', 'tasks', 'events'} <= tables
+                    or 'started' not in {r[1] for r in db.execute('PRAGMA table_info(tasks)')}
+                ):
                     raise ValueError('Expected a parallel dispatcher v001 ledger; no automatic state migration')
             elif application not in (0, 0x50414C50):
                 raise ValueError('State belongs to another application')
