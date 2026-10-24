@@ -59,3 +59,5 @@ Agent improvement: [failure/feedback → regression → skill diff → paired ev
 MCP tooling: [task-oriented tool design, context, protocol/security, evaluation и build](mcp/build/README.md).
 
 Межпроектная память и VPS: [Graph/fulltext, promotion и эксплуатация](memory/README.md).
+
+[Подключение к проекту и global memory](setup/README.md): pinned skills bundle, безопасная установка Codex/Claude, doctor и usage.

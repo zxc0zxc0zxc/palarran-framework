@@ -109,3 +109,4 @@
 | memory/2026-10-24-cross-project/0002 | accepted | Explicit user-authorized isolated VPS deployment, pinned Neo4j CE image and real synthetic acceptance | [record](memory/2026-10-24-cross-project/decisions/0002-authorized-vps.md) |
 
 | memory/2026-10-24-cross-project/0003 | accepted | Explicit global/private project env scope, fail-closed partial profiles and agent-only credential view | [record](memory/2026-10-24-cross-project/decisions/0003-env-scopes.md) |
+| setup/2026-10-24-global-onboarding/0001 | accepted | Explicit global Codex MCP + login SSH tunnel and repeatable project onboarding | [record](setup/2026-10-24-global-onboarding/decisions/0001-user-scoped-setup.md), [handoff](setup/2026-10-24-global-onboarding/handoff.md) |

@@ -51,3 +51,7 @@ python3 scripts/memory_ops.py mcp
 ```
 
 Пример выше не требует повторять credentials в каждом проекте. Global config заполняется только данными пользователя/разрешёнными сгенерированными service secrets; SSH key reference/agent вместо plaintext SSH password. Env scope не равен memory knowledge scope: global bank и project-visible candidates фильтруются API независимо от расположения env.
+
+## Подключение клиентов и автозапуск
+
+Workflow `docs/setup/README.md` и scripts/project_setup.py: явный install в проект, затем doctor без модели и записи памяти. `scripts/memory_global_setup.py install` по отдельному явному разрешению оператора подключает global Codex MCP и macOS user LaunchAgent; --plan без изменений/подключений. Stable snapshot не зависит от dirty checkout. Stdout/stderr туннеля не сохраняются; launchctl показывает state/last exit, ручная диагностика не раскрывает env. Project-only install не даёт разрешения на global изменения.
