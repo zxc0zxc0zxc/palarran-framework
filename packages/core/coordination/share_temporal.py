@@ -6,7 +6,8 @@ from datetime import timedelta
 import hashlib
 import time
 
-from .share import CONSENT, ShareError, apply, canonical, create, fields, ident, require
+from .share import (CONSENT, TERMINAL, ShareError, apply, canonical, create, digest, fields,
+                    ident, require, usage)
 from .service import CoordinationStore
 
 WORKFLOW_NAME = 'palarran.share.v1'
@@ -19,19 +20,70 @@ def workflow_id(project, share_id):
     return 'palarran-share-' + hashlib.sha256(canonical([project, share_id])).hexdigest()
 
 
-def creation(project, offer, actor, confirmed):
+def _usage_snapshot(value):
+    require(type(value) is dict and len(value) <= 33)
+    for actor, counters in value.items():
+        ident(actor); usage(counters)
+
+
+def predecessor_snapshot(project, prior, prior_envelope):
+    """Compact immutable evidence from the same project's terminal authority."""
+    require(prior_envelope['project'] == project, 'forbidden')
+    require(prior['offer'] == prior_envelope['offer'], 'lineage_mismatch')
+    return dict(share_id=prior['offer']['share_id'], sender=prior['sender'],
+                status=prior['status'], repository=prior['offer']['repository'],
+                task_id=prior['offer']['task_id'], run_id=prior['offer']['run_id'],
+                usage=copy.deepcopy(prior['usage']), prior_usage=copy.deepcopy(prior.get('prior_usage', {})),
+                state_sha256=hashlib.sha256(canonical(prior)).hexdigest())
+
+
+def _inherited_usage(offer, actor, predecessor):
+    previous = offer.get('previous_share_id')
+    if previous is None:
+        require(predecessor is None, 'lineage_mismatch')
+        return None
+    require(previous != offer['share_id'], 'lineage_mismatch')
+    fields(predecessor, {'share_id', 'sender', 'status', 'repository', 'task_id', 'run_id',
+                         'usage', 'prior_usage', 'state_sha256'})
+    require(predecessor['share_id'] == previous, 'lineage_mismatch')
+    require(predecessor['sender'] == actor and isinstance(predecessor['status'], str)
+            and predecessor['status'] in TERMINAL,
+            'previous_share_active')
+    require(all(offer[key] == predecessor[key] for key in ('repository', 'task_id', 'run_id')),
+            'lineage_mismatch')
+    digest(predecessor['state_sha256'])
+    _usage_snapshot(predecessor['usage'])
+    inherited = copy.deepcopy(predecessor['prior_usage'])
+    require(type(inherited) is dict and len(inherited) <= 7, 'capacity_exhausted')
+    for share_id, counters in inherited.items():
+        ident(share_id); _usage_snapshot(counters)
+    require(previous not in inherited and offer['share_id'] not in inherited, 'lineage_mismatch')
+    inherited[previous] = copy.deepcopy(predecessor['usage'])
+    return inherited
+
+
+def creation(project, offer, actor, confirmed, predecessor=None):
     ident(project); ident(actor)
     require(confirmed is True, 'confirmation_required')
     require(type(offer) is dict and offer.get('backend') == 'temporal', 'backend_mismatch')
     result = dict(project=project, offer=copy.deepcopy(offer), actor=actor, confirmed=True)
+    _inherited_usage(offer, actor, predecessor)
+    if predecessor is not None:
+        result['predecessor'] = copy.deepcopy(predecessor)
     canonical(result)
     return result
 
 
 def validate_creation(value, now):
-    fields(value, {'project', 'offer', 'actor', 'confirmed'})
-    result = creation(value['project'], value['offer'], value['actor'], value['confirmed'])
-    return result, create(result['offer'], result['actor'], now)
+    fields(value, {'project', 'offer', 'actor', 'confirmed'}, {'predecessor'})
+    state = create(value['offer'], value['actor'], now)
+    result = creation(value['project'], value['offer'], value['actor'], value['confirmed'],
+                      value.get('predecessor'))
+    inherited = _inherited_usage(result['offer'], result['actor'], result.get('predecessor'))
+    if inherited is not None:
+        state['prior_usage'] = inherited
+        canonical(state)
+    return result, state
 
 
 def command(project, share_id, event, actor, confirmed):
@@ -106,8 +158,16 @@ class ShareTemporalGateway:
 
     async def create(self, token, project, offer, *, confirmed=False):
         actor = self._actor(token, project)
-        request = creation(project, offer, actor, confirmed)
+        require(confirmed is True, 'confirmation_required')
         create(offer, actor, int(self.clock()))  # local admission; Workflow validates again.
+        predecessor = None
+        if 'previous_share_id' in offer:
+            require(offer['previous_share_id'] != offer['share_id'], 'lineage_mismatch')
+            prior_handle = self._handle(project, offer['previous_share_id'])
+            prior_envelope = await self._query(prior_handle, 'envelope')
+            prior_status = await self._query(prior_handle, 'status')
+            predecessor = predecessor_snapshot(project, prior_status['state'], prior_envelope)
+        request = creation(project, offer, actor, confirmed, predecessor)
         wid = workflow_id(project, offer['share_id'])
         try:
             handle = await self.client.start_workflow(
