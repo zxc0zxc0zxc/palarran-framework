@@ -167,6 +167,12 @@ class SharingGitTests(unittest.TestCase):
             self.checkpoint()
         self.assertFalse((self.sender / "injected.txt").exists())
 
+    def test_nested_worktree_rejected_without_primary_mutation(self):
+        (self.sender / "owned.txt").write_text("task")
+        with self.assertRaisesRegex(GitShareError, "nested_worktree_forbidden"):
+            self.helper.checkpoint(["owned.txt"], self.sender / "nested", "codex/share", "Task", expected_head=self.base)
+        self.assertFalse((self.sender / "nested").exists())
+
     def test_symlink_owned_file_rejected(self):
         (self.sender / "owned.txt").unlink()
         (self.sender / "owned.txt").symlink_to(self.sender / "foreign.txt")
