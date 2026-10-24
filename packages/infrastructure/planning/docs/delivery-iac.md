@@ -13,6 +13,12 @@ Terraform is optional when the provider lacks an API or the host is already prov
 
 The [Terraform example](../templates/terraform-hcloud/main.tf) is only for a **new** Hetzner server. This is a specific provider adapter; for another provider, choose a supported provider and rebuild resources. Do not assume Terraform/OpenTofu interchangeability: pin the selected version and check provider/backend compatibility and lockfile.
 
+## Repository CI validation
+
+The repository workflow validates the canonical example in `packages/infrastructure/planning/templates/terraform-hcloud`; update that workflow path whenever the capability moves. GitHub resolves a step's [working-directory](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsworking-directory) before starting its shell, so a removed directory prevents all Terraform checks from running.
+
+CI runs `terraform fmt -check`, `terraform init -backend=false -input=false` and `terraform validate` with the pinned CLI. Initialization may download the public provider; it does not initialize a remote backend. These checks require no cloud credentials and do not run plan, refresh or apply. Passing confirms formatting and configuration/provider-schema compatibility, not deployed infrastructure or operational security. The offline workflow-path regression catches missing literal directories without installing Terraform or making network calls.
+
 ## State and resource changes
 
 State, saved plans and tfvars may contain secrets; `sensitive` only hides some output ([HashiCorp](https://developer.hashicorp.com/terraform/language/state/sensitive-data)). Use a remote backend with encryption, IAM, locking/versioning as supported, separate state environments and backups. Store no access tokens in HCL. Prefer OIDC where the provider supports it; do not promise OIDC for every API ([GitHub OIDC](https://docs.github.com/en/actions/concepts/security/openid-connect)).
