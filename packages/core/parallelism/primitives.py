@@ -5,10 +5,12 @@ import re
 _ID = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,95}$')
 
 
+
 def integer(value, name, minimum=0):
     if type(value) is not int or value < minimum or value > 10**15:
         raise ValueError('Invalid ' + name)
     return value
+
 
 def text(value, name, limit=4096):
     if (
@@ -20,10 +22,12 @@ def text(value, name, limit=4096):
         raise ValueError('Invalid ' + name)
     return value
 
+
 def identifier(value):
     if not isinstance(value, str) or not _ID.fullmatch(value):
         raise ValueError('Invalid identifier')
     return value
+
 
 def path(value):
     text(value, 'owned path', 512)
@@ -37,6 +41,7 @@ def path(value):
         raise ValueError('Expected a literal relative file path')
     return value
 
+
 def strings(values, name, limit=128):
     if (
         type(values) is not list
@@ -49,16 +54,25 @@ def strings(values, name, limit=128):
         text(value, name, 512)
     return values
 
+
 def overlap(left, right):
     return left == right or left.startswith(right + '/') or right.startswith(left + '/')
+
 
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
 
+
 def allocations(budget):
     """Protect named pools; absent cash pools use the frozen token proportions."""
     phases = ('integration', 'verification', 'handoff')
-    costs = {phase: budget.get(phase + '_cost_micros', budget['cost_micros'] * budget.get(phase + '_tokens', 0) // budget['tokens']) for phase in phases}
+    costs = {
+        phase: budget.get(
+            phase + '_cost_micros',
+            budget['cost_micros'] * budget.get(phase + '_tokens', 0) // budget['tokens'],
+        )
+        for phase in phases
+    }
     for value in costs.values():
         integer(value, 'phase cost reserve')
     if sum(costs.values()) >= budget['cost_micros']:

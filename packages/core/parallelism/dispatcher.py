@@ -105,7 +105,10 @@ class Dispatcher:
         return self.ledger.read_run(db, run_id)
 
     def _status(self, rows, cancelled=False):
-        states = {r['state'] for r in rows if r['attempt'] > 0 or json.loads(r['packet']).get('required_for_completion', True)}
+        states = {
+            row['state'] for row in rows
+            if row['attempt'] > 0 or json.loads(row['packet']).get('required_for_completion', True)
+        }
         if TaskState.UNKNOWN in states:
             return TaskState.UNKNOWN.value
         if TaskState.CANCEL_REQUESTED in states:
