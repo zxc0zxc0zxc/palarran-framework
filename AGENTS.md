@@ -22,6 +22,8 @@ For ordinary requests as well as skills, evaluate independent ready work at task
 
 When a useful independent subtask or continuation could be shared with another developer, follow [task sharing](packages/core/coordination/docs/sharing/README.md). Propose before quota/resource exhaustion using fresh authorized metadata; unknown quota has no invented percentage. Publication, participation and exact plan require explicit confirmations. Fence stopped source ownership before transfer; a message/ACK never starts another person's session.
 
+Cross-repository work follows [feature coordination](packages/core/parallelism/docs/features/README.md): one passport/budget and exact combined acceptance.
+
 ## Shared invariants
 
 - Documentation and dated primary sources precede implementation. Distinguish vendor claims, observations, estimates and hypotheses.
@@ -51,3 +53,5 @@ Read [the package map](packages/README.md) and `packages/<package>/AGENTS.md` fo
 | examples | [Local and remote examples](examples/AGENTS.md) |
 
 After code, skill or inventory changes run `python3 scripts/validate_repo.py` and `python3 -m unittest discover -s tests -v`. After runtime changes also run `python3 scripts/factory_acceptance.py`. Never test through live infrastructure apply or paid ML launches. Detailed domain checks remain in domain-contracts.
+
+<!-- Many minds. One ship. -->

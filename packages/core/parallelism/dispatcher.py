@@ -74,10 +74,29 @@ def validate(manifest):
         raise ValueError('Manifest exceeds byte budget')
     _identifier(value['run_id'])
     _text(value['plan_version'], 'plan version', 128)
-    if not re.fullmatch(r'[a-f0-9]{40,64}', value['base_commit']):
+    if not re.fullmatch(r'[a-f0-9]{40}|[a-f0-9]{64}', value['base_commit']):
         raise ValueError('Exact base commit required')
-    if set(value) - {'run_id', 'plan_version', 'base_commit', 'budget', 'max_workers', 'tasks', 'heartbeat_seconds'}:
+    if set(value) - {'run_id', 'plan_version', 'base_commit', 'budget', 'max_workers', 'tasks', 'heartbeat_seconds', 'repositories'}:
         raise ValueError('Unknown manifest fields')
+    repositories = value.get('repositories')
+    if repositories is not None:
+        if type(repositories) is not list or not 1 <= len(repositories) <= 32:
+            raise ValueError('Expected 1..32 repositories')
+        seen = set()
+        for repository in repositories:
+            if set(repository) != {'repository_id', 'default_branch', 'base_commit', 'files', 'owner'}:
+                raise ValueError('Invalid repository binding')
+            key = _identifier(repository['repository_id'])
+            if key in seen:
+                raise ValueError('Duplicate repository')
+            seen.add(key)
+            _identifier(repository['owner'])
+            _text(repository['default_branch'], 'default branch', 256)
+            if not re.fullmatch(r'[a-f0-9]{40}|[a-f0-9]{64}', repository['base_commit']):
+                raise ValueError('Exact repository base required')
+            _strings(repository['files'], 'repository files')
+            for item in repository['files']:
+                _path(item)
     budget = value['budget']
     for key in ('tokens', 'cost_micros', 'launches', 'seconds'):
         _integer(budget[key], key, 1)
@@ -100,12 +119,22 @@ def validate(manifest):
         raise ValueError('Duplicate task')
     by_id = {t['task_id']: t for t in tasks}
     for task in tasks:
-        if set(task) - {'task_id', 'parent_task_id', 'goal', 'acceptance', 'depends_on', 'plan_version', 'base_commit', 'contracts', 'files', 'resources', 'tools', 'actions', 'limits', 'owner', 'worktree', 'session_id', 'expected_result', 'budget_phase', 'task_queue', 'dispatch_mode', 'required_for_completion'}:
+        if set(task) - {'task_id', 'parent_task_id', 'goal', 'acceptance', 'depends_on', 'plan_version', 'base_commit', 'contracts', 'files', 'resources', 'tools', 'actions', 'limits', 'owner', 'worktree', 'session_id', 'expected_result', 'budget_phase', 'task_queue', 'dispatch_mode', 'required_for_completion', 'repository_id'}:
             raise ValueError('Unknown task fields')
         _identifier(task['owner'])
         for key in ('goal', 'acceptance', 'expected_result'):
             _text(task[key], key)
-        if task['plan_version'] != value['plan_version'] or task['base_commit'] != value['base_commit']:
+        repository = None
+        if repositories is not None:
+            repository = next((r for r in repositories if r['repository_id'] == task.get('repository_id')), None)
+            if repository is None:
+                raise ValueError('Task repository binding required')
+            if any(not any(_overlap(f, p) and (f == p or f.startswith(p + '/')) for p in repository['files']) for f in task['files']):
+                raise ValueError('Task widens repository file scope')
+        elif task.get('repository_id') is not None:
+            raise ValueError('Repository task requires root repositories')
+        expected_base = repository['base_commit'] if repository else value['base_commit']
+        if task['plan_version'] != value['plan_version'] or task['base_commit'] != expected_base:
             raise ValueError('Task source/plan drift')
         if type(task['contracts']) is not dict or len(_canonical(task['contracts'])) > 8192:
             raise ValueError('Invalid contracts')
@@ -132,6 +161,8 @@ def validate(manifest):
             _integer(task['limits'][key], key, 1)
         if parent is not None:
             ancestor = by_id[parent]
+            if task.get('repository_id') != ancestor.get('repository_id'):
+                raise ValueError('Child cannot change repository')
             if task.get('required_for_completion', True) != ancestor.get('required_for_completion', True):
                 raise ValueError('Child cannot change completion requirement')
             if task.get('dispatch_mode', 'auto') != ancestor.get('dispatch_mode', 'auto'):
@@ -301,7 +332,7 @@ class Dispatcher:
                 'attempt_id': row['attempt'], 'state': row['state'], 'reason': row['reason'] if row['reason'] in (None, 'budget', 'heartbeat_lost') else 'operator_reconciled',
                 'owner': packet['owner'],
                 'session_id': packet.get('session_id'), 'task_queue': packet.get('task_queue'),
-                'base_commit': packet['base_commit'], 'plan_version': packet['plan_version'],
+                'repository_id': packet.get('repository_id'), 'base_commit': packet['base_commit'], 'plan_version': packet['plan_version'],
                 'depends_on': packet['depends_on'], 'dispatch_mode': packet.get('dispatch_mode', 'auto'), 'required_for_completion': packet.get('required_for_completion', True), 'budget_phase': packet.get('budget_phase', 'execution'),
                 'verified_subject': (proof.get('subject') if isinstance(proof.get('subject'), str) and re.fullmatch(r'[a-f0-9]{40}|[a-f0-9]{64}', proof['subject']) else hashlib.sha256(_canonical(proof.get('subject')).encode()).hexdigest()) if row['state'] == 'verified' else None,
                 'evidence_sha256': hashlib.sha256(_canonical(proof).encode()).hexdigest() if proof else None,
@@ -316,7 +347,7 @@ class Dispatcher:
             run, manifest = self._run(db, run_id)
             rows = db.execute('SELECT * FROM tasks WHERE run=? ORDER BY rowid', (run_id,)).fetchall()
             return {'run_id': run_id, 'backend': run['backend'], 'plan_sha256': run['digest'], 'plan_version': manifest['plan_version'], 'base_commit': manifest['base_commit'], 'tasks_sha256': hashlib.sha256(_canonical([json.loads(r['packet']) for r in rows]).encode()).hexdigest(), 'status': self._status(rows, bool(run['cancel'])), 'stopped': not any(r['state'] in _HELD for r in rows),
-                    'budget': manifest['budget'], 'cost_allocations': allocations(manifest['budget']), 'usage': {'tokens': sum(r['tokens'] for r in rows), 'cost_micros': sum(r['cost'] for r in rows), 'reserved_tokens': sum(r['reserve_tokens'] for r in rows), 'reserved_cost_micros': sum(r['reserve_cost'] for r in rows), 'known': all(r['usage_known'] for r in rows)},
+                    'repositories': manifest.get('repositories'), 'budget': manifest['budget'], 'cost_allocations': allocations(manifest['budget']), 'usage': {'tokens': sum(r['tokens'] for r in rows), 'cost_micros': sum(r['cost'] for r in rows), 'reserved_tokens': sum(r['reserve_tokens'] for r in rows), 'reserved_cost_micros': sum(r['reserve_cost'] for r in rows), 'known': all(r['usage_known'] for r in rows)},
                     'tasks': [self._task_report(r) for r in rows]}
 
     def _conflicts(self, db, run_id, packet):
@@ -325,7 +356,7 @@ class Dispatcher:
             other = json.loads(held['packet'])
             if set(packet['resources']) & set(other['resources']):
                 return True
-            if held['run'] == run_id and any(_overlap(a, b) for a in packet['files'] for b in other['files']):
+            if held['run'] == run_id and packet.get('repository_id') == other.get('repository_id') and any(_overlap(a, b) for a in packet['files'] for b in other['files']):
                 return True
             if packet.get('worktree') and other.get('worktree') and _overlap(str(Path(packet['worktree']).resolve()), str(Path(other['worktree']).resolve())):
                 return True
@@ -424,7 +455,7 @@ class Dispatcher:
             rows = db.execute('SELECT id,state,packet,attempt FROM tasks WHERE run=?', (run_id,)).fetchall()
             return {'status': self._status(rows, bool(run['cancel'])), 'stopped': not any(r['state'] in _HELD for r in rows), 'backend': run['backend'], 'available': max(0, manifest.get('max_workers', 2) - sum(r['state'] in _HELD for r in rows)), 'routes': {t['task_id']: t['task_queue'] for t in [json.loads(r[0]) for r in db.execute('SELECT packet FROM tasks WHERE run=?', (run_id,))] if t.get('task_queue')}, 'ready': [r['id'] for r in rows if r['state'] == 'ready' and json.loads(r['packet']).get('dispatch_mode', 'auto') == 'auto'], 'active': [r['id'] for r in rows if r['state'] in _HELD]}
 
-    def _admit(self, run_id, task_id):
+    def _admit(self, run_id, task_id, *, feature_binding=None):
         self.tick(run_id)
         with self._transaction() as db:
             run, manifest = self._run(db, run_id)
@@ -439,6 +470,20 @@ class Dispatcher:
             if sum(r['state'] in _HELD for r in rows) >= manifest.get('max_workers', 2):
                 return None
             task = json.loads(row['packet'])
+            feature_table = db.execute("SELECT 1 FROM sqlite_master WHERE name='features'").fetchone()
+            if manifest.get('repositories') and not feature_table:
+                return None
+            if manifest.get('repositories') and feature_table and not db.execute('SELECT 1 FROM features WHERE run=?', (run_id,)).fetchone():
+                return None
+            if feature_table:
+                from packages.core.parallelism.feature import admission_allowed
+                if not admission_allowed(db, run_id, task):
+                    self._event(db, run_id, task_id, 'feature_contract_wait')
+                    return None
+            if feature_binding is not None:
+                from packages.core.parallelism.feature import check_binding_allowed
+                if not feature_table or not check_binding_allowed(db, run_id, task_id, feature_binding):
+                    raise ValueError('Feature check composition, criteria or slot changed')
             if self._conflicts(db, run_id, task):
                 self._event(db, run_id, task_id, 'ownership_wait')
                 return None
@@ -503,8 +548,8 @@ class Dispatcher:
             receipt = {'status': 'unknown', 'tokens': 0, 'cost_micros': 0, 'usage_known': False, 'stopped': False}
         return self.finish_task(run_id, task_id, task['attempt_id'], receipt, verifier, elapsed=time.monotonic() - started)
 
-    def claim_task(self, run_id, task_id):
-        return self._admit(run_id, task_id)
+    def claim_task(self, run_id, task_id, *, feature_binding=None):
+        return self._admit(run_id, task_id, feature_binding=feature_binding)
 
     def finish_task(self, run_id, task_id, attempt_id, receipt, verifier, *, elapsed=None):
         with self._transaction() as db:
