@@ -86,7 +86,7 @@ class FeatureTests(unittest.TestCase):
         with self.assertRaises(ValueError): validate(m)
     def test_unresolved_invariant_stops_dispatch(self):
         p=copy.deepcopy(self.p); p['plan_revision']=2;p['business_invariants'][0]['resolved']=False
-        self.f.update_passport(p,approvals=['owner-auth'])
+        self.f.update_passport(p,approvals=p['owners'])
         self.assertIsNone(self.d.claim_task('feature-run','build-auth')); self.assertEqual('blocked',self.f.report()['status'])
     def test_contract_change_needs_boundary_owners_and_blocks_old_packets(self):
         p=copy.deepcopy(self.p);p['plan_revision']=2;p['contracts'][0]['revision']=2;p['contracts'][0]['semantics_sha256']='4'*64

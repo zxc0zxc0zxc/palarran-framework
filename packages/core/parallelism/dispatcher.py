@@ -74,7 +74,7 @@ def validate(manifest):
         raise ValueError('Manifest exceeds byte budget')
     _identifier(value['run_id'])
     _text(value['plan_version'], 'plan version', 128)
-    if not re.fullmatch(r'[a-f0-9]{40,64}', value['base_commit']):
+    if not re.fullmatch(r'[a-f0-9]{40}|[a-f0-9]{64}', value['base_commit']):
         raise ValueError('Exact base commit required')
     if set(value) - {'run_id', 'plan_version', 'base_commit', 'budget', 'max_workers', 'tasks', 'heartbeat_seconds', 'repositories'}:
         raise ValueError('Unknown manifest fields')
