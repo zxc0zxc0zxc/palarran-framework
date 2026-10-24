@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import stat
 import time
 import uuid
 
@@ -23,9 +24,23 @@ def digest(value):
 
 def _regular(path, limit=1048576):
     path = Path(path)
-    if any(p.is_symlink() for p in (path, *path.parents)) or not path.is_file() or path.stat().st_size > limit:
+    if any(p.is_symlink() for p in (path, *path.parents)):
         raise ValueError('Expected bounded regular non-symlink file')
-    return path.read_bytes()
+    descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    try:
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode) or info.st_size > limit:
+            raise ValueError('Expected bounded regular non-symlink file')
+        chunks, count = [], 0
+        while True:
+            chunk = os.read(descriptor, min(65536, limit + 1 - count))
+            if not chunk:
+                return b''.join(chunks)
+            chunks.append(chunk); count += len(chunk)
+            if count > limit:
+                raise ValueError('Bounded file exceeded read limit')
+    finally:
+        os.close(descriptor)
 
 
 def _load(path):
@@ -113,12 +128,29 @@ class FeatureGateRunner:
             raise ValueError('Unregistered verification slot')
         with self.dispatcher._transaction() as db:
             _, manifest = self.dispatcher._run(db, self.run_id)
+            feature_table = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='features'").fetchone()
+            feature_row = db.execute('SELECT state FROM features WHERE run=?', (self.run_id,)).fetchone() if feature_table else None
+            if feature_row:
+                state = json.loads(feature_row['state'])
+                frozen = state['compositions'].get(state['current_composition'])
+                checks = state['passport']['acceptance_protocol']['checks']
+                frozen_check = next((item for item in checks if item['check_id'] == check_id), None)
+                if (not frozen or composition != dict(frozen, composition_id=state['current_composition'])
+                        or frozen['passport_sha256'] != state['passport_sha256']):
+                    raise ValueError('Current authoritative feature composition required')
+                if (not frozen_check or entry['criteria_sha256'] != frozen_check['criteria_sha256']
+                        or slot not in [frozen_check['task_id'], *frozen_check.get('repair_task_ids', [])]
+                        or entry['verifier_id'] == frozen_check['owner']):
+                    raise ValueError('Check registration differs from authoritative protocol')
+
         task_config = next((t for t in manifest['tasks'] if t['task_id'] == slot), None)
         if task_config is None or task_config.get('dispatch_mode') != 'external' or task_config.get('budget_phase') not in ('verification', 'integration'):
             raise ValueError('Check requires original root external verification slot')
         if sum(1 for _ in itertools.islice(self.root.iterdir(), 101)) >= 100:
             raise ValueError('Check attempt storage bound reached')
-        task = self.dispatcher.claim_task(self.run_id, slot)
+        binding = {'feature_binding': {'composition_id': composition_id, 'check_id': check_id,
+                                       'criteria_sha256': entry['criteria_sha256']}} if feature_row else {}
+        task = self.dispatcher.claim_task(self.run_id, slot, **binding)
         if task is None:
             raise ValueError('Verification slot not admitted; never replay')
         started = time.monotonic()
@@ -186,7 +218,8 @@ class FeatureGateRunner:
             return False
         for path in paths:
             record = _load(path)
-            if record['receipt'] == receipt and record['accounting']['status'] == 'verified':
+            if (record['receipt'] == receipt and record['accounting']['status'] == 'verified'
+                    and digest(record['evidence']) == receipt.get('evidence_sha256')):
                 if receipt.get('check_id') != check.get('check_id') or receipt.get('run_id') != self.run_id or receipt['criteria_sha256'] != check['criteria_sha256'] or receipt['verifier_id'] == check['owner']:
                     return False
                 return {'independent': True, 'subject': receipt['composition_id'],
