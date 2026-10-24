@@ -42,4 +42,6 @@
 <text x="1210" y="830" fill="#a4a4a5" font-size="19" font-weight="400">Graph links + full-text retrieval</text>
 <text x="70" y="960" fill="#efeee9" font-size="22" font-weight="400">Messages inform. The authority assigns. Independent checks accept.</text>
 <text x="70" y="1004" fill="#a4a4a5" font-size="19" font-weight="400">No ACK grants approval. Stale ownership and unknown actions require reconciliation before overlapping work continues.</text>
+
+<g transform="translate(550 710)" fill="none" stroke="#a4a4a5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-label="SQLite schematic icon"><ellipse cx="15" cy="6" rx="12" ry="4"/><path d="M3 6v19c0 5 24 5 24 0V6M3 15c0 5 24 5 24 0"/></g><g transform="translate(1095 710)" fill="none" stroke="#a4a4a5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-label="Temporal schematic icon"><circle cx="15" cy="15" r="13"/><path d="M15 6v9l7 4M15 2v2M28 15h-2"/></g><g transform="translate(1650 710)" fill="none" stroke="#a4a4a5" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-label="Neo4j schematic icon"><path d="M7 7l17 4M8 9l6 15M23 13l-7 11"/><circle cx="5" cy="6" r="4"/><circle cx="25" cy="11" r="4"/><circle cx="15" cy="27" r="4"/></g>
 </g></svg>
