@@ -108,10 +108,10 @@ def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port
                     if feature.report()['passport_sha256'] != payload['passport_sha256']:
                         raise ValueError('Feature revision drift')
                     method, arguments = payload['method'], payload['arguments']
-                    if method not in {'update_passport','compose','record_check','begin_release','begin_step','finish_step','observe'} or type(arguments) is not dict:
+                    if method not in {'update_passport','compose','record_check','begin_release','begin_step','finish_step','reconcile_step','observe'} or type(arguments) is not dict:
                         raise ValueError('Unsupported feature operation')
                     arguments = dict(arguments)
-                    if method in {'record_check','finish_step','observe'}:
+                    if method in {'record_check','finish_step','reconcile_step','observe'}:
                         trusted = (feature_verifiers or {}).get(method)
                         if not callable(trusted): raise ValueError('Trusted feature verifier unavailable')
                         if 'verifier' in arguments: raise ValueError('Caller verifier forbidden')

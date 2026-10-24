@@ -45,6 +45,14 @@ def admission_allowed(db, run_id, task):
         return False
     # External checks/controllers use their own immutable criteria pins.
     if task.get('dispatch_mode') == 'external':
+        release_slots = {s['task_id'] for s in passport['release_plan']['steps']}
+        if task['task_id'] in release_slots:
+            # Release slots cannot be admitted by an ordinary worker claim before
+            # the trusted coordinator has persisted exact authorized intent.
+            return any(op['composition_id'] == state['current_composition'] and op['state'] == 'releasing'
+                       and any(entry['task_id'] == task['task_id'] and entry['state'] == 'unknown'
+                               and entry['attempt_id'] is None for entry in op['steps'].values())
+                       for op in state['releases'].values())
         return True
     for contract in passport['contracts']:
         service_repos = {s['repository_id'] for s in passport['services']
@@ -157,30 +165,46 @@ class FeatureAuthority:
                 raise ValueError('Invalid business invariant')
             invariant_ids.add(invariant['invariant_id'])
         release = p['release_plan']
-        if set(release) != {'environment','initial_versions','allowed_matrices','steps','observation_seconds','thresholds'}:
+        if set(release) != {'environment','initial_versions','allowed_matrices','steps','observation_seconds','thresholds','initial_state_sha256','allowed_states'}:
             raise ValueError('Invalid release plan')
         _identifier(release['environment']); _integer(release['observation_seconds'], 'observation window', 1)
         def matrix(value):
             if type(value) is not dict or set(value) != service_ids:
                 raise ValueError('Full version matrix required')
             for sha in value.values(): _pin(sha, True)
-        matrix(release['initial_versions'])
+        matrix(release['initial_versions']); _pin(release['initial_state_sha256'])
         if type(release['allowed_matrices']) is not list or not 1 <= len(release['allowed_matrices']) <= 128:
             raise ValueError('Allowed intermediate version matrices required')
         for value in release['allowed_matrices']: matrix(value)
         if release['initial_versions'] not in release['allowed_matrices']:
             raise ValueError('Initial matrix not approved')
+        if type(release['allowed_states']) is not list or not 1 <= len(release['allowed_states']) <= 128:
+            raise ValueError('Exact migration/flag/config prefix states required')
+        for prefix in release['allowed_states']:
+            if type(prefix) is not dict or set(prefix) != {'versions','state_sha256'}:
+                raise ValueError('Invalid release prefix state')
+            matrix(prefix['versions']); _pin(prefix['state_sha256'])
+            if prefix['versions'] not in release['allowed_matrices']:
+                raise ValueError('Prefix version matrix not approved')
+        if {'versions':release['initial_versions'],'state_sha256':release['initial_state_sha256']} not in release['allowed_states']:
+            raise ValueError('Initial environment state not approved')
         if type(release['steps']) is not list or not 1 <= len(release['steps']) <= 64:
             raise ValueError('Release steps required')
         step_ids = set()
         for step in release['steps']:
-            if set(step) != {'step_id','owner','task_id','versions','kind','recovery','irreversible'}:
+            if set(step) != {'step_id','owner','task_id','versions','kind','recovery','irreversible','reversibility','state_sha256'}:
                 raise ValueError('Invalid release step fields')
             key = _identifier(step['step_id']); matrix(step['versions'])
             task = tasks.get(step['task_id'])
             if key in step_ids or step['owner'] not in p['owners'] or step['kind'] not in {'migration','deploy','flag','compensation'} or task is None or task.get('dispatch_mode') != 'external' or step['task_id'] in slots or type(step['irreversible']) is not bool:
                 raise ValueError('Release requires unique external root slots')
-            _text(step['recovery'], 'release recovery')
+            _text(step['recovery'], 'release recovery'); _pin(step['state_sha256'])
+            if type(step['reversibility']) is not dict or set(step['reversibility']) != {'code','schema','data','external'} or any(type(v) is not bool for v in step['reversibility'].values()):
+                raise ValueError('Separate code/schema/data/external reversibility required')
+            if step['irreversible'] != (not all(step['reversibility'].values())):
+                raise ValueError('Irreversibility contradicts recovery dimensions')
+            if {'versions':step['versions'],'state_sha256':step['state_sha256']} not in release['allowed_states']:
+                raise ValueError('Unsafe intermediate migration/flag/config state')
             if step['versions'] not in release['allowed_matrices']:
                 raise ValueError('Unsafe intermediate release matrix')
             step_ids.add(key); slots.add(step['task_id'])
@@ -206,6 +230,8 @@ class FeatureAuthority:
                 if json.loads(row['state'])['passport'] != p:
                     raise ValueError('Feature already bound to another passport')
             else:
+                if db.execute('SELECT 1 FROM tasks WHERE run=? AND attempt>0',(self.run_id,)).fetchone():
+                    raise ValueError('Freeze feature passport before execution')
                 state = {'passport':p, 'passport_sha256':digest(p), 'revisions':[], 'compositions':{},
                          'current_composition':None, 'checks':{}, 'releases':{}, 'stage':'draft'}
                 db.execute('INSERT INTO features VALUES(?,?)', (self.run_id, _canonical(state)))
@@ -262,7 +288,11 @@ class FeatureAuthority:
             for value in (test_suite_sha256,environment_sha256): _pin(value)
             for value in (flags_sha256,data_sha256):
                 if value is not None: _pin(value)
-            composition={'feature_id':p['feature_id'],'run_id':self.run_id,'spec_revision':p['spec_revision'],
+            previous = state['compositions'].get(state['current_composition'])
+            comparison = {'components':components,'test_suite_sha256':test_suite_sha256,'environment_sha256':environment_sha256,'flags_sha256':flags_sha256,'data_sha256':data_sha256}
+            if previous and previous['passport_sha256']==state['passport_sha256'] and all(previous[k]==v for k,v in comparison.items()):
+                return dict(previous,composition_id=state['current_composition'])
+            composition={'composition_revision':len(state['compositions'])+1,'feature_id' :p['feature_id'],'run_id':self.run_id,'spec_revision':p['spec_revision'],
                          'plan_revision':p['plan_revision'],'passport_sha256':state['passport_sha256'],
                          'components':components,'test_suite_sha256':test_suite_sha256,
                          'environment_sha256':environment_sha256,'flags_sha256':flags_sha256,'data_sha256':data_sha256}
@@ -320,21 +350,23 @@ class FeatureAuthority:
         if type(authorization) is not dict or set(authorization)!={'confirmed','actor','environment','composition_id'} or authorization.get('confirmed') is not True or authorization.get('actor') not in ({owner} if owner else set(p['owners'])) or authorization.get('environment')!=environment or authorization.get('composition_id')!=composition_id:
             raise ValueError('Explicit exact environment authorization required')
 
-    def begin_release(self,composition_id,environment,*,authorization,observed_versions):
+    def begin_release(self,composition_id,environment,*,authorization,observed_versions,observed_state_sha256):
         with self.dispatcher._transaction() as db:
             state=self._load(db); composition=self._composition(state,composition_id); p=state['passport']
             self._authorization(p,composition_id,environment,authorization,p['coordinator'])
+            key=digest({'composition_id':composition_id,'environment':environment})
+            if key in state['releases']: return state['releases'][key]
             if self.report_from(db,state)['status']!='release_ready': raise ValueError('Feature not release ready')
             release=p['release_plan']
-            if environment!=release['environment'] or observed_versions!=release['initial_versions'] or release['steps'][-1]['versions']!={k:v['commit'] for k,v in composition['components'].items()}:
+            if environment!=release['environment'] or observed_state_sha256!=release['initial_state_sha256'] or observed_versions!=release['initial_versions'] or release['steps'][-1]['versions']!={k:v['commit'] for k,v in composition['components'].items()}:
                 raise ValueError('Release environment/version drift')
             key=digest({'composition_id':composition_id,'environment':environment})
             if key not in state['releases']:
-                state['releases'][key]={'operation_id':key,'composition_id':composition_id,'environment':environment,'state':'releasing','versions':observed_versions,'steps':{},'observation_started':None}
+                state['releases'][key]={'operation_id':key,'composition_id':composition_id,'environment':environment,'state':'releasing','versions':observed_versions,'state_sha256':observed_state_sha256,'steps':{},'observation_started':None}
                 state['stage']='releasing'; self._save(db,state)
             return state['releases'][key]
 
-    def begin_step(self,operation_id,step_id,*,authorization,observed_versions):
+    def begin_step(self,operation_id,step_id,*,authorization,observed_versions,observed_state_sha256):
         # Intent before admission: a crash cannot launch a second process. Incomplete
         # intent is unknown and needs explicit root reconciliation; never replay.
         with self.dispatcher._transaction() as db:
@@ -346,15 +378,21 @@ class FeatureAuthority:
             self._authorization(p,op['composition_id'],op['environment'],authorization,step['owner'])
             if step_id in op['steps']: return dict(op['steps'][step_id],launch_allowed=False)
             index=steps.index(step)
-            if op['state']!='releasing' or observed_versions!=op['versions'] or any(op['steps'].get(s['step_id'],{}).get('state')!='completed' for s in steps[:index]):
+            if op['state']!='releasing' or observed_state_sha256!=op['state_sha256'] or observed_versions!=op['versions'] or any(op['steps'].get(s['step_id'],{}).get('state')!='completed' for s in steps[:index]):
                 raise ValueError('Release ordering/version drift')
-            op['steps'][step_id]={'state':'unknown','task_id':step['task_id'],'attempt_id':None,'subject':op['composition_id'],'versions':step['versions']}
+            op['steps'][step_id]={'state':'unknown','task_id':step['task_id'],'attempt_id':None,'subject':op['composition_id'],'versions':step['versions'],'state_sha256':step['state_sha256']}
             self._save(db,state)
         task=self.dispatcher.claim_task(self.run_id,step['task_id'])
         with self.dispatcher._transaction() as db:
             state=self._load(db); entry=state['releases'][operation_id]['steps'][step_id]
             if task is None:
                 entry['state']='blocked'; self._save(db,state); return dict(entry,launch_allowed=False)
+            # Cancellation/authority may change between intent and root claim.
+            run, _ = self.dispatcher._run(db, self.run_id)
+            row = db.execute('SELECT state,attempt FROM tasks WHERE run=? AND id=?',(self.run_id,step['task_id'])).fetchone()
+            if run['cancel'] or row['state'] != 'running' or row['attempt'] != task['attempt_id']:
+                entry.update(state='unknown',attempt_id=task['attempt_id']); state['releases'][operation_id]['state']='unknown'
+                self._save(db,state); return dict(entry,launch_allowed=False)
             entry.update(state='running',attempt_id=task['attempt_id']); self._save(db,state)
             return dict(entry,launch_allowed=True,task=task)
 
@@ -373,15 +411,49 @@ class FeatureAuthority:
         with self.dispatcher._transaction() as db:
             state=self._load(db); op=state['releases'][operation_id]; self._composition(state,op['composition_id']); entry=op['steps'][step_id]
             row=self._root_slot(db,step['task_id'],op['composition_id'],require_verified=False)
-            if entry['attempt_id']!=row['attempt'] or row['state'] in {'running','submitted','unknown','cancel_requested'} or not row['usage_known']:
+            run, _ = self.dispatcher._run(db,self.run_id)
+            if run['cancel']:
+                entry['state']='cancelled' if row['usage_known'] and row['state'] not in {'running','submitted','unknown','cancel_requested'} else 'unknown'
+                op['state']=entry['state']
+            elif entry['attempt_id']!=row['attempt'] or row['state'] in {'running','submitted','unknown','cancel_requested'} or not row['usage_known']:
                 entry['state']='unknown'; op['state']='unknown'
-            elif proof.get('verdict')=='PASS' and proof.get('versions')==step['versions'] and row['state']=='verified' and json.loads(row['receipt'])['subject']==op['composition_id']:
-                entry.update(state='completed',evidence_sha256=proof['evidence_sha256']); op['versions']=step['versions']; op['state']='releasing'
+            elif proof.get('verdict')=='PASS' and proof.get('versions')==step['versions'] and proof.get('state_sha256')==step['state_sha256'] and row['state']=='verified' and json.loads(row['receipt'])['subject']==op['composition_id']:
+                entry.update(state='completed',evidence_sha256=proof['evidence_sha256']); op['versions']=step['versions']; op['state_sha256']=step['state_sha256']; op['state']='releasing'
                 if all(op['steps'].get(s['step_id'],{}).get('state')=='completed' for s in state['passport']['release_plan']['steps']):
                     op.update(state='observing',observation_started=time.time())
             else:
                 entry['state']='failed'; op['state']='failed'
             state['stage']=op['state']; self._save(db,state)
+            return dict(entry)
+
+
+    def reconcile_step(self,operation_id,step_id,receipt,*,verifier):
+        """Close an orphan intent after root reconciliation; never resumes action.
+
+        Successful work needs a new explicitly authorized plan/slot after an unknown
+        process was reconciled failed. Reconciliation is not deployment acceptance.
+        """
+        receipt=_bounded(receipt)
+        with self.dispatcher._transaction() as db:
+            state=self._load(db); op=state['releases'].get(operation_id)
+            if op is None or step_id not in op['steps']: raise ValueError('Unknown release intent')
+            entry=op['steps'][step_id]
+            step=next(s for s in state['passport']['release_plan']['steps'] if s['step_id']==step_id)
+        proof=verifier(dict(step),dict(receipt))
+        if type(proof) is not dict or proof.get('independent') is not True or proof.get('subject')!=op['composition_id'] or proof.get('stopped') is not True:
+            raise ValueError('Independent stopped reconciliation proof required')
+        _pin(proof.get('evidence_sha256'))
+        with self.dispatcher._transaction() as db:
+            state=self._load(db); op=state['releases'][operation_id]; entry=op['steps'][step_id]
+            row=self._root_slot(db,step['task_id'],op['composition_id'],require_verified=False)
+            if row['state'] in {'running','submitted','unknown','cancel_requested'} or not row['usage_known']:
+                raise ValueError('Reconcile root outcome and usage first')
+            if row['attempt']==0 and proof.get('not_started') is not True:
+                raise ValueError('Unstarted intent needs no-launch proof')
+            if entry['state']=='completed': return dict(entry)
+            run,_=self.dispatcher._run(db,self.run_id)
+            entry.update(state='cancelled' if run['cancel'] else 'failed',attempt_id=row['attempt'],evidence_sha256=proof['evidence_sha256'])
+            op['state']=entry['state']; state['stage']=op['state']; self._save(db,state)
             return dict(entry)
 
     def observe(self,operation_id,receipt,*,verifier):
@@ -391,7 +463,7 @@ class FeatureAuthority:
             if op is None or op['state'] not in {'observing','accepted'}: raise ValueError('Release not observing')
             self._composition(state,op['composition_id']); plan=state['passport']['release_plan']
         proof=verifier(dict(plan),dict(receipt))
-        if type(proof) is not dict or proof.get('independent') is not True or proof.get('subject')!=op['composition_id'] or proof.get('versions')!=op['versions']:
+        if type(proof) is not dict or proof.get('independent') is not True or proof.get('subject')!=op['composition_id'] or proof.get('versions')!=op['versions'] or proof.get('state_sha256')!=op['state_sha256']:
             raise ValueError('Independent observation proof required')
         _pin(proof.get('evidence_sha256'))
         seconds=proof.get('observed_seconds'); metrics=proof.get('metrics',{})
@@ -407,7 +479,11 @@ class FeatureAuthority:
             report = self.report_from(db, state)
             if any(b in report['blockers'] for b in ('root_outcome_unknown','root_cancelled')):
                 raise ValueError('Root authority blocks observation acceptance')
-            op.update(state='accepted' if passed else 'failed',observation={'evidence_sha256':proof['evidence_sha256'],'metrics':metrics,'observed_seconds':seconds})
+            observation={'evidence_sha256':proof['evidence_sha256'],'metrics':metrics,'observed_seconds':seconds,'state_sha256':proof['state_sha256']}
+            if 'observation' in op:
+                if op['observation'] != observation: raise ValueError('Observation receipt immutable')
+                return self.report_from(db,state)
+            op.update(state='accepted' if passed else 'failed',observation=observation)
             state['stage']=op['state']; self._save(db,state)
         return self.report()
 
@@ -419,7 +495,7 @@ class FeatureAuthority:
         if any(not i['resolved'] for i in p['business_invariants']): blockers.append('unresolved_business_invariants')
         for check in p['acceptance_protocol']['checks']:
             proof=state['checks'].get(str(key)+':'+check['check_id']) if composition and composition['passport_sha256']==state['passport_sha256'] else None
-            checks.append(dict(check,verdict=proof['verdict'] if proof else 'NOT_RUN',evidence=proof))
+            checks.append(dict(check,verdict=proof['verdict'] if proof else 'NOT_RUN',evidence=proof,**({k:proof[k] for k in ('subject','criteria_sha256','verifier_id','evidence_sha256')} if proof else {})))
         if not composition: blockers.append('composition_missing')
         if any(c['verdict']!='PASS' for c in checks): blockers.append('acceptance_incomplete')
         if any(r['state'] in {'unknown','cancel_requested'} or not r['usage_known'] for r in rows): blockers.append('root_outcome_unknown')
@@ -449,7 +525,8 @@ class FeatureAuthority:
                 'spec_revision':p['spec_revision'],'plan_revision':p['plan_revision'],'passport_sha256':state['passport_sha256'],
                 'passport':p,'composition_id':key,'composition':dict(composition,composition_id=key) if composition else None,'checks':checks,'blockers':blockers,
                 'plan_sha256':run['digest'],'budget':manifest['budget'],'repositories':p['repositories'],'services':p['services'],'contracts':p['contracts'],
-                'release':current[-1] if current else None,'human_actions':blockers,
+                'release':current[-1] if current else None,'release_ready':status=='release_ready','accepted':status=='accepted','human_actions':blockers,
+                'steps':[dict(s,status=(current[-1]['steps'].get(s['step_id'],{}).get('state','pending') if current else 'pending')) for s in p['release_plan']['steps']],
                 'releases':releases,'revisions':state['revisions'],
                 'usage':{'tokens':sum(r['tokens'] for r in rows),'cost_micros':sum(r['cost'] for r in rows),'reserved_tokens':sum(r['reserve_tokens'] for r in rows),'reserved_cost_micros':sum(r['reserve_cost'] for r in rows),'known':all(r['usage_known'] for r in rows)},
                 'tasks':[self.dispatcher._task_report(r) for r in rows]}
