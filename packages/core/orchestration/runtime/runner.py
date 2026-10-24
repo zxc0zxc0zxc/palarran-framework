@@ -36,6 +36,7 @@ class Result:
     seconds: float
     usage_complete: Optional[bool] = None
     diagnostics: Optional[dict] = None
+    stopped: Optional[bool] = None  # Proven process-group absence, not leader exit.
 
 
 def invocation(task, workspace, *, profile=None, telemetry=False, max_cost_usd=None, output_limit=1048576):
@@ -131,7 +132,7 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
                 usage_stream = UsageStream(usage_adapter)
         except Exception:
             return Result(127, "usage_error", digest.hexdigest(), 0,
-                          time.monotonic() - started, False)
+                          time.monotonic() - started, False, stopped=True)
 
     def publish(snapshots):
         for snapshot in snapshots:
@@ -148,7 +149,7 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
     except (OSError, ValueError):
         return Result(127, "spawn_error", digest.hexdigest(), 0,
                       time.monotonic() - started, usage_complete,
-                      diagnostics.finish() if diagnostics is not None else None)
+                      diagnostics.finish() if diagnostics is not None else None, stopped=True)
     selector = selectors.DefaultSelector()
     pending_input = memoryview(stdin_text.encode("utf-8"))
     for stream in (process.stdout, process.stderr):
@@ -260,4 +261,5 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
         process.wait()
     return Result(process.returncode, reason, digest.hexdigest(), output_bytes,
                   time.monotonic() - started, usage_complete,
-                  diagnostics.finish() if diagnostics is not None else None)
+                  diagnostics.finish() if diagnostics is not None else None,
+                  stopped=_group_absent(process.pid))

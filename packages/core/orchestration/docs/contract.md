@@ -26,6 +26,7 @@ class Result:
     seconds: float
     usage_complete: Optional[bool] = None
     diagnostics: Optional[dict] = None  # enum-only CLI observations
+    stopped: Optional[bool] = None  # additive: actual process-group absence proof
 
 def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
             usage_adapter=None, on_usage=None) -> Result:

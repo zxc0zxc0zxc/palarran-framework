@@ -33,3 +33,7 @@ The [product pipeline](../../../product/research/docs/pipeline.md) connects five
 ## Agent evaluations
 
 [Agent eval](../../../validation/agents/docs/eval/README.md) compiles frozen suites into existing runtime workflows with independent final gates, private usage ledger and safe quality/cost/time reports. CLI: `python3 -m orchestrator.agent_eval --help`.
+
+## Parallel execution
+
+The [Core parallel dispatcher](../../parallelism/README.md) adds durable shared admission for ordinary managed requests and skill tasks, local execution and optional Temporal. The original v001 engine and its serial workflow contracts remain supported; they are not silently rewritten into distributed workflows.
