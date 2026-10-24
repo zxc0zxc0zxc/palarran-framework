@@ -3,6 +3,9 @@ name: ml-data
 description: "Спланировать ML-данные, очистку, splits и смесь доменов/языков с сохранением полных ответов; --prepare готовит разрешённые данные. Использовать для /ml:data; default research без загрузок/обучения."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # ML data
 
 ## Явный runtime pipeline

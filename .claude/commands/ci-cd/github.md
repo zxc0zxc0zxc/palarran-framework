@@ -3,6 +3,9 @@ description: GitHub Actions с тестами, оптимизацией, deploy 
 argument-hint: "[задача и путь проекта]"
 ---
 
+Обязателен `docs/skills/global-memory.md`: перед работой bounded recall, после проверок sanitized verified learn/dedup (явно разрешён только этот memory scope); --plan offline, без рекурсии memory skills и без повторного цикла при передаче этому же SKILL.md.
+
+
 Выполни `${CLAUDE_PLUGIN_ROOT}/skills/ci-cd-github/SKILL.md`. Для проектной команды без подстановки plugin root найди `skills/ci-cd-github/SKILL.md` в checkout ai-tools.
 Сначала прочитай скилл, обязательную базу и `docs/skills/decision-memory.md`. В целевом проекте прочитай `.ai-development/INDEX.md` и связанные решения, затем фиксируй каждый новый принятый выбор с объяснением до изменения.
 Аргументы пользователя: $ARGUMENTS

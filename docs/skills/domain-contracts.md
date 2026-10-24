@@ -101,3 +101,7 @@
 ## Project onboarding
 
 - docs/setup/README.md requires pinned public snapshot, preserved project instructions/configs and explicit client scope. --plan never writes or connects. Project install alone never authorizes user MCP/launchd or remote deploy; explicit global setup request does. Record target decisions before dependent writes. Never copy project journals/secrets/dirty code into shared runtime. Real stdio doctor checks connectivity only, not host UI discovery or app quality; no model calls.
+
+## Automatic skill memory
+
+- Every skill/adapter requires docs/skills/global-memory.md. Bounded sanitized global recall before work, verified portable learning after actual checks under explicit owner policy; --plan offline. Existing candidate/reviewer separation stays: only trusted coordinator uses reviewer after evidence/privacy/dedup gates, no new reviewer MCP tools. Unknown write outcome requires readonly reconciliation. No hidden raw ingestion, paid calls, invented verification or claims that instruction text guarantees host execution.

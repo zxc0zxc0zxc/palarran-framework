@@ -3,6 +3,9 @@ name: ml-model
 description: "Выбрать модель и метод ML-обучения под данные, метрики и бюджет: classical/transfer/LoRA/full training и no-training baseline. Использовать для /ml:model; только выбор и план."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # ML model
 
 ## Явный runtime pipeline

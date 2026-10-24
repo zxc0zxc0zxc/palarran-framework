@@ -3,6 +3,9 @@ name: product-define
 description: "Определить продукт по идее или README: ICP/JTBD, value proposition, business model, MVP и проверяемые критерии успеха на основе startup cases. Использовать для /product:define; исследование и planning, без реализации."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Product define
 
 Вызов `/product:define {описание/объект}` или `$product-define`. Работай только с вопросом этого скилла; остальные product-этапы не запускай автоматически.

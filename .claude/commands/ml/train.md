@@ -3,6 +3,9 @@ description: "Подготовить и выполнить разрешённы�
 argument-hint: "{задача/план} [--plan]"
 ---
 
+Обязателен `docs/skills/global-memory.md`: перед работой bounded recall, после проверок sanitized verified learn/dedup (явно разрешён только этот memory scope); --plan offline, без рекурсии memory skills и без повторного цикла при передаче этому же SKILL.md.
+
+
 Выполни `${CLAUDE_PLUGIN_ROOT}/skills/ml-train/SKILL.md`. Без plugin root найди `skills/ml-train/SKILL.md` в checkout ai-tools.
 Аргументы: $ARGUMENTS
 

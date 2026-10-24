@@ -151,7 +151,9 @@ def build_package(namespace, output, root=ROOT):
         resources = ["templates/ai-development/decision.md", "templates/science/main.tex", "templates/science/claim-evidence.md", "scripts/science_preprint.py", "scripts/ml_data.py"]
     if namespace == "agent":
         resources = ["templates/ai-development/decision.md", "templates/agent-eval/protocol.md", "templates/agent-improve/review.md", "templates/agent-improve/incident.example.json"]
-    resources += ["templates/agents/root.md", "templates/agents/module.md"]
+    resources += ["templates/agents/root.md", "templates/agents/module.md",
+                  "scripts/memory_cycle.py", "scripts/memory_ops.py", "templates/memory/lesson.example.json",
+                  "memory/__init__.py", "memory/service.py"]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():
         paths.append(root / command["source"])

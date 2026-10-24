@@ -3,6 +3,9 @@ name: product-market
 description: "Исследовать рынок и спрос по startup cases: сегменты, search trends, альтернативы, TAM/SAM/SOM и проверка гипотез с источниками. Использовать для /product:market; не запускает рекламу или продуктовую разработку."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Product market
 
 Вызов `/product:market {описание/объект}` или `$product-market`. Работай только с вопросом этого скилла; остальные product-этапы не запускай автоматически.

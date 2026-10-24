@@ -3,6 +3,9 @@ name: backend-plan
 description: Спланировать backend фичу по контексту проекта и первичным engineering sources; сначала stack/architecture/contracts foundation при отсутствии backend, затем SDD spec, SLA/SLO, данные/cache/performance, edge-case tests, rollout и DoD с future git worktree tasks. Использовать для /backend:plan; только планирование, без реализации.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Backend plan
 
 Вызов `/backend:plan {фича}` или `$backend-plan {фича}`. Это только planning. Создание самого скилла не означает планирование backend ai-tools.

@@ -3,6 +3,9 @@ description: "Превратить реальную ошибку агента и
 argument-hint: "{failed run + feedback} [--plan]"
 ---
 
+Обязателен `docs/skills/global-memory.md`: перед работой bounded recall, после проверок sanitized verified learn/dedup (явно разрешён только этот memory scope); --plan offline, без рекурсии memory skills и без повторного цикла при передаче этому же SKILL.md.
+
+
 Выполни `${CLAUDE_PLUGIN_ROOT}/skills/agent-improve/SKILL.md`; иначе найди полный ai-tools checkout.
 Аргументы: $ARGUMENTS
 

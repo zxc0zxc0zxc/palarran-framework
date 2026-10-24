@@ -3,6 +3,9 @@ name: vps-inspect
 description: Обследовать разрешённый VPS по SSH без изменений и утечки credentials; --plan без target access. Использовать для /vps:inspect.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # /vps:inspect
 
 Обязательные руководства до решений:

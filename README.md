@@ -64,6 +64,8 @@ python3 scripts/project_setup.py install --target /ABSOLUTE/project --client bot
 python3 scripts/project_setup.py doctor --target /ABSOLUTE/project
 ```
 
+Все скиллы используют [цикл общей памяти](docs/skills/global-memory.md): recall перед работой и проверенные обезличенные уроки после, с owner policy и dedup; `--plan` offline.
+
 Установщик сохраняет существующие правила, закрепляет public source revision и создаёт `.ai-tools/USAGE.md`. Global MCP/tunnel подключаются один раз отдельно по явному запросу: `python3 scripts/memory_global_setup.py install`; проверка — `python3 scripts/memory_global_setup.py doctor`. Платных model calls в doctor нет.
 
 **В этом checkout:** Codex discovery использует [.agents/skills](.agents/skills), project slash adapters лежат в [.claude/commands](.claude/commands). Пример переносимого вызова: `$frontend-plan {фича}` или `$infra-plan-med --plan`. Slash-имена в каталоге обозначают namespace/адаптер; не все hosts предоставляют их как встроенные команды.

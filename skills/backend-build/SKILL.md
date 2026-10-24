@@ -3,6 +3,9 @@ name: backend-build
 description: Реализовать backend по SDD-плану с параллельными агентами в Git worktrees, edge/invariant тестами, проверкой SLI/SLO/SLA и DoD. Использовать для /backend:build; сохраняет решения и обновляет прямо в плане прогресс задач, реализованную revision, commits и оставшиеся проверки.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Backend build
 
 Вызов `/backend:build {путь/ID плана}` или `$backend-build`. Реализуй target приложение по готовому source plan, а не backend ai-tools при authoring самого скилла.

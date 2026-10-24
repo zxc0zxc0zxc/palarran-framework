@@ -91,6 +91,8 @@ def validate(root=ROOT):
         body = path.read_text()
         if not body.startswith(f"---\nname: {name}\ndescription: "):
             errors.append(f"Invalid skill frontmatter: {name}")
+        if "../../docs/skills/global-memory.md" not in body:
+            errors.append(f"{name}: missing automatic global-memory cycle")
         if "../../docs/skills/decision-memory.md" not in body:
             errors.append(f"{name}: missing shared decision-memory contract")
         if namespace in {"memory", "vps"}:
@@ -140,6 +142,8 @@ def validate(root=ROOT):
         adapter = adapter_path.read_text() if adapter_path.is_file() else ""
         if "$ARGUMENTS" not in adapter or f"skills/{name}/SKILL.md" not in adapter:
             errors.append(f"Invalid command adapter: {name}")
+        if "docs/skills/global-memory.md" not in adapter:
+            errors.append(f"Adapter omits automatic global memory: {name}")
         if "docs/skills/decision-memory.md" not in adapter:
             errors.append(f"Adapter omits memory: {name}")
 

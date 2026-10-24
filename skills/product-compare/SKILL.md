@@ -3,6 +3,9 @@ name: product-compare
 description: "Сравнить продукт с прямыми конкурентами и заменами по customer jobs, pricing, ограничениям и позиционированию. Использовать для /product:compare; опирается на GitLab/Buffer cases и evidence, без редизайна или внедрения."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Product compare
 
 Вызов `/product:compare {описание/объект}` или `$product-compare`. Работай только с вопросом этого скилла; остальные product-этапы не запускай автоматически.

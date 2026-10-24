@@ -3,6 +3,9 @@ name: app-verify
 description: Независимо принять приложение по бизнес-сценариям через настоящий браузер, API и БД с exact subject/evidence и PASS/FAIL/INCONCLUSIVE. Использовать для /app:verify; --plan без execution, тесты без платных запусков.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # /app:verify {target/scenarios} [--plan]
 
 Сначала прочитай [README](../../docs/app/verify/README.md), [sources](../../docs/app/verify/sources.md), [methodology](../../docs/app/verify/methodology.md), [contract](../../docs/app/verify/contract.md), [operations](../../docs/app/verify/operations.md), [evidence](../../docs/app/verify/evidence.md) и [decision-memory](../../docs/skills/decision-memory.md). Отдели installed checkout от target. Прочитай target README/AGENTS, INDEX/accepted ADR, product/UX/API/DB requirements и source plan/DoD; технический build/handoff не приёмка.

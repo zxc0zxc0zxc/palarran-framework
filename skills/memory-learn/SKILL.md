@@ -3,6 +3,9 @@ name: memory-learn
 description: Сохранить проверенные инженерные кейсы из проекта в cross-project Neo4j memory с provenance, privacy review и отдельным promotion. Использовать для /memory:learn; --plan только draft.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # /memory:learn
 
 Обязательные руководства до решений:

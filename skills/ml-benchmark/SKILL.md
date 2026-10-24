@@ -3,6 +3,9 @@ name: ml-benchmark
 description: "Спланировать или выполнить независимый ML benchmark по frozen protocol: baseline, качество, edge/slices, latency/cost и неопределённость. Использовать для /ml:benchmark; --plan без выполнения."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # ML benchmark
 
 ## Явный runtime pipeline

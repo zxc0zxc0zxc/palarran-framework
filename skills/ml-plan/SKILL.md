@@ -3,6 +3,9 @@ name: ml-plan
 description: "Спланировать ML-эксперимент: цель, baseline, метрики, гипотезы, данные, compute budget, stop gates и DoD. Использовать для /ml:plan; без обучения и облачных действий."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # ML plan
 
 ## Явный runtime pipeline

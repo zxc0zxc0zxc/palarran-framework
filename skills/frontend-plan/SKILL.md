@@ -3,6 +3,9 @@ name: frontend-plan
 description: Спланировать frontend фичу по UX/UI и контексту проекта без реализации, с SDD spec, API-контрактами, edge-case тест-планом, адаптивностью, DoD и future agent tasks через Git worktree. Использовать для /frontend:plan; сохраняет решения и pending прогресс прямо в плане для /frontend:build.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Frontend plan
 
 Вызов `/frontend:plan {фича}` или `$frontend-plan {фича}`. Это отдельный planning-only этап; authoring скилла не означает planning интерфейса ai-tools.

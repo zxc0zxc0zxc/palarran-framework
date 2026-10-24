@@ -3,6 +3,9 @@ name: science-preprint
 description: Создать LaTeX отчёт-статью по существующим экспериментам с проверяемыми результатами, ссылками, ограничениями и claim-to-evidence. Использовать для /science:preprint; без обучения и публикации.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # /science:preprint {experiment/report paths}
 
 Сначала прочитай [README](../../docs/science/README.md), [sources](../../docs/science/sources.md), [evidence](../../docs/science/evidence.md), [workflow](../../docs/science/workflow.md) и [decision-memory](../../docs/skills/decision-memory.md). Разреши installed checkout отдельно от target. Прочитай target README/AGENTS, INDEX, принятые решения, experiment/protocol/data/model/config/benchmark и отчёты всех попыток. Отсутствующие результаты не запускать автоматически.

@@ -3,6 +3,9 @@ name: ml-hypotheses
 description: "Сформировать проверяемые гипотезы ML-обучения и абляции с baseline, критериями опровержения и бюджетом. Использовать для /ml:hypotheses; без запуска sweep."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # ML hypotheses
 
 ## Явный runtime pipeline

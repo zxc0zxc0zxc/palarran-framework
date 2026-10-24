@@ -3,6 +3,9 @@ description: Только план backend фичи: foundation, SDD, SLA/SLO, �
 argument-hint: "{фича}"
 ---
 
+Обязателен `docs/skills/global-memory.md`: перед работой bounded recall, после проверок sanitized verified learn/dedup (явно разрешён только этот memory scope); --plan offline, без рекурсии memory skills и без повторного цикла при передаче этому же SKILL.md.
+
+
 Выполни `${CLAUDE_PLUGIN_ROOT}/skills/backend-plan/SKILL.md`. Для project command без plugin root найди `skills/backend-plan/SKILL.md` в checkout ai-tools.
 Прочитай обязательные docs/backend/plan и `docs/skills/decision-memory.md`, target общий/backend indexes и связанные accepted specs/решения.
 Фича: $ARGUMENTS

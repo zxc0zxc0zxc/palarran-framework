@@ -3,6 +3,9 @@ name: memory-recall
 description: Найти релевантный межпроектный инженерный опыт через graph/fulltext и проверить применимость к текущему проекту. Использовать для /memory:recall; --plan без service/SSH calls.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # /memory:recall
 
 Обязательные руководства до решений:

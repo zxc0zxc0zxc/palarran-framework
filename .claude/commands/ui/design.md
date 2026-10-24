@@ -3,6 +3,9 @@ description: Адаптивный визуальный дизайн по UX-ко
 argument-hint: "[направление/описание/ссылки на референсы]"
 ---
 
+Обязателен `docs/skills/global-memory.md`: перед работой bounded recall, после проверок sanitized verified learn/dedup (явно разрешён только этот memory scope); --plan offline, без рекурсии memory skills и без повторного цикла при передаче этому же SKILL.md.
+
+
 Выполни `${CLAUDE_PLUGIN_ROOT}/skills/ui-design/SKILL.md`. Для project command без plugin root найди `skills/ui-design/SKILL.md` в checkout ai-tools.
 Сначала прочитай обязательные docs/ui и `docs/skills/decision-memory.md`; в target project — общий/UX/UI indexes и связанные решения/concepts.
 Пожелания пользователя: $ARGUMENTS

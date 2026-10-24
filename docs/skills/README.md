@@ -5,6 +5,7 @@
 | Guide | Когда нужен | Главный инвариант |
 | --- | --- | --- |
 | [Domain contracts](domain-contracts.md) | Любая профильная задача | Выбранный профиль задаёт обязательные guides и границы scope |
+| [Global memory](global-memory.md) | Каждый skill до/после работы | Bounded recall, verified sanitized learn, owner policy и dedup; --plan offline |
 | [Decision memory](decision-memory.md) | Любой skill/решение | Target `.ai-development`: объяснение до зависимого изменения, accepted ADR и handoff как будущий контекст |
 | [AGENTS authoring](agents-authoring.md) | Инструкции проекта/модулей | Реальные boundaries и проверки, краткие scoped rules, root map и чтение всех touched modules |
 | [Graph context](graph-context.md) | Поиск кода/связей | Optional local code-only graph, freshness → bounded query → source; missing/stale → scoped search |

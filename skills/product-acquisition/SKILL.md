@@ -3,6 +3,9 @@ name: product-acquisition
 description: "Исследовать каналы аудитории аналогов: paid search, TikTok/Meta, native/creator, organic/SEO, referral и partnerships; составить evidence-backed funnel и тесты. Использовать для /product:acquisition; без запуска рекламы и outreach."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Product acquisition
 
 Вызов `/product:acquisition {описание/объект}` или `$product-acquisition`. Работай только с вопросом этого скилла; остальные product-этапы не запускай автоматически.

@@ -3,6 +3,9 @@ name: product-revenue
 description: "Исследовать выручку и экономику аналогов: официальные раскрытия, founder reports, provider estimates и отдельные сценарии с диапазонами. Использовать для /product:revenue; неизвестные цифры не выдумывает."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Product revenue
 
 Вызов `/product:revenue {описание/объект}` или `$product-revenue`. Работай только с вопросом этого скилла; остальные product-этапы не запускай автоматически.

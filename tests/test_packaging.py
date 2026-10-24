@@ -34,6 +34,10 @@ class PackagingTest(unittest.TestCase):
                 self.assertFalse(any(path.is_symlink() for path in package.rglob("*")))
                 self.assertFalse((package / ".ai-development").exists())
                 self.assertFalse((package / ".git").exists())
+                self.assertTrue((package / 'docs/skills/global-memory.md').is_file())
+                self.assertTrue((package / 'templates/memory/lesson.example.json').is_file())
+                checked = subprocess.run([sys.executable, str(package/'scripts/memory_cycle.py'), '--help'], cwd=directory, capture_output=True, text=True)
+                self.assertEqual(checked.returncode, 0, checked.stderr)
                 if namespace in {"ui", "frontend"}:
                     catalog = json.loads((package / "docs/ui/catalog.json").read_text())
                     self.assertEqual(len(catalog["systems"]), 10)

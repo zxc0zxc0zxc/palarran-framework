@@ -3,6 +3,9 @@ name: agent-eval
 description: Спланировать или выполнить полигон агентных задач с независимой проверкой результата, учётом токенов, стоимости и времени. Использовать для /agent:eval; --plan без исполнения, тесты harness без платных вызовов.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # /agent:eval {задача или suite} [--plan]
 
 Сначала прочитай обязательные [README](../../docs/agent/eval/README.md), [sources](../../docs/agent/eval/sources.md), [methodology](../../docs/agent/eval/methodology.md), [contract](../../docs/agent/eval/contract.md), [operations](../../docs/agent/eval/operations.md), затем [decision-memory](../../docs/skills/decision-memory.md). Разреши symlink skill, отдели installed checkout от target. Прочитай target README/AGENTS, INDEX и relevant accepted ADR, прежние failures и реальные условия задачи. Нет mandatory docs — найди полный checkout, не подменяй общей памятью.

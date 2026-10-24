@@ -3,6 +3,9 @@ name: frontend-build
 description: Реализовать адаптивный frontend по UX/UI и SDD-плану с параллельными агентами в Git worktrees, проверкой в браузере и DoD. Использовать для /frontend:build; сохраняет решения и обновляет прямо в плане выполненные/оставшиеся задачи, реализованную revision и проверенные commits.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Frontend build
 
 Вызов `/frontend:build {путь/ID плана или scope/пути к UX/UI}` либо `$frontend-build`. Работай в target приложении с existing stack; authoring самого скилла не означает создание frontend ai-tools.

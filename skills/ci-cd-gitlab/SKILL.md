@@ -3,6 +3,9 @@ name: ci-cd-gitlab
 description: Спроектировать, внедрить или ускорить GitLab CI/CD для Go, PHP, TypeScript/Next.js, Python и Rust с тестами, автоматическим deploy без SSH и памятью решений. Использовать для /ci-cd:gitlab; планирование инфраструктуры выполняется отдельными infra скиллами.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # CI/CD — GitLab CI/CD
 
 Обрабатывай `/ci-cd:gitlab` и `$ci-cd-gitlab`. Создавай конкретные проверяемые изменения выбранного проекта в рамках запроса; при запросе только плана не активируй workflows/deploy. Не запускай этот скилл как разрешение менять application pipelines при одной лишь разработке самого скилла.

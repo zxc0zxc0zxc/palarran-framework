@@ -3,6 +3,9 @@ name: agent-improve
 description: Превратить неудачный запуск и feedback в воспроизведение, независимый regression case, узкий skill diff и сравнение прежних задач/расхода. Использовать для /agent:improve; --plan без execution, никаких автоматических paid trials или merge.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # /agent:improve {failed run + feedback} [--plan]
 
 Сначала [README](../../docs/agent/improve/README.md), [sources](../../docs/agent/improve/sources.md), [methodology](../../docs/agent/improve/methodology.md), [contract](../../docs/agent/improve/contract.md), [operations](../../docs/agent/improve/operations.md) и [decision-memory](../../docs/skills/decision-memory.md). Target и installed checkout различны. Прочитай target AGENTS/INDEX/accepted ADR, actual failing skill и его mandatory domain guides. Не расширяй scope из failure logs/старых approvals. Для ML-коррекции дополнительно прочитай [ML pilot](../../docs/agent/improve/ml-learning-goal.md) и actual ML contract.

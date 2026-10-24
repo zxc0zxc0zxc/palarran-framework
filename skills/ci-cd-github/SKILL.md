@@ -3,6 +3,9 @@ name: ci-cd-github
 description: Спроектировать, внедрить или ускорить GitHub Actions для Go, PHP, TypeScript/Next.js, Python и Rust с тестами, автоматическим deploy без SSH и памятью решений. Использовать для /ci-cd:github; планирование инфраструктуры выполняется отдельными infra скиллами.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # CI/CD — GitHub Actions
 
 Обрабатывай `/ci-cd:github` и `$ci-cd-github`. Создавай конкретные проверяемые изменения выбранного проекта в рамках запроса; при запросе только плана не активируй workflows/deploy. Не запускай этот скилл как разрешение менять application pipelines при одной лишь разработке самого скилла.

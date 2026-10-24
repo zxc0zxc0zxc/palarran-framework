@@ -1,6 +1,6 @@
 # Skills
 
-Наследует root. Перед изменением skill читать docs/skills/decision-memory.md, agents-authoring.md и его обязательный профиль в domain-contracts.md. Сначала профильная документация, затем skill/command adapter.
+Наследует root. Перед изменением skill читать docs/skills/global-memory.md, docs/skills/decision-memory.md, agents-authoring.md и его обязательный профиль в domain-contracts.md. Сначала профильная документация, затем skill/command adapter.
 
 - SKILL.md остаётся коротким workflow с ссылками на mandatory docs. Scope plan/build, permissions и evidence не размывать ради компактности.
 - Project instructions/ADR/graph относятся к target root, не installed skill checkout. Применимые AGENTS читать перед code changes; создавать их только в разрешённом implementation scope по реальным границам.

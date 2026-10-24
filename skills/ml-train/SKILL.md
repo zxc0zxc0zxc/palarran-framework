@@ -3,6 +3,9 @@ name: ml-train
 description: "Подготовить и выполнить разрешённый ML-эксперимент с checkpoints, контролем бюджета и метрик; --plan без запуска, --status read-only. Использовать для /ml:train."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # ML train
 
 ## Явный runtime pipeline

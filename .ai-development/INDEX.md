@@ -110,3 +110,5 @@
 
 | memory/2026-10-24-cross-project/0003 | accepted | Explicit global/private project env scope, fail-closed partial profiles and agent-only credential view | [record](memory/2026-10-24-cross-project/decisions/0003-env-scopes.md) |
 | setup/2026-10-24-global-onboarding/0001 | accepted | Explicit global Codex MCP + login SSH tunnel and repeatable project onboarding | [record](setup/2026-10-24-global-onboarding/decisions/0001-user-scoped-setup.md), [handoff](setup/2026-10-24-global-onboarding/handoff.md) |
+
+| memory/2026-10-24-automatic-cycle/0001 | accepted | Automatic bounded recall and verified sanitized global learning with owner policy, dedup and unknown-write reconciliation | [record](memory/2026-10-24-automatic-cycle/decisions/0001-verified-cycle.md), [handoff](memory/2026-10-24-automatic-cycle/handoff.md) |

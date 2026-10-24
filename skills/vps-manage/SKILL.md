@@ -3,6 +3,9 @@ name: vps-manage
 description: Подготовить и выполнить разрешённые операции VPS по SSH с конкретным планом, rollback, секретами вне Git и independent checks. Использовать для /vps:manage; --plan без подключения.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # /vps:manage
 
 Обязательные руководства до решений:

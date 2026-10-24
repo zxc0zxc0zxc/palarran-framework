@@ -3,6 +3,9 @@ name: infra-plan-med
 description: Спроектировать VDS или среднюю инфраструктуру с K3s и GitOps, обследовать машину по SSH без изменений и подготовить конфигурации, схемы и план deploy. Флаг --plan включает планирование по характеристикам без доступа к target. Использовать также для запроса /infra-plan:med.
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # Infra plan — med
 
 Обрабатывай `/infra-plan:med` и `$infra-plan-med` с теми же аргументами. Профиль **med** — исходная область запроса, а не право увеличивать сложность без аргументов.

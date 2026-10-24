@@ -3,6 +3,9 @@ description: Адаптивный frontend по UX/UI и SDD-плану с paral
 argument-hint: "[путь/ID плана или scope/пути к UX/UI]"
 ---
 
+Обязателен `docs/skills/global-memory.md`: перед работой bounded recall, после проверок sanitized verified learn/dedup (явно разрешён только этот memory scope); --plan offline, без рекурсии memory skills и без повторного цикла при передаче этому же SKILL.md.
+
+
 Выполни `${CLAUDE_PLUGIN_ROOT}/skills/frontend-build/SKILL.md`. Для project command без plugin root найди `skills/frontend-build/SKILL.md` в checkout ai-tools.
 Прочитай docs/frontend, docs/skills/execution-progress.md и `docs/skills/decision-memory.md`; target indexes, source plan/UX/UI revisions, relevant ADR и prior progress.
 Запрос пользователя: $ARGUMENTS

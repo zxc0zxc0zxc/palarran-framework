@@ -3,6 +3,9 @@ name: ml-cost
 description: "Оценить стоимость ML-эксперимента в Modal по этапам, попыткам, GPU/CPU/RAM и неизвестным расходам. Использовать для /ml:cost; офлайн-расчёт без запуска GPU."
 ---
 
+Общий цикл: до работы и после проверок выполнить [global memory](../../docs/skills/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. Этот memory scope явно разрешён; прочие запреты профиля сохраняются. `--plan` без сети/публикации; outage не блокирует основную задачу.
+
+
 # ML cost
 
 ## Явный runtime pipeline

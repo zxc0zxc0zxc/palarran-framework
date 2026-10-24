@@ -3,6 +3,9 @@ description: "Исследовать рынок и спрос по startup cases
 argument-hint: "{описание/объект}"
 ---
 
+Обязателен `docs/skills/global-memory.md`: перед работой bounded recall, после проверок sanitized verified learn/dedup (явно разрешён только этот memory scope); --plan offline, без рекурсии memory skills и без повторного цикла при передаче этому же SKILL.md.
+
+
 Выполни `${CLAUDE_PLUGIN_ROOT}/skills/product-market/SKILL.md`. Для project command без plugin root найди `skills/product-market/SKILL.md` в checkout ai-tools.
 Аргументы: $ARGUMENTS
 

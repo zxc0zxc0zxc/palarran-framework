@@ -35,3 +35,7 @@ macOS LaunchAgent `io.zxc0zxc0zxc.memory-tunnel` запускается при �
 Проверить actual config command и pinned bytes, launchctl state, native MCP initialize/list/search из нового project CWD. Убить только owned SSH child в разрешённом recovery test, дождаться нового PID и повторить authenticated doctor. Не запускать Codex model task ради проверки подключения.
 
 Откат global: `codex mcp remove engineering-memory`; `launchctl bootout gui/UID/io.zxc0zxc0zxc.memory-tunnel`; затем убрать только owned plist/runtime после проверки ссылок и сохранить backups. Project uninstall пока manual: удалить только manifest-owned unchanged links/files/managed sections; пользовательские изменения сохранять. Никакого git reset/clean, secret deletion или remote DB removal.
+
+## Автоматическое использование опыта
+
+Все новые skill bundles содержат mandatory global-memory guide и scripts/memory_cycle.py. После отдельного owner authorization `python3 scripts/memory_cycle.py enable` включает bounded recall и verified publication для всех проектов владельца; сам project install этого не делает. При выключенной/отсутствующей policy — local draft/deferred. [Контракт цикла](../skills/global-memory.md). Existing pinned project bundles не обновляются молча: для них нужен reviewed upgrade; глобальный MCP уже работает с этим существующим API и не требует расширения прав или нового server deploy.
