@@ -455,7 +455,7 @@ class Dispatcher:
             rows = db.execute('SELECT id,state,packet,attempt FROM tasks WHERE run=?', (run_id,)).fetchall()
             return {'status': self._status(rows, bool(run['cancel'])), 'stopped': not any(r['state'] in _HELD for r in rows), 'backend': run['backend'], 'available': max(0, manifest.get('max_workers', 2) - sum(r['state'] in _HELD for r in rows)), 'routes': {t['task_id']: t['task_queue'] for t in [json.loads(r[0]) for r in db.execute('SELECT packet FROM tasks WHERE run=?', (run_id,))] if t.get('task_queue')}, 'ready': [r['id'] for r in rows if r['state'] == 'ready' and json.loads(r['packet']).get('dispatch_mode', 'auto') == 'auto'], 'active': [r['id'] for r in rows if r['state'] in _HELD]}
 
-    def _admit(self, run_id, task_id):
+    def _admit(self, run_id, task_id, *, feature_binding=None):
         self.tick(run_id)
         with self._transaction() as db:
             run, manifest = self._run(db, run_id)
@@ -480,6 +480,10 @@ class Dispatcher:
                 if not admission_allowed(db, run_id, task):
                     self._event(db, run_id, task_id, 'feature_contract_wait')
                     return None
+            if feature_binding is not None:
+                from packages.core.parallelism.feature import check_binding_allowed
+                if not feature_table or not check_binding_allowed(db, run_id, task_id, feature_binding):
+                    raise ValueError('Feature check composition, criteria or slot changed')
             if self._conflicts(db, run_id, task):
                 self._event(db, run_id, task_id, 'ownership_wait')
                 return None
@@ -544,8 +548,8 @@ class Dispatcher:
             receipt = {'status': 'unknown', 'tokens': 0, 'cost_micros': 0, 'usage_known': False, 'stopped': False}
         return self.finish_task(run_id, task_id, task['attempt_id'], receipt, verifier, elapsed=time.monotonic() - started)
 
-    def claim_task(self, run_id, task_id):
-        return self._admit(run_id, task_id)
+    def claim_task(self, run_id, task_id, *, feature_binding=None):
+        return self._admit(run_id, task_id, feature_binding=feature_binding)
 
     def finish_task(self, run_id, task_id, attempt_id, receipt, verifier, *, elapsed=None):
         with self._transaction() as db:
