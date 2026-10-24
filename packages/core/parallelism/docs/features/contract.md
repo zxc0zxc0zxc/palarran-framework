@@ -36,3 +36,9 @@ Optional manifest `repositories` supplies 1–32 exact repository bindings. Ever
 ## Evidence limits
 
 Offline fake and disposable repository tests validate protocol mechanics, not production compatibility, physical multi-machine operation or Temporal Service recovery. Unknown operations and spend remain visible; no automatic retries or budget increases.
+
+## Repair slots and trusted receipt callback
+
+Each check may additionally freeze `repair_task_ids` (up to16 unique root external verification/integration slots). `record_check` receives a bounded receipt with `task_id` selecting the primary or predeclared spare slot. Root slot must already be independently verified with subject equal to composition_id. Its usage must be reconciled. `verifier(check,receipt)` returns `{independent:true,subject,verdict,criteria_sha256,verifier_id,evidence_sha256}`; verifier_id differs from the check owner. Builder self assertions are never used as verifier output. A negative semantic verdict may accompany successful accounting verification; it blocks business readiness. Receipts are immutable per composition/check. A repaired composition consumes another frozen spare slot; exhausted slots require a separately authorized new plan, never replay.
+
+Authenticated `RemoteDispatcher.get_feature(run_id)` reads the same authority. `feature_event` requires an operator control principal, exact current passport_sha256, allowlisted typed method and server-injected trusted verifier for evidence methods. Worker role cannot mutate feature lifecycle. Backend remains pinned to the root run. Report includes root plan_sha256, budget and safe projections; GET/report do not tick leases, create schemas or start processes.
