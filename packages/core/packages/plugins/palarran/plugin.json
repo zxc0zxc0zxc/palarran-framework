@@ -190,6 +190,22 @@
     "security:cve": {
       "source": "packages/security/cve/commands/cve.md",
       "argumentHint": "{target/context?} [--plan]"
+    },
+    "git:commit": {
+      "source": "./packages/code/git/commands/commit.md",
+      "argumentHint": "{stage?} [--plan]"
+    },
+    "git:history": {
+      "source": "./packages/code/git/commands/history.md",
+      "argumentHint": "@file [--plan]"
+    },
+    "git:conflicts": {
+      "source": "./packages/code/git/commands/conflicts.md",
+      "argumentHint": "{target-branch} [--plan]"
+    },
+    "git:mr": {
+      "source": "./packages/code/git/commands/mr.md",
+      "argumentHint": "[--plan]"
     }
   }
 }

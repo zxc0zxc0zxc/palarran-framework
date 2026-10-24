@@ -516,8 +516,8 @@ class CoordinationHTTPServer(ThreadingHTTPServer):
         pass
 
 
-def create_server(store, host="127.0.0.1", port=0):
-    if host != "127.0.0.1" or type(port) is not int or not 0 <= port <= 65535:
+def create_server(store, host="127.0.0.1", port=0, *, container_network=False):
+    if type(container_network) is not bool or host not in (("127.0.0.1", "0.0.0.0") if container_network else ("127.0.0.1",)) or type(port) is not int or not 0 <= port <= 65535:
         raise CoordinationError("invalid_request")
 
     class Handler(BaseHTTPRequestHandler):
@@ -580,7 +580,7 @@ def create_server(store, host="127.0.0.1", port=0):
                 # Broken clients/timeouts cannot safely receive another reply.
                 self.close_connection = True
 
-    return CoordinationHTTPServer((host, port), Handler)
+    return CoordinationHTTPServer(("0.0.0.0" if container_network else host, port), Handler)
 
 
 def main():
@@ -588,11 +588,12 @@ def main():
     parser.add_argument("--db", required=True)
     parser.add_argument("--credentials", required=True)
     parser.add_argument("--port", type=int, default=18792)
+    parser.add_argument("--container-network", action="store_true", help="Explicit private-container bridge mode; never publish publicly")
     args = parser.parse_args()
     server = None
     try:
         store = CoordinationStore(args.db, load_credentials(args.credentials))
-        server = create_server(store, port=args.port)
+        server = create_server(store, port=args.port, container_network=args.container_network)
         server.serve_forever()
     except KeyboardInterrupt:
         return 0

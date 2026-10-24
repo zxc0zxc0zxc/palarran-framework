@@ -41,3 +41,6 @@ plans/
 # Derived local Graphify index, isolated tool environment and staging.
 .graphify/
 graphify-out/
+
+# Verified public build input is staged outside version control.
+/packages/core/coordination/build-inputs/

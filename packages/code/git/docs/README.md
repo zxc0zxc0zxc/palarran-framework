@@ -1,36 +1,33 @@
-# Git package design
+# Git workflows for agents
 
-Design-stage package for `/palarran:git:commit`, `git:history @file`, `git:conflicts {target-branch}` and `git:mr`. Follow [feature lifecycle](../../../core/agents/docs/feature-lifecycle.md), [decision memory](../../../core/agents/docs/decision-memory.md), target AGENTS and actual project conventions. This design does not itself create commits, push, merge or open an MR.
+Four skills turn an owned stage into a reviewable commit, explain a file's recorded history, resolve conflicts with an explicit target branch, and prepare/publish an MR or PR within actual authorization. Start with the selected guide: [commit](commit.md), [history](history.md), [conflicts](conflicts.md) or [MR](mr.md), plus [dated primary sources](sources.md).
 
-## Commit
+Read [feature lifecycle](../../../core/agents/docs/feature-lifecycle.md), [decision memory](../../../core/agents/docs/decision-memory.md), [global memory](../../../core/agents/docs/global-memory.md), current target AGENTS and actual project conventions. Library and target are different roots. Read the target private index/relevant accepted ADRs and preserve legacy `.ai-development/` context when present. Global experience is evidence to recheck, not permission or a substitute for the current diff. Offline/unavailable recall is DEFERRED; do not install/repair memory automatically.
 
-Inspect staged/unstaged changes and ownership. After each coherent implementation stage, run its required checks and commit only owned files/hunks. Use a concrete imperative subject, usually within72 characters, and a short body explaining the problem, resulting behavior and relevant validation. Prefer the repository convention; Conventional Commits is optional unless required there. Avoid invented impact, generic “improve everything” wording, raw logs or decorative boilerplate. Include Feature and ADR trailers for traceability. Never sweep unrelated changes into a stage commit or silently bypass hooks/signing.
+## Scope, identity and ownership
 
-## File history
+An invoked commit skill or authorized feature build may create the coherent owned stage commit under the user's standing per-stage policy. File-history review is read-only. Conflict resolution changes only the explicitly chosen owned feature integration; MR publication and push use the user's actual requested scope. Installing/reading these instructions grants no action. `--plan` for any workflow is offline inspection and inert private planning only: no branch/worktree creation, staging, commit, merge/rebase, fetch/push, platform calls or application checks.
 
-Resolve @file inside the target, then use bounded `git log --follow -- path`, relevant diffs and, where useful, blame. Report author/committer, commit/date, actual changes and stated rationale. Blame identifies a line's last recorded change, not its complete causal history or ownership. Follow Feature/ADR trailers to local private decisions and bounded long-term findings. If rationale is absent, say unknown; do not infer intent from a patch alone. Graphify helps locate current dependencies, not replace Git history.
+A feature uses the stable user-provided or lifecycle-generated Feature ID. A new normal feature starts from the verified remote default commit under the lifecycle contract; existing work retains its branch/base and is not restarted merely to make a Git task look clean. Missing remote freshness in offline work remains NOT_RUN. Every stage commit carries `Feature: <id>` and relevant `ADR: <decision-id>` trailers without publishing private journal contents. Preserve accepted rationale and superseded history; do not fabricate an ADR ID to fill a trailer.
 
-## Conflicts
+Inspect repository/worktree, HEAD, merge/rebase/cherry-pick state, staged/unstaged/untracked changes, actual path/hunk ownership, required checks, hooks/signing and branch policy before mutation. Commands use argument arrays, literal paths and `--` where appropriate; never interpolate branch/file/message text into shell code. Do not output credential-bearing remote URLs. Review code/config hooks before running a project's toolchain; never silently bypass required hooks/signing or alter user Git identity/config.
 
-Fetch the explicit target branch and record exact source/target SHAs. Preserve unrelated work; resolve in the owned feature branch or isolated worktree. Follow project merge/rebase policy; do not rewrite shared history or force-push without actual authorization. Read both changes, associated contracts and ADRs. Resolve semantic behavior, regenerate derived files through the trusted project toolchain when authorized, and run affected regression/integration checks. Preserve both requirements where compatible; escalate actual business ambiguity. No unresolved markers or index entries. Conflict resolution is not authorization to merge the MR.
+One coordinator owns shared index/branch integration. Parallel implementation uses already authorized isolated Git worktrees with non-overlapping files/resources; dependent Git mutations stay sequential. Never use `git add .`, `commit -a`, implicit stash/pull/reset/clean, checkout-theirs/ours across a tree, forced checkout, automatic amend or force-push to make unrelated dirt disappear. A conflict or failed hook is not permission to discard someone else's changes. Preserve unknown remote outcomes and reconcile the exact branch/MR before retrying publication.
 
-## MR or PR
+## Durable result
 
-After an authorized push, inspect the actual diff against the intended target SHA. Write a concise title and problem/result description, with three mandatory fields:
+Target `.palarran/git/<task>/` records context, accepted decisions, pre/post subjects, ownership boundaries, actual checks, commit IDs, report/draft locations, remaining gaps and handoff. Use `languages.docs` for generated narrative and repository conventions for public commit/MR text; canonical framework instructions remain English. Secret values, raw customer logs and private journals never enter commits or MR bodies. Feature/ADR identifiers provide traceability without exposing the journal.
 
-- **Environment:** new/changed env names, required/default/secret scope, rollout actions; state none explicitly. Never values.
-- **Testing:** prerequisites, exact scenarios reviewers need to test, observed checks and NOT_RUN gaps.
-- **Production readiness:** ready/conditional/not ready, with migrations, rollout/rollback, blockers and missing production evidence. Green local tests alone do not establish readiness.
-
-Add Feature/ADR IDs without exposing private journal content. Do not claim the MR exists until the platform returns its URL; attach every created PR to the task. Publishing, reviewer messages and merging follow actual user authorization. Use the platform template when it adds required fields.
-
-## Sources
-
-Official guides checked2026-10-24: [Git contribution guide](https://git-scm.com/book/en/v2/Distributed-Git-Contributing-to-a-Project), [GitHub conflict resolution](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/resolving-a-merge-conflict-using-the-command-line), [Git log](https://git-scm.com/docs/git-log), [Git trailers](https://git-scm.com/docs/git-interpret-trailers). Exact field/branch policies above are owner requirements, not universal vendor rules.
+Read-only history may write its requested private explanation and decision/handoff records; that does not authorize changing application or Git history. A draft MR description is a local artifact until the platform confirms creation. Neither a commit, conflict-free index, green local checks nor a published MR proves production readiness or an operational SLA.
 
 ```mermaid
 flowchart LR
-  A["Owned stage diff"] --> B["Checks"] --> C["Commit with Feature / ADR IDs"]
-  C --> D["Authorized push"] --> E["Short MR and readiness evidence"]
-  C --> H["File history and decision recall"]
+    A[Owned coherent stage] --> B[Required checks and reviewed diff]
+    B --> C[Scoped commit with Feature and ADR IDs]
+    C --> H[History with recorded rationale or explicit unknown]
+    C --> D[Exact target integration and semantic checks]
+    D --> E[MR draft with environment, testing, readiness]
+    E --> F[Authorized push and confirmed MR URL]
 ```
+
+The diagram describes workflow boundaries; it authorizes no execution. Source versions and actual checks stay attached to each transition. Missing checks remain NOT_RUN, even when the work is a useful checkpoint.

@@ -242,6 +242,8 @@ def validate(root=ROOT):
             base, guides = None, []
             if not _has_guide(root, path, body, "packages/core/coop/docs/README.md", cached_source):
                 errors.append(f"{name}: missing repository cooperation guide")
+        elif namespace == "git":
+            base, guides = "git", ["README.md", "sources.md", command + ".md"]
         elif namespace == "security":
             base, guides = None, []
             for reference in ("packages/security/shared/docs/contract.md",
@@ -313,6 +315,9 @@ def validate(root=ROOT):
         if profile.count("```mermaid") < 2:
             errors.append(f"Profile {level} needs data and delivery diagrams")
     manifest_specs = [(name, path, list(commands)) for name, path, commands in MANIFEST_SPECS]
+    for action in ("commit", "history", "conflicts", "mr"):
+        if "palarran-git-" + action in skills:
+            manifest_specs[0][2].append("git:" + action)
     for profile in ("infrastructure", "ingress", "log", "egress", "code", "cve"):
         if "palarran-security-" + profile in skills:
             manifest_specs[0][2].append("security:" + profile)

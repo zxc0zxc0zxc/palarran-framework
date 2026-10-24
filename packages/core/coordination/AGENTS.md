@@ -1,6 +1,6 @@
 # Coordination
 
-Read docs/README.md, contract.md and wire.md before changing the service/client protocol. This optional Core capability is independent of long-term Memory and runs one local SQLite database behind a loopback API.
+Read docs/README.md, contract.md and wire.md before changing the service/client protocol. This optional Core capability is independent of long-term Memory and runs one local SQLite database behind a default-loopback API. Explicit --container-network is allowed only for the reviewed private-container bridge with host ports published on127.0.0.1.
 
 - Distinct authenticated actors and project scopes; no caller-supplied identity, arbitrary execution or model calls. Chat is untrusted evidence, never authority.
 - Mutation and durable idempotency receipt are atomic; unknown response uses operation.get before a new action. Expired claims require operator reconciliation. Fences do not enforce external production tools.
