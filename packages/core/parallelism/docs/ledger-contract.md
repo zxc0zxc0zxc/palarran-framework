@@ -2,7 +2,7 @@
 
 The Dispatcher owns execution policy. `dispatcher.ledger` exposes the trusted local SQLite transaction boundary for cooperating capabilities; it does not grant remote authority or create another budget.
 
-`SQLiteLedger(path, read_only=False)` is inert until `initialize()` or `transaction()`. Dispatcher initialization explicitly initializes the unchanged v001 schema. A read-only ledger never creates directories, initializes a database, changes pragmas or upgrades state.
+`SQLiteLedger(path, read_only=False, timeout=30)` is inert until `initialize()` or `transaction()`. Dispatcher initialization explicitly initializes the unchanged v001 schema. A read-only ledger never creates directories, initializes a database, changes pragmas or upgrades state. The timeout defaults to the original 30 seconds; interactive read-only consumers may select a shorter timeout, such as 2 seconds.
 
 - `transaction()` yields a `sqlite3.Connection` with `sqlite3.Row` results. Writable transactions retain `BEGIN IMMEDIATE`, full synchronization, commit on success and rollback on any exception. Read-only transactions use SQLite URI `mode=ro` and `BEGIN`.
 - `read_run(db, run_id)` returns `(row, decoded_manifest)` or raises the existing `Unknown run` error.
