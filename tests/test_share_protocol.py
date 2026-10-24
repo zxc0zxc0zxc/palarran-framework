@@ -198,6 +198,36 @@ class ShareReducerTests(unittest.TestCase):
             self.assertEqual(len(adapter.calls), 1)
 
 
+    def test_lost_start_reply_keeps_intent_and_never_calls_adapter_twice(self):
+        from test_parallel_dispatcher import manifest, FakeAdapter, verify
+        from packages.core.parallelism.dispatcher import Dispatcher
+        from packages.core.setup.temporal_config import TemporalProfile
+        from packages.core.coordination import share_runtime
+        self.ready()
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            dispatcher = Dispatcher(root / "private" / "dispatch.sqlite")
+            value = manifest(root, workers=1, count=1, run_id="receiver-run")
+            value["base_commit"] = BASE
+            value["tasks"][0].update(base_commit=BASE, owner="bob", session_id="receiver-session", files=["src/export.py"],
+                resources=["export"], actions=["edit"], tools=["python"], contracts={"share_plan_hash": PLAN})
+            adapter = FakeAdapter()
+            sends = []
+            def lost(share_id, event):
+                sends.append(event)
+                raise OSError("synthetic lost reply")
+            kwargs = dict(get_share=lambda _: copy.deepcopy(self.state), send_event=lost, share_id="share-1", actor="bob",
+                          manifest=value, profile=TemporalProfile(False, "fixture"), adapter=adapter, verifier=verify)
+            result = share_runtime.execute_received(dispatcher, **kwargs)
+            self.assertEqual(result["status"], "unknown")
+            self.assertTrue(result["reconciliation_required"])
+            replay = share_runtime.execute_received(dispatcher, **kwargs)
+            self.assertFalse(replay["launched"])
+            self.assertTrue(replay["reconciliation_required"])
+            self.assertEqual(len(sends), 1)
+            self.assertEqual(adapter.calls, [])
+
+
 class ShareStoreTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
