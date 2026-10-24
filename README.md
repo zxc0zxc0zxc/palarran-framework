@@ -56,7 +56,7 @@ Tell your agent:
 
 > Deploy the Palarran services I select to my VPS using SSH alias SERVER. Follow the versioned installation runbooks, inspect existing workloads, prepare the exact configuration and rollback, keep ports private, configure my local connection, and verify it. Do not install agent skills on the server or reveal credentials.
 
-[Self-hosting](packages/core/setup/docs/self-host.md) · [Service runbooks](packages/core/setup/docs/runbooks/services.md) · [Memory operations](packages/memory/knowledge/docs/operations.md) · [Message bus operations](packages/core/coordination/docs/operations.md).
+[Container deployment runbook](packages/infrastructure/hosting/docs/runbook.md) · [Self-hosting](packages/core/setup/docs/self-host.md) · [Service runbooks](packages/core/setup/docs/runbooks/services.md) · [Memory operations](packages/memory/knowledge/docs/operations.md) · [Message bus operations](packages/core/coordination/docs/operations.md).
 
 A runbook defines supported inputs and exact checks. An unsupported host or an uncertain previous operation needs reconciliation or a reviewed procedure extension before changes.
 
@@ -155,7 +155,7 @@ Start with a specific task or move between compatible stages. Skills cover produ
 | Product | `/palarran:product:define`, `market`, `compare`, `revenue`, `acquisition`, `b2b`, `b2c` |
 | Design | `/palarran:ux:design`, `/palarran:ui:design` |
 | Security | `/palarran:security:infrastructure`, `ingress`, `log`, `egress`, `code`, `cve` |
-| Code | `/palarran:frontend:plan`, `frontend:build`, `backend:plan`, `backend:build` |
+| Code | `/palarran:frontend:plan`, `frontend:build`, `backend:plan`, `backend:build`, `git:commit`, `git:history`, `git:conflicts`, `git:mr` |
 | Infrastructure | `/palarran:infra:plan low|med|high`, `/palarran:ci-cd github|gitlab`, `/palarran:infrastructure:incident` |
 | ML | `/palarran:ml:plan`, `hypotheses`, `model`, `data`, `cost`, `train`, `benchmark` |
 | Acceptance | `/palarran:app:verify`, `/palarran:agent:eval`, `/palarran:agent:improve` |

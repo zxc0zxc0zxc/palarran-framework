@@ -223,6 +223,12 @@ def _legacy_package(namespace, output, root=ROOT):
     resources += ["scripts/palarran_paths.py", "templates/agents/root.md", "templates/agents/module.md",
                   "scripts/memory_cycle.py", "scripts/memory_ops.py", "scripts/keenable_auth.py", "templates/memory/lesson.example.json",
                   "memory/__init__.py", "memory/service.py"]
+    # Shared memory/installation guides link this inert procedure even when
+    # the optional Infrastructure runtime was not selected.
+    hosting_guides = ["packages/infrastructure/hosting/docs/" + guide
+                      for guide in ("README.md", "runbook.md", "sources.md")]
+    if source_path(root, hosting_guides[0]).is_file():
+        resources += hosting_guides
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():
         paths.append(root / command["source"].removeprefix("./"))
@@ -404,6 +410,20 @@ def _public_package(output, root, resolved, name):
                 if destination.exists() and destination.read_bytes() != source.read_bytes(): raise ValueError("Conflicting public resource")
                 if not destination.exists(): shutil.copyfile(source, destination)
         moves = layout_moves(root)
+        if "code" in resolved["packages"]:
+            references = ["docs/git/" + guide + ".md" for guide in
+                          ("README", "commit", "history", "conflicts", "mr", "sources")]
+            references += ["templates/git/mr.md"]
+            for reference in references:
+                source = source_path(root, reference, required=True)
+                destination = bundle / reference; destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(portable_bytes(source.read_bytes(), source.relative_to(root).as_posix(), reference, moves))
+        if "infrastructure" in resolved["packages"]:
+            references = ['packages/infrastructure/hosting/compose.yaml', 'packages/infrastructure/hosting/runtime.py', 'packages/infrastructure/hosting/prepare.py', 'packages/infrastructure/hosting/docs/README.md', 'packages/infrastructure/hosting/docs/runbook.md', 'packages/infrastructure/hosting/docs/sources.md', 'packages/memory/knowledge/Dockerfile', 'packages/memory/knowledge/Dockerfile.dockerignore', 'packages/memory/knowledge/runtime/service.py', 'packages/core/coordination/Dockerfile', 'packages/core/coordination/Dockerfile.dockerignore', 'packages/core/coordination/service.py', 'packages/core/coordination/build_sqlite.py']
+            for reference in references:
+                source = source_path(root, reference, required=True)
+                destination = bundle / reference; destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(portable_bytes(source.read_bytes(), source.relative_to(root).as_posix(), reference, moves))
         if "security" in resolved["packages"]:
             # Explicit reviewed resource set; never sweep ignored audit evidence,
             # customer logs, credentials or arbitrary package-local artifacts.

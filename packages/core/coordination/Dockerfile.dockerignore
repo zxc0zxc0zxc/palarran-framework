@@ -1,0 +1,6 @@
+**
+!packages/core/coordination/Dockerfile
+!packages/core/coordination/build_sqlite.py
+!packages/core/coordination/service.py
+!packages/infrastructure/hosting/runtime.py
+!packages/core/coordination/build-inputs/sqlite-amalgamation-3510300.zip

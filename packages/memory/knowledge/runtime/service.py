@@ -84,9 +84,11 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 class Neo4j:
-    def __init__(self, url, password):
+    def __init__(self, url, password, *, container_network=False):
+        require(type(container_network) is bool)
         parsed = urlsplit(url)
-        require(parsed.scheme == 'http' and parsed.hostname in ('127.0.0.1', 'localhost'))
+        require(parsed.scheme == 'http' and (parsed.hostname in ('127.0.0.1', 'localhost') or
+                (container_network and url in ('http://graph:7474', 'http://graph:7474/'))))
         require(not parsed.username and not parsed.password and not parsed.query and not parsed.fragment and parsed.path in ('', '/'))
         require(type(password) is str and len(password) >= 16)
         self.url = url.rstrip('/') + '/db/neo4j/query/v2'
@@ -349,19 +351,28 @@ def handler(knowledge, agent_token, reviewer_token):
     return Handler
 
 
+
+def create_server(knowledge, agent_token, reviewer_token, *, port=18791, container_network=False):
+    require(type(container_network) is bool and type(port) is int and 0 <= port <= 65535)
+    host = '0.0.0.0' if container_network else '127.0.0.1'
+    return HTTPServer((host, port), handler(knowledge, agent_token, reviewer_token))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('operation', choices=('init', 'serve'))
     parser.add_argument('--port', type=int, default=18791)
+    parser.add_argument('--container-network', action='store_true', help='Explicit private-container bridge mode; never publish publicly')
     args = parser.parse_args()
     os.umask(0o077)
     try:
-        db = Neo4j(os.environ.get('NEO4J_URL', 'http://127.0.0.1:17474'), os.environ['NEO4J_PASSWORD'])
+        db = Neo4j(os.environ.get('NEO4J_URL', 'http://127.0.0.1:17474'), os.environ['NEO4J_PASSWORD'], container_network=args.container_network)
         if args.operation == 'init':
             db.initialize()
         else:
             knowledge = Knowledge(db, Artifacts(os.environ['MEMORY_ARTIFACT_DIR']))
-            HTTPServer(('127.0.0.1', args.port), handler(knowledge, os.environ['MEMORY_AGENT_TOKEN'], os.environ['MEMORY_REVIEWER_TOKEN'])).serve_forever()
+            create_server(knowledge, os.environ['MEMORY_AGENT_TOKEN'], os.environ['MEMORY_REVIEWER_TOKEN'],
+                          port=args.port, container_network=args.container_network).serve_forever()
         return 0
     except (ValueError, KeyError, OSError):
         print('Memory service rejected configuration or database outcome; inspect scoped status without replay.')

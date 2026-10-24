@@ -111,6 +111,42 @@
       ]
     },
     {
+      "skill": "palarran-git-commit",
+      "domain": "git",
+      "action": "commit",
+      "command": "git:commit",
+      "adapter": "commands/palarran/git/commit.md",
+      "arguments": "{stage?} [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-git-conflicts",
+      "domain": "git",
+      "action": "conflicts",
+      "command": "git:conflicts",
+      "adapter": "commands/palarran/git/conflicts.md",
+      "arguments": "{target-branch} [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-git-history",
+      "domain": "git",
+      "action": "history",
+      "command": "git:history",
+      "adapter": "commands/palarran/git/history.md",
+      "arguments": "@file [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-git-mr",
+      "domain": "git",
+      "action": "mr",
+      "command": "git:mr",
+      "adapter": "commands/palarran/git/mr.md",
+      "arguments": "[--plan]",
+      "legacy": []
+    },
+    {
       "skill": "palarran-infra-plan",
       "domain": "infra-plan",
       "action": "plan",

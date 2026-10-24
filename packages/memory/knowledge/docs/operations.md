@@ -1,5 +1,7 @@
 # VPS, secrets, backup and acceptance
 
+For a new containerized stack or an explicitly authorized replacement, follow the [container hosting runbook](../../../infrastructure/hosting/docs/runbook.md). It packages the API, graph and bus separately and publishes only private API ports. The Neo4j-only Compose example and host-systemd steps below describe the earlier topology; do not mix procedures or assume its host database port exists in the container stack.
+
 ## Before deployment
 
 Verify trusted SSH host key, OS/CPU/RAM/free disk/ports and existing workloads under the [infra workflow](../../../infrastructure/planning/docs/workflow.md). `--plan` never connects. Do not change root/password login, firewall, Docker daemon or others' services without a concrete plan. Current targets/keys stay in private `.env`/SSH config; never commit addresses/credentials to the library.

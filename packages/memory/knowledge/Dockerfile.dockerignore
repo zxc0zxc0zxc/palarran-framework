@@ -1,0 +1,4 @@
+**
+!packages/memory/knowledge/Dockerfile
+!packages/memory/knowledge/runtime/service.py
+!packages/infrastructure/hosting/runtime.py
