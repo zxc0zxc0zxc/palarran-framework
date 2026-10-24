@@ -20,11 +20,11 @@ class ParallelExportsTests(unittest.TestCase):
             output = PACKAGER.build_package('core', base / 'core', root=ROOT)
             env = {'PATH': os.defpath, 'HOME': str(base), 'PYTHONPATH': str(output), 'PYTHONDONTWRITEBYTECODE': '1'}
             code = '''from pathlib import Path
-from packages.core.parallelism import dispatcher, authority, entry, native, temporal, root_budget, integration, dashboard, feature, feature_gates, feature_demo
+from packages.core.parallelism import dispatcher, authority, entry, native, temporal, root_budget, integration, dashboard, feature, feature_gates, feature_demo, primitives, states, ledger, manifest_validation, feature_validation
 from packages.core.setup import temporal_config
 from packages.core.coordination import share, share_store, share_runtime, share_git, share_temporal, client, service
 root=Path.cwd()
-for module in (dispatcher,authority,entry,native,temporal,root_budget,integration,dashboard,feature,feature_gates,feature_demo,temporal_config,share,share_store,share_runtime,share_git,share_temporal,client,service):
+for module in (dispatcher,authority,entry,native,temporal,root_budget,integration,dashboard,feature,feature_gates,feature_demo,primitives,states,ledger,manifest_validation,feature_validation,temporal_config,share,share_store,share_runtime,share_git,share_temporal,client,service):
     assert Path(module.__file__).resolve().is_relative_to(root)
 print('portable runtime imports verified')
 '''
@@ -36,5 +36,7 @@ print('portable runtime imports verified')
                 self.assertEqual(help_result.returncode, 0, help_result.stderr)
             for name in ('dashboard.html', 'dashboard.css', 'dashboard.js'):
                 self.assertTrue((output / 'packages/core/parallelism/assets' / name).is_file())
+            self.assertEqual((output / 'LICENSE').read_bytes(), (ROOT / 'LICENSE').read_bytes())
+            self.assertTrue((output / 'packages/core/parallelism/docs/ledger-contract.md').is_file())
             self.assertFalse((output / '.palarran').exists())
             self.assertFalse((output / 'packages/core/parallelism/private.env').exists())

@@ -234,16 +234,16 @@ def _legacy_package(namespace, output, root=ROOT):
     # source closure, never task journals, logs or arbitrary package-local files.
     parallel_guides = ["packages/core/parallelism/README.md"] + [
         "packages/core/parallelism/docs/" + name + ".md" for name in
-        ("contract", "sources", "authority", "managed-entry", "temporal", "temporal-sources", "integration", "integration-sources", "dashboard")]
+        ("contract", "sources", "authority", "managed-entry", "temporal", "temporal-sources", "integration", "integration-sources", "dashboard", "core-internals", "ledger-contract")]
     parallel_guides += ["packages/core/parallelism/docs/features/" + name + ".md" for name in
-                        ("README", "sources", "contract", "workflow", "acceptance", "gates")]
+                        ("README", "sources", "contract", "workflow", "acceptance", "gates", "validation")]
     resources += [name for name in parallel_guides if source_path(root, name).is_file()]
     temporal_runbook = "packages/infrastructure/hosting/docs/temporal-runbook.md"
     if source_path(root, temporal_runbook).is_file():
         resources.append(temporal_runbook)
     if namespace in {"skills", "core"}:
         helpers = ["packages/core/parallelism/" + name for name in
-                   ("dispatcher.py", "authority.py", "entry.py", "harness.py", "native.py", "temporal.py", "temporal_worker.py", "requirements-temporal.txt", "integration.py", "root_budget.py", "dashboard.py", "feature.py", "feature_gates.py", "feature_demo.py")]
+                   ("primitives.py", "states.py", "ledger.py", "manifest_validation.py", "feature_validation.py", "dispatcher.py", "authority.py", "entry.py", "harness.py", "native.py", "temporal.py", "temporal_worker.py", "requirements-temporal.txt", "integration.py", "root_budget.py", "dashboard.py", "feature.py", "feature_gates.py", "feature_demo.py")]
         helpers += ["packages/core/parallelism/fixtures/features/" + name for name in ("service.py", "check.py")]
         helpers += ["packages/core/parallelism/assets/" + name for name in ("dashboard.html", "dashboard.css", "dashboard.js")]
         helpers += ["packages/core/setup/temporal_config.py"]
@@ -256,6 +256,7 @@ def _legacy_package(namespace, output, root=ROOT):
     if namespace in {"skills", "core", "vps"}:
         resources += ["packages/core/coordination/" + name + ".py" for name in
                       ("share", "share_store", "share_git", "share_runtime", "share_temporal", "share_temporal_worker")]
+    resources.append("LICENSE")
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():
         paths.append(root / command["source"].removeprefix("./"))
