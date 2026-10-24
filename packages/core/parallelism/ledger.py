@@ -110,7 +110,9 @@ class SQLiteLedger:
         db = sqlite3.connect(target, timeout=self.timeout, isolation_level=None, uri=self.read_only)
         db.row_factory = sqlite3.Row
         try:
-            if not self.read_only:
+            if self.read_only:
+                db.execute('PRAGMA query_only=ON')
+            else:
                 db.execute('PRAGMA synchronous=FULL')
             db.execute('BEGIN' if self.read_only else 'BEGIN IMMEDIATE')
             yield db
