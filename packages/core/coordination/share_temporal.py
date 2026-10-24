@@ -1,7 +1,10 @@
 """Optional authenticated sharing gateway; importing this does not load the SDK."""
 from __future__ import annotations
 
+import asyncio
 import copy
+import inspect
+import json
 from datetime import timedelta
 import hashlib
 import time
@@ -117,22 +120,24 @@ class ShareTemporalGateway:
     Do not expose this object as a generic agent auto-approval tool.
     """
     def __init__(self, client, credentials, *, already_started=None, reject_duplicate=3,
-                 clock=time.time):
+                 clock=time.time, notification_sink=None):
         self.client = client
         self.credentials = CoordinationStore._credentials(credentials)
         self.already_started = already_started
         self.reject_duplicate = reject_duplicate
         self.clock = clock
+        require(notification_sink is None or callable(notification_sink))
+        self.notification_sink = notification_sink
 
     @classmethod
-    async def connect(cls, target, credentials, *, home=None):
+    async def connect(cls, target, credentials, *, home=None, notification_sink=None):
         from ..setup.temporal_config import resolve
         from ..parallelism.temporal import TemporalBackend
         profile = resolve(target, home=home)
         require(profile.enabled, 'backend_mismatch')
         backend = await TemporalBackend.connect(profile.connection_mapping())
         return cls(backend.client, credentials, already_started=backend.already_started,
-                   reject_duplicate=backend.reject_duplicate)
+                   reject_duplicate=backend.reject_duplicate, notification_sink=notification_sink)
 
     def _actor(self, token, project):
         ident(project)
@@ -179,7 +184,7 @@ class ShareTemporalGateway:
             else:
                 raise ShareError('temporal_start_unknown') from None
         require(await self._query(handle, 'envelope') == request, 'share_conflict')
-        return await self._query(handle, 'status')
+        return await self._notify(await self._query(handle, 'status'), request)
 
     async def status(self, token, project, share_id):
         self._actor(token, project)
@@ -199,7 +204,7 @@ class ShareTemporalGateway:
         expected = transition(status['state'], envelope, request, int(self.clock()))
         prior = status['state']['events'].get(event['event_id'])
         if prior is not None:
-            return status
+            return await self._notify(status, envelope, event['event_id'])
         try:
             # execute_update waits for completion, not only accepted/enqueued delivery.
             result = await handle.execute_update('transition', request, id=event['event_id'],
@@ -210,4 +215,80 @@ class ShareTemporalGateway:
         # SDK update-ID dedup may return an earlier result for a conflicting payload.
         require(result['state']['events'].get(event['event_id']) ==
                 expected['events'][event['event_id']], 'idempotency_conflict')
-        return copy.deepcopy(result)
+        return await self._notify(copy.deepcopy(result), envelope, event['event_id'])
+
+    async def _notify(self, result, envelope, event_id=None):
+        """Notice delivery never changes the authoritative lifecycle result."""
+        if self.notification_sink is None:
+            return result
+        notice = notification(result['state'], envelope, event_id)
+        delivery = dict(status='pending', request_id=notice['request_id'])
+        try:
+            reply = self.notification_sink(copy.deepcopy(notice))
+            if inspect.isawaitable(reply):
+                reply = await asyncio.wait_for(reply, timeout=25)
+            if type(reply) is dict and reply.get('status') == 'delivered':
+                delivery['status'] = 'delivered'
+        except Exception:
+            pass
+        return dict(result, notification=delivery)
+
+    async def reconcile_notification(self, token, project, share_id, event_id=None):
+        """Read authority and original stable bus receipt; never resubmit a transition."""
+        self._actor(token, project)
+        handle = self._handle(project, share_id)
+        envelope = await self._query(handle, 'envelope')
+        result = await self.status(token, project, share_id)
+        return await self._notify(result, envelope, event_id)
+
+
+def notification(state, envelope, event_id=None):
+    if event_id is None:
+        kind, generation = 'requested', 0
+        value_digest = hashlib.sha256(canonical(envelope)).hexdigest()
+        key = ['creation']
+    else:
+        ident(event_id)
+        require(event_id in state['events'], 'event_missing')
+        record = next((v for v in state['history'] if v['event_id'] == event_id), None)
+        require(record is not None, 'event_missing')
+        kind, generation = record['kind'], record['assignment_generation']
+        value_digest = state['events'][event_id]
+        key = ['event', event_id]
+    project, share_id = envelope['project'], envelope['offer']['share_id']
+    request_id = 'sn' + hashlib.sha256(canonical([project, share_id, key])).hexdigest()[:62]
+    return dict(project=project, room=envelope['offer']['room'], request_id=request_id,
+                share_id=share_id, event=kind, assignment_generation=generation, digest=value_digest)
+
+
+class CoordinationNoticeSink:
+    """Optional real bus adapter. Receipts and messages live on the bus, not in a mirror."""
+    def __init__(self, client):
+        self.client = client
+
+    async def __call__(self, notice):
+        fields(notice, {'project', 'room', 'request_id', 'share_id', 'event',
+                        'assignment_generation', 'digest'})
+        text = json.dumps({key: notice[key] for key in
+                          ('share_id', 'event', 'assignment_generation', 'digest')},
+                          sort_keys=True, separators=(',', ':'))
+        pending = dict(status='pending', request_id=notice['request_id'])
+        lookup = await asyncio.to_thread(self.client.request, 'operation.get',
+                                        dict(project=notice['project'], request_id=notice['request_id']))
+        if lookup.get('ok') is not True:
+            return pending
+        result = lookup.get('result', {})
+        if result.get('found') is True:
+            if result.get('operation') != 'message.post':
+                return pending
+            receipt = result.get('receipt', {})
+        elif result.get('found') is False:
+            receipt = await asyncio.to_thread(self.client.request, 'message.post',
+                dict(project=notice['project'], room=notice['room'], kind='status', text=text,
+                     request_id=notice['request_id']))
+        else:
+            return pending
+        if (receipt.get('ok') is True and receipt.get('result', {}).get('request_id') == notice['request_id']
+                and receipt.get('result', {}).get('message', {}).get('text') == text):
+            return dict(status='delivered', request_id=notice['request_id'])
+        return pending

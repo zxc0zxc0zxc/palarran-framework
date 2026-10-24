@@ -24,6 +24,14 @@ Workflow time supplies event timestamps. An immutable expiry timer marks `deadli
 
 Reducer bounds (32 offers and 256 events), bounded input/output bytes, one expiry timer and no polling Activities bound normal history growth. Capacity exhaustion fails closed, never silently deletes old decisions. Reconstructing reducer state from its initial envelope and accepted event sequence is an offline deterministic check; it does not establish Temporal Service replay or multi-machine recovery.
 
+## Optional bus notices
+
+Construct the gateway with `notification_sink=CoordinationNoticeSink(client)`, where `client` is the existing authenticated Coordination `Client` using an explicitly configured integration identity/project scope. The worker does not need bus credentials. Another trusted callable may implement the same bounded notice interface; async callables are preferred. This connection is optional and never turns the bus into a second transition authority.
+
+Creation and completed events emit only share ID, event kind, assignment generation and an immutable digest. Project/room route the notice. A deterministic stable `request_id` identifies each creation/event; generation and digest remain identical when reconciled after later progress. No reviewed card, usage amounts, secrets or full lifecycle state enters message text.
+
+The real adapter reads `operation.get` before `message.post`. An unknown lookup does not post. A lost post response returns `notification.status=pending` alongside the already committed lifecycle result. Call `reconcile_notification(token, project, share_id, event_id=None)` to inspect the same receipt and deliver only the original stable notice when absence is known. It never repeats a Workflow transition, starts receiver work or chooses a new operation ID. Existing failed/conflicting receipts remain pending for operator review. No background retry loop is started.
+
 ## Running
 
 The optional SDK uses the existing pinned `requirements-temporal.txt`; normal imports work without it. An operator may run `python3 -m packages.core.coordination.share_temporal_worker --target PROJECT`. This resolves the existing global/project profile and starts only the sharing worker on its fixed task queue. It does not install an SDK, deploy Temporal, create credentials, launch training or alter global configuration. Prefer a separate worker process from the parallel-execution worker, using the same namespace/profile.
