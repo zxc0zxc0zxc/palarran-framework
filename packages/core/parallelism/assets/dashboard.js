@@ -18,17 +18,17 @@ function render(s){
   put('token-reserve',`Reserved ${number(u.reserved_tokens)} / cap ${number(b.tokens)}${known?'':` · reported ${number(u.tokens)}`}`);
   put('cost-reserve',`Reserved ${money(u.reserved_cost_micros)} / cap ${money(b.cost_micros)}${known?'':` · reported ${money(u.cost_micros)}`}`);
   [['token-meter','tokens'],['cost-meter','cost_micros']].forEach(([id,key])=>{const n=el(id);n.hidden=!(known&&typeof u[key]==='number'&&b[key]>0);n.value=Math.min(1,u[key]/b[key]);});
-  put('verified',`${r.tasks.filter(t=>t.state==='verified'&&t.verified_subject).length} / ${r.tasks.length}`);
-  const needs=r.tasks.filter(t=>['blocked','unknown','handoff_pending','failed','cancel_requested'].includes(t.state));
-  put('attention',number(needs.length));put('attention-copy',needs.length?'Review blockers and reconcile unknowns':'No reported blockers · human action not asserted');
+  const summary=r.task_summary;
+  put('verified',`${summary.verified} / ${summary.completion_tasks}`);
+  put('attention',number(summary.attention));put('attention-copy',`${summary.blocked} blocked · ${summary.unknown} unknown · ${summary.human_handoffs} human handoffs`);
   const tbody=el('tasks');tbody.replaceChildren();el('empty').hidden=r.tasks.length>0;
   r.tasks.forEach(t=>{const row=document.createElement('tr');const task=node('td',value(t.task_id));task.append(node('small',`Queue ${value(t.task_queue)} · phase ${value(t.budget_phase)}`));row.append(task);
     const owner=node('td',value(t.owner));owner.append(node('small',`${value(t.machine)} · session ${value(t.session_id)}`));row.append(owner);
-    const state=node('td','');const tag=node('span',value(t.state));tag.className='tag '+(['verified','blocked','unknown','failed','handoff_pending','cancel_requested'].includes(t.state)&&!(t.state==='verified'&&!t.verified_subject)?t.state:'');state.append(tag);state.append(node('small',`Attempt ${value(t.attempt_id)} · heartbeat ${typeof t.heartbeat_at==='number'?new Date(t.heartbeat_at*1000).toLocaleTimeString():'unknown'}`));row.append(state);
-    row.append(node('td',t.reason||(['blocked','unknown','handoff_pending'].includes(t.state)?'Action unspecified — review authority':'—')));
+    const state=node('td','');const tag=node('span',t.unused_reserve?'Unused reserve':value(t.state));tag.className='tag '+(['verified','blocked','unknown','failed','handoff_pending','cancel_requested'].includes(t.state)&&!(t.state==='verified'&&!t.verified_subject)?t.state:'');state.append(tag);state.append(node('small',`Attempt ${value(t.attempt_id)} · heartbeat ${typeof t.heartbeat_at==='number'?new Date(t.heartbeat_at*1000).toLocaleTimeString():t.unused_reserve?'not started':'unknown'}`));row.append(state);
+    row.append(node('td',t.unused_reserve?'External capacity · not required unless attempted':t.reason||(['blocked','unknown','handoff_pending'].includes(t.state)?'Action unspecified — review authority':'—')));
     const subject=typeof t.verified_subject==='object'&&t.verified_subject?JSON.stringify(t.verified_subject):value(t.verified_subject);
-    row.append(node('td',t.state==='verified'?subject:'Unverified'));row.append(node('td',`${t.usage_known===true?number(t.tokens):'Unknown total'} / ${number(t.reserved_tokens)}`));tbody.append(row);});
-  const identity=el('identity');identity.replaceChildren();[['Base commit',r.base_commit],['Plan SHA-256',r.plan_sha256],['Observation freshness','Current means authority reachable; individual task heartbeats may be old.']].forEach(([k,v])=>{identity.append(node('dt',k),node('dd',value(v)));});
+    row.append(node('td',t.unused_reserve?'—':t.state==='verified'?subject:'Unverified'));row.append(node('td',`${t.usage_known===true?number(t.tokens):'Unknown total'} / ${number(t.reserved_tokens)}`));tbody.append(row);});
+  const identity=el('identity');identity.replaceChildren();[['Base commit',r.base_commit],['Plan SHA-256',r.plan_sha256],['Unused external reserves',summary.unused_reserves],['Observation freshness','Current means authority reachable; individual task heartbeats may be old.']].forEach(([k,v])=>{identity.append(node('dt',k),node('dd',value(v)));});
   const i=s.integration;put('integration-state',i?value(i.status):'Not connected');put('integration-copy',i?`PR readiness: ${i.pr_ready===true&&s.freshness==='current'?'reported ready':'not established'} · head ${value(i.head)} · remaining ${value(i.remaining)}`:'No integration report is connected. Publication readiness is unknown.');
   const items=el('integration-items');items.replaceChildren();if(i)(i.items||[]).forEach(item=>{const n=node('div',`${value(item.item_id)} · ${value(item.owner)} · ${value(item.status)} · integrated commit ${value(item.integrated_commit)}`);n.className='integration-item';items.append(n);(item.gates||[]).forEach(g=>items.append(node('p',`${value(g.gate_id)}: ${value(g.status)} · subject ${value(g.subject)}`)));});
 }

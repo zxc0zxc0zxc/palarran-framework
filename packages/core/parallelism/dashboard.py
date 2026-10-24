@@ -22,7 +22,7 @@ _ASSETS = Path(__file__).with_name('assets')
 _ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$')
 _FIELDS = {
     'root': {'run_id', 'backend', 'status', 'plan_sha256', 'plan_version', 'base_commit', 'updated_at'},
-    'task': {'task_id', 'parent_task_id', 'attempt_id', 'state', 'reason', 'owner', 'session_id', 'task_queue', 'machine', 'verified_subject', 'updated_at', 'heartbeat_at', 'started_at', 'evidence_sha256', 'receipt_sha256', 'base_commit', 'plan_version', 'budget_phase', 'tokens', 'cost_micros', 'usage_known', 'reserved_tokens', 'reserved_cost_micros'},
+    'task': {'task_id', 'parent_task_id', 'attempt_id', 'state', 'reason', 'owner', 'session_id', 'task_queue', 'machine', 'verified_subject', 'updated_at', 'heartbeat_at', 'started_at', 'evidence_sha256', 'receipt_sha256', 'base_commit', 'plan_version', 'budget_phase', 'dispatch_mode', 'required_for_completion', 'tokens', 'cost_micros', 'usage_known', 'reserved_tokens', 'reserved_cost_micros'},
     'usage': {'tokens', 'cost_micros', 'reserved_tokens', 'reserved_cost_micros', 'known'},
     'budget': {'tokens', 'cost_micros', 'launches', 'seconds'},
     'integration': {'run_id', 'status', 'base_commit', 'head', 'remaining', 'pr_ready', 'publication'},
@@ -54,6 +54,22 @@ def _list(value):
     return value
 
 
+def summarize_tasks(tasks):
+    """Optional unattempted external reserves are capacity, not completion work."""
+    completion = [t for t in tasks if not unused_reserve(t)]
+    return {'completion_tasks': len(completion),
+            'verified': sum(t.get('state') == 'verified' and bool(t.get('verified_subject')) for t in completion),
+            'unused_reserves': len(tasks) - len(completion),
+            'attention': sum(t.get('state') in {'blocked', 'unknown', 'handoff_pending', 'failed', 'cancel_requested'} for t in completion),
+            'blocked': sum(t.get('state') == 'blocked' for t in completion),
+            'unknown': sum(t.get('state') == 'unknown' for t in completion),
+            'human_handoffs': sum(t.get('state') == 'handoff_pending' for t in completion)}
+
+
+def unused_reserve(task):
+    return task.get('required_for_completion') is False and task.get('dispatch_mode') == 'external' and type(task.get('attempt_id')) is int and task['attempt_id'] == 0
+
+
 def project_report(raw):
     """Explicit disclosure boundary; never serialize packets, logs or credentials."""
     if type(raw) is not dict or not _ID.fullmatch(str(raw.get('run_id', ''))):
@@ -62,6 +78,9 @@ def project_report(raw):
     result['usage'] = _safe(raw.get('usage'), 'usage')
     result['budget'] = _safe(raw.get('budget'), 'budget')
     result['tasks'] = [_safe(t, 'task') for t in _list(raw.get('tasks'))]
+    for task in result['tasks']:
+        task['unused_reserve'] = unused_reserve(task)
+    result['task_summary'] = summarize_tasks(result['tasks'])
     if len(json.dumps(result, allow_nan=False).encode()) > 2 * 1024 * 1024:
         raise ValueError('Report exceeds disclosure budget')
     return result
@@ -164,7 +183,7 @@ def markdown(snapshot):
              f"Usage known: {usage.get('known') is True}; reported tokens: {text(usage.get('tokens'))}; reserved: {text(usage.get('reserved_tokens'))}; reported micro-USD: {text(usage.get('cost_micros'))}; reserved: {text(usage.get('reserved_cost_micros'))}",
              '| Task | Owner / machine | State | Blocker / human action | Verified subject |', '| --- | --- | --- | --- | --- |']
     for task in report['tasks']:
-        lines.append('| ' + ' | '.join(text(v) for v in (task['task_id'], f"{text(task.get('owner'))} / {text(task.get('machine'))}", task['state'], task.get('reason'), task.get('verified_subject'))) + ' |')
+        lines.append('| ' + ' | '.join(text(v) for v in (task['task_id'], f"{text(task.get('owner'))} / {text(task.get('machine'))}", 'Unused reserve' if task.get('unused_reserve') else task['state'], task.get('reason'), task.get('verified_subject'))) + ' |')
     integration = snapshot.get('integration')
     if integration:
         ready = integration.get('pr_ready') is True and snapshot['freshness'] == 'current'
@@ -249,9 +268,27 @@ def dashboard_server(snapshot, *, host='127.0.0.1', port=0, auth_file=None):
 
 
 def demo_report(run_id='demo'):
-    return {'run_id': run_id, 'backend': 'fixture', 'status': 'running', 'plan_version': 'demo-v1', 'base_commit': 'a' * 40, 'plan_sha256': 'b' * 64,
-            'budget': {'tokens': 100000, 'cost_micros': 5000000}, 'usage': {'tokens': 18240, 'reserved_tokens': 26000, 'cost_micros': 812000, 'reserved_cost_micros': 1300000, 'known': True},
-            'tasks': [dict(task_id='dispatcher', owner='Core agent', machine='workstation-01', state='running', goal='Implement shared admission and accounting', tokens=10840, usage_known=True), dict(task_id='integration', owner='Integration agent', machine='workstation-02', state='blocked', reason='Waiting for independently verified dispatcher commit', tokens=7400, usage_known=True), dict(task_id='contract', owner='Reviewer', machine='workstation-01', state='verified', verified_subject='a' * 40, tokens=0, usage_known=True)]}
+    now = time.time()
+    common = dict(dispatch_mode='auto', required_for_completion=True, attempt_id=1,
+                  budget_phase='execution', usage_known=True, reserved_tokens=0,
+                  reserved_cost_micros=0, session_id='DEMO-session', task_queue='DEMO-workers',
+                  heartbeat_at=now, cost_micros=0)
+    tasks = [dict(common, task_id='dispatcher', session_id='DEMO-core-session', owner='DEMO-core', machine='DEMO-machine-01',
+                  state='running', tokens=10840, reserved_tokens=26000, reserved_cost_micros=1300000,
+                  cost_micros=500000),
+             dict(common, task_id='integration', session_id='DEMO-integration-session', owner='DEMO-integrator', machine='DEMO-machine-02',
+                  state='blocked', budget_phase='integration', tokens=7400, cost_micros=312000,
+                  reason='DEMO: waiting for independently verified dispatcher subject'),
+             dict(common, task_id='contract', session_id='DEMO-review-session', owner='DEMO-reviewer', machine='DEMO-machine-01',
+                  state='verified', verified_subject='a' * 40, tokens=0),
+             dict(common, task_id='external-reserve', session_id='DEMO-external-session', owner='DEMO-external', machine='DEMO-machine-03',
+                  state='pending', dispatch_mode='external', required_for_completion=False,
+                  attempt_id=0, heartbeat_at=None, tokens=0)]
+    return {'run_id': run_id, 'backend': 'fixture', 'status': 'running', 'plan_version': 'demo-v1',
+            'base_commit': 'a' * 40, 'plan_sha256': 'b' * 64,
+            'budget': {'tokens': 100000, 'cost_micros': 5000000},
+            'usage': {'tokens': 18240, 'reserved_tokens': 26000, 'cost_micros': 812000,
+                      'reserved_cost_micros': 1300000, 'known': True}, 'tasks': tasks}
 
 
 def main(argv=None):

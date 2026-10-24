@@ -26,7 +26,9 @@ The browser polls every three seconds. A locked cache limits authority reads to 
 
 Reported actual usage, outstanding reservations and frozen budget caps are separate. Values use integer tokens and micro-USD; the panel displays USD without presenting it as an invoice. `known=false` produces “Unknown total,” while preserving the reported subtotal and reservations. Missing numeric values stay unknown. The panel never sums parents and children again or estimates unreported provider spend. Independent verified subjects and source base commits are labeled separately; a subject hash is not automatically a Git commit.
 
-Blocked/failed/unknown/handoff/cancellation tasks count as attention. Their safe reason is shown as the next review context. The panel does not invent whether a particular human has approved an action or infer new authorization from any status. No execution, retry, cancel, merge, publish or approve button exists.
+External task slots with `required_for_completion=false` and attempt 0 appear as “Unused reserve.” They remain visible, but do not count in the independent-result denominator or attention totals. Required tasks and every attempted slot count; an attempted unknown reserve remains actionable. Missing required/attempt metadata is treated conservatively as completion work.
+
+Blocked/failed/unknown/handoff/cancellation tasks count as attention. The summary distinguishes dependency blockers, unknown outcomes and explicit human handoffs; dependency waiting alone does not assert a human is needed. Their safe reason is shown as the next review context. The panel does not invent whether a particular human has approved an action or infer new authorization from any status. No execution, retry, cancel, merge, publish or approve button exists.
 
 ## Integration and harness companion
 
