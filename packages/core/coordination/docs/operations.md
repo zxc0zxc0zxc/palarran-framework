@@ -41,3 +41,7 @@ Review room/message/resource/receipt and byte quotas in wire.md. The service nev
 Back up a consistently stopped service and its private database/credential files with an approved encrypted backup destination. Do not copy a live main database alone while WAL has uncheckpointed transactions. Test restore into an isolated directory/port before trusting the backup. Never restore an old coordination snapshot into active use without reconciling newer external actions and invalidating stale holders; older receipts are not proof that later actions never happened.
 
 Required acceptance: two distinct clients on the same project exchange messages; unauthorized projects fail; simultaneous acquisition yields exactly one holder; expiry blocks takeover; a lost response can be looked up after restart; a stale holder cannot release a new claim; different projects stay isolated. Local automated tests cover synthetic clients only. Real different-machine tunnels, client-host interoperability, restart/restore on the VPS and operational availability must be reported separately as NOT_RUN until observed.
+
+## Container hosting alternative
+
+The [container hosting runbook](../../../infrastructure/hosting/docs/runbook.md) provides a separate supported source for private Compose deployment with the memory service. Choose its exact admission/migration/ownership gates; do not combine it with the host-systemd installer or adopt an unknown prior state. Existing credentials and durable state remain separate from images.

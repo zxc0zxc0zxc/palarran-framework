@@ -217,7 +217,7 @@ class SecurityUpdateScopeTests(unittest.TestCase):
                 receipt=json.loads((self.target/'.ai-tools/installation.json').read_bytes())
                 self.assertIn('security',receipt['resolved_packages'])
                 self.assertEqual(receipt['preferences'],preferences)
-                self.assertEqual(len(receipt['skills']),9 if choices==['security'] else 46)
+                self.assertEqual(len(receipt['skills']),9 if choices==['security'] else 50)
                 self.assertEqual(len(receipt['resolved_packages']),2 if choices==['security'] else 11)
 
     def test_old_all_scope_is_frozen_from_receipt_or_verified_prior_catalog(self):

@@ -32,7 +32,6 @@ Create only directories with real resources. Package status and optional runtime
 | [Science](science/README.md) | `science` | Evidence-grounded scientific reporting from existing experiments. |
 | [Validation](validation/README.md) | `validation` | Independent application acceptance and measured agent evaluation. |
 | [Infrastructure](infrastructure/README.md) | `infrastructure` | Infrastructure design, delivery, VPS operations and scoped incidents. |
-
 | [Security](security/README.md) | `security` | Evidence-backed infrastructure, request, logging, egress, code and CVE audits. |
 
 [Strict catalog](catalog.json) owns selection/dependencies and canonical skill paths. [Move manifest](layout.json) owns legacy source references. [Registry contract](core/packages/docs/README.md) and [source-path contract](core/packages/docs/layout.md) describe validation.
@@ -48,6 +47,7 @@ flowchart BT
     Science --> Core
     Validation --> Core
     Infrastructure --> Core
+    Security --> Core
 ```
 
 Arrows show required package dependencies. Optional services such as Neo4j memory and the coordination API are configured separately; package selection does not deploy them.

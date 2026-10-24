@@ -5,6 +5,7 @@ Runbook ID: palarran.service.routing. Version: 1.0.0. This is routing and prefli
 | Request | Required procedure | Boundary |
 | --- | --- | --- |
 | Install/update local framework | Framework install/update runbooks in this directory | Preserve client settings and target edits; filesystem placement and connectivity are separate |
+| Containerized Palarran memory and message bus, including authorized replacement | [Container hosting runbook](../../../../infrastructure/hosting/docs/runbook.md) | Exact source/image pins, source-only transfer, cold state copy, private file credentials and independent acceptance; preserve unrelated workloads |
 | Install optional agent chat | Core coordination deployment runbook | Pinned standalone service, protected per-participant credentials, private API; no agent skills on VPS |
 | Existing global memory | Current Memory operations, exact existing ownership/receipt and a scoped check plan | Do not silently adopt, rename, restart or recreate an existing Neo4j deployment |
 | New global memory | A target-specific reviewed memory deployment runbook derived from the Memory operations/template contract | Verified image digest, OS/runtime, account, directories, protected credential transfer, backup/restore and acceptance must be concrete before apply |

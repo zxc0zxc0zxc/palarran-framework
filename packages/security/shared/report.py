@@ -1,7 +1,6 @@
 """Validate prepared security audit evidence offline; never scan or certify a target."""
 import argparse
 from datetime import date, datetime
-import hashlib
 import ipaddress
 import json
 import os
@@ -95,7 +94,8 @@ def public_url(value):
 
 def evidence_reference(value):
     text(value, 1024)
-    need(not value.startswith(('/', '~')) and '\\' not in value and '://' not in value
+    need(not value.startswith(('/', '~')) and re.match(r'^[A-Za-z]:', value) is None
+         and not any(ord(c) == 127 for c in value) and '\\' not in value and '://' not in value
          and not any(p in ('', '.', '..') for p in value.split('/'))
          and not any(c in value for c in '\r\n\t?'), 'invalid_evidence_reference')
 

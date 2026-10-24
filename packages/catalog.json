@@ -247,8 +247,8 @@
         },
         {
           "id": "git",
-          "status": "planned",
-          "description": "Git workflow design guides; dedicated skills are not implemented yet."
+          "status": "implemented",
+          "description": "Scoped stage commits, file history, semantic conflict resolution and concise review requests."
         }
       ],
       "skills": [
@@ -271,6 +271,26 @@
           "name": "palarran-backend-build",
           "path": "packages/code/backend/skills/palarran-backend-build/SKILL.md",
           "legacy_path": "skills/palarran-backend-build/SKILL.md"
+        },
+        {
+          "name": "palarran-git-commit",
+          "path": "packages/code/git/skills/palarran-git-commit/SKILL.md",
+          "legacy_path": "skills/palarran-git-commit/SKILL.md"
+        },
+        {
+          "name": "palarran-git-history",
+          "path": "packages/code/git/skills/palarran-git-history/SKILL.md",
+          "legacy_path": "skills/palarran-git-history/SKILL.md"
+        },
+        {
+          "name": "palarran-git-conflicts",
+          "path": "packages/code/git/skills/palarran-git-conflicts/SKILL.md",
+          "legacy_path": "skills/palarran-git-conflicts/SKILL.md"
+        },
+        {
+          "name": "palarran-git-mr",
+          "path": "packages/code/git/skills/palarran-git-mr/SKILL.md",
+          "legacy_path": "skills/palarran-git-mr/SKILL.md"
         }
       ]
     },
@@ -434,6 +454,11 @@
           "id": "incident",
           "status": "implemented",
           "description": "Separately assigned infrastructure incident-response skill."
+        },
+        {
+          "id": "hosting",
+          "status": "implemented",
+          "description": "Reproducible private container hosting for memory and coordination, with explicit migration and rollback gates."
         }
       ],
       "skills": [
