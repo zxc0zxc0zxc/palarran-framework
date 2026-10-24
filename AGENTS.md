@@ -18,6 +18,8 @@ Library of skills, documentation and adapters with a bounded Python orchestrator
 
 Modularity, parallelism, autonomy and quality guide every task. Prefer concurrent execution for genuinely independent work. Before dispatch, record a bounded task DAG, file/resource ownership and acceptance gates; use owned Git worktrees for parallel implementation and keep shared plan/index/integration under one coordinator. Do not parallelize dependent mutations, approvals or overlapping files. Continue authorized work autonomously without repeated confirmation, preserving budget/scope and unknown-outcome reconciliation. Parallelism must improve elapsed time without weakening independent verification; do not invent worker results or quality evidence.
 
+For ordinary requests as well as skills, evaluate independent ready work at task/phase boundaries under the [automatic dispatcher contract](packages/core/parallelism/docs/contract.md). Reuse the active run and inherited budget. Native instructions are instruction-based, not technical interception; report actual integration level. Temporal selection never grants deployment or model-call authority.
+
 ## Shared invariants
 
 - Documentation and dated primary sources precede implementation. Distinguish vendor claims, observations, estimates and hypotheses.

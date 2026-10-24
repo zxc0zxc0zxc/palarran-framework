@@ -127,7 +127,7 @@ class TemporalBoundaryTests(unittest.TestCase):
         import time
         from test_parallel_dispatcher import Dispatcher, manifest
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             dispatcher = Dispatcher(root / "private/state.sqlite3")
             dispatcher.create_run(manifest(root, count=1), backend="temporal")
             request = envelope("offline-run", dispatcher.get_run("offline-run")["plan_sha256"])

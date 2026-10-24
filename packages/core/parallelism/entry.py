@@ -25,9 +25,11 @@ def start(dispatcher, manifest, profile, *, origin='ordinary', reviewed=False, a
     return dict(run_id=run_id, backend=backend, origin=origin, continuation=False)
 
 
-def execute(dispatcher, entry, adapter, verifier, *, temporal_submit=None):
+def execute(dispatcher, entry, adapter, verifier, *, temporal_submit=None, integration_factory=None):
     """An unavailable selected engine never falls back to a local launch."""
     run = dispatcher.get_run(entry['run_id'])
+    if integration_factory is not None and _implementation_verified(run):
+        return _integrate(dispatcher, entry['run_id'], integration_factory)
     if run['backend'] == 'temporal':
         if temporal_submit is None:
             return dict(run_id=entry['run_id'], backend='temporal', status='UNAVAILABLE', local_launches=0)
@@ -36,7 +38,38 @@ def execute(dispatcher, entry, adapter, verifier, *, temporal_submit=None):
         except Exception:
             # Start outcome can be unknown; inspect the fixed run ID before retry.
             return dict(run_id=entry['run_id'], backend='temporal', status='unknown', local_launches=0)
-    return dispatcher.run_local(entry['run_id'], adapter, verifier)
+    result = dispatcher.run_local(entry['run_id'], adapter, verifier)
+    if integration_factory is not None and _implementation_verified(result):
+        return _integrate(dispatcher, entry['run_id'], integration_factory)
+    return result
+
+
+def _implementation_verified(report):
+    return (report.get('status') not in ('unknown', 'cancel_requested', 'cancelled', 'failed')
+            and all(t['state'] == 'verified' for t in report['tasks'] if t.get('dispatch_mode', 'auto') == 'auto'))
+
+
+def _integrate(dispatcher, run_id, factory):
+    """Trusted coordinator binding; never publish or replay an unknown operation."""
+    if not callable(factory):
+        raise ValueError('Reviewed integration factory required')
+    queue = factory(dispatcher.get_run(run_id))
+    report = queue.report()
+    if report.get('run_id') != run_id:
+        raise ValueError('Integration run mismatch')
+    if report['status'] == 'pending':
+        report = queue.prepare()
+    for _ in range(100):
+        if report['status'] != 'integrating':
+            break
+        if report['remaining'] == 0:
+            report = queue.finalize()
+            break
+        report = queue.advance()
+    root = dispatcher.get_run(run_id)
+    ready = report.get('pr_ready') is True and root['status'] == 'verified'
+    status = 'ready_pr' if ready else ('unknown' if report['status'] == 'unknown' else 'blocked')
+    return dict(root, status=status, root_status=root['status'], integration_queue=report, publication='not_requested')
 
 
 def run_request(dispatcher, request, *, target, binding, profile, origin='ordinary', active_run_id=None):
@@ -63,7 +96,7 @@ def run_request(dispatcher, request, *, target, binding, profile, origin='ordina
         raise ValueError('Managed binding requires an adapter and independent verifier')
     run = start(dispatcher, selected['manifest'], profile, origin=origin,
                 reviewed=True, active_run_id=active_run_id)
-    result = execute(dispatcher, run, adapter, verifier, temporal_submit=selected.get('temporal_submit'))
+    result = execute(dispatcher, run, adapter, verifier, temporal_submit=selected.get('temporal_submit'), integration_factory=selected.get('integration_factory'))
     return dict(result, integration=getattr(adapter,'integration','unsupported'), origin=origin,
                 continuation=run['continuation'])
 
@@ -101,7 +134,7 @@ def main(argv=None):
         report=run_request(Dispatcher(args.state),request_path.read_text(encoding='utf-8'),
             target=args.target,binding=binding,profile=profile,origin=args.origin,active_run_id=args.active_run_id)
         print(json.dumps(report,sort_keys=True))
-        return 0 if report.get('status')=='verified' else 2
+        return 0 if report.get('status') in ('verified','ready_pr') else 2
     except (ValueError,TypeError,KeyError,AttributeError,OSError,ImportError):
         print(json.dumps({'status':'BLOCKED','reason':'Check trusted binding, profile, manifest and existing run; no automatic retry.'}))
         return 2
