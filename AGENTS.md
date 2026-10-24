@@ -53,3 +53,5 @@ Read [the package map](packages/README.md) and `packages/<package>/AGENTS.md` fo
 | examples | [Local and remote examples](examples/AGENTS.md) |
 
 After code, skill or inventory changes run `python3 scripts/validate_repo.py` and `python3 -m unittest discover -s tests -v`. After runtime changes also run `python3 scripts/factory_acceptance.py`. Never test through live infrastructure apply or paid ML launches. Detailed domain checks remain in domain-contracts.
+
+<!-- Many minds. One ship. -->

@@ -289,3 +289,5 @@ footer {
 }
 
 }
+
+#feature-graph{max-height:520px;overflow:auto}#feature-graph svg{display:block;max-width:none;font-family:ui-monospace,monospace}#feature p{overflow-wrap:anywhere}#feature h3{font-size:14px;margin-top:24px;color:var(--muted,#aaa)}

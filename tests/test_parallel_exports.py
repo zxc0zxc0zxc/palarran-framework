@@ -20,18 +20,18 @@ class ParallelExportsTests(unittest.TestCase):
             output = PACKAGER.build_package('core', base / 'core', root=ROOT)
             env = {'PATH': os.defpath, 'HOME': str(base), 'PYTHONPATH': str(output), 'PYTHONDONTWRITEBYTECODE': '1'}
             code = '''from pathlib import Path
-from packages.core.parallelism import dispatcher, authority, entry, native, temporal, root_budget, integration, dashboard
+from packages.core.parallelism import dispatcher, authority, entry, native, temporal, root_budget, integration, dashboard, feature, feature_gates, feature_demo
 from packages.core.setup import temporal_config
 from packages.core.coordination import share, share_store, share_runtime, share_git, share_temporal, client, service
 root=Path.cwd()
-for module in (dispatcher,authority,entry,native,temporal,root_budget,integration,dashboard,temporal_config,share,share_store,share_runtime,share_git,share_temporal,client,service):
+for module in (dispatcher,authority,entry,native,temporal,root_budget,integration,dashboard,feature,feature_gates,feature_demo,temporal_config,share,share_store,share_runtime,share_git,share_temporal,client,service):
     assert Path(module.__file__).resolve().is_relative_to(root)
 print('portable runtime imports verified')
 '''
             result = subprocess.run([sys.executable, '-c', code], cwd=output, env=env, capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn('portable runtime imports verified', result.stdout)
-            for module in ('entry', 'dashboard', 'authority'):
+            for module in ('entry', 'dashboard', 'authority', 'feature_demo'):
                 help_result = subprocess.run([sys.executable, '-m', 'packages.core.parallelism.' + module, '--help'], cwd=output, env=env, capture_output=True, text=True, timeout=20)
                 self.assertEqual(help_result.returncode, 0, help_result.stderr)
             for name in ('dashboard.html', 'dashboard.css', 'dashboard.js'):

@@ -78,6 +78,11 @@ def project_report(raw):
     result['usage'] = _safe(raw.get('usage'), 'usage')
     result['budget'] = _safe(raw.get('budget'), 'budget')
     result['tasks'] = [_safe(t, 'task') for t in _list(raw.get('tasks'))]
+    for task, original in zip(result['tasks'], raw['tasks']):
+        dependencies = _list(original.get('depends_on', []))
+        if any(type(v) is not str or not _ID.fullmatch(v) for v in dependencies):
+            raise ValueError('Invalid dependency identity')
+        task['depends_on'] = dependencies
     for task in result['tasks']:
         task['unused_reserve'] = unused_reserve(task)
     result['task_summary'] = summarize_tasks(result['tasks'])
@@ -113,6 +118,7 @@ _FEATURE_FIELDS = {
               'evidence_sha256', 'verifier_id', 'composition_id'},
     'release': {'operation_id', 'status', 'state', 'environment', 'composition_id', 'step_id',
                 'observed_seconds', 'evidence_sha256'},
+    'pr': {'repository_id', 'platform', 'number', 'commit', 'state', 'evidence_sha256', 'current'},
     'component': {'commit', 'image_digest', 'migration', 'flags_sha256'},
     'step': {'step_id', 'owner', 'kind', 'state', 'status', 'task_id', 'irreversible'},
 }
@@ -140,7 +146,7 @@ def project_feature(raw, run_id):
         raise ValueError('Feature run mismatch')
     result = _feature_fields(raw, 'root')
     for key, kind in (('repositories', 'repository'), ('services', 'service'),
-                      ('contracts', 'contract'), ('checks', 'check')):
+                      ('contracts', 'contract'), ('checks', 'check'), ('pull_requests', 'pr')):
         result[key] = [_feature_fields(v, kind) for v in _list(raw.get(key, []))]
     composition = raw.get('composition')
     result['composition'] = None
@@ -273,6 +279,8 @@ def markdown(snapshot):
         lines.append(f"Spec {text(feature.get('spec_revision'))}; plan {text(feature.get('plan_revision'))}; composition {text(feature.get('composition_id'))}")
         for service, component in (feature.get('composition') or {}).get('components', {}).items():
             lines.append(f"Service {text(service)}: {text(component.get('commit'))}")
+        for pr in feature.get('pull_requests', []):
+            lines.append(f"PR {text(pr.get('repository_id'))} {text(pr.get('platform'))}#{text(pr.get('number'))}: {text(pr.get('state'))}; commit {text(pr.get('commit'))}; current {text(pr.get('current'))}")
         for check in feature.get('checks', []):
             lines.append(f"Check {text(check.get('check_id'))}: {text(check.get('verdict'))}; subject {text(check.get('subject'))}")
         for blocker in feature.get('blockers', []):
