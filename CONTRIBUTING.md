@@ -10,4 +10,6 @@ Run `python3 scripts/validate_repo.py` and `python3 -m unittest discover -s test
 
 Keep secrets, raw sessions/logs, customer data, runtime state, weights, checkpoints and private datasets out of Git and fixtures. Portable packages exclude target memory. Do not change global configuration without explicit scope or launch outreach, deployments, purchases or paid experiments from an ordinary contribution task.
 
-Public interface changes need migration notes and checks preserving local edits. The library checkout, target project and project journal are distinct roots. A license has not yet been selected; this guide does not imply a public release or replace a license.
+Public interface changes need migration notes and checks preserving local edits. The library checkout, target project and project journal are distinct roots. The framework is licensed under [MIT](LICENSE); preserve its notice in distributions and keep third-party attribution.
+
+For Core changes, start with the [contributor module map](packages/core/parallelism/docs/core-internals.md). Keep validation pure, use the documented local ledger boundary, preserve wire/storage compatibility and run existing regression cases before changing policy.
