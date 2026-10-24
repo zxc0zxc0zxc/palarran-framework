@@ -10,7 +10,8 @@ from unittest.mock import AsyncMock, patch
 
 from packages.core.coordination.share import ShareError, create
 from packages.core.coordination.share_temporal import (
-    ShareTemporalGateway, TASK_QUEUE, WORKFLOW_NAME, creation, fingerprint,
+    CoordinationNoticeSink, ShareTemporalGateway, TASK_QUEUE, WORKFLOW_NAME, creation, fingerprint,
+    notification,
     transition, validate_creation, workflow_id,
 )
 
@@ -210,6 +211,49 @@ class GatewayTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(ShareError, '^temporal_query_unknown$'):
             await self.gateway.status(TOKEN_A, 'repo', 'share1')
 
+    async def test_optional_notice_is_minimal_and_unknown_delivery_preserves_lifecycle(self):
+        notices = []
+        async def sink(value):
+            notices.append(value)
+            raise RuntimeError('secret notice error')
+        self.gateway.notification_sink = sink
+        result = await self.start()
+        self.assertEqual(result['state']['status'], 'requested')
+        self.assertEqual(result['notification']['status'], 'pending')
+        item = sequence()[0][1]
+        result = await self.gateway.event(TOKEN_B, 'repo', 'share1', item, confirmed=True)
+        self.assertIn('offered', result['state']['events'])
+        self.assertEqual(result['notification']['status'], 'pending')
+        self.assertEqual(set(notices[-1]), {'project', 'room', 'request_id', 'share_id',
+                                         'event', 'assignment_generation', 'digest'})
+        self.assertNotIn('Implement endpoint', json.dumps(notices))
+        self.assertNotIn(TOKEN_B, json.dumps(notices))
+        handle = next(iter(self.client.handles.values()))
+        count = len(handle.updates)
+        notice_id = result['notification']['request_id']
+        await self.gateway.reconcile_notification(TOKEN_A, 'repo', 'share1', 'offered')
+        self.assertEqual(len(handle.updates), count)
+        self.assertEqual(notices[-1]['request_id'], notice_id)
+        with self.assertRaisesRegex(ShareError, 'forbidden'):
+            await self.gateway.reconcile_notification(TOKEN_C, 'repo', 'share1', 'offered')
+
+    async def test_notice_digest_is_immutable_after_later_progress(self):
+        notices = []
+        def sink(value):
+            notices.append(value)
+            return {'status': 'delivered'}
+        self.gateway.notification_sink = sink
+        await self.start()
+        first = copy.deepcopy(notices[-1])
+        for actor, item in sequence()[:2]:
+            await self.gateway.event(TOKEN_A if actor == 'alice' else TOKEN_B,
+                                     'repo', 'share1', item, confirmed=True)
+        offered = copy.deepcopy(notices[-2])
+        await self.gateway.reconcile_notification(TOKEN_A, 'repo', 'share1')
+        self.assertEqual(notices[-1], first)
+        await self.gateway.reconcile_notification(TOKEN_A, 'repo', 'share1', 'offered')
+        self.assertEqual(notices[-1], offered)
+
     async def prepare_rework(self):
         await self.start()
         for actor, item in sequence()[:-1]:
@@ -275,6 +319,43 @@ class GatewayTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['state']['status'], 'accepted')
         self.assertEqual(result['state']['assignment_generation'], 1)
         self.assertEqual(result['state']['usage']['bob']['tokens'], 50)
+
+
+class NoticeSinkTests(unittest.IsolatedAsyncioTestCase):
+    async def test_real_adapter_reconciles_lost_post_receipt_without_duplicate_message(self):
+        class Bus:
+            def __init__(self):
+                self.calls = []; self.receipt = None; self.lost = True
+            def request(self, op, payload):
+                self.calls.append((op, copy.deepcopy(payload)))
+                if op == 'operation.get':
+                    return {'ok': True, 'result': {'found': self.receipt is not None,
+                        **({'operation': 'message.post', 'receipt': self.receipt} if self.receipt else {})}}
+                self.receipt = {'ok': True, 'result': {'request_id': payload['request_id'],
+                                'message': {'text': payload['text']}}}
+                if self.lost:
+                    self.lost = False
+                    return {'ok': False, 'error': {'code': 'unavailable_or_unknown'}}
+                return self.receipt
+        bus = Bus(); sink = CoordinationNoticeSink(bus)
+        envelope, state = validate_creation(creation('repo', offer(), 'alice', True), NOW)
+        notice = notification(state, envelope)
+        self.assertEqual((await sink(notice))['status'], 'pending')
+        self.assertEqual((await sink(notice))['status'], 'delivered')
+        self.assertEqual([op for op, _ in bus.calls], ['operation.get', 'message.post', 'operation.get'])
+        text = json.loads(bus.calls[1][1]['text'])
+        self.assertEqual(set(text), {'share_id', 'event', 'assignment_generation', 'digest'})
+
+    async def test_unknown_lookup_never_posts(self):
+        class Bus:
+            def __init__(self): self.calls = []
+            def request(self, op, payload):
+                self.calls.append(op)
+                return {'ok': False, 'error': {'code': 'unavailable_or_unknown'}}
+        bus = Bus()
+        envelope, state = validate_creation(creation('repo', offer(), 'alice', True), NOW)
+        self.assertEqual((await CoordinationNoticeSink(bus)(notification(state, envelope)))['status'], 'pending')
+        self.assertEqual(bus.calls, ['operation.get'])
 
 
 class DeterminismTests(unittest.TestCase):
