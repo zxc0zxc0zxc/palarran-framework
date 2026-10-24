@@ -14,6 +14,9 @@ from packages.core.parallelism.dashboard import LocalReport
 from packages.core.parallelism.dispatcher import Dispatcher, validate
 from packages.core.parallelism.feature import FeatureAuthority
 from test_feature_authority import fixture
+import test_feature_gates
+from packages.core.parallelism.root_budget import DispatcherBudgetBinding
+from packages.core.coordination.share_runtime import propose
 from test_parallel_dispatcher import manifest
 
 
@@ -44,6 +47,19 @@ def database_dump(path):
     """Observe every table independently of Dispatcher projection helpers."""
     with sqlite3.connect('file:' + str(path) + '?mode=ro', uri=True) as db:
         return tuple(db.iterdump())
+
+
+class PublicDispatcherPort:
+    """Expose documented extension ports; fail on private coupling immediately."""
+    def __init__(self, dispatcher):
+        self.ledger = dispatcher.ledger
+        self.get_run = dispatcher.get_run
+        self.claim_task = dispatcher.claim_task
+        self.finish_task = dispatcher.finish_task
+        self.heartbeat = dispatcher.heartbeat
+
+    def __getattr__(self, name):
+        raise AssertionError('Consumer requested non-public Dispatcher field: ' + name)
 
 
 class CorePolishGoldenTests(unittest.TestCase):
@@ -143,6 +159,77 @@ class CorePolishGoldenTests(unittest.TestCase):
             with self.assertRaises(sqlite3.OperationalError):
                 with reader._transaction() as db:
                     db.execute('DELETE FROM tasks')
+            self.assertEqual(before, database_dump(dispatcher.path))
+
+
+    def test_public_lifecycle_reports_keep_plain_string_keys_and_states(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            dispatcher = Dispatcher(root / 'state.sqlite3')
+            dispatcher.create_run(manifest(root, count=1))
+            tick = dispatcher.tick('offline-run')
+            self.assertTrue(all(type(key) is str for key in tick))
+            self.assertIs(str, type(tick['status']))
+            claim = dispatcher.claim_task('offline-run', 'task-0')
+            result = dispatcher.finish_task(
+                'offline-run', 'task-0', claim['attempt_id'],
+                dict(status='submitted', tokens=1, cost_micros=1,
+                     usage_known=True, stopped=True, subject='a' * 64),
+                lambda task, receipt: dict(passed=True, independent=True,
+                                           subject=receipt['subject'], evidence='Independent fixture'))
+            self.assertIs(str, type(result['status']))
+            cancellation = dispatcher.cancel('offline-run')
+            self.assertTrue(all(type(key) is str for key in cancellation))
+            self.assertIs(str, type(cancellation['status']))
+
+    def test_feature_budget_and_sharing_use_only_public_dispatcher_port(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            dispatcher, _, passport, _ = fixture(Path(temporary))
+            port = PublicDispatcherPort(dispatcher)
+            feature = FeatureAuthority(port, 'feature-run')
+            self.assertEqual(canonical_digest(passport), feature.report()['passport_sha256'])
+            binding = DispatcherBudgetBinding(
+                port, {('feature-run', 'verification', 'case'): 'check-local'},
+                lambda task, receipt: dict(passed=True, independent=True,
+                                           subject=receipt['subject'], evidence='Independent fixture'))
+            ticket = binding.reserve('feature-run', 'verification', 'case')
+            self.assertIsNotNone(ticket)
+            self.assertTrue(binding.heartbeat(ticket))
+            binding.settle(ticket, dict(status='known', stopped=True,
+                                       tokens=2, cost_micros=3, subject='a' * 64))
+            advice = propose(port, 'feature-run', plan_hash='f' * 64,
+                             independent_task=True, now=1000)
+            self.assertTrue(advice['suggested'])
+            self.assertFalse(advice['published'])
+            self.assertEqual(2, port.get_run('feature-run')['usage']['tokens'])
+
+    def test_real_gate_process_uses_only_public_dispatcher_port(self):
+        helper = test_feature_gates.FeatureGateTests()
+        helper.setUp()
+        self.addCleanup(helper.temp.cleanup)
+        helper.dispatcher = PublicDispatcherPort(helper.dispatcher)
+        runner = helper.runner()
+        result = runner.run(helper.composition, 'unit')
+        self.assertEqual('FAIL', result['receipt']['verdict'])
+        self.assertEqual('verified', result['accounting']['status'])
+
+    def test_readonly_factory_keeps_writer_port_and_database_unchanged(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            dispatcher, _, passport, _ = fixture(Path(temporary))
+            original_ledger = dispatcher.ledger
+            before = database_dump(dispatcher.path)
+            reader = LocalReport(dispatcher.path)
+            readonly = FeatureAuthority.read_only(reader, 'feature-run')
+            self.assertEqual('feature-run', readonly.report()['run_id'])
+            self.assertIs(original_ledger, dispatcher.ledger)
+            self.assertFalse(dispatcher.ledger.read_only)
+            self.assertTrue(reader.ledger.read_only)
+            self.assertEqual(before, database_dump(dispatcher.path))
+            with self.assertRaisesRegex(ValueError, 'Read-only'):
+                readonly.create(passport)
+            with self.assertRaises(sqlite3.OperationalError):
+                with readonly.ledger.transaction() as db:
+                    db.execute('DELETE FROM features')
             self.assertEqual(before, database_dump(dispatcher.path))
 
 
