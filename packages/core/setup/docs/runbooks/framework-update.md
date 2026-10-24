@@ -1,6 +1,6 @@
 # Update the framework while preserving project changes
 
-Stable ID: `palarran.framework.update`; version: `1.0.0`; reviewed: **2026-10-24**. Baseline, supported clients/locales/packages and shared preflight: [runbook index](README.md). Operation: ownership-aware update of an existing project installation, with explicit guarded recovery. Read the [existing update contract](../README.md) before execution.
+Stable ID: `palarran.framework.update`; version: `1.1.0`; reviewed: **2026-10-24**. Baseline, supported clients/locales/packages and shared preflight: [runbook index](README.md). Operation: ownership-aware update of an existing project installation, with explicit guarded recovery. Read the [existing update contract](../README.md) before execution.
 
 ## Applicability and non-secret inputs
 
@@ -117,3 +117,7 @@ If recovery guards fail, retain current/old/candidate variants and draft a versi
 Record runbook ID/version, incoming implementation/pin, old/new revisions, target alias/path, inherited client/preferences, preserved local file count/list, conflicts/count, exact redacted command/exit/status, receipt and protected-file read-back evidence, transaction/backup reference and journal result. Report file result, memory result and client discovery separately, with remaining gates marked NOT_RUN/NOT_READY. Preserve `.palarran/setup/update-...` decision/handoff and append the target index only within the coordinator's ownership.
 
 Explain the next already authorized action: finish read-back, retry doctor after an observed prerequisite change, or guarded recovery. For unsupported cases supply the extension proposal defined in the [runbook structure](README.md). Do not present a versioned document, passing offline plan or successful file swap as production/chat-service acceptance.
+
+## Shared parallelism instructions (1.1.0)
+
+Fresh installs and guarded updates add one separate `palarran:parallelism` managed block in AGENTS.md and, for the recorded Claude client, CLAUDE.md. Preserve all bytes outside the added block, including custom instructions. An existing edited block is CONFLICT before mutation. The update transaction stores exact before/after hashes and original existence for these files; rollback checks the complete current state before restoring only its owned additions. A concurrent instruction edit blocks rollback instead of discarding user work. This additive migration also runs at an unchanged source revision when missing; a subsequent identical update changes no files. Custom USAGE/config/env remain preserved. This installs instruction-based behavior; it does not create per-message host interception.

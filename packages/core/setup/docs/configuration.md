@@ -25,3 +25,7 @@ On a first interactive setup, ask for missing package and language preferences. 
 `--plan` reads configuration and computes the proposal without creating directories, editing files, or contacting memory. File installation and memory connectivity are separate outcomes. A successful metadata check proves wire connectivity, not client UI discovery, application quality, or paid quota availability.
 
 JSON serialization uses the [Python standard library](https://docs.python.org/3/library/json.html). The precedence and locale semantics above are Palarran policy, not vendor guarantees. Existing ownership and rollback behavior is documented in [setup](README.md).
+
+## Optional parallel execution engine
+
+Ask **Enable the Temporal engine for parallel execution?** when no existing project/global answer is recorded. The user's explicit `0`/`1` choice is separate from packages and locale settings. [Temporal configuration and actual harness levels](temporal.md) define atomic env-profile inheritance, private credential references and the read-only injected connection check. Saving a global switch requires actual global configuration authority. No setting deploys a server or starts paid models. Ordinary requests and every skill receive the same common parallelism instructions; native instruction-based integration is never presented as enforced interception.
