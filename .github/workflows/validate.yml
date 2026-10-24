@@ -44,7 +44,7 @@ jobs:
           terraform_version: 1.9.8
           terraform_wrapper: false
       - name: Format and validate provider schema without a backend or cloud access
-        working-directory: templates/infra/terraform-hcloud
+        working-directory: packages/infrastructure/planning/templates/terraform-hcloud
         run: |
           terraform fmt -check
           terraform init -backend=false -input=false

@@ -321,7 +321,7 @@ class Dispatcher:
 
     def _conflicts(self, db, run_id, packet):
         # Resource keys are canonical operator-owned aliases, project prefix included.
-        for held in db.execute("SELECT run,packet FROM tasks WHERE state IN ('running','submitted','unknown','cancel_requested')"):
+        for held in db.execute("SELECT run,packet FROM tasks WHERE state IN ('running','submitted','unknown','cancel_requested','handoff_pending')"):
             other = json.loads(held['packet'])
             if set(packet['resources']) & set(other['resources']):
                 return True
@@ -330,6 +330,71 @@ class Dispatcher:
             if packet.get('worktree') and other.get('worktree') and _overlap(str(Path(packet['worktree']).resolve()), str(Path(other['worktree']).resolve())):
                 return True
         return False
+
+    def pause_for_share(self, run_id, task_id, *, share_id, plan_hash, stopped, evidence_sha256):
+        """Fence a stopped source task; preserve spend and prevent scoped local restarts."""
+        _identifier(share_id)
+        if (stopped is not True or not isinstance(evidence_sha256,str) or not re.fullmatch('[a-f0-9]{64}',evidence_sha256)
+                or not isinstance(plan_hash,str) or not re.fullmatch('[a-f0-9]{64}',plan_hash)):
+            raise ValueError('Stopped source evidence required')
+        with self._transaction() as db:
+            self._run(db,run_id)
+            row=db.execute('SELECT * FROM tasks WHERE run=? AND id=?',(run_id,task_id)).fetchone()
+            if row is None or row['state'] not in ('pending','ready','failed','blocked','cancelled','handoff_pending'):
+                raise ValueError('Stop and reconcile active or unknown operations before sharing')
+            reason='share:'+share_id+':'+evidence_sha256+':'+plan_hash
+            if row['state']=='handoff_pending' and row['reason']!=reason:
+                raise ValueError('A different share already owns this scope')
+            db.execute("UPDATE tasks SET state='handoff_pending',reason=? WHERE run=? AND id=?",(reason,run_id,task_id))
+            self._event(db,run_id,task_id,'handoff_pending')
+            return dict(run_id=run_id,task_id=task_id,share_id=share_id,stopped=True,
+                        usage_known=bool(row['usage_known']),tokens=row['tokens'],cost_micros=row['cost'])
+
+    def accept_shared_result(self, run_id, task_id, *, share_id, assignment_generation, get_share, receipt, verifier):
+        """Independently accept external work without charging its spend to this owner."""
+        _identifier(share_id)
+        _integer(assignment_generation,'assignment generation',1)
+        if (type(receipt) is not dict or receipt.get('stopped') is not True
+                or not {'subject','stopped'}<=receipt.keys() or receipt.keys()-{'subject','stopped','external_usage','evidence_sha256'}
+                or not isinstance(receipt.get('subject'),str)
+                or not re.fullmatch('[a-f0-9]{40}|[a-f0-9]{64}',receipt['subject'])
+                or len(_canonical(receipt))>16384):
+            raise ValueError('Exact stopped shared-result receipt required')
+        if 'external_usage' in receipt:
+            from packages.core.coordination.share import usage
+            usage(receipt['external_usage'])
+        def accepted():
+            state=get_share(share_id)
+            if (state['status']!='accepted' or state['assignment_generation']!=assignment_generation
+                    or state['offer']['share_id']!=share_id or state['offer']['run_id']!=run_id
+                    or state['offer']['task_id']!=task_id or state['result']['subject']!=receipt['subject']):
+                raise ValueError('Authoritative shared acceptance required')
+            return state
+        shared=accepted()
+        # Run external verifier outside the state transaction; recheck fence below.
+        with self._transaction() as db:
+            row=db.execute('SELECT * FROM tasks WHERE run=? AND id=?',(run_id,task_id)).fetchone()
+            if row is None or row['state']!='handoff_pending' or not (row['reason'] or '').startswith('share:'+share_id+':'):
+                raise ValueError('Share ownership mismatch')
+            if not row['reason'].endswith(':'+shared['offer']['plan_hash']):
+                raise ValueError('Share plan mismatch')
+            packet=json.loads(row['packet'])
+        proof=verifier(packet,receipt)
+        if (type(proof) is not dict or proof.get('independent') is not True or proof.get('passed') is not True
+                or proof.get('subject')!=receipt['subject'] or not proof.get('evidence') or len(_canonical(proof))>16384):
+            raise ValueError('Independent exact-subject acceptance required')
+        after=accepted()
+        if after['offer']['plan_hash']!=shared['offer']['plan_hash']:
+            raise ValueError('Share plan changed')
+        with self._transaction() as db:
+            current=db.execute('SELECT * FROM tasks WHERE run=? AND id=?',(run_id,task_id)).fetchone()
+            run,_=self._run(db,run_id)
+            if run['cancel'] or current['state']!='handoff_pending' or current['reason']!=row['reason']:
+                raise ValueError('Share ownership changed')
+            db.execute("UPDATE tasks SET state='verified',receipt=?,verification=?,reserve_tokens=0,reserve_cost=0 WHERE run=? AND id=?",
+                       (_canonical(receipt),_canonical(proof),run_id,task_id))
+            self._event(db,run_id,task_id,'shared_result_verified')
+        return self.get_run(run_id)
 
     def tick(self, run_id):
         with self._transaction() as db:
@@ -349,7 +414,7 @@ class Dispatcher:
                 task = json.loads(row['packet'])
                 if stopped:
                     state = 'cancelled' if run['cancel'] else 'blocked'
-                elif any(states[dep] in ('failed', 'blocked', 'cancelled', 'handoff_pending') for dep in task['depends_on']):
+                elif any(states[dep] in ('failed', 'blocked', 'cancelled') for dep in task['depends_on']):
                     state = 'blocked'
                 elif not uncertain and all(states[dep] == 'verified' for dep in task['depends_on']):
                     state = 'ready'

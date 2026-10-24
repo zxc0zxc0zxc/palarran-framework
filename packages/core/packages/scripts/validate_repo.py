@@ -238,6 +238,10 @@ def validate(root=ROOT):
                 errors.append(f"{name}: missing mandatory artifact guide")
         elif namespace == "infrastructure" and command == "incident":
             base, guides = "infra/incident", ["README.md", "coordination.md", "sources.md", "../plan/security-network.md", "../plan/storage-operations.md", "../plan/workflow.md"]
+        elif namespace == "core" and command == "share":
+            base, guides = None, []
+            if not _has_guide(root, path, body, "packages/core/coordination/docs/sharing/README.md", cached_source):
+                errors.append(f"{name}: missing task sharing guide")
         elif namespace == "core" and command == "coop":
             base, guides = None, []
             if not _has_guide(root, path, body, "packages/core/coop/docs/README.md", cached_source):
@@ -321,6 +325,8 @@ def validate(root=ROOT):
     for profile in ("infrastructure", "ingress", "log", "egress", "code", "cve"):
         if "palarran-security-" + profile in skills:
             manifest_specs[0][2].append("security:" + profile)
+    if "palarran-core-share" in skills:
+        manifest_specs[0][2].append("core:share")
     if "palarran-core-coop" in skills:
         manifest_specs[0][2].append("core:coop")
     if "palarran-docs-artifact" in skills:

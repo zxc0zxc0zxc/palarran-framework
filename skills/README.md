@@ -18,6 +18,7 @@ Installer ID: `core`. Shared agent foundations, runtime, setup and safe package 
 | `/palarran:setup` | [`$palarran-setup`](../packages/core/setup/skills/palarran-setup/SKILL.md) | `{target?} [--client codex|claude|both] [--plan]` |
 | `/palarran:mcp:build` | [`$palarran-mcp-build`](../packages/core/agents/skills/palarran-mcp-build/SKILL.md) | `{task/context} [profile flags]` |
 | `/palarran:core:coop` | [`$palarran-core-coop`](../packages/core/coop/skills/palarran-core-coop/SKILL.md) | `[--alert {message}] [--plan]` |
+| `/palarran:core:share` | [`$palarran-core-share`](../packages/core/coordination/skills/palarran-core-share/SKILL.md) | `{task?} [--plan]` |
 
 ## Memory
 

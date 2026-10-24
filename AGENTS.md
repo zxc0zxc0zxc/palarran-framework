@@ -20,6 +20,8 @@ Modularity, parallelism, autonomy and quality guide every task. Prefer concurren
 
 For ordinary requests as well as skills, evaluate independent ready work at task/phase boundaries under the [automatic dispatcher contract](packages/core/parallelism/docs/contract.md). Reuse the active run and inherited budget. Native instructions are instruction-based, not technical interception; report actual integration level. Temporal selection never grants deployment or model-call authority.
 
+When a useful independent subtask or continuation could be shared with another developer, follow [task sharing](packages/core/coordination/docs/sharing/README.md). Propose before quota/resource exhaustion using fresh authorized metadata; unknown quota has no invented percentage. Publication, participation and exact plan require explicit confirmations. Fence stopped source ownership before transfer; a message/ACK never starts another person's session.
+
 ## Shared invariants
 
 - Documentation and dated primary sources precede implementation. Distinguish vendor claims, observations, estimates and hypotheses.

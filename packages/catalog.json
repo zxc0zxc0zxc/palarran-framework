@@ -68,6 +68,11 @@
           "name": "palarran-core-coop",
           "path": "packages/core/coop/skills/palarran-core-coop/SKILL.md",
           "legacy_path": "skills/palarran-core-coop/SKILL.md"
+        },
+        {
+          "name": "palarran-core-share",
+          "path": "packages/core/coordination/skills/palarran-core-share/SKILL.md",
+          "legacy_path": "skills/palarran-core-share/SKILL.md"
         }
       ]
     },
