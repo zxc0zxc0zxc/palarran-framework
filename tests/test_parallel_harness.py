@@ -167,3 +167,50 @@ class HeadlessTests(unittest.TestCase):
 
 
 if __name__=='__main__':unittest.main()
+
+class NativeHarnessTests(unittest.TestCase):
+    def setUp(self):
+        from packages.core.parallelism.native import NativeHarness
+        self.NativeHarness=NativeHarness
+        self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name).resolve()
+        self.task=manifest(self.root,1)['tasks'][0]
+        self.events={
+            'codex':[dict(type='turn.started'),dict(type='turn.completed',usage=dict(input_tokens=2,cached_input_tokens=0,output_tokens=1))],
+            'claude':[dict(type='result',subtype='success',is_error=False,total_cost_usd=.000003,
+                modelUsage={'fixture':dict(inputTokens=2,cacheReadInputTokens=0,cacheCreationInputTokens=0,outputTokens=1)})]}
+
+    def tearDown(self):self.temp.cleanup()
+
+    def native(self,adapter,events=None):
+        executable=self.root/(adapter+'-fake')
+        body='#!'+sys.executable+'\nimport json,sys\nprompt=sys.stdin.read()\nassert "explicit fixture task" in prompt\nassert all("explicit fixture task" not in item for item in sys.argv)\n'
+        body+='\n'.join('print('+repr(json.dumps(event))+',flush=True)' for event in (self.events[adapter] if events is None else events))+'\n'
+        executable.write_text(body);executable.chmod(0o700)
+        card=dict(input='1',cached_input='1',cache_creation='1',output='1',source_url='https://example.invalid/reviewed-fixture',as_of='2026-10-24')
+        binding=dict(adapter=adapter,executable=str(executable),profile=dict(model='fixture',effort='low'),pricing=card,
+            prompt='An explicit fixture task',environment={'PATH':'/usr/bin:/bin'},subject=lambda task:'a'*40,authorization='offline fake fixture only')
+        return self.NativeHarness({'task0':binding},authorized=True)
+
+    def test_native_provider_jsonl_is_normalized_without_model_calls(self):
+        for adapter in ('codex','claude'):
+            native=self.native(adapter);usage=[]
+            result=native.execute(self.task,heartbeat=lambda **item:usage.append(item),cancel=threading.Event())
+            self.assertEqual(result['status'],'submitted',result)
+            self.assertTrue(result['stopped']);self.assertTrue(result['usage_known'])
+            self.assertEqual(result['tokens'],3);self.assertEqual(result['cost_micros'],3)
+            self.assertIn(dict(tokens=3,cost_micros=3),usage)
+            self.assertEqual(native.integration,'instruction-based');self.assertFalse(native.nested_delegation)
+            with self.assertRaises(ValueError):native.execute(self.task,heartbeat=lambda:True,cancel=threading.Event())
+
+    def test_native_incomplete_usage_and_budget_crossing_are_not_free_success(self):
+        native=self.native('codex',events=[dict(type='turn.started')])
+        result=native.execute(self.task,heartbeat=lambda **item:True,cancel=threading.Event())
+        self.assertEqual(result['status'],'unknown');self.assertFalse(result['usage_known'])
+        native=self.native('claude')
+        result=native.execute(self.task,heartbeat=lambda **item:False if item else True,cancel=threading.Event())
+        self.assertEqual(result['status'],'unknown');self.assertEqual(result['tokens'],3);self.assertEqual(result['cost_micros'],3)
+
+    def test_native_launch_requires_authorized_registered_binding(self):
+        with self.assertRaises(ValueError):self.NativeHarness({})
+        native=self.native('codex')
+        with self.assertRaises(ValueError):native.execute(dict(self.task,task_id='other'),heartbeat=lambda:True,cancel=threading.Event())
