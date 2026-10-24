@@ -562,3 +562,97 @@ class CrossRepositoryFeatureRegressions(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.authority.observe(operation['operation_id'], {}, verifier=proof)
         self.assertNotEqual(self.authority.report()['release']['state'], 'accepted')
+
+    def gate_runner(self, *, wrong_slot=False):
+        import hashlib
+        from packages.core.parallelism.feature_gates import FeatureGateRunner
+        script = self.root / 'independent-gate.py'
+        script.write_text("import json,sys\nfrom pathlib import Path\nr=json.loads(Path(sys.argv[1]).read_text())\nPath(sys.argv[2]).write_text(json.dumps({'composition_id':r['composition']['composition_id'],'criteria_sha256':r['criteria_sha256'],'verdict':'PASS','cases':{'unit':'PASS'}}))\n")
+        registry = {}
+        for check in self.passport['acceptance_protocol']['checks']:
+            registry[check['check_id']] = dict(script=str(script),
+                script_sha256=hashlib.sha256(script.read_bytes()).hexdigest(),
+                criteria_sha256=check['criteria_sha256'], verifier_id='independent-reviewer',
+                task_ids=['task-3'] if wrong_slot and check['check_id'] == 'local' else [check['task_id']],
+                verify=lambda composition, payload: payload['cases'] == {'unit': 'PASS'})
+        return FeatureGateRunner(self.dispatcher, self.value['run_id'], registry=registry,
+                                 output_root=self.root / 'independent-evidence')
+
+    def test_stale_but_self_consistent_composition_cannot_spend_fresh_gate_slot(self):
+        self.build()
+        runner = self.gate_runner()
+        original = self.authority.compose({'auth': {'commit': 'c' * 40}, 'ledger': {'commit': 'd' * 40}},
+            test_suite_sha256=runner.suite_sha256, environment_sha256='8' * 64)
+        self.authority.compose({'auth': {'commit': 'e' * 40}, 'ledger': {'commit': 'd' * 40}},
+            test_suite_sha256=runner.suite_sha256, environment_sha256='8' * 64)
+        with self.assertRaises(ValueError):
+            runner.run(original, 'local')
+        self.assertEqual(next(t for t in self.authority.report()['tasks'] if t['task_id'] == 'task-2')['attempt_id'], 0)
+
+    def test_registry_cannot_charge_another_frozen_checks_task_slot(self):
+        self.build()
+        try:
+            runner = self.gate_runner(wrong_slot=True)
+        except ValueError:
+            return
+        composition = self.authority.compose({'auth': {'commit': 'c' * 40}, 'ledger': {'commit': 'd' * 40}},
+            test_suite_sha256=runner.suite_sha256, environment_sha256='8' * 64)
+        with self.assertRaises(ValueError):
+            runner.run(composition, 'local')
+        self.assertEqual(next(t for t in self.authority.report()['tasks'] if t['task_id'] == 'task-3')['attempt_id'], 0)
+
+    def test_composition_revision_between_preflight_and_claim_does_not_spend_slot(self):
+        from unittest.mock import patch
+        self.build()
+        runner = self.gate_runner()
+        original = self.authority.compose({'auth': {'commit': 'c' * 40}, 'ledger': {'commit': 'd' * 40}},
+            test_suite_sha256=runner.suite_sha256, environment_sha256='8' * 64)
+        claim = self.dispatcher.claim_task
+        def revise_then_claim(run_id, task_id, **kwargs):
+            self.authority.compose({'auth': {'commit': 'e' * 40}, 'ledger': {'commit': 'd' * 40}},
+                test_suite_sha256=runner.suite_sha256, environment_sha256='8' * 64)
+            return claim(run_id, task_id, **kwargs)
+        with patch.object(self.dispatcher, 'claim_task', revise_then_claim):
+            with self.assertRaises(ValueError):
+                runner.run(original, 'local')
+        self.assertEqual(next(t for t in self.authority.report()['tasks'] if t['task_id'] == 'task-2')['attempt_id'], 0)
+
+    def test_verifier_cannot_rewrite_frozen_release_matrix_through_callback_argument(self):
+        composition = self.ready()
+        operation = self.release(composition)
+        step = self.passport['release_plan']['steps'][0]
+        admitted = self.authority.begin_step(operation['operation_id'], step['step_id'],
+            authorization=self.authorization(composition, step['owner']),
+            observed_versions=operation['versions'], observed_state_sha256=operation['state_sha256'])
+        self.dispatcher.finish_task(self.value['run_id'], step['task_id'], admitted['attempt_id'],
+            dict(status='submitted', subject=composition['composition_id'], tokens=1,
+                 cost_micros=1, usage_known=True, stopped=True), verify)
+        def mutate(expected, receipt):
+            expected['versions']['auth'] = 'e' * 40
+            return dict(independent=True, subject=composition['composition_id'], verdict='PASS',
+                versions=expected['versions'], state_sha256=expected['state_sha256'], evidence_sha256='9' * 64)
+        try:
+            self.authority.finish_step(operation['operation_id'], step['step_id'], {}, verifier=mutate)
+        except ValueError:
+            pass
+        self.assertIn(self.authority.report()['release']['versions'],
+                      self.passport['release_plan']['allowed_matrices'])
+
+    def test_verifier_cannot_relax_frozen_observation_thresholds(self):
+        import time
+        from unittest.mock import patch
+        composition = self.ready()
+        operation = self.complete_release(composition)
+        def mutate(plan, receipt):
+            plan['thresholds'][0]['max'] = 100
+            return dict(independent=True, subject=composition['composition_id'], verdict='PASS',
+                versions=plan['steps'][-1]['versions'], state_sha256=plan['steps'][-1]['state_sha256'],
+                observed_seconds=2, metrics={'error-rate': 1}, evidence_sha256='9' * 64)
+        with patch('packages.core.parallelism.feature.time.time', return_value=time.time() + 2):
+            try:
+                self.authority.observe(operation['operation_id'], {}, verifier=mutate)
+            except ValueError:
+                pass
+        report = self.authority.report()
+        self.assertNotEqual(report['status'], 'accepted')
+        self.assertEqual(report['passport']['release_plan']['thresholds'][0]['max'], 0.01)
