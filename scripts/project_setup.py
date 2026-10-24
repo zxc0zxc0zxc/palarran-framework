@@ -273,7 +273,9 @@ def main():
         elif args.plan:result=dict(status='PLANNED',writes=0,network=False,model_calls=0)
         elif args.operation=='export':result=dict(status='EXPORTED',path=str(export(args.source,args.target)))
         else:result=doctor(args.source,args.target)
-        print(encoded(result).decode(),end='');return 2 if result.get('status') in ('CONFLICT','RECOVERY_REQUIRED','ROLLED_BACK','UPDATED_MEMORY_NOT_READY','UNCHANGED_MEMORY_NOT_READY') or result.get('journal')=='WRITE_FAILED' else 0
+        print(encoded(result).decode(),end='')
+        if args.operation=='rollback' and result.get('status')=='ROLLED_BACK':return 0
+        return 2 if result.get('status') in ('CONFLICT','RECOVERY_REQUIRED','ROLLED_BACK','UPDATED_MEMORY_NOT_READY','UNCHANGED_MEMORY_NOT_READY') or result.get('journal')=='WRITE_FAILED' else 0
     except (ValueError,KeyError,TypeError,AttributeError,OSError,subprocess.SubprocessError,tarfile.TarError):
         print('Setup incomplete: inspect scope/conflicts or memory connectivity; existing work preserved. No model calls.',file=sys.stderr);return 2
 

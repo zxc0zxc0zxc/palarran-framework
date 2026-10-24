@@ -139,7 +139,11 @@ class ProjectUpdateTest(unittest.TestCase):
         self.assertEqual(before,self.snapshot());self.assertEqual(self.update()['status'],'RECOVERY_REQUIRED')
 
     def test_completed_update_can_be_rolled_back_explicitly(self):
-        self.advance();result=self.update();self.assertEqual(updater.rollback(self.target,result['backup'])['status'],'ROLLED_BACK')
+        self.advance();result=self.update()
+        command=[sys.executable,str(self.lib/'scripts/project_setup.py'),'rollback','--target',str(self.target),'--backup',result['backup']]
+        rolled=subprocess.run(command,cwd=self.target,capture_output=True,text=True)
+        self.assertEqual(rolled.returncode,0,rolled.stdout+rolled.stderr)
+        self.assertEqual(json.loads(rolled.stdout)['status'],'ROLLED_BACK')
         self.assertEqual(json.loads((self.target/'.ai-tools/installation.json').read_text())['revision'],self.old);self.verify_settings()
 
     def test_second_upgrade_uses_new_upstream_baseline_and_preserves_usage(self):
