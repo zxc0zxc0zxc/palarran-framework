@@ -8,9 +8,69 @@ from __future__ import annotations
 from pathlib import Path
 import re
 import threading
+import subprocess
 from packages.core.orchestration.runtime import runner
 from packages.core.orchestration.runtime.accounting import priced_snapshot, amount
 from .harness import unknown
+
+
+def verify_worktree(task):
+    """Read-only Git admission; no hooks, inherited Git overrides or auto repair."""
+    raw=task.get('worktree')
+    if not isinstance(raw,str) or not Path(raw).is_absolute():
+        raise ValueError('Native task requires an absolute linked Git worktree')
+    worktree=Path(raw)
+    if any(part.is_symlink() for part in (worktree,*worktree.parents)) or not worktree.is_dir():
+        raise ValueError('Native worktree must be an existing nonsymlink directory')
+    gitfile=worktree/'.git'
+    if not gitfile.is_file() or gitfile.is_symlink() or gitfile.stat().st_size>4096:
+        raise ValueError('Native tasks must use a linked worktree, not a primary checkout')
+    registration=gitfile.read_text(encoding='utf-8').strip()
+    if not registration.startswith('gitdir: ') or '\n' in registration:
+        raise ValueError('Invalid linked worktree Git pointer')
+    pointer=Path(registration[len('gitdir: '):])
+    if not pointer.is_absolute():pointer=worktree/pointer
+    if any(part.is_symlink() for part in (pointer,*pointer.parents)):
+        raise ValueError('Native Git pointer symlinks are unsupported')
+    base=task.get('base_commit')
+    if not isinstance(base,str) or not re.fullmatch(r'[0-9a-f]{40,64}',base):
+        raise ValueError('Native task requires an exact source commit')
+    env={'PATH':'/usr/bin:/bin','GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null','GIT_OPTIONAL_LOCKS':'0'}
+    def git(*args):
+        result=subprocess.run(['/usr/bin/git','--no-replace-objects','-c','core.fsmonitor=false',
+            '-c','core.hooksPath=/dev/null','-C',str(worktree),*args],env=env,
+            stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=5,check=True)
+        if len(result.stdout)>65536:raise ValueError('Git admission output exceeds bound')
+        return result.stdout.decode('utf-8').strip()
+    try:
+        root=Path(git('rev-parse','--show-toplevel'))
+        admin=Path(git('rev-parse','--absolute-git-dir'))
+        common=Path(git('rev-parse','--git-common-dir'))
+        if not common.is_absolute():common=worktree/common
+        if any(part.is_symlink() for part in (common,*common.parents)):
+            raise ValueError('Native Git common-directory symlinks are unsupported')
+        common=common.resolve()
+        if pointer.resolve()!=admin:
+            raise ValueError('Native linked Git pointer does not match its administrative directory')
+        if any(part.is_symlink() for part in (admin,*admin.parents)):
+            raise ValueError('Native Git administrative symlinks are unsupported')
+        if (root!=worktree or admin==common or admin.parent!=common/'worktrees'
+                or not admin.is_dir() or not common.is_dir()):
+            raise ValueError('Native task does not identify an isolated linked worktree')
+        backlink=admin/'gitdir'
+        if backlink.is_symlink() or not backlink.is_file() or backlink.stat().st_size>4096:
+            raise ValueError('Native worktree registration is missing')
+        if Path(backlink.read_text().strip())!=gitfile:
+            raise ValueError('Native worktree registration does not match the task')
+        if git('rev-parse','HEAD')!=base:
+            raise ValueError('Native worktree HEAD differs from the reviewed base commit')
+        # Independent common-repository inventory proves this root is registered.
+        entries=git('worktree','list','--porcelain','-z').split('\x00')
+        if 'worktree '+str(worktree) not in entries:
+            raise ValueError('Native task worktree is not registered in the common repository')
+        return str(worktree)
+    except (OSError,subprocess.SubprocessError,UnicodeError) as error:
+        raise ValueError('Cannot verify native linked worktree and source') from None
 
 
 class NativeHarness:
@@ -23,7 +83,7 @@ class NativeHarness:
             raise ValueError('Native sessions need explicit approved per-task bindings')
         if type(output_limit) is not int or not 1024<=output_limit<=1048576:
             raise ValueError('Invalid native output limit')
-        self.bindings={};self.output_limit=output_limit;self._sessions=set();self._lock=threading.Lock()
+        self.bindings={};self.output_limit=output_limit;self._sessions=set();self._worktrees={};self._lock=threading.Lock()
         for task_id,binding in bindings.items():
             if not isinstance(binding,dict) or set(binding)!={'adapter','executable','profile','pricing','prompt','environment','subject','authorization'}:
                 raise ValueError('Incomplete native binding')
@@ -57,9 +117,13 @@ class NativeHarness:
             raise ValueError('Native session identity must be registered before launch')
         if cancel.is_set():
             return dict(status='cancelled',subject='',tokens=0,cost_micros=0,usage_known=True,stopped=True)
+        worktree=verify_worktree(task)
         # Repeat execution must reconcile the original session, never relaunch it.
         with self._lock:
             if session in self._sessions:raise ValueError('Native session already admitted; reconcile before retry')
+            if worktree in self._worktrees and self._worktrees[worktree]!=task['task_id']:
+                raise ValueError('Native worktree belongs to another registered task')
+            self._worktrees[worktree]=task['task_id']
             self._sessions.add(session)
         packet=dict(adapter=binding['adapter'],executable=binding['executable'],model_role='worker',
             prompt=binding['prompt']+'\n\nDo not spawn subagents, background workers or detached processes. Return work to the coordinator; all delegation uses its registered dispatcher. Stay within the supplied task scope.\n')
