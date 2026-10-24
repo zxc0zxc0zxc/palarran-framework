@@ -68,3 +68,13 @@ Primary sources checked 2026-10-24:
 - [Python `http.server`](https://docs.python.org/3/library/http.server.html): basic HTTP building blocks and security limitations. This bounded local view is not a public production web stack.
 - [Python `sqlite3` URI connections](https://docs.python.org/3/library/sqlite3.html#how-to-work-with-sqlite-uris): read-only database mode.
 - [OWASP CSRF Prevention Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html): exact source/target origin checks and Fetch Metadata. This panel applies a stricter cross-origin policy to its sensitive GET responses.
+
+## Cross-repository feature view
+
+For an existing feature run add `--feature` to `serve` or `report`. The feature metadata must be in the **same** dispatcher ledger, or returned through `RemoteDispatcher.get_feature` at the same scoped authority. The reader uses the canonical `FeatureAuthority.report` with a query-only Dispatcher; it does not initialize, migrate or reconcile feature state. Unknown/mismatched run or backend shows unavailable readiness.
+
+The view includes passport/spec/plan identity, exact service commits, pinned contracts, check verdicts, release order and blocker codes. It discloses no executable packets, worktree paths, secret values, raw output or controller credentials. Feature and source-plan progress derive from the same report. Root spend/reserves remain shown once, never summed per repository. Stale/disconnected observations cannot establish release readiness.
+
+```sh
+python3 -m packages.core.parallelism.dashboard report --state /absolute/private/authority.sqlite --run existing-feature-run --feature
+```

@@ -22,7 +22,7 @@ _ASSETS = Path(__file__).with_name('assets')
 _ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$')
 _FIELDS = {
     'root': {'run_id', 'backend', 'status', 'plan_sha256', 'plan_version', 'base_commit', 'updated_at'},
-    'task': {'task_id', 'parent_task_id', 'attempt_id', 'state', 'reason', 'owner', 'session_id', 'task_queue', 'machine', 'verified_subject', 'updated_at', 'heartbeat_at', 'started_at', 'evidence_sha256', 'receipt_sha256', 'base_commit', 'plan_version', 'budget_phase', 'dispatch_mode', 'required_for_completion', 'tokens', 'cost_micros', 'usage_known', 'reserved_tokens', 'reserved_cost_micros'},
+    'task': {'task_id', 'parent_task_id', 'attempt_id', 'state', 'reason', 'owner', 'session_id', 'task_queue', 'machine', 'verified_subject', 'updated_at', 'heartbeat_at', 'started_at', 'evidence_sha256', 'receipt_sha256', 'base_commit', 'plan_version', 'repository_id', 'budget_phase', 'dispatch_mode', 'required_for_completion', 'tokens', 'cost_micros', 'usage_known', 'reserved_tokens', 'reserved_cost_micros'},
     'usage': {'tokens', 'cost_micros', 'reserved_tokens', 'reserved_cost_micros', 'known'},
     'budget': {'tokens', 'cost_micros', 'launches', 'seconds'},
     'integration': {'run_id', 'status', 'base_commit', 'head', 'remaining', 'pr_ready', 'publication'},
@@ -102,6 +102,70 @@ def project_integration(raw, run_id):
     return result
 
 
+_FEATURE_FIELDS = {
+    'root': {'feature_id', 'run_id', 'backend', 'status', 'passport_sha256',
+             'spec_revision', 'plan_revision', 'plan_sha256', 'composition_id',
+             'release_ready', 'accepted'},
+    'repository': {'repository_id', 'default_branch', 'base_commit', 'owner'},
+    'service': {'service_id', 'repository_id', 'owner'},
+    'contract': {'contract_id', 'revision', 'producer', 'schema_sha256', 'semantics_sha256'},
+    'check': {'check_id', 'kind', 'owner', 'task_id', 'verdict', 'subject', 'criteria_sha256',
+              'evidence_sha256', 'verifier_id', 'composition_id'},
+    'release': {'operation_id', 'status', 'state', 'environment', 'composition_id', 'step_id',
+                'observed_seconds', 'evidence_sha256'},
+    'component': {'commit', 'image_digest', 'migration', 'flags_sha256'},
+    'step': {'step_id', 'owner', 'kind', 'state', 'status', 'task_id', 'irreversible'},
+}
+
+
+def _feature_fields(value, kind):
+    if type(value) is not dict:
+        raise ValueError('Invalid feature report')
+    # Reuse the existing scalar disclosure policy with an explicit allowlist.
+    result = {}
+    for key in _FEATURE_FIELDS[kind]:
+        item = value.get(key)
+        if item is None or type(item) is bool:
+            result[key] = item
+        elif type(item) is int and 0 <= item <= 10**15:
+            result[key] = item
+        elif type(item) is str and len(item.encode()) <= 1024 and not any(ord(c) < 32 for c in item):
+            result[key] = item
+    return result
+
+
+def project_feature(raw, run_id):
+    """Bounded feature metadata; no passport packets, paths, actions or raw output."""
+    if type(raw) is not dict or raw.get('run_id') != run_id:
+        raise ValueError('Feature run mismatch')
+    result = _feature_fields(raw, 'root')
+    for key, kind in (('repositories', 'repository'), ('services', 'service'),
+                      ('contracts', 'contract'), ('checks', 'check')):
+        result[key] = [_feature_fields(v, kind) for v in _list(raw.get(key, []))]
+    composition = raw.get('composition')
+    result['composition'] = None
+    if composition is not None:
+        if type(composition) is not dict or type(composition.get('components')) is not dict or len(composition['components']) > 100:
+            raise ValueError('Invalid composition report')
+        components = {}
+        for key, value in composition['components'].items():
+            if not _ID.fullmatch(key):
+                raise ValueError('Invalid service identity')
+            components[key] = _feature_fields(value, 'component')
+        key = composition.get('composition_id')
+        if not isinstance(key, str) or not re.fullmatch(r'[a-f0-9]{64}', key):
+            raise ValueError('Exact composition identity required')
+        result['composition'] = {'composition_id': key, 'components': components}
+    release = raw.get('release')
+    result['release'] = _feature_fields(release, 'release') if release is not None else None
+    result['steps'] = [_feature_fields(v, 'step') for v in _list(raw.get('steps', []))]
+    # Blockers are stable machine codes; the complete private explanation stays local.
+    result['blockers'] = [v for v in _list(raw.get('blockers', [])) if type(v) is str and _ID.fullmatch(v)]
+    if len(json.dumps(result, allow_nan=False).encode()) > 128 * 1024:
+        raise ValueError('Feature disclosure exceeds budget')
+    return result
+
+
 class LocalReport(Dispatcher):
     """Reuse canonical report calculation with query-only transactions; no schema writes."""
     def __init__(self, path):
@@ -135,11 +199,12 @@ class LocalIntegrationReport(LocalReport):
 
 
 class Snapshot:
-    def __init__(self, reader, run_id, *, integration_reader=None, interval=3, stale_after=15, clock=time.time):
+    def __init__(self, reader, run_id, *, integration_reader=None, feature_reader=None, interval=3, stale_after=15, clock=time.time):
         if not _ID.fullmatch(run_id) or not 1 <= interval <= 60 or stale_after < interval:
             raise ValueError('Invalid snapshot configuration')
         self.reader, self.run_id = reader, run_id
         self.integration_reader = integration_reader
+        self.feature_reader = feature_reader
         self.interval, self.stale_after, self.clock = interval, stale_after, clock
         self.lock = threading.Lock()
         self.last = None
@@ -164,9 +229,18 @@ class Snapshot:
                         self.integration = project_integration(self.integration_reader(), self.run_id)
                     except Exception:
                         self.integration = {'status': 'unavailable', 'pr_ready': False}
+                self.feature = None
+                if self.feature_reader is not None:
+                    try:
+                        self.feature = project_feature(self.feature_reader(), self.run_id)
+                        if self.last and (self.feature.get('backend') != self.last['report'].get('backend') or
+                                          self.feature.get('plan_sha256') != self.last['report'].get('plan_sha256')):
+                            raise ValueError('Feature backend mismatch')
+                    except Exception:
+                        self.feature = {'status': 'unavailable', 'release_ready': False}
             value = dict(self.last or {'observed_at': None, 'report': None})
             age = None if value['observed_at'] is None else max(0, now - value['observed_at'])
-            value.update(server_time=now, age_seconds=age, freshness='missing' if age is None else ('stale' if self.error or age > self.stale_after else 'current'), source_error=self.error, stale_after=self.stale_after, poll_seconds=self.interval, integration=self.integration)
+            value.update(server_time=now, age_seconds=age, freshness='missing' if age is None else ('stale' if self.error or age > self.stale_after else 'current'), source_error=self.error, stale_after=self.stale_after, poll_seconds=self.interval, integration=self.integration, feature=self.feature)
             return value
 
 
@@ -192,6 +266,17 @@ def markdown(snapshot):
             lines.append(f"Gate {text(gate.get('gate_id'))}: {text(gate.get('status'))}; subject: {text(gate.get('subject'))}")
     else:
         lines.append('Integration: not connected; publication readiness unknown')
+    feature = snapshot.get('feature')
+    if feature:
+        ready = feature.get('release_ready') is True and snapshot['freshness'] == 'current'
+        lines.append(f"Feature {text(feature.get('feature_id'))}: {text(feature.get('status'))}; release readiness established: {ready}")
+        lines.append(f"Spec {text(feature.get('spec_revision'))}; plan {text(feature.get('plan_revision'))}; composition {text(feature.get('composition_id'))}")
+        for service, component in (feature.get('composition') or {}).get('components', {}).items():
+            lines.append(f"Service {text(service)}: {text(component.get('commit'))}")
+        for check in feature.get('checks', []):
+            lines.append(f"Check {text(check.get('check_id'))}: {text(check.get('verdict'))}; subject {text(check.get('subject'))}")
+        for blocker in feature.get('blockers', []):
+            lines.append(f"Feature blocker: {text(blocker)}")
     return '\n'.join(lines) + '\n'
 
 
@@ -297,6 +382,7 @@ def main(argv=None):
     source = parser.add_mutually_exclusive_group()
     source.add_argument('--state', help='Existing private authority SQLite ledger (read only)')
     source.add_argument('--authority', help='Loopback authority URL behind owned tunnel')
+    parser.add_argument('--feature', action='store_true', help='Include same-authority cross-repository feature metadata')
     parser.add_argument('--integration-state', help='Existing private same-run integration queue SQLite (read only)')
     parser.add_argument('--token-file', help='Private authority bearer file; never browser-visible')
     parser.add_argument('--auth-file', help='Optional private dashboard user:password file')
@@ -307,7 +393,7 @@ def main(argv=None):
         if not 0 <= args.port <= 65535:
             raise ValueError('Invalid port')
         if args.command == 'demo':
-            if args.state or args.authority or args.token_file or args.integration_state:
+            if args.state or args.authority or args.token_file or args.integration_state or args.feature:
                 raise ValueError('Demo is fixture only')
             class Demo:
                 def get_run(self, run_id):
@@ -321,7 +407,17 @@ def main(argv=None):
         else:
             raise ValueError('Select --state or --authority with --token-file')
         integration = LocalIntegrationReport(args.integration_state) if args.integration_state else None
-        snapshot = Snapshot(reader, args.run, integration_reader=integration.report if integration else None)
+        feature_reader = None
+        if args.feature:
+            if args.state:
+                from .feature import FeatureAuthority
+                feature = FeatureAuthority.__new__(FeatureAuthority)
+                feature.dispatcher, feature.run_id = reader, args.run
+                feature_reader = feature.report
+            else:
+                feature_reader = lambda: reader.get_feature(args.run)
+        snapshot = Snapshot(reader, args.run, integration_reader=integration.report if integration else None,
+                            feature_reader=feature_reader)
         if args.command == 'report':
             print(markdown(snapshot.get()), end='')
             return 0 if snapshot.get()['freshness'] == 'current' else 2

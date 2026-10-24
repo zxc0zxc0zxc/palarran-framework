@@ -22,6 +22,8 @@ For ordinary requests as well as skills, evaluate independent ready work at task
 
 When a useful independent subtask or continuation could be shared with another developer, follow [task sharing](packages/core/coordination/docs/sharing/README.md). Propose before quota/resource exhaustion using fresh authorized metadata; unknown quota has no invented percentage. Publication, participation and exact plan require explicit confirmations. Fence stopped source ownership before transfer; a message/ACK never starts another person's session.
 
+Cross-repository work follows [feature coordination](packages/core/parallelism/docs/features/README.md): one passport/budget and exact combined acceptance.
+
 ## Shared invariants
 
 - Documentation and dated primary sources precede implementation. Distinguish vendor claims, observations, estimates and hypotheses.

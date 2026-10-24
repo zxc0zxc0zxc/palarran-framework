@@ -9,3 +9,5 @@ The existing serial orchestrator remains compatible. This capability adds a sepa
 - [Optional Temporal backend](docs/temporal.md) and protected hosting profile.
 - [Semantic integration and final acceptance](docs/integration.md).
 - [Live read-only panel and compact harness reports](docs/dashboard.md).
+
+- [One feature across repositories](docs/features/README.md): owner-approved contracts, shared DAG/budget, immutable compositions, independent business acceptance and ordered release.
