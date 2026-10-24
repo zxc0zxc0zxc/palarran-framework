@@ -94,8 +94,16 @@ def run_request(dispatcher, request, *, target, binding, profile, origin='ordina
     adapter, verifier = selected['adapter'], selected['verifier']
     if not callable(getattr(adapter,'execute',None)) or not callable(verifier):
         raise ValueError('Managed binding requires an adapter and independent verifier')
+    passport = selected.get('feature_passport')
+    if selected['manifest'].get('repositories') and passport is None:
+        raise ValueError('Cross-repository work requires a reviewed feature passport before execution')
     run = start(dispatcher, selected['manifest'], profile, origin=origin,
                 reviewed=True, active_run_id=active_run_id)
+    feature = None
+    if passport is not None:
+        from .feature import FeatureAuthority
+        feature = FeatureAuthority(dispatcher, run['run_id'])
+        feature.create(passport)  # Idempotent continuation; revisions require explicit owner approval.
     if selected.get('share_hint') is not None:
         from packages.core.coordination.share_runtime import propose
         advice=propose(dispatcher,run['run_id'],plan_hash=dispatcher.get_run(run['run_id'])['plan_sha256'],
@@ -104,6 +112,14 @@ def run_request(dispatcher, request, *, target, binding, profile, origin='ordina
             return dict(dispatcher.get_run(run['run_id']),status='share_suggested',share_advice=advice,
                         origin=origin,continuation=run['continuation'],local_launches=0)
     result = execute(dispatcher, run, adapter, verifier, temporal_submit=selected.get('temporal_submit'), integration_factory=selected.get('integration_factory'))
+    if feature is not None:
+        driver = selected.get('feature_driver')
+        if driver is not None:
+            if not callable(driver):
+                raise ValueError('Reviewed feature acceptance binding required')
+            if _implementation_verified(dispatcher.get_run(run['run_id'])):
+                driver(feature)  # Explicit target binding; no default tools or deployment.
+        result = dict(result, feature=feature.report())
     return dict(result, integration=getattr(adapter,'integration','unsupported'), origin=origin,
                 continuation=run['continuation'])
 

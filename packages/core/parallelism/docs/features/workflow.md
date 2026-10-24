@@ -29,3 +29,9 @@ Keep the source plan's completed/remaining work, implemented revision, commits, 
 A library/build scope can finish at `release_ready`. Production merge/deploy requires actual separate authorization and the frozen CI/CD/controller binding. Before any action compare the real environment with the reviewed predecessor. Unknown action outcome retains its intent and root reservation until explicit reconciliation; never retry blindly.
 
 Store rationale and bounded evidence locally. Publish only separately verified, sanitized portable findings to long-term memory through its existing gates. Source, raw logs, sessions, credentials and customer data stay private.
+
+## Managed entry binding
+
+The existing `entry.run_request` planning binding may return `feature_passport` alongside its reviewed multi-repository manifest, adapter and verifier. The passport is frozen before the first implementation claim. Missing passport blocks multi-repository managed execution. Continuation reuses the same run and exact passport; changing requirements uses explicit owner-approved `update_passport`, never silent recreation.
+
+An optional reviewed `feature_driver(feature_authority)` coordinates target-specific acceptance after all automatic implementation tasks are independently verified. Configure it explicitly; there is no default test environment, model call, merge or deploy. It must use predeclared external root slots and the frozen gate protocol. The final response includes `feature.report()`; root task completion alone never sets feature release readiness. Local and Temporal Workers must use the same coordinator authority; Temporal completion can resume this binding with the original run ID, never a new local run.
