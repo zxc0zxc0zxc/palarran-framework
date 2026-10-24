@@ -254,6 +254,15 @@ class FeatureAuthority:
                     affected.update(before.get(key, {}).get('owners', [])); affected.update(after.get(key, {}).get('owners', []))
                     if key in before and key in after and after[key]['revision'] <= before[key]['revision']:
                         raise ValueError('Changed contract must advance revision')
+            for field, key in (('services','service_id'),('business_invariants','invariant_id')):
+                old_items={item[key]:item for item in old[field]}; new_items={item[key]:item for item in p[field]}
+                for item_id in set(old_items)|set(new_items):
+                    if old_items.get(item_id)!=new_items.get(item_id):
+                        affected.update(item['owner'] for item in (old_items.get(item_id),new_items.get(item_id)) if item)
+            if old['acceptance_protocol']!=p['acceptance_protocol']:
+                affected.update(c['owner'] for c in old['acceptance_protocol']['checks']+p['acceptance_protocol']['checks'])
+            if old['release_plan']!=p['release_plan']:
+                affected.update(step['owner'] for step in old['release_plan']['steps']+p['release_plan']['steps'])
             if type(approvals) is not list or not affected <= set(approvals):
                 raise ValueError('Affected boundary owner approval required')
             if len(state['revisions']) >= 64: raise ValueError('Revision bound reached')
@@ -495,12 +504,16 @@ class FeatureAuthority:
         if any(not i['resolved'] for i in p['business_invariants']): blockers.append('unresolved_business_invariants')
         for check in p['acceptance_protocol']['checks']:
             proof=state['checks'].get(str(key)+':'+check['check_id']) if composition and composition['passport_sha256']==state['passport_sha256'] else None
+            if proof:
+                try: self._root_slot(db,proof['task_id'],key)
+                except ValueError: proof=None
             checks.append(dict(check,verdict=proof['verdict'] if proof else 'NOT_RUN',evidence=proof,**({k:proof[k] for k in ('subject','criteria_sha256','verifier_id','evidence_sha256')} if proof else {})))
         if not composition: blockers.append('composition_missing')
         if any(c['verdict']!='PASS' for c in checks): blockers.append('acceptance_incomplete')
         if any(r['state'] in {'unknown','cancel_requested'} or not r['usage_known'] for r in rows): blockers.append('root_outcome_unknown')
         if any(r['state'] in {'running','submitted'} for r in rows): blockers.append('root_work_active')
         if run['cancel']: blockers.append('root_cancelled')
+        if any(r['state']=='failed' for r in rows): blockers.append('root_task_failed')
         implementation=[r for r in rows if json.loads(r['packet']).get('dispatch_mode','auto')=='auto']
         if any(r['state']!='verified' for r in implementation): blockers.append('implementation_incomplete')
         if any(not admission_allowed(db,self.run_id,json.loads(r['packet'])) for r in implementation): blockers.append('contract_task_pins_stale')
@@ -518,6 +531,7 @@ class FeatureAuthority:
         else: status='verifying' if any(c['verdict']!='NOT_RUN' for c in checks) else 'integrating'
         # Global liabilities/cancellation fence every business phase, including
         # previously accepted releases; read-only reports never erase new risk.
+        if 'root_task_failed' in blockers: status='failed'
         if 'root_outcome_unknown' in blockers: status='unknown'
         if 'root_cancelled' in blockers:
             status='cancel_requested' if any(r['state'] in {'running','unknown','cancel_requested'} for r in rows) else 'cancelled'

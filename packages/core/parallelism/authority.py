@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import sqlite3
 import threading
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
@@ -111,6 +112,15 @@ def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port
                     if method not in {'update_passport','compose','record_check','begin_release','begin_step','finish_step','reconcile_step','observe'} or type(arguments) is not dict:
                         raise ValueError('Unsupported feature operation')
                     arguments = dict(arguments)
+                    actors = principal.get('feature_owners', [])
+                    if type(actors) is not list or not actors:
+                        return self.reply(403, {'error':'feature_owner_scope'})
+                    if method == 'update_passport' and not set(arguments.get('approvals', [])) <= set(actors):
+                        return self.reply(403, {'error':'feature_owner_scope'})
+                    if method in {'begin_release','begin_step'} and arguments.get('authorization', {}).get('actor') not in actors:
+                        return self.reply(403, {'error':'feature_owner_scope'})
+                    if method in {'compose','update_passport'} and feature.report()['passport']['coordinator'] not in actors:
+                        return self.reply(403, {'error':'feature_owner_scope'})
                     if method in {'record_check','finish_step','reconcile_step','observe'}:
                         trusted = (feature_verifiers or {}).get(method)
                         if not callable(trusted): raise ValueError('Trusted feature verifier unavailable')
@@ -135,7 +145,7 @@ def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port
                 else:
                     return self.reply(403, {'error': 'operation'})
                 self.reply(200, result)
-            except (ValueError, TypeError, KeyError, OSError, OverflowError):
+            except (ValueError, TypeError, KeyError, OSError, OverflowError, sqlite3.Error):
                 self.reply(400, {'error': 'invalid_request'})
     server = ThreadingHTTPServer((host, port), Handler)
     server.daemon_threads = True
