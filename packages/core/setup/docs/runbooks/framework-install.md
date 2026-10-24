@@ -1,6 +1,6 @@
 # Install the framework into an existing local project
 
-Stable ID: `palarran.framework.install`; version: `1.0.0`; reviewed: **2026-10-24**. Baseline and shared gates: [runbook index](README.md). Operation: fresh project installation through the existing `setup` dispatcher, followed by read-only health and ownership verification. No installation is performed by reading this document.
+Stable ID: `palarran.framework.install`; version: `1.1.0`; reviewed: **2026-10-24**. Baseline and shared gates: [runbook index](README.md). Operation: fresh project installation through the existing `setup` dispatcher, followed by read-only health and ownership verification. No installation is performed by reading this document.
 
 ## Applicability and required inputs
 
@@ -34,7 +34,7 @@ PALARRAN_TARGET='/ABSOLUTE/existing-project'
 PALARRAN_CLIENT='codex'
 python3 "$PALARRAN_SOURCE/scripts/project_setup.py" setup \
   --source "$PALARRAN_SOURCE" --target "$PALARRAN_TARGET" --client "$PALARRAN_CLIENT" \
-  --packages backend app --skills-language en --code-language en --docs-language en --plan
+  --packages code validation --skills-language en --code-language en --docs-language en --plan
 ```
 
 Expected: exit `0`, JSON `status: PLANNED`, `action: install`, selected `revision`, `client`, nonzero `skills`, `writes: 0`, `network: false`, `model_calls: 0`, `memory: NOT_CHECKED`. `--plan` performs local preflight only, with no installation, target journal writes or memory calls. It does not check the remote default branch. Capture the plan/pin privately and verify that all resolved values match the intended target. Recheck target state if it changes before apply.
@@ -48,7 +48,7 @@ When the concrete project mutation and bounded memory read are already authorize
 ```sh
 python3 "$PALARRAN_SOURCE/scripts/project_setup.py" setup \
   --source "$PALARRAN_SOURCE" --target "$PALARRAN_TARGET" --client "$PALARRAN_CLIENT" \
-  --packages backend app --skills-language en --code-language en --docs-language en
+  --packages code validation --skills-language en --code-language en --docs-language en
 ```
 
 The helper records a target setup decision before dependent installation writes, creates the pinned `.ai-tools/library`, source/ownership manifests and `.ai-tools/USAGE.md`, adds selected native discovery links and updates managed instructions/index. Claude/both may update project `.mcp.json`; unrelated configuration is preserved. Shared public support resources remain available, but only selected skills receive discovery links. It runs no project hooks, app tests, models or deployment.
@@ -91,3 +91,7 @@ Fresh uninstall/rollback remains a reviewed manual operation: list exact manifes
 Record runbook ID/version, selected source revision/integrity basis, target alias/path, client, package/language resolution, initial state, exact redacted command, exit/status and changed paths. Include receipt/marker verification, preserved settings, memory outcome, UI discovery NOT_RUN unless directly observed, recovery references and any incomplete gate. Retain the setup decision link and private before-state evidence; update the target handoff/index within authorized scope. Explain actual Codex `$palarran-setup` or Claude standalone `/palarran-setup` usage from the installed catalog; unified plugin commands require their separate adapter.
 
 Final status must distinguish files installed, memory connected/not ready/not run, and remaining client interaction. No application acceptance, production readiness, paid quota or service SLA is established by this runbook.
+
+## Common parallelism instructions (1.1.0)
+
+Installation appends a separate `palarran:parallelism` block to the recorded client's AGENTS/CLAUDE instruction files, preserving all original bytes. This applies to ordinary requests and subject skills; native clients remain instruction-based. Before apply resolve the optional Temporal question/profile under [Temporal setup](../temporal.md), preserving explicit project disable and existing global settings. An answer does not grant global writes, Worker startup, deployment or models. Follow the reviewed local Worker procedure only within actual scope, and report its missing readiness honestly.
