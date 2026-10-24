@@ -265,6 +265,13 @@ class LedgerPortTests(unittest.TestCase):
         with self.assertRaises(sqlite3.OperationalError):
             with ledger.transaction() as db:
                 db.execute('UPDATE runs SET cancel=1')
+        with ledger.transaction() as db:
+            self.assertEqual(db.execute('PRAGMA query_only').fetchone()[0], 1)
+            db.execute("ATTACH DATABASE ':memory:' AS attached")
+            with self.assertRaises(sqlite3.OperationalError):
+                db.execute('CREATE TABLE attached.must_not_write(value)')
+            with self.assertRaises(sqlite3.OperationalError):
+                db.execute('CREATE TEMP TABLE must_not_write(value)')
         with self.assertRaisesRegex(ValueError, 'Read-only ledger'):
             ledger.initialize()
         self.assertEqual(self.path.read_bytes(), before)
