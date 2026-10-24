@@ -76,7 +76,10 @@ class CoordinationClientTest(unittest.TestCase):
                                            'clientInfo': {'name': 'test', 'version': '1'}})['result']['protocolVersion'], '2025-11-25')
         proxy.dispatch(dict(jsonrpc='2.0', method='notifications/initialized'))
         tools = call('tools/list')['result']['tools']
-        self.assertEqual(len(tools), 9)
+        self.assertEqual(len(tools), 10)
+        share_tool=next(t for t in tools if t['name']=='coordination.get_share')
+        self.assertTrue(share_tool['annotations']['readOnlyHint'])
+        self.assertNotIn('share.create', str(tools))
         self.assertNotIn('reconcile', ' '.join(t['name'] for t in tools))
         result = call('tools/call', {'name': 'coordination.get_operation', 'arguments': {'project': 'p', 'request_id': 'old'}})
         self.assertEqual(result['result']['structuredContent']['data'], {'found': False})

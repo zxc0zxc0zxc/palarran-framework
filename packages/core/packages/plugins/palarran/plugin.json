@@ -206,6 +206,10 @@
     "git:mr": {
       "source": "./packages/code/git/commands/mr.md",
       "argumentHint": "[--plan]"
+    },
+    "core:share": {
+      "source": "packages/core/coordination/commands/share.md",
+      "argumentHint": "{task?} [--plan]"
     }
   }
 }

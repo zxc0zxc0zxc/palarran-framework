@@ -519,6 +519,15 @@
       "legacy": [
         "vps-manage"
       ]
+    },
+    {
+      "skill": "palarran-core-share",
+      "domain": "core",
+      "action": "share",
+      "command": "core:share",
+      "adapter": "packages/core/coordination/commands/share.md",
+      "arguments": "{task?} [--plan]",
+      "legacy": []
     }
   ]
 }

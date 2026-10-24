@@ -22,8 +22,9 @@ class ParallelExportsTests(unittest.TestCase):
             code = '''from pathlib import Path
 from packages.core.parallelism import dispatcher, authority, entry, native, temporal, root_budget, integration, dashboard
 from packages.core.setup import temporal_config
+from packages.core.coordination import share, share_store, share_runtime, share_git, share_temporal, client, service
 root=Path.cwd()
-for module in (dispatcher,authority,entry,native,temporal,root_budget,integration,dashboard,temporal_config):
+for module in (dispatcher,authority,entry,native,temporal,root_budget,integration,dashboard,temporal_config,share,share_store,share_runtime,share_git,share_temporal,client,service):
     assert Path(module.__file__).resolve().is_relative_to(root)
 print('portable runtime imports verified')
 '''
