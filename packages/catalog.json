@@ -46,6 +46,11 @@
           "id": "coordination",
           "status": "implemented",
           "description": "Optional private cross-machine coordination, not external-action enforcement."
+        },
+        {
+          "id": "coop",
+          "status": "implemented",
+          "description": "Repository-scoped cooperative agent receiver and alerts."
         }
       ],
       "skills": [
@@ -58,6 +63,11 @@
           "name": "palarran-mcp-build",
           "path": "packages/core/agents/skills/palarran-mcp-build/SKILL.md",
           "legacy_path": "skills/palarran-mcp-build/SKILL.md"
+        },
+        {
+          "name": "palarran-core-coop",
+          "path": "packages/core/coop/skills/palarran-core-coop/SKILL.md",
+          "legacy_path": "skills/palarran-core-coop/SKILL.md"
         }
       ]
     },
@@ -234,6 +244,11 @@
           "id": "backend",
           "status": "implemented",
           "description": "Scale-aware backend SDD, delivery and independent checks."
+        },
+        {
+          "id": "git",
+          "status": "planned",
+          "description": "Git workflow design guides; dedicated skills are not implemented yet."
         }
       ],
       "skills": [
@@ -314,18 +329,24 @@
     {
       "id": "docs",
       "title": "Docs",
-      "description": "Reserved documentation capability with no implemented skill declared.",
+      "description": "Human-readable documentation and portable review artifacts.",
       "requires": [
         "core"
       ],
       "capabilities": [
         {
           "id": "documentation",
-          "status": "planned",
-          "description": "A future explicit documentation-artifact workflow; no current skill."
+          "status": "implemented",
+          "description": "Human-readable HTML delivery artifacts grounded in source evidence."
         }
       ],
-      "skills": []
+      "skills": [
+        {
+          "name": "palarran-docs-artifact",
+          "path": "packages/docs/documentation/skills/palarran-docs-artifact/SKILL.md",
+          "legacy_path": "skills/palarran-docs-artifact/SKILL.md"
+        }
+      ]
     },
     {
       "id": "science",
@@ -411,7 +432,7 @@
         },
         {
           "id": "incident",
-          "status": "planned",
+          "status": "implemented",
           "description": "Separately assigned infrastructure incident-response skill."
         }
       ],
@@ -440,6 +461,83 @@
           "name": "palarran-infrastructure-incident",
           "path": "packages/infrastructure/incident/skills/palarran-infrastructure-incident/SKILL.md",
           "legacy_path": "skills/palarran-infrastructure-incident/SKILL.md"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "description": "Evidence-based infrastructure, application, logging, egress and current vulnerability audits.",
+      "requires": [
+        "core"
+      ],
+      "capabilities": [
+        {
+          "id": "infrastructure",
+          "status": "implemented",
+          "description": "Identity, privileges, network exposure and infrastructure controls."
+        },
+        {
+          "id": "ingress",
+          "status": "implemented",
+          "description": "Untrusted inputs, forms, routes, webhooks and request boundaries."
+        },
+        {
+          "id": "log",
+          "status": "implemented",
+          "description": "Sensitive data, noise, access, retention and integrity in logs."
+        },
+        {
+          "id": "egress",
+          "status": "implemented",
+          "description": "Outbound requests, responses, exports and third-party disclosure."
+        },
+        {
+          "id": "code",
+          "status": "implemented",
+          "description": "Authentication, authorization, tenant isolation and unsafe code paths."
+        },
+        {
+          "id": "cve",
+          "status": "implemented",
+          "description": "Fresh advisory research matched to actual technology and version inventory."
+        },
+        {
+          "id": "shared",
+          "status": "implemented",
+          "description": "Private audit evidence contract and offline report validation."
+        }
+      ],
+      "skills": [
+        {
+          "name": "palarran-security-infrastructure",
+          "path": "packages/security/infrastructure/skills/palarran-security-infrastructure/SKILL.md",
+          "legacy_path": "skills/palarran-security-infrastructure/SKILL.md"
+        },
+        {
+          "name": "palarran-security-ingress",
+          "path": "packages/security/ingress/skills/palarran-security-ingress/SKILL.md",
+          "legacy_path": "skills/palarran-security-ingress/SKILL.md"
+        },
+        {
+          "name": "palarran-security-log",
+          "path": "packages/security/log/skills/palarran-security-log/SKILL.md",
+          "legacy_path": "skills/palarran-security-log/SKILL.md"
+        },
+        {
+          "name": "palarran-security-egress",
+          "path": "packages/security/egress/skills/palarran-security-egress/SKILL.md",
+          "legacy_path": "skills/palarran-security-egress/SKILL.md"
+        },
+        {
+          "name": "palarran-security-code",
+          "path": "packages/security/code/skills/palarran-security-code/SKILL.md",
+          "legacy_path": "skills/palarran-security-code/SKILL.md"
+        },
+        {
+          "name": "palarran-security-cve",
+          "path": "packages/security/cve/skills/palarran-security-cve/SKILL.md",
+          "legacy_path": "skills/palarran-security-cve/SKILL.md"
         }
       ]
     }

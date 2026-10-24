@@ -1,4 +1,6 @@
 """Product artifact fixture builders and offline integrity regression tests."""
+
+from scripts.palarran_paths import source_path
 import copy
 import hashlib
 import json
@@ -274,8 +276,11 @@ class ArtifactTests(unittest.TestCase):
     def test_first_customer_profiles_are_pinned_and_required(self):
         with tempfile.TemporaryDirectory() as temp:
             bundle = Path(temp).resolve()
-            for relative in ('docs/product', 'docs/skills', 'templates/product', 'skills'):
-                shutil.copytree(SKILLS_ROOT / relative, bundle / relative)
+            for relative in ('docs/product', 'docs/skills', 'templates/product'):
+                shutil.copytree(source_path(SKILLS_ROOT, relative), bundle / relative)
+            for name in ('define', 'market', 'compare', 'revenue', 'acquisition', 'b2b', 'b2c'):
+                relative = 'skills/palarran-product-' + name
+                shutil.copytree(source_path(SKILLS_ROOT, relative), bundle / relative)
             original = source_digest(bundle)
             profile = bundle / 'skills/palarran-product-b2b/SKILL.md'
             profile.write_text(profile.read_text() + '\nChanged sales policy\n')
@@ -293,7 +298,7 @@ class ArtifactTests(unittest.TestCase):
 
     def test_cli_safe_receipt(self):
         manifest = write_stage(self.root, self.context, 'define')
-        argv = ['python3', str(SKILLS_ROOT / 'orchestrator/product_artifacts.py'), '--root', str(self.root),
+        argv = ['python3', str(source_path(SKILLS_ROOT, 'orchestrator/product_artifacts.py')), '--root', str(self.root),
                 '--pipeline', self.context['pipeline_id'], '--stage', 'define', '--context-sha', canonical_sha(self.context),
                 '--skills-root', str(SKILLS_ROOT)]
         proc = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

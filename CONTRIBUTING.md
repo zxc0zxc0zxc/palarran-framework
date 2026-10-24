@@ -1,10 +1,10 @@
 # Contributing to Palarran
 
-Start with AGENTS.md, .palarran/INDEX.md and docs/skills/domain-contracts.md. Read the AGENTS of every affected module. Canonical source code, guides and skill instructions use English. Locale preferences apply to generated project artifacts and interaction.
+Start with AGENTS.md, .palarran/INDEX.md and packages/core/agents/docs/domain-contracts.md. Read the AGENTS of every affected module. Canonical source code, guides and skill instructions use English. Locale preferences apply to generated project artifacts and interaction.
 
 Write source-backed documentation before implementation. Record each accepted decision with rationale, evidence, alternatives and consequences in target .palarran before dependent changes; preserve historical records. Graphify is optional: bounded fresh queries guide navigation, original files remain authoritative.
 
-Keep skills/catalog.json, unified and domain manifests, adapters, discovery links, validator registration and packager resources aligned. Native skills use hyphenated names; plugin command aliases are a separate interface. Do not rename durable runtime task IDs for branding.
+Keep packages/core/packages/catalog/skills.json, unified and domain manifests, adapters, discovery links, validator registration and packager resources aligned. Native skills use hyphenated names; plugin command aliases are a separate interface. Do not rename durable runtime task IDs for branding.
 
 Run `python3 scripts/validate_repo.py` and `python3 -m unittest discover -s tests -v`; also run `python3 scripts/factory_acceptance.py` after runtime-facing changes. Provider-facing tests use fake transports, without paid APIs, GPUs or live infrastructure apply. Report missing optional checks as NOT_RUN.
 

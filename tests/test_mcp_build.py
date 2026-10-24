@@ -1,4 +1,6 @@
 """Real stdio protocol and bounded data contracts; no SDK, model or network calls."""
+
+from scripts.palarran_paths import source_path
 import copy
 import importlib.util
 import json
@@ -9,7 +11,7 @@ import tempfile
 import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
-SPEC=importlib.util.spec_from_file_location('mcp_builder',ROOT/'scripts/mcp_build.py')
+SPEC=importlib.util.spec_from_file_location('mcp_builder',source_path(ROOT, 'scripts/mcp_build.py'))
 build=importlib.util.module_from_spec(SPEC);SPEC.loader.exec_module(build)
 srv=build.server
 
@@ -168,7 +170,7 @@ class MCPBuildTest(unittest.TestCase):
 
     def test_cli_commands_and_sanitized_summary(self):
         for args in (['scaffold','--spec',str(self.source),'--output',str(self.project)],['validate','--project',str(self.project)],['smoke','--project',str(self.project)]):
-            r=subprocess.run([sys.executable,str(ROOT/'scripts/mcp_build.py')]+args,capture_output=True,text=True,timeout=15)
+            r=subprocess.run([sys.executable,str(source_path(ROOT, 'scripts/mcp_build.py'))]+args,capture_output=True,text=True,timeout=15)
             self.assertEqual(r.returncode,0,r.stderr);value=json.loads(r.stdout)
             self.assertNotIn('Approved fixture',r.stdout);self.assertIn('status',value)
 

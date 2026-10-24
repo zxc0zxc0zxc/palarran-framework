@@ -1,4 +1,6 @@
 """Offline global-cycle privacy, evidence, idempotence and unknown-outcome gates."""
+
+from scripts.palarran_paths import source_path
 import copy
 import hashlib
 import importlib.util
@@ -48,7 +50,7 @@ class MemoryCycleTest(unittest.TestCase):
         self.git('add', 'decision.md'); self.git('-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','fixture')
         self.commit = self.git('rev-parse','HEAD').strip()
         report = self.target/'report.json'; report.write_text('{"status":"PASS"}\n')
-        case = json.loads((ROOT/'templates/memory/case.example.json').read_text())['case']
+        case = json.loads((source_path(ROOT, 'templates/memory/case.example.json')).read_text())['case']
         case['source'] = dict(repo='project-a', commit=self.commit, adr='decision.md')
         self.value = dict(project='project-a', case=case, verification=dict(subject_commit=self.commit, checks=[dict(name='independent checks', status='PASS', evidence='report.json', sha256=hashlib.sha256(report.read_bytes()).hexdigest())], portable=True, privacy_reviewed=True, dedup_reviewed=True))
 
@@ -190,7 +192,7 @@ class MemoryCycleTest(unittest.TestCase):
         self.assertEqual(len(json.loads(path.read_text())), 251)
 
     def test_shipped_template_is_inert(self):
-        value=json.loads((ROOT/'templates/memory/lesson.example.json').read_text())
+        value=json.loads((source_path(ROOT, 'templates/memory/lesson.example.json')).read_text())
         self.assertFalse(value['verification']['portable'])
         self.assertEqual(value['verification']['checks'][0]['status'], 'NOT_RUN')
         with self.assertRaises(Exception): self.finish(value)

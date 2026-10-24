@@ -124,4 +124,60 @@ for line in sys.stdin:
         with self.assertRaises(ValueError):setup.doctor(self.source,self.target)
 
 
+
+
+class ModularSetupTest(unittest.TestCase):
+    setUp = SetupTest.setUp
+    tearDown = SetupTest.tearDown
+    def modular_source(self):
+        moves = {"skills/demo": "packages/code/backend/skills/demo",
+                 "docs/skills": "packages/core/agents/docs",
+                 "scripts/memory_ops.py": "packages/memory/knowledge/scripts/memory_ops.py"}
+        for old, new in moves.items():
+            source, target = self.source / old, self.source / new
+            target.parent.mkdir(parents=True, exist_ok=True); source.rename(target)
+        (self.source / moves["skills/demo"] / "SKILL.md").write_text(
+            "# Demo\n\n[guide](../../../../core/agents/docs/decision-memory.md#details)\n")
+        (self.source / "scripts/memory_ops.py").write_text("raise SystemExit('ROOT_SHIM_MUST_NOT_EXPORT')\n")
+        (self.source / "packages/layout.json").write_text(json.dumps({"version": 1, "moves": moves}))
+        subprocess.run(['git','-C',str(self.source),'add','-A'],check=True)
+        subprocess.run(['git','-C',str(self.source),'-c','user.name=Fixture','-c','user.email=fixture@example.invalid',
+                        'commit','-qm','modular fixture'],check=True)
+        return moves
+
+    def test_committed_canonical_sources_export_to_portable_paths_and_rebase_links(self):
+        self.modular_source()
+        report = setup.install(self.source, self.target, 'codex')
+        library = self.target / '.ai-tools/library'
+        self.assertEqual((library / 'skills/demo/SKILL.md').read_text(),
+                         '# Demo\n\n[guide](../../docs/skills/decision-memory.md#details)\n')
+        self.assertNotIn('ROOT_SHIM', (library / 'scripts/memory_ops.py').read_text())
+        self.assertFalse((library / 'packages/layout.json').exists())
+        self.assertFalse((library / 'packages/code/backend/skills/demo').exists())
+        self.assertEqual(setup.doctor(library, self.target)['status'], 'PASS')
+        self.assertEqual(setup.library(library)[0], report['revision'])
+
+    def test_mapped_missing_implementation_never_exports_root_shim(self):
+        moves = self.modular_source()
+        (self.source / moves['scripts/memory_ops.py']).unlink()
+        subprocess.run(['git','-C',str(self.source),'add','-A'],check=True)
+        subprocess.run(['git','-C',str(self.source),'-c','user.name=Fixture','-c','user.email=fixture@example.invalid',
+                        'commit','-qm','missing implementation'],check=True)
+        with self.assertRaises(ValueError): setup.install(self.source,self.target,'codex',True)
+        self.assertEqual(list(self.target.iterdir()), [])
+
+    def test_source_revision_export_ignores_git_replacement_refs(self):
+        original=subprocess.check_output(['git','-C',str(self.source),'rev-parse','HEAD']).decode().strip()
+        before=(self.source/'skills/demo/SKILL.md').read_bytes()
+        (self.source/'skills/demo/SKILL.md').write_text('REPLACEMENT_NOT_APPROVED')
+        subprocess.run(['git','-C',str(self.source),'add','-A'],check=True)
+        subprocess.run(['git','-C',str(self.source),'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','replacement'],check=True)
+        replacement=subprocess.check_output(['git','-C',str(self.source),'rev-parse','HEAD']).decode().strip()
+        subprocess.run(['git','-C',str(self.source),'replace',original,replacement],check=True)
+        subprocess.run(['git','-C',str(self.source),'update-ref','HEAD',original],check=True)
+        revision,files=setup.library(self.source)
+        self.assertEqual(revision,original)
+        self.assertEqual(files['skills/demo/SKILL.md'],before)
+
+
 if __name__=='__main__':unittest.main()

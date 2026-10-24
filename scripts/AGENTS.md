@@ -1,6 +1,6 @@
 # Scripts
 
-Inherits root; mandatory sources by trigger are in docs/skills/domain-contracts.md. Canonical public CLI messages, identifiers and skill guides use English; interaction/new artifact preferences follow project/global .palarran/config.json.
+Inherits root; mandatory sources by trigger are in packages/core/agents/docs/domain-contracts.md. Canonical public CLI messages, identifiers and skill guides use English; interaction/new artifact preferences follow project/global .palarran/config.json.
 
 - Validators/inventory/cost helpers must work offline; missing/unknown prices are not zero. --plan permits no refresh/target access/provider calls.
 - Packaging is self-contained: explicit public resources only; never copy target memory, .graphify/venv/cache, .delivery, .env, state or external symlinks. Update packagers/packaging tests for new resources.

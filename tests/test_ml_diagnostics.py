@@ -1,4 +1,5 @@
 """Offline diagnostics invariants; no network, model API, GPU or dependency install."""
+from scripts.palarran_paths import source_path
 from contextlib import contextmanager,closing
 import copy
 import json
@@ -183,11 +184,11 @@ class PipelineDiagnosticsTest(unittest.TestCase):
     def test_missing_required_generations_fails_without_retraining(self):
         from orchestrator.engine import work,status
         f=self.fixture
-        source=(Path(__file__).resolve().parents[1]/'examples/ml-pipeline/local_job.py').read_text()
+        source=source_path(Path(__file__).resolve().parents[1], 'examples/ml-pipeline/local_job.py', required=True).read_text()
         job=f.base/'missing.py'
         # Preserve import root when moving fixture; omit only snapshots.
         root=Path(__file__).resolve().parents[1]
-        source=source.replace('str(Path(__file__).resolve().parents[2])',repr(str(root)))
+        source='import sys\nsys.path.insert(0, '+repr(str(root))+')\n'+source
         job.write_text(source.replace('writer.snapshot(step,blob,generate)','pass'))
         f.execution['train'].update(argv=[str(Path(sys.executable).resolve()),str(job),'train'],files=[str(Path(sys.executable).resolve()),str(job)])
         run,flow=f.ready();f.allow(run)

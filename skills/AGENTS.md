@@ -1,6 +1,6 @@
 # Skills
 
-Inherits root. Before skill changes read docs/skills/global-memory.md, docs/skills/decision-memory.md, agents-authoring.md and the mandatory profile in domain-contracts.md. Domain documentation precedes skill/command adapters.
+Inherits root. Before skill changes read packages/core/agents/docs/global-memory.md, packages/core/agents/docs/decision-memory.md, agents-authoring.md and the mandatory profile in domain-contracts.md. Domain documentation precedes skill/command adapters.
 
 - SKILL.md stays a concise workflow linking mandatory docs. Do not blur plan/build scope, permissions or evidence for brevity.
 - Project instructions/ADRs/graphs belong to target root, not installed skill checkouts. Read applicable AGENTS before code changes; create them only within authorized implementation scope and actual boundaries.

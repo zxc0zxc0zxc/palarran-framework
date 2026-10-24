@@ -1,0 +1,60 @@
+# Dependency and CVE applicability audit
+
+`/palarran:security:cve {scope?}` connects the exact software inventory to current authoritative advisories and actual exposure. Read the [shared audit/evidence contract](../../shared/docs/contract.md), [dated source catalog](sources.md), target instructions and accepted decisions first. This profile researches and reports; it does not install scanners, resolve/update dependencies, pull images, execute package hooks, exploit vulnerabilities or fix/deploy anything. No paid API enrollment, private-code uploads or broad account searches. `--plan` prepares the inventory/coverage/freshness plan offline from local or visible context, without scanner/application/search-provider execution or remote access; local file inspection and inert private planning artifacts remain allowed.
+
+## Search order and freshness
+
+1. **Discover the available search capability.** When Keenable search is actually callable, use it first with a bounded sanitized query containing only public package/ecosystem/version/advisory identifiers. Use only existing permitted no-paid-call scope; tool availability alone does not authorize a charge. Do not send source, private repository names, internal hosts, logs or credentials. Follow the existing [context-retrieval contract](../../../core/agents/docs/context-retrieval.md); do not enroll, install a connector, buy credits or invoke a paid API automatically. Record the actual tool/query/time and result limits. A tool advertised in old memory is not a current connection.
+2. **Unavailable means explicit fallback.** If no callable Keenable exists, record `Keenable unavailable` and use primary web/vendor/ecosystem sources. If it is available but errors or returns no usable evidence, record that gap and continue to authoritative sources within existing read-only scope; do not hide the failed attempt. This authoring session had no exposed Keenable tool; no search through it is claimed. Search results are leads, not applicability evidence.
+3. **Open the authoritative record.** Prefer the maintainer's advisory and the actual distribution's security notice, then ecosystem OSV/GHSA records; consult NVD for cross-references/context and CISA KEV for known exploitation. Confirm exact package identity and advisory aliases. A snippet, title, score or generated answer is insufficient. If one source is unavailable, retain the others with their limits rather than inventing its contents.
+4. **Freeze the decision-time evidence.** Record source URL, publisher, `accessed_at`/`last_checked_at` in UTC, available publication/`advisory_modified_at`, advisory revision/hash when available, and the inventory subject. Missing modified dates remain null with a limitation. Recheck live advisory, fixed-version and KEV information at the actual decision; this guide's retrieval date is not a perpetual freshness receipt. Offline/cached evidence must carry its age and unavailable refresh status, never a claim of current absence.
+
+No universal freshness TTL proves correctness. Choose and record a maximum age appropriate to the decision's urgency; if that threshold is not agreed, disclose the exact age and avoid a current/safe verdict. A changed inventory, advisory revision, deployment or newly known exploitation invalidates affected earlier conclusions and requires a new report revision.
+
+## Inventory before matching
+
+Bind repository revision/dirty snapshot, reviewed lockfile hashes, exact runtime artifact/digest when known, OS/distribution/release/architecture and collection time. Separate **declared**, **locked**, **built**, **installed** and **deployed** facts. Review existing files/reports first; obtaining missing runtime/remote inventory requires concrete existing authorization, not a command inferred from this guide.
+
+| Stack / surface | Evidence to seek and common ambiguity |
+| --- | --- |
+| Go | go.mod/toolchain, go.sum, workspace/replace/vendor metadata and existing binary build information/SBOM. Checksums alone do not establish the selected module graph or deployed standard library. |
+| PHP | composer.lock including production/dev distinction, platform/extension constraints, runtime/SAPI and installed-package evidence. A lock entry does not prove a runtime extension version. |
+| TypeScript/Next.js | Actual npm/pnpm/yarn lockfile and workspace overrides/resolutions, framework/server runtime and bundled deployment artifact. Separate browser bundle, build-only tools, server code and optional/platform dependencies. |
+| Python | Exact pinned lock/requirements and available installed distribution/wheel/SBOM metadata, Python/native library runtime. A version range, editable source tree or import name is not an exact distribution version. Never import a package to discover its version during source-only review. |
+| Rust | Cargo.lock, features/target/patch/vendor selection and existing binary/SBOM provenance. Lock inclusion is not proof that a crate/feature is linked into a particular artifact. |
+| Containers and OS | Immutable image digest, actual platform/manifests, base distribution/release and full package version including epoch/revision/vendor suffix. A floating tag or Dockerfile base does not identify the running image. Include embedded binaries and native libraries. |
+| CI/build/plugins | Third-party actions/plugins, compiler/build tools and vendored/generated dependencies in their separate execution context. A dev dependency can matter in CI even when absent from production. |
+
+Track direct/transitive edges and their evidence, deployment environment, optional features and evidence quality. Unsupported ecosystems, unresolved ranges, inaccessible images and missing runtime identity remain explicit gaps. Do not fabricate an SBOM or silently regenerate lockfiles. [OSV](https://google.github.io/osv.dev/api/) provides package-version/commit queries; [OSV-Scanner](https://google.github.io/osv-scanner/) maps supported artifacts to advisory data. Their documentation is not proof that a scanner is installed, current, comprehensive or executed here.
+
+## Decide applicability in separate steps
+
+For each candidate, establish: ecosystem + package identity; exact observed version/commit; authoritative affected range and range semantics; fix/backport evidence; relevant platform/feature/build conditions; and deployment exposure/attack prerequisites. Use the ecosystem's comparison rules, not string ordering or a universal SemVer assumption. Verify forks, package-name collisions, distro source/binary mappings, epochs and withdrawn/disputed records. Native distro backports require the applicable vendor advisory/build metadata: [Red Hat explains](https://access.redhat.com/security/updates/backporting) why an older upstream version can contain a security fix.
+
+An **exact component/version match** is an inventory/matching fact, not yet an exploitation claim. Reachability and external exposure are additional dimensions: a vulnerable installed component may have a mitigated attack path, while a static tool failing to find a path is not proof that no path exists. Do not convert a firewall/workaround into `fixed`. Preserve conflicting vendor/ecosystem conclusions with their source dates and rationale; unresolved conflict stays `unknown` rather than choosing the most convenient answer.
+
+Use exactly the shared `match_status` values:
+
+| Status | Required interpretation |
+| --- | --- |
+| `affected` | Exact observed component/version plus authoritative applicability evidence establish the advisory affects this subject; state reachability/exposure and remaining uncertainty separately. Successful exploitation is not required and is not implied. |
+| `not_affected` | Positive authoritative evidence excludes this exact subject/range/platform/backport condition. No database hit, missing scanner or unknown runtime version cannot justify this status. |
+| `fixed` | Evidence identifies the actually assessed installed/deployed subject as containing the advisory fix, including vendor backport when relevant. A suggested upgrade, merged lock change or published fix alone is not deployed-fix evidence. |
+| `unknown` | A candidate exists but version, identity, advisory, conditions or conflicting evidence prevent a defensible determination. A suspected finding can accompany it with explicit uncertainty. |
+| `not_checked` | Applicability/search or a required source was not assessed. Record why and what evidence would complete it. This is incomplete coverage, not a negative result. |
+
+Keep report coverage PASS/FAIL/NOT_RUN/NA and finding confidence confirmed/suspected separate from advisory matching. A determinate advisory match requires inventory evidence and a source; the [shared report helper](../../shared/docs/contract.md) validates links/schema only, not package comparisons, source truth or security correctness. Unknown and not_checked records remain incomplete even if JSON validation succeeds.
+
+## Aliases, exploitation and fix candidates
+
+Deduplicate CVE/GHSA/OSV/vendor aliases into one canonical advisory record before counting priorities. Preserve the original IDs and source provenance; do not merge two records merely because titles are similar. Check for aliases across already collected records and retain distinct affected components in applicability/evidence without counting one vulnerability repeatedly. If the shared schema cannot express a necessary multi-component distinction clearly, report the limitation and preserve a linked inventory table; do not duplicate alias IDs to force a valid count.
+
+Use the official [CISA KEV mirror](https://github.com/cisagov/kev-data) when the canonical site is inaccessible, recording its exact snapshot and available catalog version/release time. Confirm actual catalog membership for the candidate before claiming known exploitation. The mirror README and schema were retrievable during guide authoring; **that is not a completed KEV lookup for any target**. A blocked page, guessed repository or stale feed is a gap. Absence from KEV does not establish no exploitation, and KEV inclusion does not prove this target is affected. Government remediation deadlines are not automatically this owner's SLA or legal obligation.
+
+Prioritize actual asset exposure, sensitive data/privilege, known exploitation, prerequisites, compensating controls, operational impact, uncertainty and fix feasibility. CVSS is one dated source attribute, not the whole priority. Record urgent mitigations as proposals with their limits; do not apply them. Recommend a fixed version only when the authoritative source establishes it for the relevant release/platform branch. Otherwise keep `fixed_version: null`; never invent a CVE ID, patch version, compatible upgrade path or safe version for malware. A future fix task must verify resolved dependency graph, build/artifact identity, regression coverage and final deployment independently.
+
+## Deliver the review
+
+Use the shared version 1 report, keeping one canonical alias-deduplicated advisory record with observed version, match status, applicability, sourced fix candidate, source/evidence IDs and timestamps. Add coverage for each inventory slice and source lookup, findings for actual/suspected risks, explicit missing freshness/inventory and proposed safe retests. The source list records actual successful access; inaccessible sources belong in limitations, not fabricated access receipts. Existing reports/scanner outputs must include tool/data versions and subject binding; do not count a cached report as a fresh scan.
+
+A source-only result can responsibly say “affected version identified; running artifact not verified.” It cannot say “production fixed” or “no vulnerabilities” without the corresponding evidence. Preserve report revisions, rationale, index and handoff under the **target** `.palarran/security/` area; generated prose follows project `languages.docs`. Do not run remediation, probes, a scanner or public issue disclosure as an automatic audit follow-up.

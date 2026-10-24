@@ -1,4 +1,5 @@
 """No Modal import, authentication, network or paid execution in these tests."""
+from scripts.palarran_paths import source_path
 from contextlib import closing
 import copy
 import hashlib
@@ -187,7 +188,7 @@ class SDKContractTest(unittest.TestCase):
         import os
         import tempfile
         root = Path(__file__).resolve().parents[1]
-        spec = importlib.util.spec_from_file_location('remote_fixture', root / 'examples/ml-pipeline/modal_job.py')
+        spec = importlib.util.spec_from_file_location('remote_fixture', source_path(root, 'examples/ml-pipeline/modal_job.py'))
         module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
         protocol = dict(primary=dict(name='mse', direction='min', threshold=0.01, minimum_delta=0.1), guardrails=[], required_checks=['finite_predictions'])
         raw = json.dumps(protocol)

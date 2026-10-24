@@ -1,0 +1,40 @@
+{
+  "name": "palarran-memory",
+  "version": "0.4.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Evidence-driven skills, shared research memory and bounded agent workflows",
+  "homepage": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "repository": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "commands": {
+    "recall": {
+      "source": "packages/memory/knowledge/commands/recall.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "learn": {
+      "source": "packages/memory/knowledge/commands/learn.md",
+      "argumentHint": "{task/context} [profile flags]"
+    },
+    "memorize": {
+      "source": "packages/memory/memorize/commands/memorize.md",
+      "argumentHint": "{short|long} {note} [--plan]"
+    },
+    "remember": {
+      "source": "packages/memory/remember/commands/remember.md",
+      "argumentHint": "{query} [--plan]"
+    },
+    "memorize:session": {
+      "source": "packages/memory/sessions/commands/palarran-memorize-session.md",
+      "argumentHint": "[--long] [--plan]"
+    },
+    "remember:session": {
+      "source": "packages/memory/sessions/commands/palarran-remember-session.md",
+      "argumentHint": "[--long] @file [--plan]"
+    },
+    "vacuum": {
+      "source": "packages/memory/vacuum/commands/vacuum.md",
+      "argumentHint": "[--long] [--plan]"
+    }
+  }
+}

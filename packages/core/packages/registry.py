@@ -1,4 +1,4 @@
-"""Pure ten-package metadata validation with explicit optional path checks."""
+"""Pure public-package metadata validation with explicit optional path checks."""
 
 import copy
 import json
@@ -12,6 +12,7 @@ PUBLIC_TITLES = {
     "core": "Core", "memory": "Memory", "product": "Product", "design": "Design",
     "code": "Code", "machine-learning": "Machine Learning", "docs": "Docs",
     "science": "Science", "validation": "Validation", "infrastructure": "Infrastructure",
+    "security": "Security",
 }
 PUBLIC_IDS = tuple(PUBLIC_TITLES)
 IDENTIFIER = re.compile(r"[a-z][a-z0-9-]{0,63}\Z")

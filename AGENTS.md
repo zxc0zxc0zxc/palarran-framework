@@ -4,15 +4,15 @@ Library of skills, documentation and adapters with a bounded Python orchestrator
 
 ## Navigation
 
-- [README agent entry](README.md#agent-entry), [documentation index](docs/README.md), [skill catalog](skills/README.md), [shared contracts](docs/skills/README.md).
-- Graphify navigation: [freshness → bounded query → original source](docs/skills/graph-context.md). A diagram or graph never authorizes execution.
+- [README agent entry](README.md#agent-entry), [documentation index](docs/README.md), [skill catalog](skills/README.md), [shared contracts](packages/core/agents/docs/README.md).
+- Graphify navigation: [freshness → bounded query → original source](packages/core/agents/docs/graph-context.md). A diagram or graph never authorizes execution.
 
 ## Before a task
 
-- Read `.palarran/INDEX.md`, relevant accepted ADRs and current code to verify assumptions. Record decisions before dependent changes using [decision memory](docs/skills/decision-memory.md); update index/handoff and preserve superseded history. In older targets also inspect the legacy .ai-development index.
+- Read `.palarran/INDEX.md`, relevant accepted ADRs and current code to verify assumptions. Record decisions before dependent changes using [decision memory](packages/core/agents/docs/decision-memory.md); update index/handoff and preserve superseded history. In older targets also inspect the legacy .ai-development index.
 - Read AGENTS for every affected module in the table below, even when starting from the repository root. Root-to-CWD discovery does not load sibling modules automatically.
-- For every domain task or skill, read the relevant [domain contract](docs/skills/domain-contracts.md) and its mandatory guides. This applies outside docs/skills too.
-- Write new AGENTS using the [authoring guide](docs/skills/agents-authoring.md): real boundaries/commands, concise testable invariants, no root duplication.
+- For every domain task or skill, read the relevant [domain contract](packages/core/agents/docs/domain-contracts.md) and its mandatory guides. This applies outside packages/core/agents/docs too.
+- Write new AGENTS using the [authoring guide](packages/core/agents/docs/agents-authoring.md): real boundaries/commands, concise testable invariants, no root duplication.
 
 ## Core principles
 
@@ -25,19 +25,23 @@ Modularity, parallelism, autonomy and quality guide every task. Prefer concurren
 - Keep secrets, credentials, raw logs, customer data, state and checkpoints out of Git. `.delivery/` owns current configuration; target `.palarran/` owns rationale and results. The skill checkout and target are different roots.
 - No implied authorization for paid APIs/training, outreach, publication, ad spending or deployment. Preserve cumulative budgets across failures/restarts. Reconcile unknown outcomes before retrying; never increase a budget automatically. Separate estimates, provider usage and invoices.
 - Handoff, exit and build are not verification. Independent checks and exact subjects/evidence are mandatory. Missing checks mean partial/NOT_RUN, never PASS. Local tests do not establish an operational SLA or market validation.
-- Graphify is optional local code-only navigation under the [graph contract](docs/skills/graph-context.md). Query a bounded fresh subset, then original files/AGENTS/ADRs. Use scoped search when missing/stale; never load the whole graph or enable semantic/cloud extraction without separate scope and budget.
+- Graphify is optional local code-only navigation under the [graph contract](packages/core/agents/docs/graph-context.md). Query a bounded fresh subset, then original files/AGENTS/ADRs. Use scoped search when missing/stale; never load the whole graph or enable semantic/cloud extraction without separate scope and budget.
+
+## Package ownership
+
+Read [the package map](packages/README.md) and `packages/<package>/AGENTS.md` for every affected package. Domain implementation, skills, docs and templates live in its capability; root module directories are compatibility entrypoints or shared tests.
 
 ## Modules and checks
 
 | Directory | Context |
 | --- | --- |
-| memory | [Cross-project graph memory](memory/AGENTS.md) |
+| memory | [Cross-project graph memory](packages/memory/knowledge/runtime/AGENTS.md) |
 | mcp | [Read-only stdio reference profiles](mcp/AGENTS.md) |
-| orchestrator | [Runtime, leases, accounting and providers](orchestrator/AGENTS.md) |
+| orchestrator | [Runtime, leases, accounting and providers](packages/core/orchestration/runtime/AGENTS.md) |
 | scripts | [CLI, inventory, validators and packaging](scripts/AGENTS.md) |
 | tests | [Offline contracts and fixtures](tests/AGENTS.md) |
 | skills | [Skill authoring and mandatory guides](skills/AGENTS.md) |
-| docs | [Sources and domain contracts](docs/AGENTS.md) |
+| docs | [Sources and domain contracts](packages/core/agents/docs/AGENTS.md) |
 | templates | [Inert examples and target memory](templates/AGENTS.md) |
 | plugins | [Portable namespaces](plugins/AGENTS.md) |
 | examples | [Local and remote examples](examples/AGENTS.md) |

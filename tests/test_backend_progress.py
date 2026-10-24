@@ -1,4 +1,6 @@
 """Meaningful completion, dependency and safe plan synchronization contracts."""
+
+from scripts.palarran_paths import source_path
 import copy
 import importlib.util
 import json
@@ -7,13 +9,13 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("backend_progress", ROOT / "scripts/backend_progress.py")
+SPEC = importlib.util.spec_from_file_location("backend_progress", source_path(ROOT, 'scripts/backend_progress.py'))
 progress = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(progress)
 
 
 def pending():
-    return json.loads((ROOT / "templates/backend/progress.example.json").read_text())
+    return json.loads((source_path(ROOT, 'templates/backend/progress.example.json')).read_text())
 
 
 def verified():

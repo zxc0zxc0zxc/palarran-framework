@@ -1,4 +1,6 @@
 """Offline contracts use a fake graph transport; real Cypher proof is separate."""
+
+from scripts.palarran_paths import source_path
 import copy
 import hashlib
 from http.server import HTTPServer
@@ -18,7 +20,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 from memory.service import Artifacts,Knowledge,Neo4j,Rejected,encode,handler,parse
 from memory.proxy import Proxy
-spec=importlib.util.spec_from_file_location('memory_ops',ROOT/'scripts/memory_ops.py')
+spec=importlib.util.spec_from_file_location('memory_ops',source_path(ROOT, 'scripts/memory_ops.py'))
 ops=importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ops)
 
@@ -77,7 +79,7 @@ class MemoryTest(unittest.TestCase):
         self.db=FakeGraph()
         self.store=Artifacts(self.root/'artifacts')
         self.memory=Knowledge(self.db,self.store)
-        self.example=json.loads((ROOT/'templates/memory/case.example.json').read_text())
+        self.example=json.loads((source_path(ROOT, 'templates/memory/case.example.json')).read_text())
 
     def tearDown(self):
         self.temp.cleanup()
@@ -195,16 +197,16 @@ class MemoryTest(unittest.TestCase):
 
     def test_private_env_no_shell_no_overwrite(self):
         target=self.root/'.env'
-        ops.initialize_env(target,ROOT/'templates/memory/.env.example')
+        ops.initialize_env(target,source_path(ROOT, 'templates/memory/.env.example'))
         values=ops.load_env(target)
         self.assertGreaterEqual(len(values['MEMORY_AGENT_TOKEN']),32)
         self.assertNotEqual(values['MEMORY_AGENT_TOKEN'],values['MEMORY_REVIEWER_TOKEN'])
-        with self.assertRaises(FileExistsError):ops.initialize_env(target,ROOT/'templates/memory/.env.example')
+        with self.assertRaises(FileExistsError):ops.initialize_env(target,source_path(ROOT, 'templates/memory/.env.example'))
         target.chmod(0o644)
         with self.assertRaises(Rejected):ops.load_env(target)
         target.chmod(0o600);target.write_text('MEMORY_URL=$(touch bad)\n')
         with self.assertRaises(Rejected):ops.load_env(target)
-        result=subprocess.run([sys.executable,str(ROOT/'scripts/vps_ops.py'),'inspect','--env',str(self.root/'absent'),'--plan'],capture_output=True,text=True)
+        result=subprocess.run([sys.executable,str(source_path(ROOT, 'scripts/vps_ops.py')),'inspect','--env',str(self.root/'absent'),'--plan'],capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr)
 
     def test_query_api_202_body_errors_and_redirects(self):

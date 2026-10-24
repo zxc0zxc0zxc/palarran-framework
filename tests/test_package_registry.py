@@ -44,22 +44,22 @@ class PackageRegistryTests(unittest.TestCase):
             validate(value)
         self.assertEqual(str(raised.exception), code)
 
-    def test_public_inventory_all_ten_and_38_single_owners(self):
+    def test_public_inventory_all_eleven_and_46_single_owners(self):
         registry = Registry.load(ROOT / "packages/catalog.json")
         result = registry.resolve(list(PUBLIC_IDS))
         self.assertEqual(result["packages"], list(PUBLIC_IDS))
-        self.assertEqual(len(result["skills"]), 38)
+        self.assertEqual(len(result["skills"]), 46)
         expected = {"palarran-" + name for name in (
             "setup mcp-build memorize remember memorize-session remember-session memory-learn memory-recall vacuum "
             "product-define product-market product-compare product-revenue product-acquisition product-b2b product-b2c "
             "ux-design ui-design frontend-plan frontend-build backend-plan backend-build "
             "ml-plan ml-hypotheses ml-model ml-data ml-cost ml-train ml-benchmark science-preprint "
-            "agent-eval agent-improve app-verify infra-plan ci-cd vps-inspect vps-manage infrastructure-incident"
+            "agent-eval agent-improve app-verify infra-plan ci-cd vps-inspect vps-manage infrastructure-incident docs-artifact core-coop security-infrastructure security-ingress security-log security-egress security-code security-cve"
         ).split()}
         self.assertEqual({skill["name"] for skill in result["skills"]}, expected)
         docs = package(registry.catalog, "docs")
-        self.assertEqual(docs["skills"], [])
-        self.assertEqual(docs["capabilities"][0]["status"], "planned")
+        self.assertEqual([item["name"] for item in docs["skills"]], ["palarran-docs-artifact"])
+        self.assertEqual(docs["capabilities"][0]["status"], "implemented")
         self.assertEqual({item["id"]: item["title"] for item in registry.catalog["packages"]}, PUBLIC_TITLES)
 
     def test_core_is_the_only_automatic_dependency_no_optional_services(self):

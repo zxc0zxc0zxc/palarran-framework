@@ -1,6 +1,6 @@
 # Templates
 
-Inherits root; domain contracts are in docs/skills/domain-contracts.md.
+Inherits root; domain contracts are in packages/core/agents/docs/domain-contracts.md.
 
 - Examples stay inert until target adaptation and authorization for concrete actions. No real endpoints, keys, state, credentials or customer data.
 - Fill AGENTS templates from actual manifests/code/commands only. Never invent services or overwrite user instructions; planning produces proposals/handoffs only.

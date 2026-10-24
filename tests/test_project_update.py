@@ -21,6 +21,7 @@ class ProjectUpdateTest(unittest.TestCase):
         (self.source/'docs/local.md').write_text('old shared guide\n')
         (self.source/'scripts/project_setup.py').write_bytes(Path(setup.__file__).read_bytes())
         (self.source/'scripts/project_update.py').write_bytes(Path(updater.__file__).read_bytes())
+        (self.source/'scripts/palarran_paths.py').write_bytes((Path(setup.ROOT)/'scripts/palarran_paths.py').read_bytes())
         self.commit('guide')
         setup.install(self.source,self.target,'both')
         self.old=setup.library(self.source)[0]
@@ -195,6 +196,63 @@ class ProjectUpdateTest(unittest.TestCase):
         self.advance();outside=self.root/'outside';outside.mkdir();(self.target/'.ai-tools/releases').symlink_to(outside)
         with self.assertRaises(ValueError):self.update()
         self.assertEqual(list(outside.iterdir()),[])
+
+
+
+
+class ModularPreferenceUpdateTest(unittest.TestCase):
+    def setUp(self):
+        self.fixture=fixtures.SetupTest();self.fixture.setUp()
+        self.addCleanup(self.fixture.tearDown)
+        self.source,self.target=self.fixture.source,self.fixture.target
+        self.catalog=json.loads((setup.ROOT/'packages/catalog.json').read_text())
+        for package in self.catalog['packages']:
+            for skill in package['skills']:
+                path=self.source/skill['legacy_path'];path.parent.mkdir(parents=True,exist_ok=True)
+                path.write_text('# Synthetic '+skill['name']+'\n')
+        (self.source/'skills/catalog.json').write_text(json.dumps({'skills':[{'skill':skill['name']} for package in self.catalog['packages'] for skill in package['skills']]}))
+        self.commit('legacy selection fixture')
+
+    def commit(self,message):
+        subprocess.run(['git','-C',str(self.source),'add','-A'],check=True,capture_output=True)
+        subprocess.run(['git','-C',str(self.source),'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm',message],check=True,capture_output=True)
+
+    def preferences(self,selection):
+        return dict(version=1,packages=selection,languages=dict(skills='ru',code='en',docs='sr-Latn'))
+
+    def add_modern_catalog(self):
+        path=self.source/'packages/catalog.json';path.parent.mkdir(parents=True,exist_ok=True)
+        path.write_text(json.dumps(self.catalog))
+
+    def test_existing_legacy_receipt_is_not_widened_and_configuration_stays_exact(self):
+        setup.install(self.source,self.target,'codex',preferences=self.preferences(['backend']))
+        config=self.target/'.palarran/config.json';before=config.read_bytes()
+        local=self.target/'.ai-tools/library/skills/palarran-backend-plan/SKILL.md'
+        local.write_text(local.read_text()+'Local independent note\n')
+        self.add_modern_catalog();self.commit('canonical catalog, same legacy skill scope')
+        result=updater.update(self.source,self.target)
+        self.assertEqual(result['status'],'UPDATED')
+        self.assertEqual(config.read_bytes(),before)
+        self.assertIn('Local independent note',local.read_text())
+        receipt=json.loads((self.target/'.ai-tools/installation.json').read_text())
+        self.assertEqual(receipt['preferences']['packages'],['backend'])
+        self.assertEqual(receipt['package_selection_version'],1)
+        self.assertEqual(set(receipt['skills']),{'palarran-setup','palarran-backend-plan','palarran-backend-build'})
+        self.assertFalse((self.target/'.agents/skills/palarran-mcp-build').exists())
+
+    def test_new_receipt_retains_core_dependency_resolution_on_future_update(self):
+        self.add_modern_catalog();self.commit('modern catalog')
+        setup.install(self.source,self.target,'codex',preferences=self.preferences(['code']))
+        config=self.target/'.palarran/config.json';before=config.read_bytes()
+        (self.source/'docs/new.md').write_text('# New public support\n');self.commit('next release')
+        result=updater.update(self.source,self.target)
+        self.assertEqual(result['status'],'UPDATED')
+        receipt=json.loads((self.target/'.ai-tools/installation.json').read_text())
+        self.assertEqual(receipt['package_selection_version'],2)
+        self.assertEqual(receipt['preferences']['packages'],['code'])
+        self.assertIn('palarran-mcp-build',receipt['skills'])
+        self.assertNotIn('palarran-ux-design',receipt['skills'])
+        self.assertEqual(config.read_bytes(),before)
 
 
 if __name__=='__main__':unittest.main()

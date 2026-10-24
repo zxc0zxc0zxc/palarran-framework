@@ -1,4 +1,6 @@
 """Offline context boundaries; tests never install Graphify or call a model."""
+
+from scripts.palarran_paths import source_path
 from contextlib import contextmanager
 import importlib.util
 import json
@@ -11,7 +13,7 @@ import unittest
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location('graph_context', ROOT / 'scripts/graph_context.py')
+SPEC = importlib.util.spec_from_file_location('graph_context', source_path(ROOT, 'scripts/graph_context.py'))
 graph = importlib.util.module_from_spec(SPEC); SPEC.loader.exec_module(graph)
 
 
@@ -132,6 +134,6 @@ class AgentInstructionsTest(unittest.TestCase):
             path = ROOT / name / 'AGENTS.md'
             self.assertLessEqual(path.stat().st_size, 4096)
             self.assertLess(root.stat().st_size + path.stat().st_size, 32768)
-        contract = (ROOT / 'docs/skills/domain-contracts.md').read_text()
+        contract = (source_path(ROOT, 'docs/skills/domain-contracts.md')).read_text()
         self.assertIn('Unknown lease outcome', contract)
         self.assertIn('No live paid training', contract)

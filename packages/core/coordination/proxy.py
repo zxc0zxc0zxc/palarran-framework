@@ -5,7 +5,8 @@ import sys
 
 from .client import Client, encode, parse
 
-_path = Path(__file__).resolve().parents[3] / 'mcp/catalog/server.py'
+from scripts.palarran_paths import repository_root, source_path
+_path = source_path(repository_root(__file__), 'mcp/catalog/server.py', required=True)
 _spec = importlib.util.spec_from_file_location('palarran_coordination_protocol', _path)
 protocol = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(protocol)

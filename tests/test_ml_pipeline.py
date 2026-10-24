@@ -1,4 +1,6 @@
 """Real worker chains with synthetic agents and local fit/eval, never paid providers."""
+
+from scripts.palarran_paths import source_path
 from contextlib import closing
 import copy
 import hashlib
@@ -89,7 +91,7 @@ class MLPipelineTest(unittest.TestCase):
             'print(json.dumps({"type":"turn.started"}))',
             'print(json.dumps({"type":"turn.completed","usage":{"input_tokens":100,"cached_input_tokens":0,"cache_creation_input_tokens":0,"output_tokens":20}}),flush=True)',
         ]) + '\n'); self.agent.chmod(0o700)
-        self.job = ROOT / 'examples/ml-pipeline/local_job.py'
+        self.job = source_path(ROOT, 'examples/ml-pipeline/local_job.py')
         self.execution = dict(backend='local', total_usd='3', data_mode='non_text', **{
             name: dict(argv=[PYTHON, str(self.job), name], files=[PYTHON, str(self.job)], reserve_usd='1',
                        rate_usd_per_second='0.001', fixed_usd='0', max_seconds=10,

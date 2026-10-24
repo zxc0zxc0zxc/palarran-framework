@@ -1,0 +1,16 @@
+{
+  "name": "palarran-ci-cd",
+  "version": "0.3.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Evidence-driven skills, shared research memory and bounded agent workflows",
+  "homepage": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "repository": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "commands": {
+    "configure": {
+      "source": "packages/infrastructure/delivery/commands/ci-cd.md",
+      "argumentHint": "{github|gitlab} [--plan]"
+    }
+  }
+}

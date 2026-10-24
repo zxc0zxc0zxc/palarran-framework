@@ -1,4 +1,6 @@
 """Frontend gate semantics and explicit marker isolation with the shared engine."""
+
+from scripts.palarran_paths import source_path
 import importlib.util
 import json
 from pathlib import Path
@@ -6,14 +8,14 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SPEC = importlib.util.spec_from_file_location("execution_progress", ROOT / "scripts/execution_progress.py")
+SPEC = importlib.util.spec_from_file_location("execution_progress", source_path(ROOT, 'scripts/execution_progress.py'))
 progress = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(progress)
 
 
 class FrontendProgressTest(unittest.TestCase):
     def test_missing_browser_acceptance_is_not_complete_after_code_integration(self):
-        data = json.loads((ROOT / "templates/frontend/progress.example.json").read_text())
+        data = json.loads((source_path(ROOT, 'templates/frontend/progress.example.json')).read_text())
         head = "a" * 40
         data["integration_commit"] = head
         task = data["tasks"][0]
@@ -31,10 +33,10 @@ class FrontendProgressTest(unittest.TestCase):
     def test_frontend_sync_preserves_backend_section_and_source_design(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "plan.md"
-            body = (ROOT / "templates/frontend/plan.md").read_text()
+            body = (source_path(ROOT, 'templates/frontend/plan.md')).read_text()
             backend = progress.START + "\nbackend untouched\n" + progress.END
             path.write_text(body + "\n" + backend)
-            data = json.loads((ROOT / "templates/frontend/progress.example.json").read_text())
+            data = json.loads((source_path(ROOT, 'templates/frontend/progress.example.json')).read_text())
             summary = progress.render(data)
             progress.sync_plan(path, summary, area="frontend")
             once = path.read_text()
@@ -47,7 +49,7 @@ class FrontendProgressTest(unittest.TestCase):
     def test_wrong_area_cannot_overwrite_frontend_plan(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "plan.md"
-            body = (ROOT / "templates/frontend/plan.md").read_text()
+            body = (source_path(ROOT, 'templates/frontend/plan.md')).read_text()
             path.write_text(body)
             for area in ["backend", "unknown"]:
                 with self.assertRaises(ValueError):

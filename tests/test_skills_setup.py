@@ -109,7 +109,7 @@ class SkillsSetupTest(unittest.TestCase):
         self.assertEqual(result['memory']['status'],'PASS')
 
     def test_packaged_bootstrap_accepts_explicit_full_source(self):
-        package=packager.build_package('skills',self.root/'bootstrap')
+        package=packager.build_package('core' if (ROOT/'packages/catalog.json').exists() else 'skills',self.root/'bootstrap')
         command=[sys.executable,str(package/'scripts/project_setup.py'),'setup','--source',str(self.source),'--target',str(self.target),'--client','claude']
         result=subprocess.run(command+['--plan'],cwd=self.root,capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr);self.assertEqual(json.loads(result.stdout)['action'],'install')
