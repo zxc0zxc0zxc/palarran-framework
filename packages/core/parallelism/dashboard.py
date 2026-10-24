@@ -105,6 +105,16 @@ class LocalReport(Dispatcher):
             db.close()
 
 
+class LocalIntegrationReport(LocalReport):
+    """Use the queue's canonical read-only report, never its recovery constructor."""
+    def report(self):
+        from .integration import IntegrationQueue
+        with self._transaction() as db:
+            queue = IntegrationQueue.__new__(IntegrationQueue)
+            queue.db = db
+            return queue.report()
+
+
 class Snapshot:
     def __init__(self, reader, run_id, *, integration_reader=None, interval=3, stale_after=15, clock=time.time):
         if not _ID.fullmatch(run_id) or not 1 <= interval <= 60 or stale_after < interval:
@@ -155,6 +165,14 @@ def markdown(snapshot):
              '| Task | Owner / machine | State | Blocker / human action | Verified subject |', '| --- | --- | --- | --- | --- |']
     for task in report['tasks']:
         lines.append('| ' + ' | '.join(text(v) for v in (task['task_id'], f"{text(task.get('owner'))} / {text(task.get('machine'))}", task['state'], task.get('reason'), task.get('verified_subject'))) + ' |')
+    integration = snapshot.get('integration')
+    if integration:
+        ready = integration.get('pr_ready') is True and snapshot['freshness'] == 'current'
+        lines.append(f"Integration: {text(integration.get('status'))}; exact head: {text(integration.get('head'))}; PR readiness established: {ready}")
+        for gate in integration.get('final_gates', []):
+            lines.append(f"Gate {text(gate.get('gate_id'))}: {text(gate.get('status'))}; subject: {text(gate.get('subject'))}")
+    else:
+        lines.append('Integration: not connected; publication readiness unknown')
     return '\n'.join(lines) + '\n'
 
 
@@ -242,6 +260,7 @@ def main(argv=None):
     source = parser.add_mutually_exclusive_group()
     source.add_argument('--state', help='Existing private authority SQLite ledger (read only)')
     source.add_argument('--authority', help='Loopback authority URL behind owned tunnel')
+    parser.add_argument('--integration-state', help='Existing private same-run integration queue SQLite (read only)')
     parser.add_argument('--token-file', help='Private authority bearer file; never browser-visible')
     parser.add_argument('--auth-file', help='Optional private dashboard user:password file')
     parser.add_argument('--run', default='demo')
@@ -251,7 +270,7 @@ def main(argv=None):
         if not 0 <= args.port <= 65535:
             raise ValueError('Invalid port')
         if args.command == 'demo':
-            if args.state or args.authority or args.token_file:
+            if args.state or args.authority or args.token_file or args.integration_state:
                 raise ValueError('Demo is fixture only')
             class Demo:
                 def get_run(self, run_id):
@@ -264,7 +283,8 @@ def main(argv=None):
             reader = RemoteDispatcher(args.authority, args.token_file, timeout=3)
         else:
             raise ValueError('Select --state or --authority with --token-file')
-        snapshot = Snapshot(reader, args.run)
+        integration = LocalIntegrationReport(args.integration_state) if args.integration_state else None
+        snapshot = Snapshot(reader, args.run, integration_reader=integration.report if integration else None)
         if args.command == 'report':
             print(markdown(snapshot.get()), end='')
             return 0 if snapshot.get()['freshness'] == 'current' else 2
