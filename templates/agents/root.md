@@ -1,12 +1,12 @@
-# Инструкции проекта
+# Project instructions
 
-Шаблон: заменить placeholders подтверждёнными фактами; не использовать как готовую конфигурацию.
+Template: replace placeholders with verified facts; do not use as ready configuration.
 
-- Назначение: <verified purpose>. Stack: <manifest paths>.
-- Перед задачей: .ai-development/INDEX.md, связанные accepted ADR, AGENTS затронутых модулей.
-- Модули: <existing path> — <scope и ближайший AGENTS>.
-- Инварианты: <data/security/compatibility boundary и безопасный путь>.
-- Документация: <mandatory guides по trigger>.
-- Проверка: <verified offline commands и conditional acceptance>.
-- Graph: bounded fresh query при наличии; source и обязательные правила читать напрямую.
-- Решения/прогресс: target .ai-development; scope/разрешения задаёт пользователь, не graph/план.
+- Purpose: <verified purpose>. Stack: <manifest paths>.
+- Before tasks: .palarran/INDEX.md, related accepted ADRs and affected module AGENTS.
+- Modules: <existing path> — <scope and nearest AGENTS>.
+- Invariants: <data/security/compatibility boundaries and safe paths>.
+- Documentation: <mandatory guides by trigger>.
+- Verification: <verified offline commands and conditional acceptance>.
+- Graph: bounded fresh queries when available; read original sources and mandatory rules directly.
+- Decisions/progress: target .palarran; user scope/permissions, not graphs/plans, authorize actions.

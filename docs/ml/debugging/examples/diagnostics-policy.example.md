@@ -1,6 +1,6 @@
 # diagnostics-policy — design JSON template
 
-Status: NOT RUN / design-v001. Не runtime-accepted schema; null требует явного заполнения там, где поле applicable.
+Status: NOT RUN / design-v001. Not a runtime-accepted schema; fill null explicitly wherever a field is applicable.
 
 ```json
 {

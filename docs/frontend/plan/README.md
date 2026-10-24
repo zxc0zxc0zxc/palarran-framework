@@ -1,25 +1,25 @@
 # Frontend feature planning
 
-`/frontend:plan {фича}` — отдельное **планирование** по actual UX/UI concepts и контексту проекта. Результат: SDD spec, source mapping, API/data contracts, edge tests, future agent/worktree tasks, DoD и pending progress прямо в плане. Реализация — отдельный `/frontend:build`.
+`/palarran:frontend:plan {feature}` is separate **planning** based on actual UX/UI concepts and project context. Deliverables: SDD spec, source mapping, API/data contracts, edge tests, future agent/worktree tasks, DoD and pending progress directly in the plan. Implementation uses the separate `/palarran:frontend:build`.
 
-## Границы
+## Boundaries
 
-Читать [общую память](../../skills/decision-memory.md), target instructions/indexes/ADR/specs/UX/UI/code/API/tests/infra/CI descriptions и первичные docs. Facts/assumptions/proposals/unknowns разделять, source revisions фиксировать. Каждый принятый choice с причиной/альтернативами/evidence/последствиями сохранять до зависимого planning изменения.
+Read [shared memory](../../skills/decision-memory.md), target instructions/indexes/ADR/specs/UX/UI/code/API/tests/infra/CI descriptions and primary documentation. Separate facts/assumptions/proposals/unknowns and record source revisions. Save each accepted choice with reason/alternatives/evidence/consequences before dependent planning changes.
 
-Разрешены read-only local research, просмотр предоставленных source images и docs research, запись planning/spec/contracts/test matrix/task packets/ADR/progress. Local structural validation/sync этих artifacts — допустима. **Не менять app/config/dependencies, не запускать app/application tests/browser interactions/codegen/migrations/live APIs/SSH/cloud/deploy, не генерировать изображения, не создавать worktrees/branches и не запускать implementation agents.** Code/schema examples inert внутри planning area. Картинки, тесты и worktrees — будущие tasks, не выполненные действия.
+Allowed: read-only local research, viewing supplied source images and documentation research; writing planning/spec/contracts/test matrix/task packets/ADR/progress. Local structural validation/synchronization of these artifacts is allowed. **Do not change application/config/dependencies, run application/application tests/browser interactions/codegen/migrations/live APIs/SSH/cloud/deploy, generate images, create worktrees/branches or dispatch implementation agents.** Code/schema examples are inert within the planning area. Images, tests and worktrees are future tasks, not completed actions.
 
-Не перепроектировать UX/UI под план. Нет concepts, конфликт revision или неизвестен бизнес-процесс — конкретный ранний вопрос/предложение UX/UI этапа; независимый inventory/conditional outline продолжать. Critical gaps означают draft, не execution-ready. Нет описания фичи — запросить её, не выбирать случайную из README.
+Do not redesign UX/UI to fit the plan. Missing concepts, revision conflicts or an unknown business process require a concrete early question/proposal for a UX/UI stage; continue independent inventory/conditional outline. Critical gaps mean draft, not execution-ready. Without a feature description, request it instead of choosing randomly from README.
 
-## Обязательная база
+## Mandatory guides
 
-| Документ | Для чего |
+| Document | Purpose |
 |---|---|
 | [source-context.md](source-context.md) | UX/UI/project facts, reuse/foundation, SDD scope/revisions |
-| [api-contracts.md](api-contracts.md) | API capabilities, schema/error/auth/race и UI states |
-| [edge-cases.md](edge-cases.md) | Feature-specific matrix, browser/adaptive tests и DoD |
-| [workflow.md](workflow.md) | Future task DAG/ownership/worktrees, progress и handoff |
-| [sources.md](sources.md) | Первичные sources и применимость |
+| [api-contracts.md](api-contracts.md) | API capabilities, schema/error/auth/race and UI states |
+| [edge-cases.md](edge-cases.md) | Feature-specific matrix, browser/responsive tests and DoD |
+| [workflow.md](workflow.md) | Future task DAG/ownership/worktrees, progress and handoff |
+| [sources.md](sources.md) | Primary sources and applicability |
 
-Также читать [source contract](../source-contract.md), [SDD/agents/DoD](../sdd-agents.md), [адаптивность](../responsive.md), [browser acceptance](../browser-verification.md), [progress](../progress.md) и [общий protocol](../../skills/execution-progress.md). Planning проектирует проверки, а не заявляет их PASS.
+Also read [source contract](../source-contract.md), [SDD/agents/DoD](../sdd-agents.md), [responsiveness](../responsive.md), [browser acceptance](../browser-verification.md), [progress](../progress.md) and [shared protocol](../../skills/execution-progress.md). Planning designs checks rather than declaring them PASS.
 
-Templates: [spec](../../../templates/frontend/spec.md), [plan](../../../templates/frontend/plan.md), [API](../../../templates/frontend/api-contract.md), [tests](../../../templates/frontend/test-matrix.md), [agent](../../../templates/frontend/agent-task.md), [progress](../../../templates/frontend/progress.example.json), [planning handoff](../../../templates/frontend/planning-handoff.md). Малый scope может объединять разделы с anchors, но не удаляет coverage/DoD.
+Templates: [spec](../../../templates/frontend/spec.md), [plan](../../../templates/frontend/plan.md), [API](../../../templates/frontend/api-contract.md), [tests](../../../templates/frontend/test-matrix.md), [agent](../../../templates/frontend/agent-task.md), [progress](../../../templates/frontend/progress.example.json), [planning handoff](../../../templates/frontend/planning-handoff.md). Small scope may combine sections with anchors without removing coverage/DoD.

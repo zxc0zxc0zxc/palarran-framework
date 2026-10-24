@@ -33,11 +33,11 @@ def continuation(source, pipeline, through, skills_root, executable, usage_polic
             if path.is_file(): files.add(path.relative_to(source).as_posix())
         value=json.loads(read_bytes(source,relative+'/stages/'+name+'/stage.json',1048576))
         files.update(d['path'] for d in value['decisions'])
-    files.update(('.ai-development/INDEX.md','.ai-development/product/INDEX.md'))
+    files.update(('.palarran/INDEX.md','.palarran/product/INDEX.md'))
     data={name:read_bytes(source,name,1048576) for name in sorted(files)}
     frozen={name:hashlib.sha256(body).hexdigest() for name,body in data.items()}
     receipt_name=relative+'/imports/prefix.json'
-    receipt_data=(json.dumps({name:digest for name,digest in frozen.items() if name not in ('.ai-development/INDEX.md','.ai-development/product/INDEX.md')},sort_keys=True)+'\n').encode()
+    receipt_data=(json.dumps({name:digest for name,digest in frozen.items() if name not in ('.palarran/INDEX.md','.palarran/product/INDEX.md')},sort_keys=True)+'\n').encode()
     receipt_sha=hashlib.sha256(receipt_data).hexdigest()
     data[receipt_name]=receipt_data;frozen[receipt_name]=receipt_sha
     verifier=skills_root/'orchestrator/product_artifacts.py' 
@@ -90,7 +90,7 @@ def create_continuation(state,target,source,pipeline,through,skills_root,executa
             path=safe_path(workspace,name)
             if path.exists() and path.read_bytes()!=body:
                 # Baseline indexes are intentionally extended with imported accepted entries.
-                if name not in ('.ai-development/INDEX.md','.ai-development/product/INDEX.md'):
+                if name not in ('.palarran/INDEX.md','.palarran/product/INDEX.md'):
                     raise ValueError('Import would overwrite baseline')
             path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(body)
         for name,digest in frozen.items():

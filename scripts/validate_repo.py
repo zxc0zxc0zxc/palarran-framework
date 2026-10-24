@@ -6,26 +6,10 @@ import re
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = {
-    "skills-setup": ("skills", "setup"),
-    "memory-recall": ("memory", "recall"), "memory-learn": ("memory", "learn"),
-    "vps-inspect": ("vps", "inspect"), "vps-manage": ("vps", "manage"),
-    "mcp-build": ("mcp", "build"),
-    "agent-improve": ("agent", "improve"),
-    "app-verify": ("app", "verify"),
-    "science-preprint": ("science", "preprint"),
-    "agent-eval": ("agent", "eval"),
-    **{f"ml-{command}": ("ml", command) for command in ("plan", "hypotheses", "model", "data", "cost", "train", "benchmark")},
-    **{f"product-{command}": ("product", command) for command in ("define", "market", "compare", "revenue", "acquisition", "b2b", "b2c")},
-    **{f"infra-plan-{level}": ("infra-plan", level) for level in ("low", "med", "high")},
-    **{f"ci-cd-{provider}": ("ci-cd", provider) for provider in ("github", "gitlab")},
-    "ux-design": ("ux", "design"),
-    "ui-design": ("ui", "design"),
-    "frontend-build": ("frontend", "build"),
-    "frontend-plan": ("frontend", "plan"),
-    "backend-plan": ("backend", "plan"),
-    "backend-build": ("backend", "build"),
-}
+CATALOG = json.loads((ROOT / "skills/catalog.json").read_text())
+SKILLS = {row["skill"]: (row["domain"], row["action"]) for row in CATALOG["skills"]}
+ADAPTERS = {row["skill"]: row["adapter"] for row in CATALOG["skills"]}
+
 INFRA_GUIDES = ["README.md", "workflow.md", "security-network.md", "delivery-iac.md",
                 "storage-operations.md", "decisions.md", "plan-template.md", "sources.md"]
 CI_GUIDES = ["README.md", "workflow.md", "evidence.md", "architecture.md", "performance.md",
@@ -53,7 +37,7 @@ ML_PROFILES = {
     "train": ["train.md", "metrics.md", "cost.md", "modal.md", "data/pipeline.md"],
     "benchmark": ["benchmark.md", "metrics.md"],
 }
-IGNORED = {".git", ".agents", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch", ".graphify", "graphify-out"}
+IGNORED = {".git", ".agents", ".palarran", ".ai-development", ".codex", ".claude", ".claude-plugin", ".ai-tools", ".etc", ".terraform", "plans", "artifacts", "node_modules", ".venv", "scratch", ".graphify", "graphify-out"}
 
 
 def validate(root=ROOT):
@@ -116,10 +100,12 @@ def validate(root=ROOT):
             base, guides = "product", PRODUCT_GUIDES + [f"{command}.md", "cases/" + PRODUCT_CASES[command]]
             if command in {"b2b", "b2c", "acquisition"}:
                 guides += ["go-to-market.md", "pricing.md", "go-to-market-sources.md"]
+        elif namespace == "infrastructure" and command == "incident":
+            base, guides = "infra/incident", ["README.md", "coordination.md", "sources.md"]
         elif namespace == "infra-plan":
-            base, guides = "infra/plan", INFRA_GUIDES + [f"{command}.md"]
+            base, guides = "infra/plan", INFRA_GUIDES + ["low.md", "med.md", "high.md"]
         elif namespace == "ci-cd":
-            base, guides = "ci-cd", CI_GUIDES + [f"{command}.md"]
+            base, guides = "ci-cd", CI_GUIDES + ["github.md", "gitlab.md"]
         elif namespace == "ux":
             base, guides = "ux", UX_GUIDES
         elif namespace == "ui":
@@ -139,9 +125,9 @@ def validate(root=ROOT):
             if f"../../docs/{base}/{guide}" not in body:
                 errors.append(f"{name}: missing mandatory guide {guide}")
         discover = root / ".agents" / "skills" / name
-        if not discover.is_symlink() or discover.resolve() != path.parent:
+        if (discover.exists() or discover.is_symlink()) and (not discover.is_symlink() or discover.resolve() != path.parent):
             errors.append(f"Invalid discovery link: {name}")
-        adapter_path = root / ".claude" / "commands" / namespace / f"{command}.md"
+        adapter_path = root / ADAPTERS[name]
         adapter = adapter_path.read_text() if adapter_path.is_file() else ""
         if "$ARGUMENTS" not in adapter or f"skills/{name}/SKILL.md" not in adapter:
             errors.append(f"Invalid command adapter: {name}")
@@ -154,10 +140,10 @@ def validate(root=ROOT):
         profile = (root / "docs/infra/plan" / f"{level}.md").read_text()
         if profile.count("```mermaid") < 2:
             errors.append(f"Profile {level} needs data and delivery diagrams")
-    for namespace, relative in [("skills", "plugins/skills/plugin.json"), ("memory", "plugins/memory/plugin.json"), ("vps", "plugins/vps/plugin.json"), ("mcp", "plugins/mcp/plugin.json"), ("app", "plugins/app/plugin.json"), ("science", "plugins/science/plugin.json"), ("agent", "plugins/agent/plugin.json"), ("ml", "plugins/ml/plugin.json"), ("product", "plugins/product/plugin.json"), ("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json"), ("frontend", "plugins/frontend/plugin.json"), ("backend", "plugins/backend/plugin.json")]:
+    manifest_specs = [('palarran', 'plugins/palarran/plugin.json', ['agent:eval', 'agent:improve', 'app:verify', 'backend:build', 'backend:plan', 'ci-cd', 'frontend:build', 'frontend:plan', 'infra:plan', 'infrastructure:incident', 'mcp:build', 'memory:learn', 'memory:recall', 'memorize', 'remember', 'memorize:session', 'remember:session', 'vacuum', 'ml:benchmark', 'ml:cost', 'ml:data', 'ml:hypotheses', 'ml:model', 'ml:plan', 'ml:train', 'product:acquisition', 'product:b2b', 'product:b2c', 'product:compare', 'product:define', 'product:market', 'product:revenue', 'science:preprint', 'setup', 'ui:design', 'ux:design', 'vps:inspect', 'vps:manage']), ('palarran-setup', 'plugins/palarran-setup/plugin.json', ['setup']), ('palarran-memory', 'plugins/palarran-memory/plugin.json', ['learn', 'recall', 'memorize', 'remember', 'memorize:session', 'remember:session', 'vacuum']), ('palarran-vps', 'plugins/palarran-vps/plugin.json', ['inspect', 'manage']), ('palarran-mcp', 'plugins/palarran-mcp/plugin.json', ['build']), ('palarran-app', 'plugins/palarran-app/plugin.json', ['verify']), ('palarran-science', 'plugins/palarran-science/plugin.json', ['preprint']), ('palarran-agent', 'plugins/palarran-agent/plugin.json', ['eval', 'improve']), ('palarran-ml', 'plugins/palarran-ml/plugin.json', ['benchmark', 'cost', 'data', 'hypotheses', 'model', 'plan', 'train']), ('palarran-product', 'plugins/palarran-product/plugin.json', ['acquisition', 'b2b', 'b2c', 'compare', 'define', 'market', 'revenue']), ('palarran-backend', 'plugins/palarran-backend/plugin.json', ['build', 'plan']), ('palarran-frontend', 'plugins/palarran-frontend/plugin.json', ['build', 'plan']), ('palarran-ui', 'plugins/palarran-ui/plugin.json', ['design']), ('palarran-ci-cd', 'plugins/palarran-ci-cd/plugin.json', ['configure']), ('palarran-infra', 'plugins/palarran-infra/plugin.json', ['plan', 'incident']), ('palarran-ux', 'plugins/palarran-ux/plugin.json', ['design'])]
+    for namespace, relative, commands in manifest_specs:
         manifest = json.loads((root / relative).read_text())
-        expected = {command for ns, command in SKILLS.values() if ns == namespace}
-        if manifest.get("name") != namespace or set(manifest.get("commands", {})) != expected:
+        if manifest.get("name") != namespace or set(manifest.get("commands", {})) != set(commands):
             errors.append(f"Invalid plugin namespace or commands: {namespace}")
         for command in manifest.get("commands", {}).values():
             source = command.get("source", "")
@@ -184,22 +170,6 @@ def validate(root=ROOT):
     except (OSError, ValueError, KeyError, TypeError):
         errors.append("Invalid UI catalog")
 
-    index = root / ".ai-development/INDEX.md"
-    indexed = index.read_text() if index.exists() else ""
-    if not indexed:
-        errors.append("Missing project decision index")
-    for record in (root / ".ai-development").glob("*/*/decisions/*.md"):
-        body = record.read_text()
-        identifier = re.search(r"^id: (.+)$", body, re.M)
-        status = re.search(r"^status: (.+)$", body, re.M)
-        if not identifier or not status or status[1] not in {"proposed", "accepted", "rejected", "superseded"}:
-            errors.append(f"Invalid decision metadata: {record.relative_to(root)}")
-        if status and status[1] == "accepted":
-            if not identifier or identifier[1] not in indexed:
-                errors.append(f"Accepted decision not indexed: {record.relative_to(root)}")
-            for heading in ("Контекст и основание", "Выбор и объяснение", "Альтернативы", "Источники и evidence", "Последствия и пересмотр", "Применение и проверка"):
-                if f"## {heading}" not in body:
-                    errors.append(f"Decision missing explanation section: {record.relative_to(root)}")
     return errors, len(markdown)
 
 

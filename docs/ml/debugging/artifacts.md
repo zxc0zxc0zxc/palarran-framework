@@ -1,8 +1,8 @@
-# Данные диагностики и хранение
+# Diagnostic data and storage
 
-Читать [контракты](../contracts.md), [data gate](../data/pipeline.md), [metrics](task-metrics.md). [MLflow](https://mlflow.org/docs/latest/ml/tracking/) показывает разделение parameters/metrics/artifacts; здесь задаём tracker-independent private contract. Перенос в W&B/MLflow не заменяет локальную durability и не разрешает upload.
+Read [contracts](../contracts.md), the [data gate](../data/pipeline.md), [metrics](task-metrics.md). [MLflow](https://mlflow.org/docs/latest/ml/tracking/) illustrates parameters/metrics/artifacts separation; here we define a tracker-independent private contract. Moving to W&B/MLflow neither replaces local durability nor authorizes uploads.
 
-## Private структура logical run
+## Private logical-run structure
 
 ```text
 run/
@@ -23,34 +23,34 @@ run/
   latest-report.json            # atomic pointer + hash, previous revisions retained
 ```
 
-Это design schema, не существующая SQLite/filesystem layout runtime. Raw/tokenized corpora не дублировать: manifest ссылается на проверенный private data bundle/digest. В Git target `.ai-development` — decisions, progress, sanitized aggregates и safe refs; samples, prompt IDs, per-example labels и checkpoints private. IDs/хеши не считаются анонимизацией.
+This is a design schema, not the runtime's existing SQLite/filesystem layout. Do not duplicate raw/tokenized corpora: the manifest references the verified private data bundle/digest. Target `.palarran` Git content comprises decisions, progress, sanitized aggregates and safe refs; samples, prompt IDs, per-example labels and checkpoints stay private. IDs/hashes are not anonymization.
 
-## Что сохраняем
+## What to preserve
 
-| Слой | Обязательные данные | Когда / зачем |
+| Layer | Required data | When / why |
 | --- | --- | --- |
-| Identity | experiment/run/attempt/segment, plan/source/dirty-patch/image/dependency/hardware/model/tokenizer/template/data/config/protocol hashes, seeds | До старта; exact reproduction и сравнимость |
-| Optimizer progress | microbatch, optimizer update, effective batch, accumulation, unique/consumed examples, input и supervised target tokens, LR, optimizer/scaler state ref | На запланированном интервале; skipped update не считать выполненным |
-| Learning | отдельно objective и unregularized task loss; NLL sums/counts, validation receipt, loss reduction/units, regularization components где применимо | Train windows и validation; разные objectives не сливать |
-| Stability | grad norm pre/post clip, clipping threshold/fraction, AMP scale/skip/overflow counters, nonfinite counts, zero-gradient/zero-update diagnostics | По profile/cadence; optimizer.apply и skipped differentiate |
-| Data exposure | actual domain/language/class/length counts и token shares, repeat/unique exposure, padding/skipped/corrupt counts, sampler state digest | За window + cumulative; requested mixture отдельно от факта |
-| Quality | primary + guardrails/slices, support, failures/unevaluable, uncertainty и evaluator version | Каждый planned dev evaluation; final heldout отдельно |
-| Behavior | fixed prompt/output pair, rendering/decoding/checkpoint hashes, generation length/finish status, validity/correctness rubric | До train и по snapshot cadence; [полный контракт](generations.md) |
-| Compute / reliability | monotonic elapsed, step/data-wait/eval/checkpoint/generation time, throughput useful tokens/s, memory peaks, provider/heartbeat/checkpoint state | Scalar windows + lifecycle events; gaps видимы |
-| Money | ссылки на existing attempt receipts/reserves; estimated/provider-reported/invoiced, measurement time, unresolved | Не второй финансовый ledger и не средняя цена из головы |
+| Identity | experiment/run/attempt/segment, plan/source/dirty-patch/image/dependency/hardware/model/tokenizer/template/data/config/protocol hashes, seeds | Before launch; exact reproduction and comparability |
+| Optimizer progress | microbatch, optimizer update, effective batch, accumulation, unique/consumed examples, input and supervised target tokens, LR, optimizer/scaler state ref | At planned intervals; skipped updates do not count as completed |
+| Learning | objective separate from unregularized task loss; NLL sums/counts, validation receipt, loss reduction/units, regularization components where applicable | Train windows and validation; do not merge different objectives |
+| Stability | grad norm pre/post clip, clipping threshold/fraction, AMP scale/skip/overflow counters, nonfinite counts, zero-gradient/zero-update diagnostics | By profile/cadence; distinguish optimizer.apply from skipped steps |
+| Data exposure | actual domain/language/class/length counts and token shares, repeat/unique exposure, padding/skipped/corrupt counts, sampler state digest | Window + cumulative; requested mixture separate from realized exposure |
+| Quality | primary + guardrails/slices, support, failures/unevaluable, uncertainty and evaluator version | Every planned dev evaluation; final holdout separate |
+| Behavior | fixed prompt/output pair, rendering/decoding/checkpoint hashes, generation length/finish status, validity/correctness rubric | Before training and at snapshot cadence; [full contract](generations.md) |
+| Compute / reliability | monotonic elapsed, step/data-wait/eval/checkpoint/generation time, useful tokens/s throughput, memory peaks, provider/heartbeat/checkpoint state | Scalar windows + lifecycle events; visible gaps |
+| Money | existing attempt receipt/reserve refs; estimated/provider-reported/invoiced, measurement time, unresolved | Neither another financial ledger nor an invented average price |
 
-Distributed: rank-local writers и один designated aggregator, никаких concurrent appends в общий файл. Rank норм/throughput aggregation объявляется; глобальный metric либо reduce sufficient statistics, либо versioned merge. Не складывать per-rank и уже global counts повторно. Gradient norm semantics для sharded/ZeRO/FSDP требуют framework-aware global computation, локальная shard norm так и подписывается. Activation/gradient histograms, top-k token scores, confusion matrices/residuals — bounded opt-in artifacts; полные logits/activation dumps/checkpoint на каждом шаге не default.
+Distributed: rank-local writers and one designated aggregator; no concurrent appends to one shared file. Declare rank norm/throughput aggregation; global metrics reduce sufficient statistics or use versioned merges. Do not sum rank counts and already-global counts twice. Sharded/ZeRO/FSDP gradient norms need framework-aware global computation; label local-shard norms accordingly. Activation/gradient histograms, top-k token scores, confusion matrices/residuals are bounded opt-in artifacts; full logits/activation dumps/checkpoints every step are not default.
 
 ## Metric/event envelope
 
-Каждая запись: `schema_version`, run/attempt/segment, writer, монотонный writer-local sequence, UTC, monotonic elapsed, microbatch/update/consumed-target counters, split, metric ID/version, value status, units/reduction/window, numerator/denominator/support где применимо, subject/protocol hashes, evidence ref. Validation также eval ID, checkpoint exact subject, expected/evaluated/failed counts и sampling policy. Event identity tuple `(run,attempt,segment,writer,sequence)`; duplicate byte-equivalent delivery идемпотентна, conflicting replay — corruption. Это diagnostic identity, не замена существующих resource receipt sequence rules.
+Each record: `schema_version`, run/attempt/segment, writer, monotonic writer-local sequence, UTC, monotonic elapsed, microbatch/update/consumed-target counters, split, metric ID/version, value status, units/reduction/window, numerator/denominator/support where applicable, subject/protocol hashes, evidence ref. Validation also records eval ID, exact checkpoint subject, expected/evaluated/failed counts and sampling policy. Event identity tuple `(run,attempt,segment,writer,sequence)`; duplicate byte-equivalent delivery is idempotent, conflicting replay is corruption. This diagnostic identity does not replace existing resource-receipt sequencing rules.
 
-Смена optimizer/data/decoding/protocol basis — новый revision/segment, не незаметное продолжение кривой. Resume от checkpoint не удваивает consumed counters: сохранять logical progress и отдельно physically processed tokens за все attempts. UTC не использовать как единственный порядок; restart/replay/gaps размечать явно.
+A changed optimizer/data/decoding/protocol basis creates a new revision/segment, not a silently continued curve. Resume must not double consumed counters: retain logical progress separately from physically processed tokens across every attempt. UTC alone is not ordering; mark restarts/replays/gaps explicitly.
 
-`value_status=observed|estimated|missing|nonfinite|invalid|not_applicable`. JSON только finite numbers/null; NaN/Inf не сериализовать. При nonfinite сохранить null + safe enum kind и diagnostic event; не заменять нулём и не объявлять missing PASS. Nonfinite learning signal доходит до stop controller отдельным typed event, даже если scalar transport принимает только finite numbers. Missing target denominator означает invalid metric.
+`value_status=observed|estimated|missing|nonfinite|invalid|not_applicable`. JSON permits finite numbers/null only; never serialize NaN/Inf. For nonfinite values preserve null + safe kind enum and a diagnostic event; do not replace with zero or call missing PASS. Nonfinite learning signals reach the stop controller through separate typed events even when scalar transport accepts only finite numbers. Missing target denominator means an invalid metric.
 
-## Durability, приватность, лимиты
+## Durability, privacy and limits
 
-Append-only chunks со checksum/length, manifest публиковать atomic rename после полной записи. Interrupted trailing line отмечается truncated/corrupt, не успешно прочитанной записью; сохранять hash исходного damaged chunk и evidence gap. Canonical report ссылается только на завершённые chunks. Checkpoint manifest — commit marker после проверки всех файлов; weights-only не exact-resume state. Checkpoints/snapshots с одинаковым digest не копировать заново ради каждого poll.
+Append-only chunks with checksums/lengths; publish manifests by atomic rename after complete writes. Mark interrupted trailing lines truncated/corrupt, not successfully read records; preserve original damaged-chunk hashes and evidence gaps. Canonical reports reference only completed chunks. Checkpoint manifests are commit markers after verifying all files; weights-only is not exact-resume state. Do not recopy identical-digest checkpoints/snapshots on every poll.
 
-До запуска задать retention/access/encryption, предел bytes/records/sample length/histogram bins, max event frequency и storage/evaluation/generation reserves. Overflow storage — recorded failure и stop/review по policy; не молчаливое удаление плохих samples или обрезка ответа. Секреты/env/provider raw logs/неразрешённые данные не сохранять. Raw private outputs допускаются только в approved storage; публичный report получает redacted presentation с отдельным digest и пометкой преобразования. Если samples нельзя сохранять — explicit unresolved requirement до обучения, не отчёт с выдуманными outputs.
+Before launch define retention/access/encryption, bytes/records/sample-length/histogram-bin limits, maximum event frequency and storage/evaluation/generation reserves. Storage overflow is a recorded failure with policy-driven stop/review, not silently deleted bad samples or cut answers. Never preserve secrets/env/provider raw logs/unauthorized data. Raw private outputs belong only in approved storage; public reports receive redacted presentations with separate digests and transformation labels. If samples cannot be stored, record an explicit unresolved requirement before training rather than fabricate outputs in reports.

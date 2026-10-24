@@ -1,29 +1,29 @@
-# Данные и DB design
+# Data and database design
 
-Сначала invariants и access patterns, затем schema/store. Для каждой сущности: владелец, identity/tenant, lifecycle, cardinality/рост, data classification, retention/deletion, source of truth и derived views. Планировать backup/restore, encryption/access/audit в соответствии с критичностью; не хранить personal payload в ADR/logs/test fixtures.
+Start with invariants/access patterns, then schema/stores. For every entity identify owner, identity/tenant, lifecycle, cardinality/growth, classification, retention/deletion, source of truth and derived views. Plan backup/restore, encryption/access/auditing by criticality; no personal payloads in ADRs/logs/test fixtures.
 
-## Обязательная модель
+## Required model
 
-| Область | Что явно спроектировать |
+| Area | Explicit design |
 |---|---|
-| Инварианты | Uniqueness, foreign relations, allowed transitions, quotas/balances, cross-row правила; где DB constraint, где transactional check |
-| Типы | Money precision/валюта без двоичного float для точных сумм; timestamp/timezone, enum evolution, optional/null, identifier limits |
-| Запросы | Read/write patterns, filters/sort/pagination, expected cardinality, tenant scope, projected columns, bounding limits |
-| Индексы | Columns/order/uniqueness/selectivity, write/storage cost, plan measurement, migration locks; не «индекс на каждое поле» |
-| Транзакции | Atomic boundary, isolation/locking, conflict/retry policy, lock order/deadlock, lost-update/write-skew сценарии |
+| Invariants | Uniqueness, foreign relations, allowed transitions, quotas/balances, cross-row rules; DB constraints versus transactional checks |
+| Types | Money precision/currency without binary floats for exact amounts; timestamps/timezones, enum evolution, optional/null, identifier limits |
+| Queries | Read/write patterns, filters/sort/pagination, expected cardinality, tenant scope, projected columns, bounded limits |
+| Indexes | Columns/order/uniqueness/selectivity, write/storage costs, plan measurements, migration locks; not an index per field |
+| Transactions | Atomic boundaries, isolation/locking, conflict/retry policy, lock ordering/deadlocks, lost-update/write-skew cases |
 | Lifecycle | Retention/deletion/anonymization, archival, derived data/cache invalidation, restore/reconciliation |
-| Распределение | Replica lag/read-after-write, shard key/skew/rebalance только при необходимости; ownership межсервисных данных |
+| Distribution | Replica lag/read-after-write, shard keys/skew/rebalancing only where needed; cross-service data ownership |
 
-[PostgreSQL isolation docs](https://www.postgresql.org/docs/current/transaction-iso.html) различают гарантии уровней и необходимость повторов некоторых транзакций. Для plan указать конкретную аномалию и механизм защиты, не считать `Read Committed` универсальной защитой от бизнес-гонок. [Multicolumn indexes](https://www.postgresql.org/docs/current/indexes-multicolumn.html) — справочник для выбранной версии/типа индекса; порядок колонок и query shape обосновать. [EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html) — будущая процедура проверки запроса: оценки planner не фактическое время, `ANALYZE` исполняет запрос. На этапе planning не запускать это на live DB.
+[PostgreSQL isolation docs](https://www.postgresql.org/docs/current/transaction-iso.html) distinguish guarantees and required retries for some transactions. Specify exact anomalies/protections; `Read Committed` is not universal protection against business races. [Multicolumn indexes](https://www.postgresql.org/docs/current/indexes-multicolumn.html) references chosen index versions/types; justify column order/query shapes. [EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html) is a future query-check procedure: planner estimates are not actual timing, and `ANALYZE` executes queries. Never run it on live DBs during planning.
 
-## Данные через процессные границы
+## Data across process boundaries
 
-Когда mutation и событие обязаны соответствовать, рассмотреть [AWS transactional outbox](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html): business record/outbox в одной transaction и отдельная доставка с идемпотентным consumer. Обозначить crash/replay/lag/retention. Это не атомарность удалённого API и не гарантия отсутствия duplicates. При простой synchronous фиче outbox может не требоваться.
+When mutations/events must correspond, consider [AWS transactional outbox](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html): business records/outbox share a transaction, delivery is separate with idempotent consumers. Identify crashes/replays/lag/retention. This does not make remote APIs atomic or guarantee no duplicates. Simple synchronous features may need no outbox.
 
-Не делать shared mutable tables между independent services без ownership/compatibility policy. В distributed workflow определить компенсации/необратимые действия, reconciliation и user-visible промежуточные состояния. Saga/CDC нужны только при доказанном сценарии; для одного DB transaction проще локальная атомарность.
+No shared mutable tables across independent services without ownership/compatibility policies. Distributed workflows define compensation/irreversible actions, reconciliation and user-visible intermediate states. Saga/CDC need demonstrated scenarios; one-DB transactions are simpler with local atomicity.
 
-## Миграция как часть feature plan
+## Migration in the feature plan
 
-Schema before/after, compatibility со старой/новой app, expand→backfill→switch→contract, batch/cursor/rate limits/checkpoints, consistency checks, lock/space budget и recovery. [Stripe online migrations](https://stripe.com/blog/online-migrations) — пример поэтапного перехода на больших данных; не оправдание вводить dual writes без reconciliation. Backfill повторяемый и ограниченный; остановка/возобновление и concurrent writes проверяются. Destructive cleanup после observation window и явного gate, не первым deploy.
+Schema before/after, old/new application compatibility, expand→backfill→switch→contract, batch/cursor/rate limits/checkpoints, consistency checks, lock/space budgets and recovery. [Stripe online migrations](https://stripe.com/blog/online-migrations) exemplifies staged large-data changes, not justification for unreconciled dual writes. Backfills are repeatable/bounded; test stop/resume/concurrent writes. Destructive cleanup follows observation windows/explicit gates, never the first deployment.
 
-Rollback кода не отменяет committed business data. Указать что обратимо, где roll-forward/restore/reconciliation, кто принимает data-loss риск и какой RPO/RTO ожидается. Подготовить ER diagram и transaction/failure sequence, если они помогают проверить инварианты.
+Code rollback does not undo committed business data. Specify reversibility, roll-forward/restore/reconciliation, who accepts data-loss risk and expected RPO/RTO. Add ER diagrams and transaction/failure sequences when they help verify invariants.

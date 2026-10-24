@@ -1,6 +1,6 @@
 # Benchmark protocol and report
 
-Template: все metrics unknown до actual evaluation. Protocol freeze предшествует final test.
+Template: all metrics remain unknown until actual evaluation. Freeze the protocol before viewing final tests.
 
 - Protocol ID/revision/hash / predeclared date / task/H-IDs:
 - Checkpoint hash / base+adapter or exported artifact hashes:
@@ -19,4 +19,4 @@ Template: все metrics unknown до actual evaluation. Protocol freeze пре�
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Primary | unassigned | unknown | unknown | unknown | unknown | proposed | not_run |
 
-Verdict: not_run. Acceptance требует все обязательные gates; partial не accept. Actual evaluation cost/provider/unknown reserves; limitations и ADR. Изменение model/data/protocol инвалидирует затронутые PASS. Production SLA/market success/publication не проверены.
+Verdict: not_run. Acceptance requires every mandatory gate; partial is not accept. Actual evaluation cost/provider/unknown reserves; limitations and ADR. Model/data/protocol changes invalidate affected PASS results. Production SLA/market success/publication are not verified.

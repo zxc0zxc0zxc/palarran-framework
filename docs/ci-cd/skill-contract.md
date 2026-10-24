@@ -1,53 +1,53 @@
-# Контракт /ci-cd:github и /ci-cd:gitlab
+# /palarran:ci-cd github and /palarran:ci-cd gitlab contract
 
-Созданы переносимые `skills/ci-cd-github` и `skills/ci-cd-gitlab` и slash-адаптеры. Это контракт их применения, не обещание уже работающего application pipeline. Credentials, targets и agents ai-tools не подключает автоматически.
+Portable `skills/palarran-ci-cd` and `skills/palarran-ci-cd` and slash adapters have been created. This defines application of those skills, not an already working application pipeline. Palarran does not automatically connect credentials, targets or agents.
 
-## Обязательное чтение
+## Mandatory reading
 
-Скилл сначала выполняет [общий контракт памяти решений](../skills/decision-memory.md), затем читает `docs/ci-cd/README.md`, `evidence.md`, `workflow.md`, `architecture.md`, `performance.md`, `security.md`, `environments.md`, `decisions.md`, этот контракт, `sources.md`, guide выбранного provider и все обнаруженные `stacks/*.md`. Если база отсутствует — запросить checkout, не планировать только по общим знаниям. В результате указать реально прочитанные paths/commit и применимые первоисточники; claims компании и нашу адаптацию различать.
+First follow the [shared decision-memory contract](../skills/decision-memory.md), then read `docs/ci-cd/README.md`, `evidence.md`, `workflow.md`, `architecture.md`, `performance.md`, `security.md`, `environments.md`, `decisions.md`, this contract, `sources.md`, selected provider guide and all detected `stacks/*.md`. If missing, request the checkout instead of planning from general knowledge alone. Identify paths/commit actually read and applicable primary sources; distinguish company claims from our adaptation.
 
-## Intake и discovery
+## Intake and discovery
 
-1. Read-only repository inventory: manifests/lockfiles/toolchains/workspaces, CI files/Dockerfiles, test scripts/suites и их runtime, dependencies/shared graph, migrations, существующая `.delivery/` registry, ownership и branch policies. Не читать `.env`, credentials, private state или app production data.
-2. Определить provider/version/tier, runner pools/arch/capacity/cache storage, registry и deployment backend. Сохранённый config использовать первым; не спрашивать повторно уже известные параметры.
-3. Уточнить только существенное: dev/test/prod и их capacity/arch, auto/manual preference, source/ref policy, нужны ли prod approvals, SLO/rollback/migration requirements, бюджет и baseline timings. Пользователь может дать характеристики; отсутствие SSH не мешает проектированию.
-4. Live metadata разрешённого control-plane API читать по необходимости и в пределах предоставленного доступа; без credentials готовить draft и список blocker. **SSH-доступ к host не запрашивать**, runtime secrets не собирать через чат.
-5. Проверить mismatch между config и actual identity/namespace/revision/capacity; актуализация через reviewed project configuration, не неявное изменение target.
+1. Read-only repository inventory: manifests/lockfiles/toolchains/workspaces, CI files/Dockerfiles, test scripts/suites and runtime, dependencies/shared graph, migrations, existing `.delivery/` registry, ownership and branch policies. Do not read `.env`, credentials, private state or application production data.
+2. Identify provider/version/tier, runner pools/architecture/capacity/cache storage, registry and deployment backend. Use saved config first; do not re-ask known parameters.
+3. Clarify only material information: dev/test/prod capacity/architecture, automatic/manual preference, source/ref policy, production approvals, SLO/rollback/migration requirements, budget and baseline timings. Users may provide specifications; lack of SSH does not prevent design.
+4. Read authorized control-plane API metadata as needed within granted access; without credentials, prepare drafts/blockers. **Do not request host SSH access** or collect runtime secrets through chat.
+5. Check config/actual identity/namespace/revision/capacity mismatch; update through reviewed project configuration, not implicit target changes.
 
-## Результаты применения
+## Application outputs
 
-- Краткое решение: выбранные provider/stacks/backend, текущие bottlenecks, измеримые цели, ограничения, вопросы и ADR.
-- Pipeline graph + traffic/trust boundary graph; список source/events/jobs/gates/identities/cache/artifact boundaries.
-- Адаптированные workflow files выбранного provider и stack commands без deploy по SSH; pinned versions/refs и явные prerequisites.
-- Schema-validated `.delivery/project.yaml` и per-env registry без secrets; migration существующей конфигурации без потери полезных сведений.
-- Release/evidence/deployment manifests и правила promotion/manual buttons/auto events, environment authorization, lock/CAS/stale protection.
-- Cache/test-selection/sharding plan с full fallback, budget sheet и способами измерения до/после.
-- Secret handling/log/artifact redaction policy и negative tests; runtime secret references отдельно от CI credentials.
-- Runbooks bad deploy/rollback/migration failure/identity rotation/cache invalidation/controller unavailable и ownership.
+- Concise decision: selected provider/stacks/backend, current bottlenecks, measurable objectives, constraints, questions and ADRs.
+- Pipeline graph + traffic/trust-boundary graph; source/events/jobs/gates/identities/cache/artifact boundary inventory.
+- Adapted selected-provider workflow files and SSH-free stack commands; pinned versions/refs and explicit prerequisites.
+- Schema-validated `.delivery/project.yaml` and secret-free per-environment registry; migrate existing configuration without losing useful information.
+- Release/evidence/deployment manifests and promotion/manual-button/automatic-event rules, environment authorization, lock/CAS/stale protection.
+- Cache/test-selection/sharding plan with full fallback, budget sheet and before/after measurement methods.
+- Secret-handling/log/artifact-redaction policy and negative tests; runtime-secret references separate from CI credentials.
+- Owned runbooks for bad deployment/rollback/migration failure/identity rotation/cache invalidation/controller unavailability.
 
-Скиллы создают и проверяют конкретные reviewable изменения, а не только советы. На стадии реализации ранее данное разрешение на соответствующий scope не спрашивается повторно. Включение auto deployment на реальные environments требует настроенного authorization/policy contract; его trusted triggers применяют изменения автоматически без chat approval на каждый run. Optional approval gates задаёт проект, не универсальное требование скилла.
+Skills create/test concrete reviewable changes, not advice alone. During implementation, do not re-ask authorization already granted for the applicable scope. Enabling automatic deployment on real environments needs a configured authorization/policy contract; trusted triggers then apply automatically without chat approval on every run. Projects define optional approval gates; they are not universal skill requirements.
 
-## Приёмка реализации
+## Implementation acceptance
 
-| Область | Доказательство |
+| Area | Evidence |
 |---|---|
-| Документация | Использованные guides/commit, источники возле решений, неизвестное помечено |
-| Trigger correctness | PR/MR, merged/protected release, manual и auto events покрыты сценариями |
-| Stack correctness | Обнаружены все modules/packages/workspaces, команды и versions совместимы |
-| Test scope | Required aggregate не пропускает failed/cancelled/missing tests; impacted closure и full fallback проверены |
-| Performance | p50/p95 cold/warm + queue/cost до/после на сопоставимых changes, bottlenecks названы |
-| Cache | Cache miss проходит, ключи корректны, untrusted write не отравляет trusted build |
-| Artifact | Digest/source/inputs/evidence связаны, packaged candidate прошёл smoke |
-| Promotion | Выбор env не rebuild; Next build-time exceptions явно покрыты variants/evidence |
-| Permissions | Unknown env/ref/release/actor и invalid OIDC claims rejected |
-| Secrets | Synthetic sentinel не найден в logs/reports/cache/layers известных tested failure paths |
-| Deployment | Нет SSH/scp/rsync/tunnels, no arbitrary remote scripts; exact observed revision/digest и smoke |
-| Concurrency | Нет stale overwrite, lock охватывает rollout/verification, prod change не оборван superseded CI |
-| Recovery | Failed rollout и совместимый rollback verified, DB data rollback не обещан без процедуры |
-| Project memory | New run воспроизводит config из repo, secret values отсутствуют, drift/verified_at видны |
+| Documentation | Guides/commit used, sources near decisions, unknowns identified |
+| Trigger correctness | PR/MR, merged/protected release, manual/automatic events covered by scenarios |
+| Stack correctness | All modules/packages/workspaces found; compatible commands/versions |
+| Test scope | Required aggregate rejects failed/canceled/missing tests; affected closure/full fallback verified |
+| Performance | Before/after p50/p95 cold/warm + queue/cost on comparable changes, identified bottlenecks |
+| Cache | Cache misses pass, correct keys, untrusted writes cannot poison trusted builds |
+| Artifact | Digest/source/inputs/evidence bound; packaged candidate passed smoke |
+| Promotion | Environment selection does not rebuild; Next build-time exceptions covered by explicit variants/evidence |
+| Permissions | Unknown environment/ref/release/actor and invalid OIDC claims rejected |
+| Secrets | Synthetic sentinel absent from logs/reports/cache/layers of known tested failure paths |
+| Deployment | No SSH/scp/rsync/tunnels/arbitrary remote scripts; exact observed revision/digest and smoke |
+| Concurrency | No stale overwrite; lock covers rollout/verification; superseded CI does not interrupt production changes |
+| Recovery | Failed rollout/compatible rollback verified; no DB-data rollback promise without procedure |
+| Project memory | New runs reconstruct repository config; no secret values; visible drift/verified_at |
 
-Результаты помечаются PASS/FAIL/NOT RUN с evidence. Offline validation не доказывает cloud IAM, protected-environment gates, отсутствие утечек при всех ошибках или реальный runtime rollout. Пока эти проверки не запускались — только запланированная проверка, без заявления «всё работает».
+Mark results PASS/FAIL/NOT RUN with evidence. Offline validation does not prove cloud IAM, protected-environment gates, absence of leaks on every failure or actual runtime rollout. Unexecuted checks remain planned checks, not “everything works.”
 
-## Неймспейсы и упаковка
+## Namespaces and packaging
 
-В checkout доступны project adapters `/ci-cd:github` и `/ci-cd:gitlab`, а portable skill names — `ci-cd-github`, `ci-cd-gitlab`. Для другого проекта собрать отдельный namespace `ci-cd` через `scripts/package_plugin.py` по root README. Пакет включает обязательные docs/templates и не ссылается за пределы plugin root. Корневой `infra-plan` manifest сохранён; production pipelines не активируются самим фактом установки скилла.
+Checkout project adapters are `/palarran:ci-cd github` and `/palarran:ci-cd gitlab`; portable skill names are `palarran-ci-cd`, `palarran-ci-cd`. For another project, build separate namespace `ci-cd` through `scripts/package_plugin.py` under root README. Packages include required docs/templates without links outside plugin roots. The root `infra-plan` manifest is preserved; skill installation alone does not activate production pipelines.

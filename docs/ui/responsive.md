@@ -1,26 +1,26 @@
-# Адаптивность и доступность UI
+# UI responsiveness and accessibility
 
-UI обязан реализовать поведение [source UX](../ux/responsive.md) в визуальных layouts. Один desktop screenshot, уменьшенный до телефона, не считается адаптивным UI. Решения о расположении объяснять через задачу, чтение, достижимость controls и content priority.
+UI must implement [source UX](../ux/responsive.md) behavior in visual layouts. One desktop screenshot scaled to a phone is not responsive UI. Explain placement through tasks, reading, control reachability and content priority.
 
 ## Layout contract
 
-Для каждого экрана/состояния описать narrow/mobile, tablet и desktop: ширину content, columns, gutters, тип navigation, перенос action group, поведение tables/cards/dialogs, длинных строк и текста. Breakpoints выбирать по разрушению контента, а не бренду устройства. Пробы 320, 390, 768 и 1440 CSS px — наша стартовая проверка, не универсальный стандарт; дополнительно проверить точки смены layout и промежуточную ширину. Viewport height, safe areas, touch и virtual keyboard учитывать при наличии соответствующего preview/runtime.
+For each screen/state, describe narrow/mobile, tablet and desktop: content width, columns, gutters, navigation type, action-group wrapping, tables/cards/dialogs, long strings and text. Choose breakpoints where content breaks rather than by device brand. Probes at 320, 390, 768 and 1440 CSS px are our starting checks, not a universal standard; also check layout transition points and intermediate widths. Account for viewport height, safe areas, touch and virtual keyboard when corresponding preview/runtime exists.
 
-Сохранять primary action, порядок чтения и состояния UX. Скрыть второстепенную колонку допустимо лишь с доступным предусмотренным UX способом получить её содержимое. Изменение способа выполнения задачи оформить в `ux-deltas.md`, не внедрять молча. Таблицы могут требовать локального horizontal scroll; не делать весь экран непроизвольно прокручиваемым по горизонтали. Различать допустимое исключение для двумерного содержимого и обычный текст.
+Preserve primary action, reading order and UX states. Hide a secondary column only with an accessible UX-defined path to its contents. Record changed task methods in `ux-deltas.md` instead of introducing them silently. Tables may need local horizontal scrolling; do not accidentally make the entire screen scroll horizontally. Distinguish valid two-dimensional-content exceptions from ordinary text.
 
-## Визуальные критерии
+## Visual criteria
 
-- [WCAG contrast minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html): обычный текст 4.5:1, крупный 3:1 с определением large text из источника и применимыми исключениями. 3:1 не объявлять достаточным для любого заголовка; ratio не округлять вверх.
-- [Non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html): необходимые для распознавания controls/state/graphics визуальные части проверять по применимому критерию 3:1, не требовать его от каждой декоративной линии.
-- [Use of color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html): состояние/ошибка не только цвет. [Focus visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html): заметный keyboard focus; не удалять outline без замены, не закрывать focus sticky layer.
-- [Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html): проверить обычное содержимое на ширине 320 CSS px с учётом исключений. Zoom/увеличенный текст не обрезает label/value/action; breakpoint screenshot сам по себе не проверяет zoom.
-- [Target size minimum](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html): 24×24 CSS px либо применимые условия/исключения, в том числе spacing; комфортные touch targets можно делать больше. Размер и расстояния проверять вместе.
-- `prefers-reduced-motion` — наша базовая политика для существенного motion. [Animation from interactions](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html) имеет уровень **AAA**, не приписывать это требование уровню AA.
+- [WCAG contrast minimum](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html): normal text 4.5:1, large text 3:1 using the source's large-text definition and applicable exceptions. Do not call 3:1 sufficient for every heading; never round ratios upward.
+- [Non-text contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html): check visual parts needed to identify controls/states/graphics under the applicable 3:1 criterion; do not require it for every decorative line.
+- [Use of color](https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html): states/errors use more than color. [Focus visible](https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html): visible keyboard focus; do not remove outlines without replacement or cover focus with sticky layers.
+- [Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html): check ordinary content at 320 CSS px with exceptions. Zoom/enlarged text must not clip labels/values/actions; breakpoint screenshots alone do not test zoom.
+- [Target size minimum](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html): 24×24 CSS px or applicable conditions/exceptions, including spacing; comfortable touch targets may be larger. Check size and spacing together.
+- `prefers-reduced-motion` is our baseline policy for substantial motion. [Animation from interactions](https://www.w3.org/WAI/WCAG22/Understanding/animation-from-interactions.html) is **AAA**; do not attribute it to AA.
 
-Это targeted checks, не обещание полной WCAG certification. В handoff перечислить реально проверенные критерии и ограничения: screenshot не доказывает keyboard/screen-reader behavior.
+These are targeted checks, not full WCAG certification. Handoff lists actually checked criteria and limitations: screenshots do not establish keyboard/screen-reader behavior.
 
-## Glass, themes и fallback
+## Glass, themes and fallbacks
 
-Для Liquid Glass и любых translucent materials проверять contrast после compositing на самом светлом/тёмном и неоднородном реальном фоне. Формула opaque token pair не доказывает contrast под blur. Controls и тексты должны сохранять устойчивую читаемую поверхность, материал не маскирует action priority. Предусмотреть opaque/high-contrast variant и fallback при неподдерживаемом `backdrop-filter`; reduced effects должны сохранять иерархию без blur/animation. Отдельно проверять dark mode, если выбран.
+For Liquid Glass and any translucent materials, check contrast after compositing on the lightest/darkest and heterogeneous actual backgrounds. An opaque token-pair formula does not establish contrast under blur. Controls/text need stable readable surfaces; material must not obscure action priority. Provide opaque/high-contrast variants and fallback for unsupported `backdrop-filter`; reduced effects preserve hierarchy without blur/animation. Check dark mode separately if selected.
 
-[Apple](https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/) описывает native material, реагирующий на контент. CSS approximation в web preview помечать адаптацией, не нативным воспроизведением Apple renderer. Не переносить native platform assumptions автоматически в web.
+[Apple](https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/) describes native material reacting to content. Label CSS approximation in web previews as adaptation, not native reproduction of Apple's renderer. Do not automatically transfer native-platform assumptions to web.

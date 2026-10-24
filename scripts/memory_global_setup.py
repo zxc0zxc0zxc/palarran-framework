@@ -13,7 +13,7 @@ import time
 from project_setup import ROOT,export,library,safe,require,doctor,encoded
 from memory_ops import load_env
 
-LABEL='io.zxc0zxc0zxc.memory-tunnel'
+LABEL='io.palarran.memory-tunnel'
 SERVER='engineering-memory'
 
 
@@ -29,7 +29,7 @@ def launch_spec(snapshot,home):
 
 def install(source,plan=False):
     require(sys.platform=='darwin')
-    home=safe(Path.home());root=home/'.zxc0zxc0zxc'
+    home=safe(Path.home());root=home/'.palarran'
     revision,_=library(source)
     snapshot=root/'runtime'/revision
     path=home/'Library/LaunchAgents'/(LABEL+'.plist')

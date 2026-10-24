@@ -1,9 +1,9 @@
-# Preprint workflow и DoD
+# Preprint workflow and DoD
 
-1. Разрешить target root и report/experiment revisions. Прочитать target .ai-development/INDEX.md, accepted decisions, experiment/protocol/diagnostics/benchmark и источники. Зафиксировать отсутствующие доказательства до narrative.
-2. Создать private evidence register и article outline; сопоставить claim→artifact/digest, baseline, selection/test split, all attempts и uncertainty. Недостающие результаты не запускать автоматически.
-3. Создать dedicated LaTeX project main.tex + sections/figures/references/evidence. Existing neutral template и helper могут дать старт; venue style только при проверенной policy/version/license. Полные sensitive samples остаются private, article содержит approved redacted examples с provenance.
-4. Написать научную аргументацию без invented gain/novelty. Назвать partial/negative/inconclusive outcomes, actual N/cost/unknowns, known limits. Сохранить target `.ai-development/science/<task>` rationale, coverage, source hashes и handoff.
-5. Проверить tables/figures против exact subject, references и units; compile доступным tool без shell escape, просмотреть PDF если есть renderer. Нет compiler/viewer — NOT COMPILED/NOT VISUALLY REVIEWED. Не заменять gaps зелёным summary.
+1. Resolve target root/report/experiment revisions. Read target .palarran/INDEX.md, accepted decisions, experiment/protocol/diagnostics/benchmark and sources. Record missing evidence before narrative.
+2. Create a private evidence register/article outline; map claim→artifact/digest, baseline, selection/test split, all attempts and uncertainty. Do not automatically run missing results.
+3. Create a dedicated LaTeX project main.tex + sections/figures/references/evidence. Existing neutral templates/helpers can start it; venue styles require checked policy/version/license. Complete sensitive samples remain private; articles contain approved redacted examples with provenance.
+4. Write scientific reasoning without invented gain/novelty. Identify partial/negative/inconclusive outcomes, actual N/cost/unknowns and known limits. Preserve target `.palarran/science/<task>` rationale, coverage, source hashes and handoff.
+5. Verify tables/figures against exact subject, references and units; compile with available tools without shell escape and inspect PDF if a renderer exists. No compiler/viewer means NOT COMPILED/NOT VISUALLY REVIEWED. A green summary never replaces gaps.
 
-DoD: self-contained source, claim/evidence mapping, traceable data/metrics/selection, negative outcomes, real bibliography, reproducibility/limitations/disclosure, actual compiler diagnostics и remaining gates. Publication/submission/DOI/peer review отдельно. Pipeline export включает data-only draft; полный scientific narrative требует источников/review по этому workflow.
+DoD: self-contained source, claim/evidence mapping, traceable data/metrics/selection, negative outcomes, real bibliography, reproducibility/limitations/disclosure, actual compiler diagnostics and remaining gates. Publication/submission/DOI/peer review remain separate. Pipeline export gives a data-only draft; complete scientific narrative needs source/review under this workflow.

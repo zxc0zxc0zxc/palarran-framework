@@ -1,24 +1,24 @@
-# Контракты до parallel implementation
+# Contracts before parallel implementation
 
-План фиксирует вызывающие стороны, sync/async interaction, inputs/outputs, ошибки и invariants. Использовать текущий contract convention проекта (OpenAPI/protobuf/GraphQL/JSON schema/внутренний interface), а не навязывать новый transport. [Google API Design Guide](https://cloud.google.com/apis/design) — источник принципов API design; применимость к конкретному протоколу проверить, не копировать Google-wide conventions целиком.
+Plans freeze callers, sync/async interactions, inputs/outputs, errors and invariants. Use existing project contract conventions (OpenAPI/protobuf/GraphQL/JSON schema/internal interfaces), not an imposed transport. The [Google API Design Guide](https://cloud.google.com/apis/design) provides API-design principles; check protocol applicability rather than copying every Google-wide convention.
 
-Минимум для каждого operation:
+Minimum per operation:
 
-- Stable operation/requirement ID, resource/method/route или internal call; schema с required/optional/null/limits, money/time units, timestamps/timezone и examples без personal data.
-- AuthN/AuthZ, object/field/tenant access, ownership и audit; недопустимы доверие caller tenant ID без проверки и авторизация только во frontend.
-- Success/error semantics: status/code, machine-readable reason, safe message, retryability, validation/error boundaries; pagination/order/filter constraints и version compatibility.
+- Stable operation/requirement ID, resource/method/route or internal call; schema with required/optional/null/limits, money/time units, timestamps/timezones and nonpersonal examples.
+- AuthN/AuthZ, object/field/tenant access, ownership and auditing; never trust caller tenant IDs without validation or authorize only in frontend.
+- Success/error semantics: status/code, machine-readable reasons, safe messages, retryability, validation/error boundaries; pagination/order/filter constraints and version compatibility.
 - Deadline/cancellation, request size/rate/concurrency limits, idempotency key scope/storage/retention/request fingerprint, duplicate/concurrent reuse behavior.
-- Для событий: producer/consumer owner, event ID/schema version, transaction relation, partition/order boundary, at-least-once/dedup, retry/backoff/DLQ/replay и retention. Не обещать глобальное exactly-once простым выбором брокера.
+- Events: producer/consumer owners, event ID/schema version, transaction relationship, partition/order boundaries, at-least-once/dedup, retry/backoff/DLQ/replay and retention. Choosing a broker does not promise global exactly-once.
 
-[Stripe idempotent requests](https://docs.stripe.com/api/idempotent_requests) показывает один конкретный контракт повторов: reuse key связан с первоначальным запросом и его параметрами, а retention ограничен. Наша фича должна определить собственный подходящий срок и concurrency semantics; не копировать Stripe TTL автоматически. Timeout после commit — **unknown outcome**, не доказательство отмены. Запланировать status lookup/reconciliation или повтор с тем же idempotency key.
+[Stripe idempotent requests](https://docs.stripe.com/api/idempotent_requests) demonstrates one retry contract: reused keys bind initial requests/parameters with limited retention. Define suitable retention and concurrency semantics for this feature; never copy Stripe TTL automatically. Timeout after commit means **unknown outcome**, not proof of cancellation. Plan status lookup/reconciliation or retry with the same idempotency key.
 
-[OWASP API Security](https://owasp.org/API-Security/editions/2023/en/0x11-t10/) полезен для проверки object/property authorization и resource abuse. В plan добавить конкретные adversarial cases и safe telemetry; не заменять это общей фразой «безопасно».
+[OWASP API Security](https://owasp.org/API-Security/editions/2023/en/0x11-t10/) helps check object/property authorization and resource abuse. Add concrete adversarial cases/safe telemetry rather than a generic “secure” claim.
 
-## Snippets и заимствования
+## Snippets and borrowed material
 
-Небольшой schema/interface/pseudocode помещать внутрь plan artifacts, с expected behavior и тестовыми assertions. Он не заменяет полный contract и не исполняется. Если это наш sketch — явно **original illustrative pseudocode**, не «код Netflix». Если заимствуем open-source snippet — permalink к commit/file/line, license/attribution, зависимости/версия, применимость и modifications. При недоступном source/license ограничиться ссылкой и собственной адаптацией; не копировать большой proprietary/code block из статьи. Корпоративная статья даёт architectural evidence, не разрешение/гарантию совместимости кода.
+Put small schema/interface/pseudocode snippets in plan artifacts with expected behavior/test assertions. They neither replace full contracts nor execute. Label our sketches **original illustrative pseudocode**, not “Netflix code.” Borrowed open-source snippets need commit/file/line permalinks, license/attribution, dependencies/version, applicability and modifications. Without accessible source/licenses use links and original adaptations; do not copy large proprietary/code blocks from articles. Corporate articles provide architectural evidence, not code permission/compatibility guarantees.
 
-Пример **нашего** contract sketch (не готовая библиотека):
+Example of **our** contract sketch, not a ready library:
 
 ```text
 create(command, tenant, idempotency_key, deadline)
@@ -31,4 +31,4 @@ create(command, tenant, idempotency_key, deadline)
   response lost after commit => lookup/retry same key; never blind new command
 ```
 
-Crash между claim и completion требует recovery state/timeout policy; отдельно committed claim не должен навечно блокировать операцию. Этот sketch задаёт вопросы для DB/тестов, а не доказывает exactly-once внешнего side effect.
+A crash between claim and completion needs recovery-state/timeout policies; separately committed claims must not block operations forever. This sketch raises DB/test questions rather than proving exactly-once external side effects.

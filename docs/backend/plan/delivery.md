@@ -1,20 +1,20 @@
-# План внедрения и восстановления
+# Delivery and recovery planning
 
-Это описание будущих действий, **не их выполнение**. Читать existing CI/delivery/infra conventions локально; deploy через текущий trusted pipeline/controller/API, не придумывать новый SSH путь. Если CI/CD или infrastructure ещё нет, выделить prerequisite и resource/ownership gap, не разворачивать их из planning skill.
+This describes future actions, **not execution**. Read existing CI/delivery/infrastructure conventions locally; deploy through existing trusted pipelines/controllers/APIs rather than inventing SSH paths. Without CI/CD/infrastructure identify prerequisites and resource/ownership gaps, never deploy them through a planning skill.
 
-## Этапы
+## Stages
 
-1. Baseline и foundation/contracts freeze: source commit/spec versions, clients/consumers/dependencies, business invariants и targets.
-2. Реализация и isolated tests по [SDD DAG](sdd-agents.md); contracts/migrations интегрируются раньше consumers. Совместимость старых/новых readers/writers проверяется отдельно.
-3. Expand/backfill/verify: additive schema, batch/throttle/checkpoint/restart, lock/space budget, concurrent write correctness и data reconciliation по [data](data.md).
-4. Release: artifact/version, config/feature flag если есть, rollout stages/staged cohort/traffic, ownership и конкретные observation windows/stop thresholds. На одной instance не обещать настоящий canary/zero downtime без spare capacity: предложить реалистичное окно/rolling alternative/infra prerequisite.
-5. Observe/recover: SLI/SLO, business correctness, resources/queue/cache, data mismatch; кто и когда останавливает/откатывает, какие steps/state проверяет. Проценты rollout/window — contextual proposal, не универсальный стандарт.
-6. Contract/cleanup: destructive migration, удаление compatibility path/flag/старых данных только после retention/observation/rollback gate; explicit future task и owner.
+1. Baseline and foundation/contract freeze: source commits/spec versions, clients/consumers/dependencies, business invariants and targets.
+2. Implementation and isolated tests under the [SDD DAG](sdd-agents.md); integrate contracts/migrations before consumers. Check old/new reader/writer compatibility separately.
+3. Expand/backfill/verify: additive schema, batch/throttle/checkpoint/restart, lock/space budgets, concurrent-write correctness and reconciliation under [data](data.md).
+4. Release: artifact/version, existing config/feature flags, rollout stages/cohorts/traffic, ownership and exact observation windows/stop thresholds. Do not promise real canaries/zero downtime on one instance without spare capacity: propose realistic windows/rolling alternatives/infrastructure prerequisites.
+5. Observe/recover: SLI/SLO, business correctness, resources/queues/caches, data mismatches; who stops/rolls back when and verifies which steps/states. Rollout percentages/windows are contextual proposals, not universal standards.
+6. Contract/cleanup: destructive migrations, removed compatibility paths/flags/old data only after retention/observation/rollback gates; explicit future tasks/owners.
 
 ## Recovery contract
 
-Для каждого шага: обратимость, preconditions, stop signal, действие, data consequences и validation. Откат binary не удаляет external side effects и не восстанавливает старую схему автоматически. Когда rollback небезопасен — roll-forward/disable writes/compensate/reconcile/restore с оговорённым RPO/RTO. Не обещать `down migration` для уже изменённых денег/пользовательских данных без анализа.
+For each step specify reversibility, preconditions, stop signals, actions, data consequences and validation. Binary rollbacks neither remove external side effects nor automatically restore old schemas. Unsafe rollback needs roll-forward/disabled writes/compensation/reconciliation/restores with agreed RPO/RTO. Do not promise `down migration` for already changed money/user data without analysis.
 
-Планировать telemetry до запуска: safe structured events, bounded labels, correlation IDs, security-safe diagnostics, dashboards/alerts/runbook и release owner. Связать failure thresholds с [reliability](reliability.md), а не «посмотрим логи». Feature flag не изолирует incompatible DB change сама по себе.
+Plan telemetry before launch: safe structured events, bounded labels, correlation IDs, security-safe diagnostics, dashboards/alerts/runbooks and release owners. Tie failure thresholds to [reliability](reliability.md), not “look at logs.” Feature flags alone do not isolate incompatible DB changes.
 
-Внедрение считается спланированным, когда известны prerequisite capacity/access, последовательность и gates, future commands/tooling где определены, expected outcomes, recovery и owner. Выполнение всех шагов в текущем plan — NOT RUN; фактический rollout отдельная задача.
+Delivery is planned when prerequisite capacity/access, sequence/gates, future commands/tools where defined, expected outcomes, recovery and owners are known. All current-plan execution is NOT RUN; actual rollout is separate.

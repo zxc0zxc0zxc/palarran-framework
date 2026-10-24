@@ -17,10 +17,10 @@ SPEC.loader.exec_module(packager)
 class PackagingTest(unittest.TestCase):
     def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
-            for namespace, expected in [("skills", 1), ("memory", 2), ("vps", 2), ("mcp", 1), ("app", 1), ("science", 1), ("agent", 2), ("ml", 7), ("product", 7), ("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
+            for namespace, expected in [("skills", 1), ("memory", 7), ("vps", 2), ("mcp", 1), ("app", 1), ("science", 1), ("agent", 2), ("ml", 7), ("product", 7), ("ci-cd", 1), ("infra-plan", 2), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
                 package = packager.build_package(namespace, Path(directory) / namespace).resolve()
                 manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
-                self.assertEqual(manifest["name"], namespace)
+                self.assertEqual(manifest["name"], packager.ALIASES[namespace])
                 self.assertEqual(len(list((package / "skills").iterdir())), expected)
                 for item in manifest["commands"].values():
                     self.assertTrue((package / item["source"]).is_file())
@@ -32,7 +32,7 @@ class PackagingTest(unittest.TestCase):
                         self.assertTrue(destination.is_relative_to(package), (source, target))
                         self.assertTrue(destination.exists(), (source, target))
                 self.assertFalse(any(path.is_symlink() for path in package.rglob("*")))
-                self.assertFalse((package / ".ai-development").exists())
+                self.assertFalse((package / ".palarran").exists())
                 self.assertFalse((package / ".git").exists())
                 self.assertTrue((package / 'docs/skills/global-memory.md').is_file())
                 self.assertTrue((package / 'templates/memory/lesson.example.json').is_file())
@@ -47,13 +47,16 @@ class PackagingTest(unittest.TestCase):
                     checked = subprocess.run([sys.executable, str(package/"scripts/project_setup.py"), "--help"], cwd=directory, capture_output=True, text=True)
                     self.assertEqual(checked.returncode, 0, checked.stderr)
                     self.assertIn("setup", checked.stdout)
+                    coordination = subprocess.run([sys.executable, "-m", "packages.core.coordination.client", "check", "--plan"], cwd=package, capture_output=True, text=True)
+                    self.assertEqual(coordination.returncode, 0, coordination.stderr)
+                    self.assertFalse(json.loads(coordination.stdout)["network"])
                 if namespace in {"ui", "frontend"}:
                     catalog = json.loads((package / "docs/ui/catalog.json").read_text())
                     self.assertEqual(len(catalog["systems"]), 10)
                     self.assertIn("custom", catalog["selection_modes"])
                     tokens = json.loads((package / "templates/ui/tokens.example.json").read_text())
                     self.assertEqual(tokens["schema_version"], 1)
-                    self.assertTrue((package / "skills/ux-design/SKILL.md").is_file())
+                    self.assertTrue((package / "skills/palarran-ux-design/SKILL.md").is_file())
                 if namespace in {"memory", "vps"}:
                     self.assertTrue((package/'memory/service.py').is_file())
                     for tool in ('memory_ops.py','vps_ops.py'):
@@ -80,10 +83,10 @@ class PackagingTest(unittest.TestCase):
                     self.assertEqual(checked.returncode,0,checked.stderr)
                     self.assertFalse((package/'orchestrator').exists())
                 if namespace == "agent":
-                    self.assertTrue((package / "templates/agent-improve/review.md").is_file())
-                    self.assertTrue((package / "templates/agent-improve/incident.example.json").is_file())
-                    self.assertTrue((package / "skills/agent-improve/SKILL.md").is_file())
-                    self.assertTrue((package / "templates/agent-eval/protocol.md").is_file())
+                    self.assertTrue((package / "templates/palarran-agent-improve/review.md").is_file())
+                    self.assertTrue((package / "templates/palarran-agent-improve/incident.example.json").is_file())
+                    self.assertTrue((package / "skills/palarran-agent-improve/SKILL.md").is_file())
+                    self.assertTrue((package / "templates/palarran-agent-eval/protocol.md").is_file())
                     self.assertTrue((package / "docs/agent/eval/contract.md").is_file())
                     self.assertFalse((package / "orchestrator").exists())
                 if namespace == "ml":
@@ -115,13 +118,13 @@ class PackagingTest(unittest.TestCase):
                     self.assertFalse((package / "docs/backend").exists())
                 if namespace == "frontend":
                     self.assertEqual(set(manifest["commands"]), {"plan", "build"})
-                    self.assertTrue((package / "skills/frontend-plan/SKILL.md").is_file())
+                    self.assertTrue((package / "skills/palarran-frontend-plan/SKILL.md").is_file())
                     for resource in ["spec.md", "api-contract.md", "test-matrix.md", "planning-handoff.md"]:
                         self.assertTrue((package / "templates/frontend" / resource).is_file())
-                    self.assertTrue((package / "skills/ui-design/SKILL.md").is_file())
+                    self.assertTrue((package / "skills/palarran-ui-design/SKILL.md").is_file())
                     self.assertTrue((package / "templates/frontend/browser-review.md").is_file())
                     self.assertFalse((package / "docs/backend").exists())
-                    target = Path(directory) / "frontend-plan.md"
+                    target = Path(directory) / "palarran-frontend-plan.md"
                     target.write_text((package / "templates/frontend/plan.md").read_text())
                     checked = subprocess.run([
                         sys.executable, str(package / "scripts/execution_progress.py"),
@@ -174,9 +177,9 @@ class PackagingTest(unittest.TestCase):
             fixture.mkdir()
             (fixture / "docs/ci-cd").mkdir(parents=True)
             (fixture / "templates").mkdir()
-            (fixture / "plugins/ci-cd").mkdir(parents=True)
-            (fixture / "plugins/ci-cd/plugin.json").write_text(json.dumps({"name": "ci-cd", "commands": {}}))
-            for name in ["ci-cd-github", "ci-cd-gitlab"]:
+            (fixture / "plugins/palarran-ci-cd").mkdir(parents=True)
+            (fixture / "plugins/palarran-ci-cd/plugin.json").write_text(json.dumps({"name": "palarran-ci-cd", "commands": {}}))
+            for name in ["palarran-ci-cd"]:
                 (fixture / "skills" / name).mkdir(parents=True)
             external = Path(directory) / "private.txt"
             external.write_text("must not be packaged")

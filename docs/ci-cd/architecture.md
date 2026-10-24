@@ -1,6 +1,6 @@
-# Архитектура CI/CD без SSH
+# SSH-free CI/CD architecture
 
-## Общий DAG
+## Shared DAG
 
 ```mermaid
 flowchart LR
@@ -27,25 +27,25 @@ flowchart LR
   O -->|Failure| R[Abort or rollback verified previous digest]
 ```
 
-PR/MR и release candidate — разные trust levels. Green проверки исходной ветки не доказывают тестирование merge result. Для protected release commit обязательные проверки выполняются повторно или evidence переиспользуется только при доказанном совпадении всех входов/контекста доверия. Образы PR можно собирать заранее для feedback, но они не становятся автоматически publishable trusted release.
+PR/MR and release candidates have different trust levels. Green source-branch checks do not prove merge-result testing. For a protected release commit, rerun required checks or reuse evidence only after proving identical inputs/trust context. PR images may be built early for feedback without automatically becoming publishable trusted releases.
 
-Release image можно собирать параллельно тестам ради latency при ресурсе/бюджете; eligibility и promotion всё равно ждут gates. Build once означает один кандидат на конкретные source+toolchain+build inputs, не запрет отдельных test builds. Tests production-пакета не требуют включения dev tools в production image: возможен внешний harness против запущенного кандидата.
+Release-image builds may run alongside tests for latency when resources/budget allow; eligibility and promotion still wait for gates. Build once means one candidate for specific source+toolchain+build inputs, not a ban on separate test builds. Production-package tests need not include development tools in production images: an external harness can target the running candidate.
 
-Сборка, dependency resolution, тесты и release metadata автоматизированы и версионированы по мотивам [Google release engineering](https://sre.google/sre-book/release-engineering/). OCI, формат manifest и разделение trust zones — наш выбор.
+Automated versioned builds, dependency resolution, tests and release metadata draw on [Google release engineering](https://sre.google/sre-book/release-engineering/). OCI, manifest format and trust-zone separation are our choices.
 
-## Три backend варианта
+## Three backend options
 
-| Target | Автоматизация | Какие права получает CI | Prerequisites |
+| Target | Automation | CI permissions | Prerequisites |
 |---|---|---|---|
-| Kubernetes/K3s | Argo CD или Flux читает desired state и применяет его внутри cluster boundary | Узкая identity обновления GitOps path/release record; не cluster-admin | Установленный controller, scoped RBAC, registry pull, secret delivery, ingress/storage |
-| Managed containers/serverless/PaaS | Provider deploy API запускает revision из artifact | OIDC/federation для конкретного project/service/env; scoped token, если OIDC нет | Service/IAM, private registry integration, health/rollback API |
-| Отдельная VM/Compose | Pull-controller забирает подписанный разрешённый release manifest и применяет локальный fixed workflow | Только публикация release в разрешённый repository/channel | Agent/system service уже установлен, trust roots, registry access, локальный secret provider, audit и rollback |
+| Kubernetes/K3s | Argo CD or Flux reads desired state and applies within the cluster boundary | Narrow identity updating GitOps path/release record; no cluster-admin | Installed controller, scoped RBAC, registry pull, secret delivery, ingress/storage |
+| Managed containers/serverless/PaaS | Provider deployment API starts an artifact revision | OIDC/federation for a specific project/service/environment; scoped token without OIDC | Service/IAM, private registry integration, health/rollback API |
+| Separate VM/Compose | Pull-controller fetches a signed authorized release manifest and applies a fixed local workflow | Release publication only to an authorized repository/channel | Agent/system service already installed, trust roots, registry access, local secret provider, audit and rollback |
 
-SSH, Docker remote socket over SSH/TCP без строгой API-модели и «зайти один раз из pipeline поставить agent» исключены. Облачный remote-command API с произвольным root shell не выдавать за узкий deploy-controller: это отдельный сильный privilege, не default. Не ставить универсальный GitHub/GitLab runner на production VM ради удобства.
+Exclude SSH, Docker remote sockets over SSH/TCP without a strict API model and “connect once from the pipeline to install an agent.” A cloud remote-command API exposing arbitrary root shell is not a narrow deployment controller: it is a separate powerful privilege, not the default. Do not put general-purpose GitHub/GitLab runners on production VMs for convenience.
 
-Pull-controller single-host — **контракт будущей интеграции, не разработанный здесь демон**. Если подходящего готового решения нет, явно оставить blocker или выбрать managed deployment backend. Agent принимает только подписанный schema-validated manifest из trusted publisher; выполняет разрешённые операции/пути, не `script:` из app repo; не исполняет произвольные hooks. Docker socket фактически даёт высокие права: доверенный компонент отделён от app и CI. Poll interval, отказы registry/Git и offline rollback учитываются в RTO.
+The single-host pull-controller is a **future integration contract, not a daemon implemented here**. Without a suitable existing solution, retain an explicit blocker or choose managed deployment. The agent accepts only signed schema-validated manifests from trusted publishers; it executes authorized operations/paths, not `script:` from application repositories or arbitrary hooks. Docker sockets effectively grant extensive privileges: isolate this trusted component from application and CI. Include poll interval, registry/Git failures and offline rollback in RTO.
 
-## GitOps и разделение traffic
+## GitOps and traffic separation
 
 ```mermaid
 flowchart LR
@@ -66,12 +66,12 @@ flowchart LR
   EDGE --> APP
 ```
 
-Registry и GitOps HTTPS — management egress, public ingress приложения отдельный. CI не открывает management ingress на VM и не сканирует host. Private observer размещается в отдельном доверенном management runner pool либо получает статус через authenticated callback/API. Callback проверяет identity, release/env и replay protection.
+Registry and GitOps HTTPS are management egress; application public ingress is separate. CI neither opens management ingress on VMs nor scans hosts. A private observer uses a separate trusted management runner pool or authenticated status callback/API. Callbacks validate identity, release/environment and replay protection.
 
-[GitLab GitOps](https://docs.gitlab.com/user/clusters/agent/gitops/) описывает pull-модель с Flux; наличие GitLab agent не означает автоматически настроенный GitOps. Выбор Flux/Argo зависит от уже имеющейся платформы.
+[GitLab GitOps](https://docs.gitlab.com/user/clusters/agent/gitops/) describes Flux pull; a GitLab agent's presence does not automatically configure GitOps. Choose Flux/Argo based on the existing platform.
 
-## Что означает успешный deploy
+## Successful deployment
 
-Порядок: проверить eligibility → lock environment → compare expected previous release → обновить desired state/API → дождаться именно нужного commit/digest/revision → readiness/availability → безопасный внешний smoke → окно оценки метрик → deployment record. При недостаточном трафике canary даёт INCONCLUSIVE: продлить окно, synthetic load либо иной согласованный gate, а не PASS.
+Sequence: verify eligibility → lock environment → compare expected previous release → update desired state/API → wait for the exact required commit/digest/revision → readiness/availability → safe external smoke → metric-evaluation window → deployment record. With insufficient traffic, canary is INCONCLUSIVE: extend the window, use synthetic load or another agreed gate instead of PASS.
 
-При GitOps rollback меняется desired state на предыдущий разрешённый digest; прямой live rollback без изменения Git будет отменён reconciling controller. Для [Argo auto-sync](https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/) учитывать режимы sync/self-heal и ограничения rollback; не обещать `argocd rollback` при включённой автоматизации. Применение неуспешно при timeout, несовпадении digest или отказе smoke; merge/push сами по себе не дают зелёный deployment.
+GitOps rollback changes desired state to the previous authorized digest; a direct live rollback without Git changes will be reversed by the reconciling controller. For [Argo auto-sync](https://argo-cd.readthedocs.io/en/stable/user-guide/auto_sync/), account for sync/self-heal modes and rollback restrictions; do not promise `argocd rollback` with automation enabled. Application fails on timeout, digest mismatch or failed smoke; merge/push alone do not establish green deployment.

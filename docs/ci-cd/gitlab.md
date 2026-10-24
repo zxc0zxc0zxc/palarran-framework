@@ -1,47 +1,47 @@
 # GitLab CI/CD
 
-Документ задаёт требования `/ci-cd:gitlab`; pipeline ещё не установлен. Использовать вместе с общими документами и всеми обнаруженными stack guides. Перед генерацией определить GitLab.com/Self-Managed, version/tier, runner executor/pools, registry, required policies и доступные environment protections.
+This document defines `/palarran:ci-cd gitlab` requirements; no pipeline is installed yet. Use shared documents and all detected stack guides. Before generation, identify GitLab.com/Self-Managed, version/tier, runner executor/pools, registry, required policies and available environment protections.
 
 ## Pipeline graph
 
-`workflow: rules` определяет создание MR/protected branch/tag/manual pipelines; job `rules` задаёт scope. Не создавать одновременно дубли branch и MR pipelines на каждый commit без причины. Для merged results/merge trains проверить поддержку и настройки: тесты branch не доказывают merged release candidate.
+`workflow: rules` controls creation of MR/protected-branch/tag/manual pipelines; job `rules` define scope. Do not create duplicate branch/MR pipelines for each commit without reason. Verify merged-results/merge-train support and settings: branch tests do not prove a merged release candidate.
 
-Использовать [DAG needs](https://docs.gitlab.com/ci/yaml/needs/), чтобы job не ждала весь stage при независимых зависимостях. `needs` не должен обходить security/test eligibility. В selective pipeline учитывать missing jobs/optional needs; aggregate проверяет все обязательные результаты, а optional означает неприменимость по доказанной классификации, не разрешение проигнорировать failure.
+Use [DAG needs](https://docs.gitlab.com/ci/yaml/needs/) so jobs need not wait for the entire stage when dependencies are independent. `needs` must not bypass security/test eligibility. Selective pipelines account for missing jobs/optional needs; aggregates check every required result, and optional means inapplicable under proven classification, not permission to ignore failure.
 
-| Группа | Содержимое | Trust scope |
+| Group | Contents | Trust scope |
 |---|---|---|
-| MR validation | Detect → parallel lint/unit/integration/analysis | Без production identities и trusted cache write |
-| Protected release | Exact candidate checks → build → package smoke/scans → publish evidence | Свой registry namespace; approved builder identity |
-| Promotion/deployment | Env/release validation → lock → GitOps/API → observed health | Environment-scoped identity, no SSH |
+| MR validation | Detect → parallel lint/unit/integration/analysis | No production identities/trusted-cache writes |
+| Protected release | Exact candidate checks → build → package smoke/scans → publish evidence | Own registry namespace; approved builder identity |
+| Promotion/deployment | Environment/release validation → lock → GitOps/API → observed health | Environment-scoped identity, no SSH |
 
-Общие blocks — versioned CI components/includes, pinned immutable release/commit. Pipeline authors приложения не могут отключить governed security policy незаметно. Синтаксис и component inputs зависят от version; не переносить GitHub `uses:` механически.
+Shared blocks use versioned CI components/includes pinned to immutable releases/commits. Application pipeline authors cannot silently disable governed security policy. Syntax/component inputs depend on version; do not mechanically transfer GitHub `uses:`.
 
-## Manual выбор и автоматический deploy
+## Manual selection and automatic deployment
 
-[CI/CD inputs](https://docs.gitlab.com/ci/inputs/) поддерживают типы/валидацию/ограничения. Для pipeline creation через UI заложить `spec:inputs` с environment options `[dev, test, prod]` и release ID; совместимость pipeline inputs проверить по GitLab version, не выдавать старой инсталляции новый синтаксис.
+[CI/CD inputs](https://docs.gitlab.com/ci/inputs/) support types/validation/constraints. For UI pipeline creation, define `spec:inputs` with environment options `[dev, test, prod]` and release ID; check pipeline-input compatibility against GitLab version instead of giving old installations new syntax.
 
-Альтернатива: отдельные `deploy:dev`, `deploy:test`, `deploy:prod` с `when: manual` в pipeline eligible release. Указывать `allow_failure` явно: blocking approval и optional manual job имеют разные semantics, в том числе внутри `rules`. Не позволять optional manual job считаться успешно выполненным prod deployment без запуска. Нельзя принимать secret values через manual variables form; inputs/ref/env проверяются повторно в trusted logic. [YAML reference](https://docs.gitlab.com/ci/yaml/) — источник точной семантики.
+Alternative: separate `deploy:dev`, `deploy:test`, `deploy:prod` with `when: manual` in eligible-release pipelines. Set `allow_failure` explicitly: blocking approval and optional manual jobs have different semantics, including within `rules`. An unrun optional manual job must not count as a successful production deployment. Do not accept secret values through manual-variable forms; revalidate inputs/ref/environment in trusted logic. [YAML reference](https://docs.gitlab.com/ci/yaml/) defines exact semantics.
 
-Auto mode: protected release event выбирает env по project policy; manual mode использует тот же deployment contract. В обоих случаях publish/test не выполняются заново ради выбора стенда. Prod требует нужной lower-env evidence и действующей eligibility.
+Automatic mode selects environment from project policy on protected-release events; manual mode uses the same deployment contract. Neither reruns publishing/tests merely for environment selection. Production requires lower-environment evidence and valid eligibility.
 
-## Environments и safety
+## Environments and safety
 
-Каждая deployment job указывает точное `environment: name`, deployment tier и env-scoped variables/identity. [Protected environments](https://docs.gitlab.com/ci/environments/protected_environments/) и approvals имеют tier/version ограничения; проверить доступность (protected environments документированы для Premium/Ultimate на дату обзора). Без нужного механизма установить внешний enforcement либо отметить blocker; обычная кнопка manual не заменяет authorization.
+Every deployment job specifies exact `environment: name`, deployment tier and environment-scoped variables/identity. [Protected environments](https://docs.gitlab.com/ci/environments/protected_environments/) and approvals have tier/version restrictions; verify availability (protected environments were documented for Premium/Ultimate at review date). Without required mechanisms, use external enforcement or mark a blocker; ordinary manual buttons do not replace authorization.
 
-[Resource groups](https://docs.gitlab.com/ci/resource_groups/) сериализуют deployment; ключ per app+environment, а process mode/очередь выбираются сознательно. Lock должен покрывать фактическое применение и verification, а не только trigger downstream pipeline. Для downstream архитектуры проверить wait/mirroring semantics и возможные deadlocks, не строить два взаимно ожидающих lock.
+[Resource groups](https://docs.gitlab.com/ci/resource_groups/) serialize deployment; keys are per application+environment and process mode/queue are deliberate choices. Locks cover actual application/verification, not only downstream-pipeline triggers. For downstream architectures, verify wait/mirroring semantics and possible deadlocks instead of creating mutually waiting locks.
 
-[Outdated deployment protection](https://docs.gitlab.com/ci/environments/deployment_safety/) полезна, но job age не идентичен source commit age; дополнительно release intent/CAS из environment contract. Production change не `interruptible` по умолчанию; obsolete validation jobs можно прерывать. Согласовать rollback policy вместо бесконтрольного retry старых deploy jobs.
+[Outdated deployment protection](https://docs.gitlab.com/ci/environments/deployment_safety/) helps, but job age is not source-commit age; also use environment-contract release intent/CAS. Production changes are not `interruptible` by default; obsolete validation jobs may be interrupted. Agree rollback policy instead of unrestricted retries of old deployment jobs.
 
-## Credentials, cache, runners
+## Credentials, cache and runners
 
-[ID tokens](https://docs.gitlab.com/ci/secrets/id_token_authentication/) — короткая identity с нужным audience; IAM ограничивается project/protected ref/environment и доступными claims. `CI_JOB_TOKEN` имеет собственные scopes/allowlists и не универсален для cross-project GitOps writes. Deploy token/project access token применять с минимальными правами и сроком только при отсутствии подходящей federation.
+[ID tokens](https://docs.gitlab.com/ci/secrets/id_token_authentication/) provide short-lived identities with required audiences; IAM is restricted by project/protected ref/environment and available claims. `CI_JOB_TOKEN` has its own scopes/allowlists and is not universal for cross-project GitOps writes. Use minimally privileged expiring deploy/project-access tokens only when suitable federation is unavailable.
 
-[Masked/hidden/protected variables](https://docs.gitlab.com/ci/variables/) решают разные задачи; masking не защищает от вредоносного script. Никакого `CI_DEBUG_TRACE`/service debug с secrets, `env` dumps или credentials в artifacts. MR из fork нельзя запускать в parent project с production secrets без trust review. [Pipeline security](https://docs.gitlab.com/ci/pipeline_security/).
+[Masked/hidden/protected variables](https://docs.gitlab.com/ci/variables/) solve different problems; masking does not protect against malicious scripts. No `CI_DEBUG_TRACE`/service debugging with secrets, `env` dumps or credentials in artifacts. Fork MRs must not run in parent projects with production secrets without trust review. [Pipeline security](https://docs.gitlab.com/ci/pipeline_security/).
 
-[Cache](https://docs.gitlab.com/ci/caching/): ключи из lock/toolchain/arch/trust scope; protected/unprotected separation не отключать ради hit rate. Single writer и pull-only consumers уменьшают гонки. Cache не обязан присутствовать; artifacts передаются только нужным jobs (`needs:artifacts`/dependencies по модели), без всего workspace. Shared runners с privileged containers требуют отдельного рассмотрения, build и prod management pools раздельны.
+[Cache](https://docs.gitlab.com/ci/caching/): keys include lock/toolchain/architecture/trust scope; do not disable protected/unprotected separation for hit rate. A single writer/pull-only consumers reduce races. Caches are optional; artifacts go only to required jobs (`needs:artifacts`/dependencies according to model), not entire workspaces. Shared runners with privileged containers need separate consideration; build and production-management pools remain separate.
 
-Для Kubernetes [GitLab GitOps](https://docs.gitlab.com/user/clusters/agent/gitops/) предлагает Flux pull; existing Argo CD также допустим. CI обновляет desired state, controller применяет. Ни GitLab agent, ни successful Git push сами по себе не доказывают deployed digest.
+For Kubernetes, [GitLab GitOps](https://docs.gitlab.com/user/clusters/agent/gitops/) proposes Flux pull; existing Argo CD is also acceptable. CI updates desired state; the controller applies it. Neither GitLab agents nor successful Git pushes alone establish the deployed digest.
 
 ## Acceptance
 
-CI Lint/schema под реальную GitLab version, MR/branch duplicates отсутствуют, required result aggregation корректна; environment enum валидируется; manual/auto paths ведут к одному digest; unauthorized users/ref/forks не получают secrets/deploy; resource group+stale protection проверены; observed rollout/smoke и безопасный rollback записаны. Self-Managed admin settings/tier limitations — часть handoff, не скрытые assumptions.
+CI Lint/schema against actual GitLab version; no duplicate MR/branch pipelines; correct required-result aggregation; validated environment enum; manual/automatic paths use one digest; unauthorized users/refs/forks receive no secrets/deployment rights; resource groups/stale protection tested; observed rollout/smoke and safe rollback recorded. Self-Managed admin settings/tier limitations belong in handoff rather than hidden assumptions.

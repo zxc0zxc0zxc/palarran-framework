@@ -51,7 +51,7 @@ class PipelineTests(unittest.TestCase):
             ' else: print(json.dumps({\"type\":\"result\",\"subtype\":\"success\",\"total_cost_usd\":0.002,\"modelUsage\":{\"fixture\":{\"inputTokens\":50,\"cacheReadInputTokens\":40,\"cacheCreationInputTokens\":10,\"outputTokens\":20}}}),flush=True)\n' +
             'if mode=="pause" and stage=="market" and "Scope clarified" not in prompt:\n' +
             ' handoff.write_text(json.dumps({"status":"needs_input"})); (handoff.parent/"question.md").write_text("Which geography?"); emit_usage(); sys.exit(0)\n' +
-            'with (root/".ai-development/product/INDEX.md").open("a") as f: f.write(meta["pipeline_id"]+"\\n")\n' +
+            'with (root/".palarran/product/INDEX.md").open("a") as f: f.write(meta["pipeline_id"]+"\\n")\n' +
             'manifest=write_stage(root,context,stage,unknown=(mode=="validate" and stage=="market"),critical=(mode=="validate" and stage=="market"),recommendation="validate" if mode=="validate" else "plan")\n' +
             'if mode=="app" and stage=="compare": (root/"app.py").write_text("pass\\n")\n' +
             'if mode=="rewrite" and stage=="market":\n' +
@@ -77,7 +77,7 @@ class PipelineTests(unittest.TestCase):
             self.assertIn('SKILL.md', task['prompt'])
             self.assertIn('pipeline-contract.md', task['prompt'])
         self.assertIn('SYNTHESIS MODE', flow['tasks'][-1]['prompt'])
-        self.assertIn('product-define/SKILL.md', flow['tasks'][-1]['prompt'])
+        self.assertIn('palarran-product-define/SKILL.md', flow['tasks'][-1]['prompt'])
         self.assertEqual(flow['policy']['env'], ['PATH', 'HOME'])
         self.assertEqual(flow['ai_policy']['max_calls'], 6)
         self.assertTrue(all(t['model_role'] == 'planning' and t['model_calls'] == 1 for t in flow['tasks']))
@@ -102,7 +102,7 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue((base / 'context.json').is_file())
         self.assertFalse((base / 'stages').exists())
         self.assertEqual(self.git('status', '--porcelain'), '')
-        self.assertFalse((self.target / '.ai-development').exists())
+        self.assertFalse((self.target / '.palarran').exists())
 
     def test_real_worker_six_stages_both_cli_adapters(self):
         for adapter in ('codex', 'claude'):
@@ -156,7 +156,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(report['tasks'][-1]['status'], 'failed')
 
     def test_ignored_product_reports_still_invalidate_verified_status(self):
-        (self.target / '.gitignore').write_text('.ai-development/\n')
+        (self.target / '.gitignore').write_text('.palarran/\n')
         self.git('add', '.gitignore'); self.git('commit', '-qm', 'Private memory policy')
         run, meta = self.new()
         self.assertEqual(work(self.state, run), 'verified')

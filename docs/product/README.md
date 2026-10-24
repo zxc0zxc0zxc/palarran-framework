@@ -1,25 +1,25 @@
-# Продукт: от evidence к решению
+# Product: from evidence to a decision
 
-Обязательная база product-скиллов: **сначала изучить кейсы и профильную документацию, затем выполнять исследование**. Кейсы стартапов показывают механизмы на близком масштабе; практики бигтехов помогают измерять и проверять решения. Это наша адаптация, не универсальный рецепт успеха.
+Mandatory foundation for product skills: **study the cases and domain documentation before conducting research**. Startup cases illustrate mechanisms at a comparable scale; big-tech practices help measure and verify decisions. This is our adaptation, not a universal recipe for success.
 
-| Команда | Обязательный профиль | Результат |
+| Command | Mandatory profile | Output |
 |---|---|---|
-| `/product:define {идея}` | [Продукт](define.md), [Superhuman/Amazon](cases/product-discovery.md) | ICP/JTBD, value proposition, business model, MVP, success/stop criteria |
-| `/product:market {рынок}` | [Рынок](market.md), [Buffer/Airbnb](cases/market-validation.md) | demand evidence, сегменты, scope TAM/SAM/SOM, проверки риска |
-| `/product:compare {продукт}` | [Аналоги](compare.md), [GitLab/Buffer](cases/competitive-positioning.md) | одинаковые customer jobs, конкуренты/замены, pricing и defensible wedge |
-| `/product:revenue {аналоги}` | [Выручка](revenue.md), [Buffer transparency](cases/revenue-economics.md) | раскрытые метрики и отдельно диапазоны оценок с допущениями |
-| `/product:b2b {продукт}` | [B2B](b2b.md), [Yclients/YouGile/Buffer](cases/b2b-first-customers.md) | Малые кандидаты, bounded offer, sales/outreach plan |
-| `/product:b2c {продукт}` | [B2C](b2c.md), [Россия и иностранные стартапы](cases/b2c-frugal-growth.md) | Узкая аудитория, дешёвые каналы, цены и growth tests |
-| `/product:acquisition {аналоги}` | [Привлечение](acquisition.md), [Ahrefs/Airbnb/TikTok](cases/acquisition-growth.md) | доказанные channel signals, funnel и план ограниченных экспериментов |
+| `/palarran:product:define {idea}` | [Product](define.md), [Superhuman/Amazon](cases/product-discovery.md) | ICP/JTBD, value proposition, business model, MVP, success/stop criteria |
+| `/palarran:product:market {market}` | [Market](market.md), [Buffer/Airbnb](cases/market-validation.md) | Demand evidence, segments, TAM/SAM/SOM scope, risk tests |
+| `/palarran:product:compare {product}` | [Alternatives](compare.md), [GitLab/Buffer](cases/competitive-positioning.md) | Comparable customer jobs, competitors/substitutes, pricing and a defensible wedge |
+| `/palarran:product:revenue {alternatives}` | [Revenue](revenue.md), [Buffer transparency](cases/revenue-economics.md) | Disclosed metrics and separate estimated ranges with assumptions |
+| `/palarran:product:b2b {product}` | [B2B](b2b.md), [Yclients/YouGile/Buffer](cases/b2b-first-customers.md) | Small prospects, bounded offer, sales/outreach plan |
+| `/palarran:product:b2c {product}` | [B2C](b2c.md), [Russian and international startups](cases/b2c-frugal-growth.md) | Narrow audience, inexpensive channels, prices and growth tests |
+| `/palarran:product:acquisition {alternatives}` | [Acquisition](acquisition.md), [Ahrefs/Airbnb/TikTok](cases/acquisition-growth.md) | Supported channel signals, funnel and bounded experiment plan |
 
-Для всех: [evidence](evidence.md), [workflow и handoff](workflow.md), [методы и API](data-sources.md), [реестр кейсов](cases/README.md), [первичные источники](sources.md). Templates: [brief](../../templates/product/brief.md), [research](../../templates/product/research.md), [competitors](../../templates/product/competitors.md), [economics](../../templates/product/economics.md), [channels](../../templates/product/channels.md).
+For every profile: [evidence](evidence.md), [workflow and handoff](workflow.md), [methods and APIs](data-sources.md), [case registry](cases/README.md), [primary sources](sources.md). Templates: [brief](../../templates/product/brief.md), [research](../../templates/product/research.md), [competitors](../../templates/product/competitors.md), [economics](../../templates/product/economics.md), [channels](../../templates/product/channels.md).
 
-Каждый skill можно вызвать отдельно, с текущими проектными материалами или явным списком аналогов. Не нужно автоматически запускать остальные. Нет description — прочитать target README/product memory; если бизнес/география не ясны, задать один конкретный вопрос, продолжая независимый inventory. Не выбирать другой бизнес вместо пользовательского.
+Each skill can run independently, using current project materials or an explicit list of alternatives. Do not automatically run the others. Without a description, read the target README/product memory; if the business or geography is unclear, ask one specific question while continuing independent inventory. Do not substitute a different business for the user's business.
 
-Исследование разрешает read-only public web/доступные authorized data и planning artifacts. Оно не разрешает создавать accounts, покупать subscriptions, подавать alpha applications, писать респондентам/креаторам, публиковать страницы, включать tracking или запускать рекламу. Paid API/credits используют только по имеющемуся явному бюджету; отсутствие доступа → gap/fallback, не секрет в чате и не выдуманный результат.
+Research permits read-only public web/available authorized data and planning artifacts. It does not authorize account creation, subscription purchases, alpha applications, messages to respondents/creators, publishing pages, enabling tracking or launching ads. Use paid APIs/credits only within an existing explicit budget; unavailable access becomes a gap/fallback, never a secret requested in chat or an invented result.
 
-## Единый runtime pipeline
+## Shared runtime pipeline
 
-[Запуск от идеи до MVP-плана](pipeline.md) и [версионированный artifact contract](pipeline-contract.md). Это явный связанный scope; standalone commands не запускают pipeline автоматически.
+[From an idea to an MVP plan](pipeline.md) and the [versioned artifact contract](pipeline-contract.md). This is an explicit linked scope; standalone commands do not start the pipeline automatically.
 
-[Кому/как продавать до build и после polish](go-to-market.md), [проверка цен](pricing.md), [даты и границы новых источников](go-to-market-sources.md). Runtime сохраняет шесть stages; B2B/B2C — ветки внутри acquisition, без дополнительного модельного запуска.
+[Who to sell to and how, before build and after polish](go-to-market.md), [price checks](pricing.md), [dates and limitations of new sources](go-to-market-sources.md). The runtime retains six stages; B2B/B2C are branches within acquisition, without another model launch.

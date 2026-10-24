@@ -1,12 +1,12 @@
 # Runtime
 
-Наследует root. Перед изменениями читать docs/product-factory/contract.md, operations.md и связанные ADR; для ML — docs/ml/pipeline-contract.md и modal-adapter.md. Полные обязательные ограничения: раздел Runtime и выбранный профиль docs/skills/domain-contracts.md.
+Inherits root. Before changes read docs/product-factory/contract.md, operations.md and related ADRs; ML additionally requires docs/ml/pipeline-contract.md and modal-adapter.md. Full mandatory constraints: Runtime and selected profiles in docs/skills/domain-contracts.md.
 
-- engine координирует execution/independent final gates; store владеет fenced leases, private SQLite и immutable workflow; runner ограничивает foreground process groups/output/time. Parser/docs/examples/tests обновлять вместе.
-- accounting/budgets и ml_resources не обнуляют failed/unknown spend. Private state вне target. Не replay unknown lease outcome; operator reconciliation не доказывается agent narrative.
-- Product/ML manifests и verifiers сохраняют context/source/lineage hashes и stable private receipts. Compact packet/graph не заменяют mandatory docs и проверку exact checkpoint/subject.
-- Modal: durable intent до create; lookup вместо повторного launch; remote terminal proof обязателен для stop. Provider estimates/usage/invoice раздельны, billing pending удерживает reserve. Existing resources, никакого paid smoke.
-- Agent eval: перед изменениями читать docs/agent/eval/. Frozen external graders и final gates обязательны; fixture evidence не model quality, unknown расход не ноль. Tests только offline/fake.
-- Agent improvement: docs/agent/improve/ обязательны; frozen skill treatment + regression/controls, native eval bindings, all-case denominator и общий carry. Prepare/compare не dispatch/patch, fixture не model evidence.
-- Context optimization не меняет AI routing/caps/approval и не запускает вложенные модели. Runtime не должен обязательно зависеть от optional Graphify installation; missing/stale graph = fallback.
-- Проверка: offline unit suite, scripts/validate_repo.py, scripts/factory_acceptance.py. Live provider/operational SLA остаются NOT RUN без отдельного scope/evidence.
+- engine coordinates execution/independent final gates; store owns fenced leases, private SQLite and immutable workflows; runner bounds foreground process groups/output/time. Update parser/docs/examples/tests together.
+- accounting/budgets and ml_resources never reset failed/unknown spending. Private state stays outside target. Never replay unknown lease outcomes; agent narratives do not prove operator reconciliation.
+- Product/ML manifests/verifiers preserve context/source/lineage hashes and stable private receipts. Compact packets/graphs replace neither mandatory docs nor exact checkpoint/subject verification.
+- Modal: durable intent before create; lookup instead of relaunch; remote terminal proof required for stopping. Separate provider estimates/usage/invoices; pending billing retains reserves. Existing resources only, no paid smoke tests.
+- Agent eval: read docs/agent/eval/ before changes. Frozen external graders/final gates mandatory; fixtures do not establish model quality, unknown spend is not zero. Offline/fake tests only.
+- Agent improvement: docs/agent/improve/ mandatory; frozen skill treatment + regression/controls, native evaluation bindings, all-case denominators and shared carry. Prepare/compare is not dispatch/patch; fixtures are not model evidence.
+- Context optimization changes neither AI routing/caps/approval nor launches nested models. Runtime must not require optional Graphify installation; missing/stale graphs use fallback.
+- Checks: offline unit suite, scripts/validate_repo.py, scripts/factory_acceptance.py. Live provider/operational SLA remain NOT RUN without separate scope/evidence.

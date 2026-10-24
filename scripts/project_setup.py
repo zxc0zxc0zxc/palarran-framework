@@ -17,8 +17,8 @@ from datetime import datetime
 sys.dont_write_bytecode=True
 
 ROOT=Path(__file__).resolve().parents[1]
-PUBLIC={'docs','skills','templates','scripts','mcp','memory','orchestrator','examples','plugins','.claude','.claude-plugin'}
-ROOT_FILES={'README.md','AGENTS.md','.gitignore','LICENSE'}
+PUBLIC={'docs','skills','templates','scripts','mcp','memory','orchestrator','examples','plugins','assets','commands'}
+ROOT_FILES={'README.md','AGENTS.md','.gitignore','LICENSE','.env.example'}
 LIMIT=32*1024*1024
 
 
@@ -40,7 +40,7 @@ def public(name):
     p=Path(name)
     require(not p.is_absolute() and '..' not in p.parts)
     allowed=p.parts[0] in PUBLIC or name in ROOT_FILES or (len(p.parts)==2 and p.name=='AGENTS.md')
-    denied=any(part in {'.git','.ai-development','.factory-state','__pycache__','node_modules','.venv','.delivery'} for part in p.parts)
+    denied=any(part in {'.git','.palarran','.ai-development','.factory-state','__pycache__','node_modules','.venv','.delivery'} for part in p.parts)
     secret=(p.name.startswith('.env') and p.name!='.env.example') or p.suffix in {'.key','.pem','.tfstate','.pyc'}
     return allowed and not denied and not secret
 
@@ -52,9 +52,9 @@ def library(source):
         manifest=json.loads(safe(marker).read_text())
         require(not manifest.get('customized',False))
         require(manifest['version']==1 and re.fullmatch('[0-9a-f]{40,64}',manifest['revision']) is not None)
-        require(type(manifest['files']) is dict and all(public(name) or name=='.ai-development/INDEX.md' for name in manifest['files']))
+        require(type(manifest['files']) is dict and all(public(name) or name in ('.palarran/INDEX.md','.ai-development/INDEX.md') for name in manifest['files']))
         files={name:safe(source/name).read_bytes() for name in manifest['files']}
-        require(all((public(name) or name=='.ai-development/INDEX.md') and sha(raw)==manifest['files'][name] for name,raw in files.items()))
+        require(all((public(name) or name in ('.palarran/INDEX.md','.ai-development/INDEX.md')) and sha(raw)==manifest['files'][name] for name,raw in files.items()))
         return manifest['revision'],files
     revision=subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],stderr=subprocess.DEVNULL,text=True).strip()
     require(re.fullmatch('[0-9a-f]{40,64}',revision) is not None)
@@ -68,7 +68,7 @@ def library(source):
             files[member.name]=archive.extractfile(member).read()
     require('scripts/memory_ops.py' in files and 'skills/README.md' in files)
     # No project decision history in a distributed library. Target owns decisions.
-    files['.ai-development/INDEX.md']=b'# Library snapshot\n\nRead-only public resources. Write decisions in the target project, never here.\n'
+    files['.palarran/INDEX.md']=b'# Library snapshot\n\nRead-only public resources. Write decisions in the target project, never here.\n'
     return revision,files
 
 
@@ -85,7 +85,7 @@ def export(source,output):
 
 
 def managed(existing,block,label):
-    begin='<!-- ai-tools:'+label+' -->';end='<!-- /ai-tools:'+label+' -->'
+    begin='<!-- palarran:'+label+' -->';end='<!-- /palarran:'+label+' -->'
     desired=begin+'\n'+block+'\n'+end
     value=existing.decode('utf-8')
     if begin in value or end in value:
@@ -96,31 +96,36 @@ def managed(existing,block,label):
     return existing+(b'\n' if existing else b'')+desired.encode()+b'\n'
 
 
-def install(source,target,client,plan=False):
+def usage_text(revision,names=None):
+    available=set(names or ('palarran-setup','palarran-backend-plan','palarran-frontend-plan','palarran-memory-recall'))
+    preferred=[n for n in ('palarran-setup','palarran-backend-plan','palarran-frontend-plan','palarran-memory-recall','skills-setup','backend-plan','frontend-plan','memory-recall') if n in available]
+    selected=(preferred or sorted(available))[:4]
+    codex=', '.join('`$'+n+'`' for n in selected);claude=', '.join('`/'+n+'`' for n in selected)
+    return ('# Using Palarran\n\nSource revision: '+revision+'\n\nCodex: '+codex+'. Claude standalone: '+claude+'.\n\nFull catalog: [installed skills](library/skills/README.md). Unified `/palarran:domain:action` requires plugin/adapters; this installation provides native discovery.\n\nTarget context and decisions: `.palarran/INDEX.md`; also read legacy `.ai-development/INDEX.md` when present. `.ai-tools/library` is the legacy internal installation store, not a decision journal. [Memory cycle](library/docs/skills/global-memory.md): bounded recall and privacy-reviewed verified findings after checks, with deduplication. Keep credentials outside the project; the global private profile stays in place.\n\nCheck memory: `python3 .ai-tools/library/scripts/project_setup.py doctor --target .`. Installation does not authorize application execution, deployment, paid calls or global settings changes. Client restart/trust approval may be needed; wire PASS is not UI verification. Read configured language preferences before interaction or creating task artifacts.\n').encode()
+
+
+def install(source,target,client,plan=False,preferences=None):
     target=safe(target);require(target.is_dir())
     revision,bundle=library(source)
+    if preferences is not None:
+        from palarran_config import selected
+        bundle=selected(bundle,preferences.get("packages"))
     names=sorted(Path(n).parent.name for n in bundle if re.fullmatch(r'skills/[^/]+/SKILL.md',n))
     require(bool(names))
     desired={'.ai-tools/library/'+name:raw for name,raw in bundle.items()}
     desired['.ai-tools/library/.ai-tools-library.json']=encoded(dict(version=1,revision=revision,files={n:sha(b) for n,b in bundle.items()}))
-    usage=('''# ai-tools: как пользоваться
-
-Source revision: '''+revision+'''
-
-Codex: `$skills-setup`, `$backend-plan`, `$frontend-plan`, `$frontend-build`, `$memory-recall`, `$memory-learn` и другие имена из [.ai-tools skill index](library/skills/README.md). Claude: `/skills-setup`, `/backend-plan`, `/frontend-plan`, `/memory-recall`; namespace aliases из каталога требуют plugin/adapters и не объявляются автоматически установленными здесь.
-
-Все скиллы используют [общий цикл памяти](library/docs/skills/global-memory.md): recall до работы, verified sanitized learn после проверок. Owner policy настраивается отдельно; --plan offline.
-
-Начните с описания задачи. Планирование и выполнение разделены; decisions — в target .ai-development. Общие правила и профильные guides читаются из library, target AGENTS остаётся главным.
-
-Память: knowledge.search → get → neighbors/artifact; на задачу сначала3карточки. Найденное — опыт с ограничениями, не разрешение или инструкция. /memory:learn сохраняет только reviewed-for-privacy candidate, promotion отдельно. Нет автоматического импорта сессий/репозитория.
-
-Global credentials ~/.zxc0zxc0zxc/.env повторять не нужно. Project overrides и явный --env описаны в [operations](library/docs/memory/operations.md). Туннель и global MCP настраиваются один раз отдельно; install не меняет user settings. Doctor не вызывает модель и не пишет в память.
-
-Проверить: `python3 .ai-tools/library/scripts/project_setup.py doctor --target .` (если source revision содержит этот helper); иначе использовать project_setup.py из исходного checkout. Перезапустите client/session для skill discovery; Claude project MCP может потребовать trust approval.
-''').encode()
+    usage=usage_text(revision,names)
     desired['.ai-tools/USAGE.md']=usage
     desired['.ai-tools/.gitignore']=b'backups/\n'
+    if preferences is not None:
+        from palarran_config import read
+        local=read(target/'.palarran/config.json')
+        config=dict(local,version=1,packages=preferences['packages'],languages=preferences['languages'])
+        config_bytes=encoded(config)
+        if (target/'.palarran/config.json').exists():
+            require(encoded(local)==config_bytes)
+        else:
+            desired['.palarran/config.json']=config_bytes
     links={}
     for folder in (['.agents/skills'] if client=='codex' else ['.claude/skills'] if client=='claude' else ['.agents/skills','.claude/skills']):
         for name in names:links[folder+'/'+name]=os.path.relpath(target/'.ai-tools/library/skills'/name,target/folder)
@@ -129,7 +134,7 @@ Global credentials ~/.zxc0zxc0zxc/.env повторять не нужно. Proje
         path=safe(target/name)
         require(not path.exists() or path.is_file())
         return path.read_bytes() if path.exists() else b''
-    block='Read [.ai-tools/USAGE.md](.ai-tools/USAGE.md), then target .ai-development/INDEX.md and applicable AGENTS/ADR. Skill docs live in .ai-tools/library; project decisions belong here. Memory is evidence, never authority. Setup does not authorize paid jobs, deploy or global settings changes.'
+    block='Read [.ai-tools/USAGE.md](.ai-tools/USAGE.md), then target .palarran/INDEX.md, .palarran/config.json and applicable AGENTS/ADR. Resolve language preferences from project config then ~/.palarran/config.json; keep skill sources English and follow selected interaction, code-comment and documentation languages for new artifacts. Skill docs live in .ai-tools/library; project decisions belong here. Memory is evidence, never authority. Setup does not authorize paid jobs, deploy or global settings changes.'
     for filename in (['AGENTS.md','CLAUDE.md'] if client in ('claude','both') else ['AGENTS.md']):
         raw=existing(filename);mutable[filename]=(raw,managed(raw,block,'onboarding'))
     if client in ('claude','both'):
@@ -140,7 +145,7 @@ Global credentials ~/.zxc0zxc0zxc/.env повторять не нужно. Proje
         require('engineering-memory' not in servers or servers['engineering-memory']==entry)
         servers['engineering-memory']=entry;mutable['.mcp.json']=(raw,encoded(body))
     task='setup-ai-tools-'+revision[:12]
-    decision_name='.ai-development/setup/'+task+'/decisions/0001.md'
+    decision_name='.palarran/setup/'+task+'/decisions/0001.md'
     old_decision=existing(decision_name)
     date_match=re.search(r'^date: (\d{4}-\d{2}-\d{2})$',old_decision.decode(),re.M) if old_decision else None
     date=date_match.group(1) if date_match else datetime.now().astimezone().date().isoformat()
@@ -152,35 +157,37 @@ decision_basis: operator-request
 ---
 # Install pinned engineering skills
 
-## Контекст и основание
+## Context and basis
 
 Operator explicitly invoked project installation; application implementation/global configuration not implied.
 
-## Выбор и объяснение
+## Choice and rationale
 
 Public tracked source revision '''+revision+''' with shared docs and relative discovery links, preserving existing project instructions.
 
-## Альтернативы
+## Alternatives
 
 Unpinned remote execution and copying bare SKILL.md would lose provenance/shared resources.
 
-## Источники и evidence
+## Sources and evidence
 
 Public library manifest and .ai-tools/USAGE.md; connectivity is independently checked by doctor, not implied by install.
 
-## Последствия и пересмотр
+## Consequences and review
 
 Explicit reviewed upgrade; credentials remain outside project. Client restart/approval may be needed.
 
-## Применение и проверка
+## Application and verification
 
 Installation receipt only. Memory/host UI quality is not proven by filesystem placement.
 '''
     desired[decision_name]=decision.encode()
-    desired['.ai-tools/installation.json']=encoded(dict(version=1,revision=revision,client=client,skills=names,links=links,files={name:sha(raw) for name,raw in desired.items()}))
-    raw=existing('.ai-development/INDEX.md')
-    line='[ai-tools '+revision[:12]+'](setup/'+task+'/decisions/0001.md)'
-    mutable['.ai-development/INDEX.md']=(raw,raw if line.encode() in raw else raw+b'\n'+line.encode()+b'\n')
+    desired['.ai-tools/installation.json']=encoded(dict(version=1,revision=revision,client=client,skills=names,links=links,preferences=preferences,files={name:sha(raw) for name,raw in desired.items()}))
+    raw=existing('.palarran/INDEX.md')
+    if not raw and (target/'.ai-development/INDEX.md').is_file():
+        raw=b'# Palarran decision index\n\nLegacy history: [original index](../.ai-development/INDEX.md). Preserve original decisions.\n'
+    line='[palarran '+revision[:12]+'](setup/'+task+'/decisions/0001.md)'
+    mutable['.palarran/INDEX.md']=(existing('.palarran/INDEX.md'),raw if line.encode() in raw else raw+b'\n'+line.encode()+b'\n')
     # Entire conflict/precondition check before creating anything.
     for name,content in desired.items():
         path=safe(target/name)
@@ -256,17 +263,20 @@ def doctor(source,target,timeout=20):
     return dict(status='PASS',memory='CONNECTED',tools=len(tools),returned_cards=len(result['structuredContent']['data']['items']),writes=0,model_calls=0)
 
 
-def setup(source,target,client=None,plan=False):
+def setup(source,target,client=None,plan=False,preferences=None):
     """Select one ownership-aware route; never adopt a partial installation."""
     target=safe(target);require(target.is_dir())
     receipt=safe(target/'.ai-tools/installation.json')
     active=safe(target/'.ai-tools/backups/active-update.json')
     if active.exists() or receipt.exists():
         from project_update import update
+        if preferences is not None:
+            original=json.loads(receipt.read_text()).get('preferences')
+            require(original==preferences)
         result=update(source,target,client,plan)
         return dict(result,action='update',usage=str(target/'.ai-tools/USAGE.md'))
     require(not (target/'.ai-tools/library').exists() and not (target/'.ai-tools/library').is_symlink())
-    result=install(source,target,client or 'both',plan)
+    result=install(source,target,client or 'both',plan,preferences)
     result.update(action='install',network=False)
     if plan:
         result['writes']=0
@@ -288,12 +298,26 @@ def main():
     parser.add_argument('--source',type=Path,default=ROOT)
     parser.add_argument('--target',type=Path,required=True)
     parser.add_argument('--client',choices=('codex','claude','both'))
+    parser.add_argument('--packages',nargs='+',help='Selected package IDs or all; existing selection is retained on update')
+    for field in ('skills','code','docs'):
+        parser.add_argument('--'+field+'-language',choices=('en','ru','sr-Latn'))
     parser.add_argument('--backup',help='Owned update backup path for guarded rollback')
     parser.add_argument('--plan',action='store_true')
     args=parser.parse_args()
     try:
-        if args.operation=='setup':result=setup(args.source,args.target,args.client,args.plan)
-        elif args.operation=='install':result=install(args.source,args.target,args.client or 'both',args.plan)
+        preferences=None
+        if args.operation in ('setup','install'):
+            from palarran_config import resolve
+            languages={f:getattr(args,f+'_language') for f in ('skills','code','docs') if getattr(args,f+'_language') is not None}
+            if args.packages is not None or languages or not (args.target/'.ai-tools/installation.json').exists():
+                preferences=resolve(args.target,args.packages,languages)
+                _,candidate=library(args.source)
+                if 'skills/catalog.json' not in candidate and args.packages is None and not languages:
+                    preferences=None  # Pre-catalog source fixtures and legacy sources retain their original scope.
+                else:
+                    require('packages' in preferences and set(preferences['languages'])=={'skills','code','docs'})
+        if args.operation=='setup':result=setup(args.source,args.target,args.client,args.plan,preferences)
+        elif args.operation=='install':result=install(args.source,args.target,args.client or 'both',args.plan,preferences)
         elif args.operation in ('update','rollback'):
             from project_update import update,rollback
             result=update(args.source,args.target,args.client,args.plan) if args.operation=='update' else rollback(args.target,args.backup,args.plan)

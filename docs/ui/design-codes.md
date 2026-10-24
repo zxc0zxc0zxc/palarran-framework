@@ -1,34 +1,34 @@
-# Выбор дизайн-кода: 10 систем и свои references
+# Choose a design code: ten systems and custom references
 
-«Дизайн-код» здесь — узнаваемая система визуальных правил/семейство, а не библиотека, которую нужно автоматически установить. Меню объединяет web/enterprise systems и native material; они не сравнимы по одной установленной нами метрике popularity. Выбраны известные системы с устойчивыми first-party sources. **Не называть список объективным top-10**, не приписывать ему доли рынка.
+“Design code” here means a recognizable visual-rule system/family, not a library to install automatically. The menu combines web/enterprise systems and native material; they are not comparable through one popularity metric we established. We selected established systems with durable first-party sources. **Do not call this an objective top ten** or assign market shares.
 
-Machine-readable source меню — [catalog.json](catalog.json): ровно 10 уникальных system IDs. Custom — отдельный режим, не одиннадцатая «система компании». Цифры ниже — номера выбора.
+Machine-readable menu source: [catalog.json](catalog.json), exactly 10 unique system IDs. Custom is a separate mode, not an eleventh “company system.” Numbers below are selection numbers.
 
-| № / ID | Направление и canonical reference | Наша отправная визуальная интерпретация | Что учитывать |
+| No. / ID | Direction and canonical reference | Our initial visual interpretation | Considerations |
 |---|---|---|---|
-| 1 `material-3` | **Material 3 — Google**, [официальная документация](https://developer.android.com/develop/ui/compose/designsystems/material3) | Semantic tonal palette, shape/type hierarchy, выразительные controls | Не смешивать M2/M3/Expressive версии; web-адаптация не означает Android UI everywhere |
-| 2 `liquid-glass` | **Liquid Glass — Apple**, [официальное описание](https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/) | Translucent functional layers, depth, restrained glass navigation | Apple описывает native real-time material; CSS blur — лишь вдохновлённая адаптация. Opaque fallback и contrast обязательны |
-| 3 `fluent-2` | **Fluent 2 — Microsoft**, [система](https://fluent2.microsoft.design/) | Layered surfaces, calm workspaces, clear control hierarchy | Выбрать платформенную версию; не переносить Windows materials на web без проверки |
-| 4 `carbon` | **Carbon — IBM**, [система](https://www.carbondesignsystem.com/) | Structured grids, neutral layered surfaces, disciplined data density | Dense desktop data не сжимать в нечитаемый mobile; source major/version фиксировать |
-| 5 `atlassian` | **Atlassian Design System**, [foundations](https://atlassian.design/foundations/) | Team-workspace clarity, semantic status/color, consistent spacing | Наша app identity и UX важнее копии Jira shell; tokens/version проверять |
-| 6 `polaris` | **Polaris — Shopify**, [официальные references](https://shopify.dev/docs/api/polaris) | Calm commerce/admin surfaces, actionable cards/forms/data | App surfaces и current web components отличаются от legacy packages; storefront не равен admin |
-| 7 `spectrum` | **Spectrum — Adobe**, [система](https://spectrum.adobe.com/) | Content/tool-focused hierarchy, balanced controls and color roles | Проверять platform/version; не смешивать Spectrum variants без rationale |
-| 8 `lightning` | **Lightning/SLDS 2 — Salesforce**, [официальное описание](https://developer.salesforce.com/docs/platform/lwc/guide/create-components-css-slds.html) | Structured enterprise objects, record/form hierarchy and semantic styling | LWC framework не обязателен для вдохновения; native SLDS integration отличается от visual adaptation |
-| 9 `ant-design` | **Ant Design — Ant**, [официальное введение](https://ant.design/docs/spec/introduce/) | Enterprise information hierarchy, consistent forms/tables and states | Ant web library не решает автоматически mobile UX/accessible custom overrides |
-| 10 `primer` | **Primer — GitHub**, [система](https://primer.style/) | Practical developer-workspace surfaces, borders, restrained hierarchy | Не копировать GitHub branding/sidebar и не путать dark mode с отдельным design code |
+| 1 `material-3` | **Material 3 — Google**, [official documentation](https://developer.android.com/develop/ui/compose/designsystems/material3) | Semantic tonal palette, shape/type hierarchy, expressive controls | Do not mix M2/M3/Expressive versions; web adaptation does not mean Android UI everywhere |
+| 2 `liquid-glass` | **Liquid Glass — Apple**, [official description](https://www.apple.com/newsroom/2025/06/apple-introduces-a-delightful-and-elegant-new-software-design/) | Translucent functional layers, depth, restrained glass navigation | Apple describes native real-time material; CSS blur is only an inspired adaptation. Opaque fallback and contrast are mandatory |
+| 3 `fluent-2` | **Fluent 2 — Microsoft**, [system](https://fluent2.microsoft.design/) | Layered surfaces, calm workspaces, clear control hierarchy | Choose platform version; do not transfer Windows materials to web without verification |
+| 4 `carbon` | **Carbon — IBM**, [system](https://www.carbondesignsystem.com/) | Structured grids, neutral layered surfaces, disciplined data density | Do not compress dense desktop data into unreadable mobile views; record source major/version |
+| 5 `atlassian` | **Atlassian Design System**, [foundations](https://atlassian.design/foundations/) | Team-workspace clarity, semantic status/color, consistent spacing | Our application identity and UX take precedence over a Jira-shell copy; check tokens/version |
+| 6 `polaris` | **Polaris — Shopify**, [official references](https://shopify.dev/docs/api/polaris) | Calm commerce/admin surfaces, actionable cards/forms/data | Application surfaces/current web components differ from legacy packages; storefront is not admin |
+| 7 `spectrum` | **Spectrum — Adobe**, [system](https://spectrum.adobe.com/) | Content/tool-focused hierarchy, balanced controls and color roles | Check platform/version; do not mix Spectrum variants without rationale |
+| 8 `lightning` | **Lightning/SLDS 2 — Salesforce**, [official description](https://developer.salesforce.com/docs/platform/lwc/guide/create-components-css-slds.html) | Structured enterprise objects, record/form hierarchy and semantic styling | LWC framework is not required for inspiration; native SLDS integration differs from visual adaptation |
+| 9 `ant-design` | **Ant Design — Ant**, [official introduction](https://ant.design/docs/spec/introduce/) | Enterprise information hierarchy, consistent forms/tables and states | Ant's web library does not automatically solve mobile UX/accessible custom overrides |
+| 10 `primer` | **Primer — GitHub**, [system](https://primer.style/) | Practical developer-workspace surfaces, borders, restrained hierarchy | Do not copy GitHub branding/sidebar or treat dark mode as a separate design code |
 
-Это наша прикладная интерпретация для выбора, не дословный список правил владельцев. Точные foundations/components и визуальные примеры выбранной версии агент читает/смотрит при реальном вызове. UI, вдохновлённый системой, не именуется её официальной реализацией или endorsement.
+This is our practical selection interpretation, not source owners' verbatim rules. Read/view exact foundations/components and visual examples of the selected version during an actual run. System-inspired UI is not its official implementation or endorsement.
 
-## Как предложить выбор
+## Offer the choice
 
-В application task показать все 10 названий со ссылками и коротким признаком + «Свои референсы». Рекомендовать 2–3 по UX/audience/platform/плотности, объяснив tradeoffs; не навязывать один default. При доступном визуальном output показать 2–3 сопоставимых style samples на **одном и том же UX screen/data**, а не рисовать 10 полных приложений автоматически.
+In application tasks, show all ten linked names with a short characteristic + “Custom references.” Recommend 2–3 based on UX/audience/platform/density with tradeoffs; do not impose one default. With visual output available, show 2–3 comparable style samples on **the same UX screen/data** instead of automatically drawing ten complete applications.
 
-Если host позволяет selectable options — использовать его, иначе краткое numbered menu с free-text ответом. При ограничении количества кнопок показать shortlist, но полный catalog оставить доступным и дать ввод любого ID/custom. Preselected пункт не выбран, пока пользователь не отправил ответ. Не спрашивать style при authoring самого скилла.
+Use host selectable options when available; otherwise a concise numbered menu with free-text reply. If buttons are limited, show a shortlist while retaining access to the full catalog and allowing any ID/custom input. A preselected item is not selected until the user submits an answer. Do not ask for style while authoring the skill itself.
 
-Уже заданный `Material`, `Liquid Glass`, system ID или «используй мои references» — достаточное preference, не начинать повторный опрос. Ранее accepted style переиспользовать, если новый запрос его не меняет; меню по-прежнему доступно для пересмотра. Пока выбора нет, сохранить independent work и alternatives, но не финализировать accepted design code за пользователя.
+A supplied `Material`, `Liquid Glass`, system ID or “use my references” is sufficient preference; do not restart the survey. Reuse an earlier accepted style unless the new request changes it; the menu remains available for reconsideration. Without selection, preserve independent work and alternatives without finalizing an accepted design code on the user's behalf.
 
-## Режимы
+## Modes
 
-`system`: canonical system + минимум 2 дополнительных visual references. `custom`: присланные материалы + дополнительные релевантные источники по пробелам; не принуждать к одному preset. `system+custom`: один governing system, пользовательские материалы объясняют нужные overrides. Custom refs — полноценный выбор: «что именно нравится» (типографика, palette, плотность, shape, imagery) можно уточнить, не требуя от пользователя назвать техническую библиотеку.
+`system`: canonical system + at least 2 additional visual references. `custom`: supplied materials + relevant additional sources to address gaps; do not force a preset. `system+custom`: one governing system with user materials explaining overrides. Custom references are a complete choice: clarify “what do you like here?” (typography, palette, density, shape, imagery) without requiring the user to name a technical library.
 
-Брендовые assets/шрифты/пакеты не переносятся автоматически: проверить права/доступность и уместность проекта. Нужен согласованный собственный visual language, а не смесь всех десяти palettes/components.
+Brand assets/fonts/packages do not transfer automatically: check rights/availability and project fit. Deliver a coherent original visual language instead of mixing all ten palettes/components.

@@ -1,27 +1,27 @@
-# Foundations: связный визуальный язык
+# Foundations: coherent visual language
 
-Сначала source UX и выбранный [design code](design-codes.md), затем foundations; не начинать с случайной палитры. Для каждого выбора нужны причина, alternatives и ссылка на reference observation/ADR. Сведения компании отделять от нашей адаптации.
+Start with source UX and selected [design code](design-codes.md), then foundations; do not begin with a random palette. Every choice needs reasons, alternatives and a reference-observation/ADR link. Separate company information from our adaptation.
 
-## Tokens и иерархия
+## Tokens and hierarchy
 
-| Слой | Что определить | Проверка |
+| Layer | Define | Check |
 |---|---|---|
-| Color | Semantic roles: surface, text, text-muted, border, action, on-action, focus, success/warning/error; interactive states | Contrast на реальном фоне; значение не только цветом |
-| Typography | Семейство с доступной лицензией/fallback, размеры/вес/leading для heading/body/label; длинные значения | Читабельность, zoom, локализация, без декоративной многострочной простыни |
-| Layout | Content width, columns, gutters, spacing scale, compact/comfortable density | Иерархия source UX, полезная площадь и touch targets |
-| Shape/elevation | Радиусы, border, тени и порядок слоёв | Один принцип для похожих компонентов; overlay не закрывает действие |
-| Material | Opaque/translucent surfaces, blur budget, fallback | Glass не делает текст или controls нечитаемыми |
-| Icons/assets | Единая family/weight, смысл, источник/лицензия | Icon-only action имеет accessible name; не копировать логотип бизнеса |
-| Motion | Цель перехода, duration/easing, reduced-motion вариант | Объясняет изменение состояния, не задерживает задачу |
+| Color | Semantic roles: surface, text, text-muted, border, action, on-action, focus, success/warning/error; interactive states | Contrast on actual backgrounds; meaning conveyed beyond color |
+| Typography | Licensed family/fallback, heading/body/label sizes/weight/leading; long values | Readability, zoom, localization, no decorative multiline walls of text |
+| Layout | Content width, columns, gutters, spacing scale, compact/comfortable density | Source UX hierarchy, useful space and touch targets |
+| Shape/elevation | Radii, borders, shadows and layer order | Consistent principles for similar components; overlays do not obscure actions |
+| Material | Opaque/translucent surfaces, blur budget, fallback | Glass does not make text/controls unreadable |
+| Icons/assets | Consistent family/weight, meaning, source/license | Icon-only actions have accessible names; do not copy business logos |
+| Motion | Transition purpose, duration/easing, reduced-motion variant | Explains state changes without delaying tasks |
 
-Primitive values → semantic roles → component tokens. Не размазывать raw hex/px по каждой странице. Разные темы, если входят в scope, имеют одинаковые semantic roles и независимо проверенные значения. [Carbon](https://www.carbondesignsystem.com/building-blocks/foundations/color/overview) иллюстрирует role-based color и слои; [Spectrum](https://spectrum.adobe.com/page/color-system/) — устройство color system. Это примеры, а не основание копировать их значения во все приложения.
+Primitive values → semantic roles → component tokens. Do not scatter raw hex/px values across pages. In-scope themes share semantic roles with independently verified values. [Carbon](https://www.carbondesignsystem.com/building-blocks/foundations/color/overview) illustrates role-based color/layers; [Spectrum](https://spectrum.adobe.com/page/color-system/) illustrates color-system structure. These are examples, not grounds to copy values into every application.
 
-Сохрани `tokens.json` и `tokens.css` в concept revision, укажи их соответствие. [Пример](../../templates/ui/tokens.example.json) — наш простой обменный формат, **не заявленная совместимость с DTCG**. Если проект требует стандарт [Design Tokens Format Module](https://www.designtokens.org/tr/drafts/format/), проверь актуальную версию/структуру и валидатор отдельно; community specification не называть W3C Recommendation.
+Save `tokens.json` and `tokens.css` in the concept revision and describe their mapping. The [example](../../templates/ui/tokens.example.json) is our simple exchange format, **not claimed DTCG compatibility**. If the project needs [Design Tokens Format Module](https://www.designtokens.org/tr/drafts/format/), separately check current version/structure and validator; do not call a community specification a W3C Recommendation.
 
-## Компоненты и состояния
+## Components and states
 
-Сначала переиспользуй существующие компоненты target и UX blocks. Для кнопок, полей, navigation, cards, tables, dialogs опиши anatomy, variants, density и responsive behavior. Матрица состояний: default, hover при pointer, focus-visible, pressed/selected, disabled, pending, validation/error, empty и success там, где есть соответствующий UX state. N/A объяснить; не добавлять новые бизнес-состояния ради матрицы.
+First reuse existing target components and UX blocks. For buttons, fields, navigation, cards, tables and dialogs, describe anatomy, variants, density and responsive behavior. State matrix: default, hover for pointer, focus-visible, pressed/selected, disabled, pending, validation/error, empty and success where corresponding UX states exist. Explain N/A; do not add business states merely to fill a matrix.
 
-Disabled/pending не должны отличаться только очень слабой opacity; pending сохраняет размер/label context. Error не только красная рамка. Существующий короткий copy сохраняется; annotation дизайнера не становится UI текстом. Для overlays опиши focus/close/back/scroll согласно UX, не сочиняя новый сценарий.
+Disabled/pending must not differ only through very low opacity; pending preserves size/label context. Error is more than a red border. Preserve existing concise copy; designer annotations do not become UI text. For overlays, describe focus/close/back/scroll under UX without inventing scenarios.
 
-Выбор библиотеки и код приложения — отдельные implementation decisions. Упоминание Material/Polaris/Lightning не разрешает автоматически установить package, принять несовместимую лицензию/платформу или скопировать бренд. Например, актуальная [Polaris](https://shopify.dev/docs/api/polaris) описывает web components; не назначать legacy React package по памяти. Для [SLDS](https://developer.salesforce.com/docs/platform/lwc/guide/create-components-css-slds.html) учитывать текущую версию и styling hooks.
+Library selection and application code are separate implementation decisions. Naming Material/Polaris/Lightning does not authorize installing packages, accepting incompatible licenses/platforms or copying branding. For example, current [Polaris](https://shopify.dev/docs/api/polaris) documents web components; do not prescribe its legacy React package from memory. For [SLDS](https://developer.salesforce.com/docs/platform/lwc/guide/create-components-css-slds.html), account for current version and styling hooks.

@@ -27,7 +27,7 @@
       "id": "backend-feature",
       "adapter": "codex",
       "executable": "/absolute/path/to/codex",
-      "prompt": "Read /absolute/path/to/ai-tools/skills/backend-build/SKILL.md and all its mandatory documentation. Target is the current worktree. Read target .ai-development/INDEX.md, accepted decisions and .ai-development/backend/FEATURE/plan.md revision v001. Implement only that approved SDD scope; record decisions before dependent changes and keep canonical skill progress and plan updated. Do not deploy, push or create additional autonomous runs. Missing decisions or permissions require needs_input. Follow the appended runtime handoff protocol. The verifier below must be replaced with the feature-specific DoD commands from the source plan before admission.",
+      "prompt": "Read /absolute/path/to/palarran/skills/palarran-backend-build/SKILL.md and all its mandatory documentation. Target is the current worktree. Read target .palarran/INDEX.md, accepted decisions and .palarran/backend/FEATURE/plan.md revision v001. Implement only that approved SDD scope; record decisions before dependent changes and keep canonical skill progress and plan updated. Do not deploy, push or create additional autonomous runs. Missing decisions or permissions require needs_input. Follow the appended runtime handoff protocol. The verifier below must be replaced with the feature-specific DoD commands from the source plan before admission.",
       "verify": [
         [
           "/absolute/path/to/python3",

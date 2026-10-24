@@ -1,55 +1,55 @@
-# ML: от вопроса до проверенного эксперимента
+# ML: from a question to a verified experiment
 
-Это обязательная база ML-скиллов. Сначала прочитать этот маршрут, [workflow](workflow.md), [контракты](contracts.md), [кейсы](cases.md), [источники](sources.md) и guide выбранного этапа. Отсутствующие документы — blocker, их нельзя подменять общей памятью модели. Читай профильные guides по необходимости: для классификатора не нужен весь материал по LLM post-training.
+This is the mandatory foundation for ML skills. First read this route, [workflow](workflow.md), [contracts](contracts.md), [cases](cases.md), [sources](sources.md) and the selected stage's guide. Missing documents are blockers; general model memory cannot replace them. Read specialist guides as needed: a classifier does not need all LLM post-training material.
 
-| Команда | Результат | Граница |
+| Command | Output | Boundary |
 | --- | --- | --- |
-| `/ml:plan {задача}` | [Experiment spec, gates, бюджет и DoD](plan.md) | Только планирование |
-| `/ml:hypotheses {проблема}` | [Проверяемые H-IDs, baseline, абляции](hypotheses.md) | Без вычислительного поиска |
-| `/ml:model {задача/план}` | [Выбор baseline, модели и метода](model.md) | Без загрузки весов/обучения |
-| `/ml:data {план}` | [Поиск, dataset card, split/quality recipe](data.md) | По умолчанию research; `--prepare` — разрешённая подготовка |
-| `/ml:cost {план}` | [Modal low/base/high estimate и caps](cost.md) | Offline расчёт, не GPU pilot |
-| `/ml:train {план}` | [Запуск, обучение и наблюдение](train.md) | `--plan` — без запуска; `--status` — read-only разрешённого run |
-| `/ml:benchmark {checkpoint/план}` | [Baseline comparison по frozen protocol](benchmark.md) | `--plan` — только протокол; выполнение в разрешённой среде |
+| `/palarran:ml:plan {task}` | [Experiment spec, gates, budget and DoD](plan.md) | Planning only |
+| `/palarran:ml:hypotheses {problem}` | [Testable H-IDs, baseline, ablations](hypotheses.md) | No computational search |
+| `/palarran:ml:model {task/plan}` | [Baseline, model and method selection](model.md) | No weight downloads/training |
+| `/palarran:ml:data {plan}` | [Discovery, dataset card, split/quality recipe](data.md) | Research by default; `--prepare` for authorized preparation |
+| `/palarran:ml:cost {plan}` | [Modal low/base/high estimate and caps](cost.md) | Offline calculation, not a GPU pilot |
+| `/palarran:ml:train {plan}` | [Launch, training and monitoring](train.md) | `--plan` does not launch; `--status` is read-only for an authorized run |
+| `/palarran:ml:benchmark {checkpoint/plan}` | [Baseline comparison under a frozen protocol](benchmark.md) | `--plan` is protocol only; execution in an authorized environment |
 
-Codex использует `$ml-plan`, `$ml-hypotheses`, `$ml-model`, `$ml-data`, `$ml-cost`, `$ml-train`, `$ml-benchmark`. Slash-адаптеры — интерфейс Claude, не встроенные команды Codex. Standalone skills независимы; явный [runtime pipeline](pipeline.md) связывает их в семь preparation stages и два supervised execution tasks: local или [Modal Sandbox](modal-adapter.md).
+Codex uses `$palarran-ml-plan`, `$palarran-ml-hypotheses`, `$palarran-ml-model`, `$palarran-ml-data`, `$palarran-ml-cost`, `$palarran-ml-train`, `$palarran-ml-benchmark`. Slash adapters are a Claude interface, not built-in Codex commands. Standalone skills are independent; an explicit [runtime pipeline](pipeline.md) connects them into seven preparation stages and two supervised execution tasks: local or [Modal Sandbox](modal-adapter.md).
 
 ```mermaid
 flowchart TD
-    Q[Бизнес-вопрос и ограничения] --> P[Plan и критерии успеха]
-    P --> H[Гипотезы и дешёвые baseline]
-    H --> M[Модель и метод]
-    H --> D[Источники и split plan]
-    M --> C[Стоимость и ресурсы]
+    Q[Business question and constraints] --> P[Plan and success criteria]
+    P --> H[Hypotheses and inexpensive baselines]
+    H --> M[Model and method]
+    H --> D[Sources and split plan]
+    M --> C[Cost and resources]
     D --> C
-    C --> G{Права на данные и разрешённый бюджет?}
-    G -->|нет| B[Уточнение или пересмотр плана]
-    G -->|да| T[Подготовка данных и pilot]
-    T --> R{Измерения укладываются в scope?}
-    R -->|да| F[Ограниченное обучение]
-    R -->|нет| B
-    F --> E[Независимый benchmark]
-    E --> S[Принять, отклонить или новая гипотеза]
+    C --> G{Data rights and authorized budget?}
+    G -->|no| B[Clarify or revise plan]
+    G -->|yes| T[Data preparation and pilot]
+    T --> R{Measurements within scope?}
+    R -->|yes| F[Bounded training]
+    R -->|no| B
+    F --> E[Independent benchmark]
+    E --> S[Accept, reject or a new hypothesis]
 ```
 
-Порядок допускает итерации: найденная лицензия или недостаток памяти меняют model/cost revision. Никакой автоматической цепочки вызовов, поиска гиперпараметров до исчерпания бюджета или перехода от benchmark к deploy.
+The sequence allows iteration: a license finding or insufficient memory changes the model/cost revision. No automatic skill-call chain, hyperparameter search until budget exhaustion or transition from benchmark to deployment.
 
-## Основа подхода
+## Basis of the approach
 
-[Karpathy, Recipe](https://karpathy.github.io/2019/04/25/recipe/): посмотреть данные, отладить простой pipeline, добиться обучения на малой выборке, затем усложнять. Переносим последовательность диагностики; советы 2019 года о конкретных архитектурах/unsupervised learning не объявляем сегодняшней универсальной истиной. [Google Rules of ML](https://developers.google.com/machine-learning/guides/rules-of-ml) поддерживает простой первый baseline и проверку training-serving consistency. Наша рекомендация: разрешить результат «обучение пока не нужно» и потратить бюджет на более полезные данные/оценку.
+[Karpathy, Recipe](https://karpathy.github.io/2019/04/25/recipe/): inspect data, debug a simple pipeline, fit a tiny set, then add complexity. Transfer the diagnostic sequence; do not treat 2019 advice about specific architectures/unsupervised learning as today's universal truth. [Google Rules of ML](https://developers.google.com/machine-learning/guides/rules-of-ml) supports a simple first baseline and checks of training-serving consistency. Our recommendation: allow “training is not needed yet” and spend on more useful data/evaluation.
 
-Suite охватывает tabular, ranking/retrieval, time series, CV/audio и LLM; конкретные методы выбираются по [model guide](model.md). Скилл не обязан выбирать крупнейшую модель или GPU. Хороший результат — объяснимое решение с evidence, включая отрицательный эксперимент.
+The suite covers tabular, ranking/retrieval, time series, CV/audio and LLM tasks; select methods with the [model guide](model.md). A skill need not choose the largest model or a GPU. A good outcome is an explained, evidence-backed decision, including a negative experiment.
 
-## Что сохранять
+## What to preserve
 
-В target `.ai-development/ml/<task>/`: context, decisions, immutable revisions, progress, безопасные отчёты и handoff. Код — в штатном коде проекта, большие/чувствительные данные и веса — в разрешённом artifact store. [Контракт](contracts.md) связывает plan → data/model/config → attempts → checkpoint → benchmark. [Шаблоны](../../templates/ml/experiment.md) не запускают обучение и не являются готовой конфигурацией target.
+In target `.palarran/ml/<task>/`: context, decisions, immutable revisions, progress, safe reports and handoff. Code belongs in the project's normal source tree; large/sensitive data and weights belong in an authorized artifact store. The [contract](contracts.md) connects plan → data/model/config → attempts → checkpoint → benchmark. [Templates](../../templates/ml/experiment.md) neither launch training nor provide a ready target configuration.
 
-DoD suite: профильный результат содержит ссылки/версии/evidence/unknowns, объясняет применимость исследовательских кейсов, фиксирует решения до зависимых изменений и передаёт следующий шаг. `planned`, `running`, `trained`, `benchmarked` и `accepted` — разные состояния. Падение loss не доказывает полезность продукта, а лабораторный benchmark не подтверждает production SLO.
+Suite DoD: each stage output includes references/versions/evidence/unknowns, explains case applicability, records decisions before dependent changes and hands off the next step. `planned`, `running`, `trained`, `benchmarked` and `accepted` are separate states. Falling loss does not prove product usefulness; a lab benchmark does not establish production SLOs.
 
-## Данные и сохранение возможностей
+## Data and capability preservation
 
-[Data preparation](data/README.md): scientific data-first planning, cleaning/exact dedup/grouped splits, joint domain/language token exposure, general capability preservation и полные ответы. Existing `/ml:data` расширен; defaults research/--plan не вызывают helpers.
+[Data preparation](data/README.md): scientific data-first planning, cleaning/exact dedup/grouped splits, joint domain/language token exposure, general capability preservation and complete answers. Existing `/palarran:ml:data` is extended; research/--plan defaults do not invoke helpers.
 
-## Диагностика обучения
+## Training diagnostics
 
-[Training debugging design](debugging/README.md): task-specific метрики, tracked heuristics, full generation snapshots и обязательный rolling/terminal report при любом исходе. Status design-v001; runtime integration [pending](debugging/integration-plan.md).
+[Training debugging design](debugging/README.md): task-specific metrics, tracked heuristics, full generation snapshots and a mandatory rolling/terminal report for every outcome. Status design-v001; runtime integration [pending](debugging/integration-plan.md).

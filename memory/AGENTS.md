@@ -1,9 +1,9 @@
 # Engineering memory service
 
-Наследует root; mandatory docs/memory/ guides и domain-contracts. Native Neo4j CE + private content-addressed artifacts; Graphify/local ADR не заменяются.
+Inherits root; docs/memory/ guides and domain-contracts are mandatory. Native Neo4j CE + private content-addressed artifacts; Graphify/local ADRs are not replaced.
 
-- Только fixed parameterized operations; никакого user Cypher, shell, path/URL fetch. Propose != promote; reviewer credential никогда не рекламировать обычному agent MCP inventory.
-- IDs immutable/deterministic, provenance/applicability/evidence обязательны. Missing evidence/DB errors/unknown outcome не превращать в success или retry.
-- Service loopback-only, SSH tunnel отдельно. Не логировать tokens/headers/bodies. Env/state/artifacts вне Git. Secret scan не гарантия privacy.
-- Offline fixtures проверяют контракты, не Cypher compatibility. Real Neo4j test opt-in и только isolated local test DB; production не тестовый стенд.
-- Проверки: test_memory.py, test_packaging.py, validate_repo.py, full offline suite и factory_acceptance.py. Deployment/restore/live semantic quality отдельно NOT_RUN без evidence.
+- Fixed parameterized operations only; no user Cypher, shell or path/URL fetching. Propose != promote; never advertise reviewer credentials in ordinary agent MCP inventories.
+- IDs are immutable/deterministic; provenance/applicability/evidence mandatory. Missing evidence/DB errors/unknown outcomes never become success or retries.
+- Service is loopback-only; SSH tunnels are separate. Never log tokens/headers/bodies. Environment/state/artifacts stay outside Git. Secret scans do not guarantee privacy.
+- Offline fixtures check contracts, not Cypher compatibility. Real Neo4j tests are opt-in on isolated local test DBs only; production is not a test environment.
+- Checks: test_memory.py, test_packaging.py, validate_repo.py, full offline suite and factory_acceptance.py. Deployment/restores/live semantic quality remain separately NOT_RUN without evidence.

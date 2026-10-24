@@ -1,43 +1,43 @@
-# S01 — Название экрана
+# S01 — Screen name
 
-Статус: proposed/draft. Заменить пример на реальный экран; цель/роль и permissions обязательны.
+Status: proposed/draft. Replace the example with an actual screen; goal/role/permissions are mandatory.
 
-## Задача и навигация
+## Task and navigation
 
-Role/goal, entry/deep link/предусловия, main action/result, secondary actions, back/cancel/exit и сохраняемый контекст. Screen ID и связанные journey IDs.
+Role/goal, entry/deep link/preconditions, main action/result, secondary actions, back/cancel/exit and preserved context. Screen ID and related journey IDs.
 
-## Блоки и краткий UI текст
+## Blocks and concise UI copy
 
-| Block ID | Purpose / priority | Порядок чтения/focus | Точные короткие labels/actions | Условия видимости |
+| Block ID | Purpose / priority | Reading/focus order | Exact short labels/actions | Visibility conditions |
 |---|---|---|---|---|
-| B01 | Основные входные данные | 1 | Подписи по задаче | Заполнить |
-| B02 | Результат/основное действие | 2 | Короткий CTA | Заполнить |
+| B01 | Primary inputs | 1 | Task-specific labels | Fill |
+| B02 | Result/primary action | 2 | Short CTA | Fill |
 
 ## Desktop layout
 
-`---` — соседство/порядок, не пользовательский переход. Схема semantic, не visual design:
+`---` denotes adjacency/order, not user transitions. This is semantic structure, not visual design:
 
 ```mermaid
 flowchart TB
-  H["Контекст и навигация"] --- B01["B01 Основные данные"]
-  B01 --- B02["B02 Основное действие"]
+  H["Context and navigation"] --- B01["B01 Primary data"]
+  B01 --- B02["B02 Primary action"]
 ```
 
 ## Mobile layout
 
 ```mermaid
 flowchart TB
-  H["Назад и заголовок"] --- B01["B01 Ввод одной колонкой"]
-  B01 --- B02["B02 Основное действие доступно"]
+  H["Back and title"] --- B01["B01 Single-column input"]
+  B01 --- B02["B02 Primary action available"]
 ```
 
-## Адаптация
+## Adaptation
 
-Для каждого блока: move/collapse/show/omit с альтернативным путём; tablet transition; narrow/reflow/long content; keyboard и touch; safe area/виртуальная клавиатура; scroll/sticky/focus. Совпавшие desktop/mobile layouts допустимы с объяснением, не как автоматическое подтверждение адаптивности.
+For each block: move/collapse/show/omit with alternative routes; tablet transitions; narrow/reflow/long content; keyboard/touch; safe areas/virtual keyboards; scroll/sticky/focus. Matching desktop/mobile layouts are valid with justification, never automatic proof of responsiveness.
 
-## States и transitions
+## States and transitions
 
-Учебный graph — заменить/дополнить по реальному процессу; статический экран имеет обоснование N/A вместо фиктивной async логики:
+Illustrative graph: replace/extend for actual processes; static screens explain N/A rather than inventing async logic:
 
 ```mermaid
 stateDiagram-v2
@@ -48,16 +48,16 @@ stateDiagram-v2
   Error --> Ready: correct or retry
 ```
 
-| State ID | Trigger/guard | Видимые блоки и короткий статус | Actions/target | Сохранение данных/focus/recovery |
+| State ID | Trigger/guard | Visible blocks and concise status | Actions/target | Data/focus preservation/recovery |
 |---|---|---|---|---|
-| S01.ready | Заполнить | Заполнить | Заполнить | Заполнить |
+| S01.ready | Fill | Fill | Fill | Fill |
 
-Применимые loading/empty/error/permission/validation/success states не пропускать. Повторное действие не дублирует side effect. Все Screen/State targets существуют или обозначены unresolved.
+Include applicable loading/empty/error/permission/validation/success states. Repeated actions must not duplicate side effects. Every Screen/State target exists or is explicitly unresolved.
 
-## Почему так
+## Rationale
 
-Короткое объяснение порядка/соседства блоков и main action; reference observation IDs, ADR, reuses existing screen/block либо причина нового. Visual tokens/production CSS сюда не входят.
+Explain block ordering/adjacency and primary actions briefly; reference observation IDs, ADRs, reused screens/blocks or reasons for new ones. No visual tokens/production CSS here.
 
 ## Review
 
-Desktop/mobile/tablet walkthrough, keyboard/back/error paths, microcopy, diagram parse/render и prototype checks — PASS/FAIL/NOT RUN. Unknown business behavior не выдавать за принятое требование.
+Desktop/mobile/tablet walkthroughs, keyboard/back/error paths, microcopy, diagram parse/render and prototype checks: PASS/FAIL/NOT RUN. Never present unknown business behavior as accepted requirements.

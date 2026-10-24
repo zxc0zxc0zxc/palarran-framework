@@ -1,0 +1,416 @@
+{
+  "version": 1,
+  "name": "palarran",
+  "repository": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "skills": [
+    {
+      "skill": "palarran-agent-eval",
+      "domain": "agent",
+      "action": "eval",
+      "command": "agent:eval",
+      "adapter": "commands/palarran/agent/eval.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "agent-eval"
+      ]
+    },
+    {
+      "skill": "palarran-agent-improve",
+      "domain": "agent",
+      "action": "improve",
+      "command": "agent:improve",
+      "adapter": "commands/palarran/agent/improve.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "agent-improve"
+      ]
+    },
+    {
+      "skill": "palarran-app-verify",
+      "domain": "app",
+      "action": "verify",
+      "command": "app:verify",
+      "adapter": "commands/palarran/app/verify.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "app-verify"
+      ]
+    },
+    {
+      "skill": "palarran-backend-build",
+      "domain": "backend",
+      "action": "build",
+      "command": "backend:build",
+      "adapter": "commands/palarran/backend/build.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "backend-build"
+      ]
+    },
+    {
+      "skill": "palarran-backend-plan",
+      "domain": "backend",
+      "action": "plan",
+      "command": "backend:plan",
+      "adapter": "commands/palarran/backend/plan.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "backend-plan"
+      ]
+    },
+    {
+      "skill": "palarran-ci-cd",
+      "domain": "ci-cd",
+      "action": "configure",
+      "command": "ci-cd",
+      "adapter": "commands/palarran/ci-cd.md",
+      "arguments": "{github|gitlab} [--plan]",
+      "legacy": [
+        "ci-cd-github",
+        "ci-cd-gitlab"
+      ]
+    },
+    {
+      "skill": "palarran-frontend-build",
+      "domain": "frontend",
+      "action": "build",
+      "command": "frontend:build",
+      "adapter": "commands/palarran/frontend/build.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "frontend-build"
+      ]
+    },
+    {
+      "skill": "palarran-frontend-plan",
+      "domain": "frontend",
+      "action": "plan",
+      "command": "frontend:plan",
+      "adapter": "commands/palarran/frontend/plan.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "frontend-plan"
+      ]
+    },
+    {
+      "skill": "palarran-infra-plan",
+      "domain": "infra-plan",
+      "action": "plan",
+      "command": "infra:plan",
+      "adapter": "commands/palarran/infra/plan.md",
+      "arguments": "{low|med|high} [--plan]",
+      "legacy": [
+        "infra-plan-low",
+        "infra-plan-med",
+        "infra-plan-high"
+      ]
+    },
+    {
+      "skill": "palarran-mcp-build",
+      "domain": "mcp",
+      "action": "build",
+      "command": "mcp:build",
+      "adapter": "commands/palarran/mcp/build.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "mcp-build"
+      ]
+    },
+    {
+      "skill": "palarran-memorize",
+      "domain": "memory",
+      "action": "memorize",
+      "command": "memorize",
+      "adapter": "commands/palarran/memorize.md",
+      "arguments": "{short|long} {note} [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-memorize-session",
+      "domain": "memory",
+      "action": "memorize:session",
+      "command": "memorize:session",
+      "adapter": "commands/palarran/memorize/session.md",
+      "arguments": "[--long] [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-memory-learn",
+      "domain": "memory",
+      "action": "learn",
+      "command": "memory:learn",
+      "adapter": "commands/palarran/memory/learn.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "memory-learn"
+      ]
+    },
+    {
+      "skill": "palarran-memory-recall",
+      "domain": "memory",
+      "action": "recall",
+      "command": "memory:recall",
+      "adapter": "commands/palarran/memory/recall.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "memory-recall"
+      ]
+    },
+    {
+      "skill": "palarran-ml-benchmark",
+      "domain": "ml",
+      "action": "benchmark",
+      "command": "ml:benchmark",
+      "adapter": "commands/palarran/ml/benchmark.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ml-benchmark"
+      ]
+    },
+    {
+      "skill": "palarran-ml-cost",
+      "domain": "ml",
+      "action": "cost",
+      "command": "ml:cost",
+      "adapter": "commands/palarran/ml/cost.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ml-cost"
+      ]
+    },
+    {
+      "skill": "palarran-ml-data",
+      "domain": "ml",
+      "action": "data",
+      "command": "ml:data",
+      "adapter": "commands/palarran/ml/data.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ml-data"
+      ]
+    },
+    {
+      "skill": "palarran-ml-hypotheses",
+      "domain": "ml",
+      "action": "hypotheses",
+      "command": "ml:hypotheses",
+      "adapter": "commands/palarran/ml/hypotheses.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ml-hypotheses"
+      ]
+    },
+    {
+      "skill": "palarran-ml-model",
+      "domain": "ml",
+      "action": "model",
+      "command": "ml:model",
+      "adapter": "commands/palarran/ml/model.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ml-model"
+      ]
+    },
+    {
+      "skill": "palarran-ml-plan",
+      "domain": "ml",
+      "action": "plan",
+      "command": "ml:plan",
+      "adapter": "commands/palarran/ml/plan.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ml-plan"
+      ]
+    },
+    {
+      "skill": "palarran-ml-train",
+      "domain": "ml",
+      "action": "train",
+      "command": "ml:train",
+      "adapter": "commands/palarran/ml/train.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ml-train"
+      ]
+    },
+    {
+      "skill": "palarran-product-acquisition",
+      "domain": "product",
+      "action": "acquisition",
+      "command": "product:acquisition",
+      "adapter": "commands/palarran/product/acquisition.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "product-acquisition"
+      ]
+    },
+    {
+      "skill": "palarran-product-b2b",
+      "domain": "product",
+      "action": "b2b",
+      "command": "product:b2b",
+      "adapter": "commands/palarran/product/b2b.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "product-b2b"
+      ]
+    },
+    {
+      "skill": "palarran-product-b2c",
+      "domain": "product",
+      "action": "b2c",
+      "command": "product:b2c",
+      "adapter": "commands/palarran/product/b2c.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "product-b2c"
+      ]
+    },
+    {
+      "skill": "palarran-product-compare",
+      "domain": "product",
+      "action": "compare",
+      "command": "product:compare",
+      "adapter": "commands/palarran/product/compare.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "product-compare"
+      ]
+    },
+    {
+      "skill": "palarran-product-define",
+      "domain": "product",
+      "action": "define",
+      "command": "product:define",
+      "adapter": "commands/palarran/product/define.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "product-define"
+      ]
+    },
+    {
+      "skill": "palarran-product-market",
+      "domain": "product",
+      "action": "market",
+      "command": "product:market",
+      "adapter": "commands/palarran/product/market.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "product-market"
+      ]
+    },
+    {
+      "skill": "palarran-product-revenue",
+      "domain": "product",
+      "action": "revenue",
+      "command": "product:revenue",
+      "adapter": "commands/palarran/product/revenue.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "product-revenue"
+      ]
+    },
+    {
+      "skill": "palarran-remember",
+      "domain": "memory",
+      "action": "remember",
+      "command": "remember",
+      "adapter": "commands/palarran/remember.md",
+      "arguments": "{query} [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-remember-session",
+      "domain": "memory",
+      "action": "remember:session",
+      "command": "remember:session",
+      "adapter": "commands/palarran/remember/session.md",
+      "arguments": "[--long] @file [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-science-preprint",
+      "domain": "science",
+      "action": "preprint",
+      "command": "science:preprint",
+      "adapter": "commands/palarran/science/preprint.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "science-preprint"
+      ]
+    },
+    {
+      "skill": "palarran-setup",
+      "domain": "skills",
+      "action": "setup",
+      "command": "setup",
+      "adapter": "commands/palarran/setup.md",
+      "arguments": "{target?} [--client codex|claude|both] [--plan]",
+      "legacy": [
+        "skills-setup"
+      ]
+    },
+    {
+      "skill": "palarran-ui-design",
+      "domain": "ui",
+      "action": "design",
+      "command": "ui:design",
+      "adapter": "commands/palarran/ui/design.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ui-design"
+      ]
+    },
+    {
+      "skill": "palarran-ux-design",
+      "domain": "ux",
+      "action": "design",
+      "command": "ux:design",
+      "adapter": "commands/palarran/ux/design.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "ux-design"
+      ]
+    },
+    {
+      "skill": "palarran-vacuum",
+      "domain": "memory",
+      "action": "vacuum",
+      "command": "vacuum",
+      "adapter": "commands/palarran/vacuum.md",
+      "arguments": "[--long] [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-vps-inspect",
+      "domain": "vps",
+      "action": "inspect",
+      "command": "vps:inspect",
+      "adapter": "commands/palarran/vps/inspect.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "vps-inspect"
+      ]
+    },
+    {
+      "skill": "palarran-vps-manage",
+      "domain": "vps",
+      "action": "manage",
+      "command": "vps:manage",
+      "adapter": "commands/palarran/vps/manage.md",
+      "arguments": "{task/context} [profile flags]",
+      "legacy": [
+        "vps-manage"
+      ]
+    },
+    {
+      "skill": "palarran-infrastructure-incident",
+      "domain": "infrastructure",
+      "action": "incident",
+      "command": "infrastructure:incident",
+      "adapter": "commands/palarran/infrastructure/incident.md",
+      "arguments": "{what happened} [--plan]",
+      "legacy": []
+    }
+  ]
+}

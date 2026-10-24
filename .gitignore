@@ -16,8 +16,24 @@ plans/
 *.pem
 *.key
 
-# Keep sanitized decisions/context; discard only per-task scratch.
-.ai-development/**/scratch/
+# Private project journals and agent-client state; never distribute task history.
+.palarran/
+.ai-development/
+.codex/
+.claude/
+.claude-plugin/
+.agents/
+.etc/
+.ai-tools/
+.cursor/
+.windsurf/
+.continue/
+.roo/
+.kilocode/
+.opencode/
+.gemini/
+.aider*
+.delivery/
 
 # Private local orchestrator state, including workflow snapshots.
 .factory-state/

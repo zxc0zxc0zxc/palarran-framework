@@ -5,14 +5,14 @@
   "context_sha256": "REPLACE_WITH_CANONICAL_CONTEXT_HASH",
   "inputs": {},
   "report": {
-    "path": ".ai-development/ml/pipeline-ID/stages/hypotheses/report.md",
+    "path": ".palarran/ml/pipeline-ID/stages/hypotheses/report.md",
     "sha256": "REPLACE_WITH_REPORT_BYTES_HASH"
   },
   "evidence": [
     {"id": "E-example", "claim": "Illustrative unmeasured hypothesis", "source": "target context", "classification": "hypothesis"}
   ],
   "decisions": [
-    {"id": "D-example", "path": ".ai-development/ml/pipeline-ID/decisions/0001-example.md", "sha256": "REPLACE_WITH_DECISION_BYTES_HASH"}
+    {"id": "D-example", "path": ".palarran/ml/pipeline-ID/decisions/0001-example.md", "sha256": "REPLACE_WITH_DECISION_BYTES_HASH"}
   ],
   "hypotheses": ["H-example"],
   "lineage": {},

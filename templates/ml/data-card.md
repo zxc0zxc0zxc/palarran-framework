@@ -1,6 +1,6 @@
 # Dataset card
 
-Planning template; не доказательство полученных прав/качества.
+Planning template; not proof of acquired rights/quality.
 
 - Dataset ID / revision / source URL / original owner:
 - Original license / redistribution terms / permitted use / unresolved rights:

@@ -1,38 +1,38 @@
 # Rust
 
-Определить Cargo workspace/members, `rust-toolchain.toml`, MSRV, `Cargo.lock`, feature sets, binary/library, target triples, linker/native dependencies и integration services. Для deployable app lockfile обязателен; library compatibility может требовать дополнительного разрешения зависимостей отдельно от reproducible app release.
+Identify Cargo workspace/members, `rust-toolchain.toml`, MSRV, `Cargo.lock`, feature sets, binary/library, target triples, linker/native dependencies and integration services. Deployable applications require lockfiles; library compatibility may need additional dependency resolution separately from reproducible application releases.
 
 ## DAG
 
-| Ветка | Содержание | Ограничение |
+| Branch | Contents | Limitation |
 |---|---|---|
 | Format | `cargo fmt --all -- --check` | Pinned rustfmt/component |
-| Analysis | `cargo clippy --workspace --all-targets --locked -- -D warnings` как начальная форма | Реальные features/targets выбрать; all-targets не равно все target triples |
-| Tests | `cargo test --workspace --locked` либо nextest + отдельный doctest contract | Scope включает применимые feature combinations и integration tests |
-| Dependencies | Policy-driven audit/advisories/licenses с pinned tools | Не выдавать отсутствие advisories за доказательство корректности |
-| Release | `cargo build --release --locked` для точного bin/target/features | Packaged binary проверяется отдельно от debug tests |
-| Candidate | OCI/binary smoke на target arch/libc | Не подтверждается одним cross-compile |
+| Analysis | `cargo clippy --workspace --all-targets --locked -- -D warnings` as a starting form | Choose actual features/targets; all-targets is not all target triples |
+| Tests | `cargo test --workspace --locked` or nextest + separate doctest contract | Scope includes applicable feature combinations/integration tests |
+| Dependencies | Policy-driven audit/advisories/licenses with pinned tools | Absence of advisories does not prove correctness |
+| Release | `cargo build --release --locked` for exact bin/target/features | Packaged binary checked separately from debug tests |
+| Candidate | OCI/binary smoke on target architecture/libc | Cross-compilation alone is insufficient |
 
-Команды — адаптируемая форма, не готовый pipeline для любого workspace. `--all-features` применять только если features совместимы; взаимоисключающие backend/TLS features требуют явной matrix. [Cargo test](https://doc.rust-lang.org/cargo/commands/cargo-test.html) и [build](https://doc.rust-lang.org/cargo/commands/cargo-build.html) — основание для flags/scope. `--locked` запрещает незапланированное изменение lock, `--offline` имеет другую семантику и требует доступных зависимостей.
+Commands are adaptable forms, not ready pipelines for every workspace. Use `--all-features` only for compatible features; mutually exclusive backend/TLS features require explicit matrices. [Cargo test](https://doc.rust-lang.org/cargo/commands/cargo-test.html) and [build](https://doc.rust-lang.org/cargo/commands/cargo-build.html) define flags/scope. `--locked` prevents unplanned lock changes; `--offline` has different semantics and requires available dependencies.
 
-## Главные возможности ускорения
+## Main optimization opportunities
 
-Cache Cargo registry/git downloads отдельно от `target`/compiler results. Ключи: rustc/toolchain components, target triple, profile, features, Cargo.lock/manifests, RUSTFLAGS, linker/native libraries и trust scope. Разные runner paths могут ухудшать hits. Не сохранять registry tokens/credentials и не доверять untrusted binary build cache в release.
+Cache Cargo registry/git downloads separately from `target`/compiler results. Keys include rustc/toolchain components, target triple, profile, features, Cargo.lock/manifests, RUSTFLAGS, linker/native libraries and trust scope. Different runner paths may reduce hits. Do not retain registry tokens/credentials or trust untrusted binary-build caches for releases.
 
-[Mozilla sccache](https://github.com/mozilla/sccache) может переиспользовать компиляцию через `RUSTC_WRAPPER`, но не ускоряет всё: linker jobs и incremental compilation имеют ограничения. Для shared CI sccache рассмотреть `CARGO_INCREMENTAL=0` после сравнения warm/cold measurements; не обещать выигрыш без статистики. В одном pipeline «кешировать огромный target целиком» может стоить больше network time, чем компиляция нужного набора.
+[Mozilla sccache](https://github.com/mozilla/sccache) may reuse compilation through `RUSTC_WRAPPER` but does not speed everything: linker jobs/incremental compilation have limitations. For shared CI sccache, consider `CARGO_INCREMENTAL=0` after comparing warm/cold measurements; do not promise gains without statistics. Caching an enormous entire target directory may cost more network time than compiling the needed set.
 
-[cargo-nextest](https://nexte.st/docs/running/) — опция для параллельного исполнения/разделения tests. Не предполагать, что переход с `cargo test` автоматически покрывает всё: inventory unit/integration/doctest/bench scope и capabilities pinned версии сверяются. Если doctests не выполняются выбранным nextest flow, добавить `cargo test --doc --workspace --locked` с согласованными features. Переход считается завершённым только после сравнения списков и результатов test suites.
+[cargo-nextest](https://nexte.st/docs/running/) supports parallel test execution/splitting. Do not assume migration from `cargo test` automatically covers everything: reconcile unit/integration/doctest/bench inventory with pinned-version capabilities. If selected nextest flows omit doctests, add `cargo test --doc --workspace --locked` with agreed features. Migration completes only after comparing test inventories/results.
 
-Compile и test parallelism ограничиваются CPU/RAM: cargo `-j`, test threads/nextest workers и CI shard count перемножаются. На слабом runner лишние workers дают OOM и queue delays. Shard после общего compile либо отдельные runners с корректным compiler cache выбирать по measured artifact-transfer cost.
+CPU/RAM bound compile/test parallelism: cargo `-j`, test threads/nextest workers and CI shard count multiply. Excess workers on weak runners cause OOM/queue delays. Choose shards after shared compilation or separate runners with correct compiler cache based on measured artifact-transfer cost.
 
-## Релиз и supply chain
+## Release and supply chain
 
-Versioned toolchain/MSRV policy; production release features и target записаны в manifest. Build scripts/proc macros исполняют код: они не получают prod credentials. При vendoring/offline/hermetic goals контролировать все native tools/network inputs отдельно, Cargo.lock сам по себе не делает сборку герметичной.
+Version toolchain/MSRV policy; record production release features/target in manifests. Build scripts/proc macros execute code and receive no production credentials. For vendoring/offline/hermetic goals, control all native tools/network inputs separately; Cargo.lock alone does not make builds hermetic.
 
-Debug test build не равен optimized release: overflow/panic/linker/runtime flags могут отличаться. Проверить startup и critical behavior actual release binary. ThinLTO/full LTO/codegen-units подбирать по runtime/build tradeoff; выключение оптимизаций ради быстрого CI не должно незаметно менять production contract. Без обоснования не собирать полный release profile заново в каждом test shard.
+Debug test builds differ from optimized releases: overflow/panic/linker/runtime flags may differ. Check startup/critical behavior of actual release binaries. Choose ThinLTO/full LTO/codegen-units by runtime/build tradeoffs; disabling optimizations for fast CI must not silently change production contracts. Do not rebuild full release profiles in every test shard without justification.
 
-Runtime image минимален, но содержит нужные dynamic libraries, CA certs и user configuration. musl/glibc и static/dynamic linking выбираются по dependencies, не универсальному правилу. Multiarch smoke и evidence для фактических platforms обязательны. Deploy — [контроллер/API](../architecture.md), old/new protocol/schema compatibility, no SSH/remote cargo install.
+Minimal runtime images still contain necessary dynamic libraries, CA certificates and user configuration. Choose musl/glibc/static/dynamic linking by dependencies, not universal rules. Multiarch smoke/evidence for actual platforms is mandatory. Deployment: [controller/API](../architecture.md), old/new protocol/schema compatibility, no SSH/remote cargo install.
 
-## Приёмка
+## Acceptance
 
-Cargo.lock drift fail; cold/warm cache корректны; Clippy/test/doctest scope доказан; supported features/MSRV проверены по policy; release binary работает с target loader/libc/arch; signed eligible digest соответствует наблюдаемому rollout; build/test stderr и crash diagnostics не содержат secrets. В handoff — реальные timings и cache statistics, а не обещание «Rust будет быстрым» только от установки sccache. Основание общих safety/performance решений — [Google/Meta/Microsoft](../evidence.md); конкретные Rust tooling choices наши.
+Cargo.lock drift fails; cold/warm caches are correct; Clippy/test/doctest scope proven; supported features/MSRV checked under policy; release binary runs with target loader/libc/architecture; signed eligible digest matches observed rollout; build/test stderr/crash diagnostics contain no secrets. Handoff includes actual timings/cache statistics, not “Rust will be fast” merely because sccache is installed. [Google/Meta/Microsoft](../evidence.md) inform shared safety/performance decisions; concrete Rust tooling choices are ours.

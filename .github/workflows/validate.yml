@@ -1,4 +1,4 @@
-name: Validate AI tools
+name: Validate Palarran
 on:
   push:
   pull_request:

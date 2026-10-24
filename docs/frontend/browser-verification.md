@@ -1,34 +1,34 @@
-# Browser acceptance: обязательная проверка результата
+# Browser acceptance: mandatory result verification
 
-Успешная компиляция не завершает `/frontend:build`. Запустить приложение штатной командой, определить **фактический** URL/port, открыть его доступным browser tool и пройти [coverage matrix](../../templates/frontend/coverage.md). Не проверять вместо приложения старый UI preview или другой процесс на занятом порту. Сохранять ownership dev process; не останавливать чужой сервер.
+Successful compilation does not complete `/palarran:frontend:build`. Start the application with its normal command, determine the **actual** URL/port, open it using an available browser tool and exercise the [coverage matrix](../../templates/frontend/coverage.md). Do not test an old UI preview or another process occupying the port instead. Preserve ownership of the development process; do not stop someone else's server.
 
-Использовать доступный purpose-built browser/UI tool; при необходимости локальный Playwright по conventions target. Если инструмент даёт ограничения доступа, соблюдать их. При отсутствии browser/runtime доступа закончить доступный код и отметить acceptance NOT RUN с конкретным blocker, не подменять проверку HTTP 200. Browser acceptance обязательна для статуса **verified**.
+Use an available purpose-built browser/UI tool; use local Playwright under target conventions when necessary. Respect tool access restrictions. Without browser/runtime access, finish available code and mark acceptance NOT RUN with a concrete blocker; do not substitute HTTP 200 for verification. Browser acceptance is required for **verified** status.
 
-## Что пройти
+## Scenarios to exercise
 
-1. Routes/deep links/reload/back и роль из source UX; проверить, что реально грузятся новые компоненты/assets, нет crash/hydration errors.
-2. Основные действия через настоящие controls: menu/navigation, form inputs/validation/submit, dialogs close/focus return, retry/pagination — где они есть. Проверить observable outcome. Доступность disabled/loading не должна маскировать неработающее действие.
-3. Loading/empty/error/forbidden/long content воспроизвести детерминированными test fixtures или mock layer, явно пометив источник. При доступном API отдельно проверить реальный request/response и ожидаемое server-side состояние; reload/read-back, если действие должно сохраняться. Не утверждать end-to-end persistence по mock success.
-4. Narrow/mobile/tablet/desktop и boundaries из [responsive](responsive.md); проверить keyboard/focus/zoom, scroll, touch targets и source UI fallbacks в поддерживаемых условиях.
-5. Снять **и посмотреть** реальные renders; сопоставить с исходным UI при одинаковых размерах/данных: hierarchy/type/spacing/color/assets/states. Записать substantive differences и причину. Наличие PNG не означает просмотр, DOM snapshot не является screenshot.
-6. Console, failed network/asset requests и server errors: устранить вызванные изменением дефекты, отличить existing issues с evidence. Фильтрация не должна скрывать crash. Auth/PII не сохранять в report/trace.
+1. Routes/deep links/reload/back and the role from source UX; check that new components/assets actually load without crashes/hydration errors.
+2. Main actions through real controls: menu/navigation, form inputs/validation/submit, dialog close/focus return, retry/pagination where present. Check observable outcomes. Disabled/loading availability must not conceal a nonfunctional action.
+3. Reproduce loading/empty/error/forbidden/long content with deterministic test fixtures or a mock layer, explicitly identifying the source. When an API is available, separately verify the real request/response and expected server-side state; reload/read back when the action should persist. Do not claim end-to-end persistence from mock success.
+4. Narrow/mobile/tablet/desktop and boundaries from [responsive](responsive.md); check keyboard/focus/zoom, scrolling, touch targets and source UI fallbacks under supported conditions.
+5. Capture **and view** actual renders; compare them with source UI at identical dimensions/data: hierarchy/type/spacing/color/assets/states. Record substantive differences and reasons. A PNG's existence does not establish visual review; a DOM snapshot is not a screenshot.
+6. Console, failed network/asset requests and server errors: fix defects caused by the change and distinguish existing issues with evidence. Filtering must not hide crashes. Do not store auth/PII in reports/traces.
 
-После исправления повторить затронутые сценарии и shared component consumers, затем критический smoke flow. Не прекращать после первой сломанной кнопки; исправлять в scope до прохождения. Внешний недоступный backend/tool — конкретная граница проверки, не повод объявить полный success.
+After fixes, repeat affected scenarios and shared component consumers, then the critical smoke flow. Do not stop at the first broken button; fix in-scope defects until checks pass. An unavailable external backend/tool is a specific verification boundary, not grounds for declaring complete success.
 
-## Автоматизация и visual regression
+## Automation and visual regression
 
-[Playwright best practices](https://playwright.dev/docs/best-practices): проверять наблюдаемое пользователем поведение, изолировать tests, применять устойчивые locators и web-first assertions. Не добавлять произвольные sleeps вместо ожидания состояния. Не привязывать test к CSS nesting, если доступен role/label locator. Использовать штатный framework проекта, не требовать установки нового browser runner при уже доступном подходящем tool.
+[Playwright best practices](https://playwright.dev/docs/best-practices): test user-observable behavior, isolate tests, use resilient locators and web-first assertions. Do not add arbitrary sleeps instead of waiting for a state. Do not tie tests to CSS nesting when role/label locators are available. Use the project's established framework; do not require a new browser runner installation when a suitable tool is already available.
 
-[Visual comparisons](https://playwright.dev/docs/test-snapshots) чувствительны к environment/fonts/browser. Зафиксировать окружение и deterministic data; сравнивать эквивалентные screens/states. Первый автоматически созданный snapshot ещё не approved baseline. Не принимать массовый `update-snapshots` или расширенный diff threshold как исправление регрессии: сначала посмотреть diff и связать осознанную смену UI с decision/source revision.
+[Visual comparisons](https://playwright.dev/docs/test-snapshots) are sensitive to environment/fonts/browser. Pin the environment and deterministic data; compare equivalent screens/states. The first automatically generated snapshot is not yet an approved baseline. Do not accept bulk `update-snapshots` or a widened diff threshold as a regression fix: first view the diff and link an intentional UI change to a decision/source revision.
 
-Cross-browser scope брать из product requirements/существующей поддержки. При отсутствии списка проверить доступный browser и указать его, не писать «все браузеры». Для поддерживаемых critical engines выполнить доступные проверки или честно перечислить непроверенные. Emulation не доказывает реальную camera/native controls/keyboard интеграцию.
+Derive cross-browser scope from product requirements/existing support. Without a list, test the available browser and name it; do not claim “all browsers.” Run available checks for supported critical engines or explicitly list untested ones. Emulation does not establish real camera/native controls/keyboard integration.
 
 ## Evidence
 
-В [browser review](../../templates/frontend/browser-review.md): commit/dirty diff identity, command и environment, browser/version, viewport/role/fixture mode, UX/UI IDs, выполненные шаги и **фактический** результат, screenshot/trace paths, PASS/FAIL/NOT RUN, bugs/recheck. Сохранить sanitized screenshots; traces/HAR могут содержать secrets — не публиковать raw recordings. Обязательные gaps означают partial/unverified, не verified. User acceptance/production deployment отдельно.
+In the [browser review](../../templates/frontend/browser-review.md), record commit/dirty diff identity, command and environment, browser/version, viewport/role/fixture mode, UX/UI IDs, steps performed and **actual** outcome, screenshot/trace paths, PASS/FAIL/NOT RUN and bugs/rechecks. Preserve sanitized screenshots; traces/HAR may contain secrets, so do not publish raw recordings. Mandatory gaps mean partial/unverified, not verified. User acceptance/production deployment are separate.
 
-## SDD integrated gates и статус задач
+## SDD integrated gates and task status
 
-Каждый случай связан с plan ID/revision, source UX/UI и TASK/T/AC/screen/state IDs; evidence указывает actual integration commit. Lane screenshots/tests возвращаются в agent reports и не подменяют required browser checks общего приложения. При shared component/router/style change перепроверить затронутые consumers/flows и инвалидировать stale evidence.
+Link each case to plan ID/revision, source UX/UI and TASK/T/AC/screen/state IDs; evidence identifies the actual integration commit. Lane screenshots/tests return in agent reports and do not replace required browser checks of the combined application. After shared component/router/style changes, recheck affected consumers/flows and invalidate stale evidence.
 
-Coordinator обновляет [ledger и section source plan](progress.md) после actual проверки: code-ready не verified. Required browser/responsive/visual/flow/DoD gates остаются NOT_RUN/FAIL при недоступном tool/источнике/API или дефекте. Не делить одну управляемую browser surface между одновременно кликающими агентами; isolated contexts/test data/ports либо serial final review.
+The coordinator updates the [ledger and source-plan section](progress.md) after actual verification: code-ready is not verified. Required browser/responsive/visual/flow/DoD gates remain NOT_RUN/FAIL when a tool/source/API is unavailable or a defect exists. Do not share one controlled browser surface between concurrently clicking agents; use isolated contexts/test data/ports or serial final review.

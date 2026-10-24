@@ -312,7 +312,7 @@ class FactoryCoreTests(unittest.TestCase):
         with closing(Store(self.state)) as store:
             recorded = store.db.execute('SELECT reason FROM reconciliations WHERE run_id=?', (run,)).fetchone()[0]
             self.assertEqual(recorded, 'operator approved scope')
-        files = list(Path(report['workspace']).glob('.ai-development/factory/*/ai/attempt-*/handoff.json'))
+        files = list(Path(report['workspace']).glob('.palarran/factory/*/ai/attempt-*/handoff.json'))
         self.assertEqual(len(files), 2)  # preserves both handoff revisions
 
     def test_handoff_rejects_symlink_and_oversized_payload(self):

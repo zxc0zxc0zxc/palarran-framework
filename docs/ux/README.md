@@ -1,33 +1,33 @@
-# UX design: бизнес → референсы → экраны и состояния
+# UX design: business → references → screens and states
 
-База для `/ux:design {описание}`. Если описания нет — прочитать README **целевого проекта**, product requirements и сохранённые UX concepts/решения. Не исследовать бизнес репозитория со скиллом вместо приложения пользователя.
+Reference for `/palarran:ux:design {description}`. Without a description, read the **target project's** README, product requirements and saved UX concepts/decisions. Do not research the skill repository's business instead of the user's application.
 
-Результат — понятный UX приложения в диаграммах и коротких пояснениях к **каждому** экрану. UX определяет задачи, порядок и расположение функциональных блоков, действия, навигацию, состояния и адаптацию; цвета, шрифты, радиусы, тени, бренд и CSS не входят в этот скилл. Реализация интерфейса/Figma не подразумевается вызовом.
+Deliver clear application UX through diagrams and concise explanations for **every** screen. UX defines tasks, ordering and placement of functional blocks, actions, navigation, states and adaptation; colors, fonts, radii, shadows, branding and CSS are outside this skill. Invoking it does not imply interface/Figma implementation.
 
-## Обязательные правила
+## Mandatory rules
 
-- Начать с [памяти решений](../skills/decision-memory.md): читать прошлые принятые выборы, каждое новое решение объяснять до зависимого изменения. Concepts сохранять для ревью и следующих задач.
-- Анализировать несколько независимых референсов: default **4 продукта**, минимум **3** для завершённого minimum с объяснением ограничения. Четыре screenshots одного продукта не заменяют четыре продукта. Если доступно меньше трёх — research incomplete, можно продолжить только явно помеченный draft.
-- Исследовать одинаковые бизнес-задачи на сайтах и в кабинетах; нет доступа — искать screenshots/официальные walkthrough с provenance. Нельзя выдумывать невидимые экраны или переходы.
-- При неясном процессе задать «Что делает данный бизнес-процесс?» с названием процесса/неизвестным входом или результатом. Продолжать независимые части; не заполнять ответ догадками.
-- По ответу проверить existing screen/state catalog: переиспользовать подходящие, добавить состояния или новые экраны только по фактической необходимости.
-- Никаких длинных текстов в UI. Краткая подпись действия, одна понятная задача/главный CTA, необходимая информация в нужный момент. Спецификация может объяснять решение, но эти пояснения не становятся экранным текстом.
-- По умолчанию охват — всё приложение, описанное в brief/product docs: все выявленные роли, journeys и экраны. Частичный scope допустим по запросу пользователя или как явно незавершённый draft; не сокращать приложение до нескольких красивых примеров и не называть это завершением.
-- Каждый экран имеет screen ID, flow связи, semantic desktop/mobile layout diagrams, state/transition contract, tablet/content adaptation и accessibility requirements. Desktop-only концепт не завершён.
-- Не выдавать desk review за пользовательское тестирование, screenshot за наблюдённую интеракцию, а статическую диаграмму — за проверенную адаптивную реализацию.
+- Start with [decision memory](../skills/decision-memory.md): read previous accepted choices and explain each new decision before dependent changes. Preserve concepts for review and subsequent tasks.
+- Analyze several independent references: default **4 products**, minimum **3** for a completed minimum with an explained limitation. Four screenshots from one product do not replace four products. With fewer than three available, research is incomplete; continue only as an explicitly labeled draft.
+- Research matching business tasks on websites and in account interfaces; without access, seek screenshots/official walkthroughs with provenance. Do not invent unseen screens or transitions.
+- For an unclear process, ask “What does this business process do?” with the process name/unknown input or outcome. Continue independent work without filling answers with guesses.
+- Use the answer to check the existing screen/state catalog: reuse suitable entries and add states/new screens only when actually needed.
+- No long UI text. Use concise action labels, one clear task/main CTA and necessary information at the right time. Specifications may explain a decision, but those explanations do not become screen copy.
+- Default scope is the entire application described by the brief/product docs: all identified roles, journeys and screens. Partial scope is allowed at the user's request or as an explicitly unfinished draft; do not reduce the application to a few attractive examples and call it complete.
+- Each screen has a screen ID, flow links, semantic desktop/mobile layout diagrams, a state/transition contract, tablet/content adaptation and accessibility requirements. A desktop-only concept is incomplete.
+- Do not present desk review as user testing, a screenshot as an observed interaction or a static diagram as verified responsive implementation.
 
-## Читать по порядку
+## Reading order
 
-| Документ | Содержание |
+| Document | Contents |
 |---|---|
-| [business.md](business.md) | Описание/README, роли, задачи, процессы, повторное использование |
-| [research.md](research.md) | Выбор аналогов, поиск сайтов/кабинетов/screenshots и evidence |
-| [analysis.md](analysis.md) | Сопоставимые задачи, проблемы/паттерны, перенос в наш продукт |
-| [diagrams.md](diagrams.md) | User flows, layouts и state graphs с примерами |
-| [responsive.md](responsive.md) | Mobile/desktop/tablet, keyboard, reflow и состояния |
-| [microcopy.md](microcopy.md) | Короткий UI текст без потери смысла |
-| [workflow.md](workflow.md) | Порядок работы скилла и каталог сохраняемых concepts |
-| [review.md](review.md) | Traceability, готовность, вопросы и usability validation |
-| [sources.md](sources.md) | Первичные методологические источники и ограничения |
+| [business.md](business.md) | Description/README, roles, tasks, processes, reuse |
+| [research.md](research.md) | Selecting analogs, finding websites/account interfaces/screenshots and evidence |
+| [analysis.md](analysis.md) | Comparable tasks, problems/patterns, transfer to our product |
+| [diagrams.md](diagrams.md) | User flows, layouts and state graphs with examples |
+| [responsive.md](responsive.md) | Mobile/desktop/tablet, keyboard, reflow and states |
+| [microcopy.md](microcopy.md) | Concise UI text without losing meaning |
+| [workflow.md](workflow.md) | Skill workflow and saved concept catalog |
+| [review.md](review.md) | Traceability, readiness, questions and usability validation |
+| [sources.md](sources.md) | Primary methodological sources and limitations |
 
-[Шаблон концепта](../../templates/ux/concept.md), [шаблон экрана](../../templates/ux/screen.md), [карточка референса](../../templates/ux/reference.md). При генерации заполнить под приложение, удалить неприменимые примеры и честно пометить неизвестное. В этой базе примеры учебные — не исследование Google/Tinder и не готовый UX ai-tools.
+[Concept template](../../templates/ux/concept.md), [screen template](../../templates/ux/screen.md), [reference card](../../templates/ux/reference.md). Fill them for the application, remove inapplicable examples and identify unknowns honestly. Examples in this reference are educational, not Google/Tinder research or ready-made palarran UX.

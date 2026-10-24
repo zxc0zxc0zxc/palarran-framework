@@ -1,24 +1,24 @@
-# Quality без фиктивных гарантий
+# Quality without invented guarantees
 
-Проверить существующие scripts и выполнить применимые lint/typecheck/build/unit/component/browser checks. Добавлять целевые tests для новых состояний/взаимодействий, где они ловят реальную регрессию; не писать snapshots/тесты, лишь повторяющие структуру реализации. Исправлять вызванные изменением failures. Existing failures описывать с baseline evidence, не объявлять новый код виноватым или всё зелёным без фактов.
+Inspect existing scripts and run applicable lint/typecheck/build/unit/component/browser checks. Add targeted tests for new states/interactions where they catch real regressions; do not write snapshots/tests that merely repeat implementation structure. Fix failures caused by the change. Describe existing failures with baseline evidence; do not blame new code or claim everything passes without facts.
 
-Выделить быстрый feedback: component/state checks и targeted browser smoke до полного suite, reuse deterministic fixtures, изолировать tests, сохранять failure evidence. Полный обязательный suite проекта остаётся обязательным. Не отключать проверки ради скорости. Изменение CI — только если нужно запросу/согласованному scope, ориентир `docs/ci-cd/` (отдельная CI/CD база) доступна отдельно, не обязательная зависимость frontend package.
+Arrange quick feedback: component/state checks and targeted browser smoke before the full suite, reuse deterministic fixtures, isolate tests and retain failure evidence. The project's full mandatory suite remains required. Do not disable checks for speed. Change CI only when required by the request/agreed scope; `docs/ci-cd/` is a separate CI/CD reference available independently, not a mandatory frontend-package dependency.
 
 ## Performance
 
-Учитывать размеры assets и client JavaScript, изображения с явной геометрией, font loading/fallback, lazy loading неключевого content, ненужные re-renders и data waterfalls. Не превращать всю страницу в client component без причины в проектах с server rendering. Измерять на воспроизводимом маршруте/данных/device profile; budget выбирать по продукту и baseline, не придумывать универсальный bundle limit.
+Consider asset and client JavaScript size, images with explicit geometry, font loading/fallback, lazy loading of noncritical content, unnecessary rerenders and data waterfalls. Do not make an entire page a client component without a reason in server-rendered projects. Measure on a reproducible route/data/device profile; choose budgets from the product and baseline instead of inventing a universal bundle limit.
 
-[Google Web Vitals](https://web.dev/articles/vitals) выделяет LCP, INP и CLS как Core Web Vitals. Lab замер помогает диагностировать, но не доказывает field показатели реальных пользователей. Записывать method/environment, до/после и ограничения; score Lighthouse не означает корректность UX, отсутствие XSS или WCAG certification. Если performance замер недоступен/вне scope, так и указать, не выдумывать проценты улучшения.
+[Google Web Vitals](https://web.dev/articles/vitals) identifies LCP, INP and CLS as Core Web Vitals. Lab measurements help diagnose issues but do not establish real users' field metrics. Record method/environment, before/after and limitations; a Lighthouse score does not establish UX correctness, absence of XSS or WCAG certification. If performance measurement is unavailable/out of scope, say so instead of inventing improvement percentages.
 
-## Границы готовности
+## Readiness boundaries
 
-- Implemented: код и in-scope coverage существуют, integration gaps явно названы.
-- Verified: применимые project checks и обязательный browser acceptance пройдены для зафиксированного scope/environment; mandatory missing asset/API/browser checks не скрыты.
-- Partial/unverified: есть FAIL/NOT RUN обязательных checks или отсутствует нужный backend/tool/source; описать конкретный остаток, сохранить независимую выполненную часть.
-- User-approved/deployed: только фактическое отдельное решение/событие, не следствие `build`.
+- Implemented: code and in-scope coverage exist; integration gaps are explicit.
+- Verified: applicable project checks and mandatory browser acceptance passed for the recorded scope/environment; no hidden mandatory missing asset/API/browser checks.
+- Partial/unverified: required checks include FAIL/NOT RUN or a necessary backend/tool/source is missing; describe specific remaining work and preserve independent completed work.
+- User-approved/deployed: only an actual separate decision/event, not a consequence of `build`.
 
-В handoff отделить syntax/build, actual UI interactions, visual review и real API integration. Запуск dev server сам по себе не evidence результата в браузере.
+In handoff, separate syntax/build, actual UI interactions, visual review and real API integration. Starting a development server alone is not evidence of browser outcomes.
 
-## SDD DoD и completion
+## SDD DoD and completion
 
-[Task/feature DoD](sdd-agents.md) связывает source AC/screens/states с actual integration checks. Task code commits → implemented, integration commit → integrated, required actual checks → verified. Финальный scope verified требует всех tasks и mandatory browser/responsive/visual/flow gates на текущем integration HEAD. Build/lint/branch PASS не завершают DoD. Снижение targets/удаление cases требует оснований spec revision/ADR, не скрытого исправления прогресса.
+[Task/feature DoD](sdd-agents.md) links source AC/screens/states to actual integration checks. Task code commits → implemented, integration commit → integrated, required actual checks → verified. Final verified scope requires all tasks and mandatory browser/responsive/visual/flow gates on current integration HEAD. Build/lint/branch PASS do not complete DoD. Reducing targets/removing cases requires justification through a spec revision/ADR, not a hidden progress correction.

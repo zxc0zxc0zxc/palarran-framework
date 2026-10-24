@@ -1,18 +1,18 @@
-# SDD execution workflow и память frontend
+# SDD execution workflow and frontend memory
 
-1. Определить target/scope, прочитать instructions/memory, actual code и source UX/UI revisions. Найти explicit SDD plan либо **до app edits** подготовить scoped [spec/plan](sdd-agents.md) из существующих UX/UI. Критичные business/source gaps уточнить, независимое планирование продолжать; не редизайнить и не выбирать новый stack по привычке.
-2. Зафиксировать plan ID/revision, UX/UI/API refs, code baseline/dirty changes, R/AC/screen/state/TASK/T IDs, полный coverage, task DAG/ownership и concrete DoD. Объяснить принятые choices в canonical ADR до зависимых изменений. Existing spec convention сохранить, не дублировать accepted truth.
-3. Инициализировать/сверить [progress.json и section самого source plan](progress.md) с full task/gate inventory. Planning pending не равно code-ready/verified. Coordinator один writer plan/progress/index, old PASS сверяется с actual Git/evidence/affected scope.
-4. Shared layout/tokens/router/types/lockfile freeze, затем ready independent tasks в owned **отдельных worktrees/branches** с internal agents, absolute cwd/touch sets и isolated server/browser/data resources. Agents возвращают scoped commits/reports; ветки интегрируются sequential по DAG. Нет agents/isolation — честная limitation/serial execution, не fake parallel.
-5. Реализовать all in-scope states/actions/assets по [implementation](implementation.md), [responsive](responsive.md) и source contracts, сохранив short copy. Images reuse/generation, mocks vs real API и production scope boundaries прежние. Lane checks/evidence ещё не accepted integrated gates.
-6. Review/интеграция → integrated; project tests/build и **actual browser review общего app** по [browser acceptance](browser-verification.md). Проверить states/flows, narrow/tablet/desktop, visual fidelity, keyboard/focus/zoom/overflow, console/network, real API/read-back по scope. Исправить defects/retest, affected shared changes инвалидируют old checks/verified tasks.
-7. После dispatch/handoff/integration/check/blocker обновить canonical ledger и source plan section с actual status/commit/evidence/remaining reason. [Helper](../../scripts/execution_progress.py) `--area frontend --plan <source-plan>` проверяет structure, не истинность тестов. Полный feature verified только все tasks verified + required integrated gates PASS на текущем HEAD. Missing browser/runtime/API/asset → partial/NOT_RUN.
-8. Сохранить coverage/browser review/agent reports/ADR/index/handoff и source revisions. Cleanup только owned saved/integrated clean worktrees, without force removal. Отдельно показать реализованную plan revision/commit и remaining work. Production deploy/user approval не следуют из local build.
+1. Determine target/scope, read instructions/memory, actual code and source UX/UI revisions. Find an explicit SDD plan or prepare a scoped [spec/plan](sdd-agents.md) from existing UX/UI **before application edits**. Clarify critical business/source gaps while continuing independent planning; do not redesign or choose a new stack out of habit.
+2. Record plan ID/revision, UX/UI/API refs, code baseline/dirty changes, R/AC/screen/state/TASK/T IDs, full coverage, task DAG/ownership and concrete DoD. Explain accepted choices in canonical ADRs before dependent changes. Preserve existing spec conventions without duplicating accepted truth.
+3. Initialize/reconcile [progress.json and the source plan's own section](progress.md) against full task/gate inventory. Planning pending does not mean code-ready/verified. The coordinator alone writes plan/progress/index; reconcile old PASS against actual Git/evidence/affected scope.
+4. Freeze shared layout/tokens/router/types/lockfile, then run independent ready tasks in owned **separate worktrees/branches** through internal agents, with absolute cwd/touch sets and isolated server/browser/data resources. Agents return scoped commits/reports; integrate branches sequentially by DAG. Without agents/isolation, state the limitation/serial execution honestly instead of fabricating parallelism.
+5. Implement all in-scope states/actions/assets under [implementation](implementation.md), [responsive](responsive.md) and source contracts, preserving concise copy. Image reuse/generation, mocks versus real API and production-scope boundaries remain unchanged. Lane checks/evidence are not yet accepted integrated gates.
+6. Review/integration → integrated; project tests/build and **actual browser review of the combined application** under [browser acceptance](browser-verification.md). Check states/flows, narrow/tablet/desktop, visual fidelity, keyboard/focus/zoom/overflow, console/network and real API/read-back within scope. Fix defects/retest; affected shared changes invalidate old checks/verified tasks.
+7. After dispatch/handoff/integration/check/blocker, update canonical ledger and source-plan section with actual status/commit/evidence/remaining reason. The [helper](../../scripts/execution_progress.py) `--area frontend --plan <source-plan>` checks structure, not test truthfulness. Full-feature verified requires all tasks verified + required integrated gates PASS on current HEAD. Missing browser/runtime/API/asset → partial/NOT_RUN.
+8. Preserve coverage/browser review/agent reports/ADR/index/handoff and source revisions. Clean up only owned saved/integrated clean worktrees without force removal. Separately show implemented plan revision/commit and remaining work. Production deployment/user approval do not follow from a local build.
 
 ```text
-.ai-development/frontend/<task>/
+.palarran/frontend/<task>/
   context.md
-  spec.md                          # либо ссылка на canonical existing spec
+  spec.md                          # or link to existing canonical spec
   plan.md                          # source design + marked execution section
   progress.json                    # canonical states/gates, coordinator writer
   decisions/                       # canonical accepted rationale
@@ -23,6 +23,6 @@
   handoff.md
 ```
 
-App code/tests/assets остаются в штатных app directories. Старые runs/revisions/evidence сохранять; UI/UX catalogs связать с реализацией, не менять source approval. При resume начать с plan/UX/UI revisions, ledger/Git/current HEAD/evidence и affected checks, продолжить незавершённое. [Handoff](../../templates/frontend/handoff.md) — конкретные delivered/remaining TASK IDs, DoD и actual browser coverage.
+Application code/tests/assets stay in normal application directories. Preserve old runs/revisions/evidence; link UI/UX catalogs to implementation without changing source approval. On resume, start with plan/UX/UI revisions, ledger/Git/current HEAD/evidence and affected checks, then continue unfinished work. [Handoff](../../templates/frontend/handoff.md) identifies concrete delivered/remaining TASK IDs, DoD and actual browser coverage.
 
-Отдельный `/frontend:plan` следует [planning-only workflow](plan/workflow.md) и заканчивается на spec/handoff/pending progress. Этот execution workflow запускается только для build scope, наличие plan само по себе не разрешает dispatch/app changes.
+The separate `/palarran:frontend:plan` follows [planning-only workflow](plan/workflow.md) and ends at spec/handoff/pending progress. This execution workflow runs only within build scope; a plan's existence alone authorizes neither dispatch nor application changes.

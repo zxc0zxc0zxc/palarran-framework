@@ -1,37 +1,37 @@
-# Понять бизнес и переиспользовать экраны
+# Understand the business and reuse screens
 
-## Вход /ux:design
+## /palarran:ux:design input
 
-Описание после команды — основной intent. Без него найти README в target root, а в monorepo — README нужного продукта/package и ссылки на product docs. README про установку библиотеки может не объяснять бизнес: не превращать список зависимостей в продуктовую спецификацию. Если неясен сам target, сначала уточнить проект.
+The description after the command is the primary intent. Without one, find README in the target root; in a monorepo, find the relevant product/package README and product-document links. A library-installation README may not explain the business: do not turn dependencies into a product specification. If the target itself is unclear, clarify the project first.
 
-Сверить описание с действующими PRD/DESIGN/product docs, существующими routes/screens и accepted `.ai-development/` решениями. Свежий запрос пользователя имеет приоритет над старой гипотезой; существенное противоречие описать. Код показывает реализованное, но не доказывает, что оно желаемое. Не выдумывать продуктовые решения из названия репозитория.
+Reconcile the description with current PRD/DESIGN/product docs, existing routes/screens and accepted `.palarran/` decisions. The user's latest request takes precedence over an old hypothesis; describe substantive contradictions. Code shows what is implemented, not proof of what is desired. Do not invent product decisions from the repository name.
 
-Краткий business brief содержит:
+A concise business brief includes:
 
-- Для кого продукт: роли, права, контекст использования/устройства/язык/рынок; предположения помечены.
-- Какую задачу человек решает, что запускает процесс и какой результат для него успешен.
-- Business entities и lifecycle: например, запрос → результаты → выбор → сохранение. Не добавлять оплату/чат/регистрацию, если бизнес их не требует.
-- Primary journeys, существующие ограничения, monetization только если известна, privacy/trust и важные failure cases.
-- Что входит в текущий scope и что неизвестно; критерии успеха как гипотезы, пока нет user data.
+- Intended audience: roles, permissions, usage context/devices/language/market; label assumptions.
+- The person's task, process trigger and successful outcome for them.
+- Business entities and lifecycle: for example request → results → selection → saving. Do not add payments/chat/registration unless the business requires them.
+- Primary journeys, existing constraints, monetization only when known, privacy/trust and important failure cases.
+- Current scope and unknowns; success criteria remain hypotheses without user data.
 
-Основание метода — [NN/G task analysis](https://www.nngroup.com/articles/task-analysis/): разложить реальную цель на действия и контекст. Наш формат brief и каталог — проектный контракт, не рецепт определённой компании.
+Method basis: [NN/G task analysis](https://www.nngroup.com/articles/task-analysis/) decomposes an actual goal into actions and context. Our brief format and catalog are a project contract, not a particular company's recipe.
 
-## Инвентарь и уточняющий вопрос
+## Inventory and clarification
 
-Сначала собрать screen/process inventory по docs, UI/routes и прошлым concepts. Для каждого процесса: role, вход, данные/предусловия, действия, успех, ошибки/отказ и выход. URL/route не всегда отдельный экран: одинаковая задача может иметь варианты состояния, modal или вкладки. Auth/privacy boundary и разные роли учитывать явно.
+First collect a screen/process inventory from docs, UI/routes and previous concepts. For each process: role, entry, data/preconditions, actions, success, errors/denial and exit. A URL/route is not always a separate screen: the same task may have state variants, modals or tabs. Account for auth/privacy boundaries and different roles explicitly.
 
-Если вход/смысл/результат процесса непонятен, задать пользователю: **«Что делает данный бизнес-процесс — <название>? Что пользователь начинает и что получает в конце?»** Можно сократить до точного неизвестного. Не спрашивать вместо этого «какие все экраны нарисовать»: бизнес-процесс выясняет агент. Список вопросов группировать, не перегружать пользователя; зависимые экраны остаются proposed, независимые исследуются дальше.
+If a process's input/meaning/outcome is unclear, ask: **“What does this business process—<name>—do? What does the user start, and what do they get at the end?”** Narrow this to the precise unknown when possible. Do not ask “which screens should I draw?” instead: the agent investigates the business process. Group questions without overloading the user; dependent screens remain proposed while independent research continues.
 
-Пример: «Что делает бизнес-процесс “проверка профиля”: пользователь отправляет данные модератору или подтверждает контакт?» Эти варианты требуют разных состояний и trust boundaries; выбор без ответа был бы домыслом.
+Example: “What does ‘profile verification’ do: does the user submit data to a moderator or confirm a contact method?” These options need different states and trust boundaries; choosing without an answer would be guesswork.
 
-## Reuse перед созданием
+## Reuse before creation
 
-| Совпадение с каталогом | Решение |
+| Catalog match | Decision |
 |---|---|
-| Та же role/цель/entities/actions/permissions | Переиспользовать Screen ID; обновить версию с ссылкой reuses |
-| Та же цель, отличаются loading/empty/error/pending | Добавить state существующего экрана |
-| Общий функциональный блок в разных задачах | Переиспользовать Block ID/interaction contract, не сливать целые экраны |
-| Другой результат, role/permissions или долгий отдельный процесс | Новый Screen ID с причиной и ссылкой на process |
-| Нужен временный контекст без потери возврата | Рассмотреть overlay/sheet; объяснить focus, dismiss, back и deep link, не создавать их по моде |
+| Same role/goal/entities/actions/permissions | Reuse Screen ID; update its revision with a reuses link |
+| Same goal, different loading/empty/error/pending | Add a state to the existing screen |
+| Shared functional block across different tasks | Reuse Block ID/interaction contract without merging whole screens |
+| Different outcome, role/permissions or long separate process | New Screen ID with rationale and process link |
+| Temporary context with a preserved return path | Consider an overlay/sheet; explain focus, dismiss, back and deep link instead of creating one for fashion |
 
-В `reuse-map.md`: process → existing screen/block/state → reuse/change/new → объяснение/ADR → affected journeys. Отдельно оценить, не ломает ли reuse понятность или права; «меньше экранов» не самоцель. Изменения старых concepts не перезаписывать молча: новая revision и supersedes. Материалы прошлых задач дают контекст, но screen name совпадение не доказывает совместимость.
+In `reuse-map.md`: process → existing screen/block/state → reuse/change/new → explanation/ADR → affected journeys. Separately assess whether reuse harms clarity or permissions; “fewer screens” is not an end in itself. Do not silently overwrite old concepts: create a new revision and supersedes link. Earlier materials provide context, but matching screen names do not establish compatibility.

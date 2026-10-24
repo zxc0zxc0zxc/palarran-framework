@@ -27,4 +27,4 @@ Canonical progress.json and plan execution section are coordinator-owned. This t
 
 ## Runtime context handoff
 
-Для последующего runtime dispatch: context.paths = подтверждённые target-relative owned files/directories из этого touch set; context.query = ключевые symbols/контракт задачи; mode = graph. Это только данные будущей task, не запуск/reindex/install и не новый budget. Root/module AGENTS передаются автоматически; missing/stale graph даёт scoped source fallback.
+For later runtime dispatch: context.paths = verified target-relative owned files/directories from this touch set; context.query = key task symbols/contract; mode = graph. These are future-task data, not launch/reindex/install or a new budget. Root/module AGENTS are included automatically; missing/stale graphs fall back to scoped sources.

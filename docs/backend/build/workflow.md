@@ -1,13 +1,13 @@
-# Execution workflow и handoff
+# Execution workflow and handoff
 
-1. Прочитать target context/memory и конкретный source plan/spec/contracts/test matrix/SLA/DoD/tasks. Зафиксировать baseline/dirty state, plan revision и permitted execution scope; resolve critical blockers зависимой части. Не переизобретать missing plan — сначала planning step/вопрос.
-2. Инициализировать/сверить [canonical progress](../progress.md) и таблицу **самого плана**, полный task inventory, current HEAD/evidence. Source plan-ready и execution verified не смешивать. Relevant implementation choices объяснять до зависимых изменений в canonical ADR.
-3. Подготовить contract freeze и owned isolated worktrees/resources; dispatch независимые ready [agent packets](../../../templates/backend/execution-agent.md) согласно [worktrees](worktrees.md). Coordinator единственный writer shared progress/contracts/migrations/index. Worktree path — cwd всех child операций. Update in_progress/owner.
-4. Реализовать [app code](implementation.md), tests и локальные migrations/integration по source. Agents возвращают code commits/touch sets/checks/evidence/blockers; coordinator review→implemented, затем serial integration→integrated. Вновь готовые lanes получают актуальные dependencies. Independent tasks не бросать из-за одного blocker.
-5. На integrated HEAD выполнить [edge/integration/DoD](verification.md) и [reliability](reliability.md) checks, исправлять собственные defects и retest. Actual PASS/FAIL/NOT_RUN и commit binding сохранять сразу; invalidated checks не оставлять verified. Operational window не заменять кратким benchmark.
-6. Сверить все requirements/tasks/tests/gates; helper проверяет и синхронизирует progress section. Обновить индексы/handoff, ссылки на source revision и delivered integration commit, выполненные/оставшиеся задачи/причины. Cleanup только owned сохранённых worktrees. Production rollout отдельно, если не входит в реальный authorized scope.
+1. Read target context/memory and the exact source plan/spec/contracts/test matrix/SLA/DoD/tasks. Freeze baseline/dirty state, plan revision and permitted execution scope; resolve critical blockers for dependent work. Do not reinvent missing plans: first plan/clarify.
+2. Initialize/reconcile [canonical progress](../progress.md) and **the source-plan table**, full task inventory, current HEAD/evidence. Keep source plan-ready separate from execution verified. Explain implementation choices in canonical ADRs before dependent changes.
+3. Freeze contracts and prepare owned isolated worktrees/resources; dispatch independent ready [agent packets](../../../templates/backend/execution-agent.md) per [worktrees](worktrees.md). Only the coordinator writes shared progress/contracts/migrations/index. Worktree paths are CWD for all child operations. Update in_progress/owner.
+4. Implement [application code](implementation.md), tests and local migrations/integration from source. Agents return code commits/touch sets/checks/evidence/blockers; coordinator review→implemented, then serial integration→integrated. Newly ready lanes receive current dependencies. Do not abandon independent tasks because of one blocker.
+5. On integrated HEAD perform [edge/integration/DoD](verification.md) and [reliability](reliability.md) checks, fix introduced defects and retest. Immediately preserve actual PASS/FAIL/NOT_RUN with commit binding; invalidated checks must not remain verified. Short benchmarks cannot replace operational windows.
+6. Reconcile all requirements/tasks/tests/gates; helpers validate/synchronize progress sections. Update indexes/handoff, source-revision/delivered-integration-commit references and completed/remaining tasks/reasons. Clean up only preserved owned worktrees. Production rollout is separate unless actually authorized.
 
-Task area reuse из source plan, например `.ai-development/backend/<feature>/`:
+Reuse the source plan's task area, for example `.palarran/backend/<feature>/`:
 
 ```text
 progress.json                        # canonical execution status, coordinator-owned
@@ -18,9 +18,9 @@ executions/<run-id>/
   verification.md                    # actual results/subject commits
   evidence/                          # sanitized artifacts/summaries
   handoff.md
-decisions/                           # использовать существующий canonical ADR path
+decisions/                           # use the existing canonical ADR path
 ```
 
-Последняя строка — существующий task `decisions/`, без нового параллельного журнала внутри execution. Код в app, not in memory. Если canonical specs вне task directory — ссылки и markers именно в source plan, а не в копии. Старые runs/revisions/evidence сохранять, history старых verdicts не переписывать под новые.
+The final line is the existing task `decisions/` directory, not another journal inside execution. Code belongs in the application, not memory. For canonical specs outside task directories put references/markers in the actual source plan, not copies. Preserve prior runs/revisions/evidence; do not rewrite old verdict history to fit new outcomes.
 
-Финальное summary: реализованная plan ID/revision и commit, counts/states TASK IDs, какие AC/edges проверены, status instrumentation/lab/operational SLA отдельно, DoD и remaining blockers. Нельзя «весь план выполнен», если required gate ещё NOT_RUN. Следующая сессия читает это и проверяет current source/HEAD перед resume.
+Final summary: implemented plan ID/revision and commit, TASK-ID counts/states, checked AC/edges, separate instrumentation/lab/operational SLA status, DoD and remaining blockers. Never claim the entire plan completed with required gates still NOT_RUN. The next session reads this and verifies current source/HEAD before resuming.

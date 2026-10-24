@@ -1,20 +1,20 @@
-# Методологические первоисточники
+# Primary methodological sources
 
-Проверены 2026-10-18. Это база **метода**, не четыре бизнес-референса для любого приложения. При вызове скилла нужные продукты и их текущие экраны ищутся отдельно, с собственной evidence/date/platform. Источники ниже не подтверждают готовность наших концептов и не задают visual style.
+Checked 2026-10-18. This is a **method** reference, not four business references for every application. A skill run separately researches relevant products and current screens with their own evidence/date/platform. These sources establish neither our concepts' readiness nor visual style.
 
-| Источник | Что используем | Граница |
+| Source | What we use | Boundary |
 |---|---|---|
-| [NN/G: Competitive Usability Evaluations](https://www.nngroup.com/articles/competitive-usability-evaluations/) | Сопоставление нескольких релевантных продуктов по задачам; distinction expert review/user testing | Popularity не доказывает usability; наш default 4/minimum 3 задан контрактом пользователя |
-| [NN/G: Task Analysis](https://www.nngroup.com/articles/task-analysis/) | Цель, действия и контекст задачи | Не выдумывать бизнес-процесс по интерфейсу/названию repo |
-| [NN/G: Usability Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/) | Feedback/control/consistency/prevention/recovery/minimal necessary content | Heuristic review — диагностическая гипотеза, не measured conversion |
-| [GOV.UK: Button](https://design-system.service.gov.uk/components/button/) | Action-oriented labels и понятный primary action | Не переносим визуальные стили или необоснованный набор юридических текстов |
-| [W3C WAI: Forms](https://www.w3.org/WAI/tutorials/forms/) | Labels, instructions, errors/feedback, понятные forms | Требует реальной проверки доступности при реализации |
-| [WCAG 2.2: Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) | Reflow target и допустимые исключения | Не universal CSS breakpoint и не blanket exemption для таблиц/всего UI |
-| [WCAG 2.2: Target Size Minimum](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) | 24×24 CSS px/условия/исключения соответствующего AA критерия | Minimum не гарантирует комфортность и не означает conformance всего продукта |
-| [WCAG 2.2: Focus Not Obscured Minimum](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html) | Focus не полностью скрыт overlays/sticky regions | Точное поведение проверяется на прототипе/реализации |
-| [Mermaid: Flowcharts](https://mermaid.js.org/syntax/flowchart.html) | Flow/layout graph syntax | Automatic layout не pixel-accurate wireframe |
-| [Mermaid: State diagrams](https://mermaid.js.org/syntax/stateDiagram.html) | State/transition syntax | Не заменяет описания действий/guards/data persistence |
+| [NN/G: Competitive Usability Evaluations](https://www.nngroup.com/articles/competitive-usability-evaluations/) | Comparing several relevant products by task; expert review/user testing distinction | Popularity does not establish usability; default 4/minimum 3 comes from the user's contract |
+| [NN/G: Task Analysis](https://www.nngroup.com/articles/task-analysis/) | Task goal, actions and context | Do not invent business processes from UI/repository names |
+| [NN/G: Usability Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/) | Feedback/control/consistency/prevention/recovery/minimum necessary content | Heuristic review is a diagnostic hypothesis, not measured conversion |
+| [GOV.UK: Button](https://design-system.service.gov.uk/components/button/) | Action-oriented labels and clear primary action | We do not copy visual styles or unjustified legal copy |
+| [W3C WAI: Forms](https://www.w3.org/WAI/tutorials/forms/) | Labels, instructions, errors/feedback, understandable forms | Requires actual accessibility checks during implementation |
+| [WCAG 2.2: Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) | Reflow target and allowed exceptions | Not universal CSS breakpoints or blanket table/whole-UI exemption |
+| [WCAG 2.2: Target Size Minimum](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html) | 24×24 CSS px/conditions/exceptions of the corresponding AA criterion | Minimum does not guarantee comfort or whole-product conformance |
+| [WCAG 2.2: Focus Not Obscured Minimum](https://www.w3.org/WAI/WCAG22/Understanding/focus-not-obscured-minimum.html) | Focus not fully hidden by overlays/sticky regions | Test exact behavior on prototype/implementation |
+| [Mermaid: Flowcharts](https://mermaid.js.org/syntax/flowchart.html) | Flow/layout graph syntax | Automatic layout is not a pixel-accurate wireframe |
+| [Mermaid: State diagrams](https://mermaid.js.org/syntax/stateDiagram.html) | State/transition syntax | Does not replace action/guard/data-persistence descriptions |
 
-Страница GOV.UK `styles/writing-for-user-interfaces` не открылась при исследовании; её содержание не использовано как прочитанное основание. Для microcopy использована доступная component/button documentation и прямое требование пользователя.
+GOV.UK `styles/writing-for-user-interfaces` did not open during research; its contents were not used as a read source. Microcopy uses accessible component/button documentation and the user's direct requirement.
 
-Проектные решения: выбранный формат/папки/ID, short-copy ориентир, scope/reuse workflow и четыре референса по умолчанию — наша адаптация под запрос. При фактическом бизнес-исследовании отдавать приоритет live/first-party evidence, screenshots третьих сторон подписывать как такие; unknown сохранять явно. Ссылки/страницы могут меняться, доступ/дату и версию повторно проверять там, где это влияет на вывод.
+Project decisions—format/directories/IDs, concise-copy guidance, scope/reuse workflow and four references by default—are our adaptation to the request. In actual business research, prioritize live/first-party evidence, label third-party screenshots accordingly and preserve unknowns explicitly. Links/pages may change; recheck access/date/version where they affect conclusions.

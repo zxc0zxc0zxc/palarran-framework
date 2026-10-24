@@ -1,24 +1,24 @@
-# Frontend progress прямо в source plan
+# Frontend progress directly in the source plan
 
-[Общий protocol](../skills/execution-progress.md) задаёт canonical schema/state/evidence и правила revisions/resume для frontend/backend. Frontend profile не зависит от backend SLA/архитектуры.
+The [shared protocol](../skills/execution-progress.md) defines canonical schema/state/evidence and revision/resume rules for frontend/backend. The frontend profile does not depend on backend SLA/architecture.
 
-Target task `progress.json` — [frontend example](../../templates/frontend/progress.example.json). Source `plan.md` (путь из запроса либо созданный по [SDD](sdd-agents.md)) содержит **свой** execution section:
+Target task `progress.json`: [frontend example](../../templates/frontend/progress.example.json). Source `plan.md` (the requested path or one created under [SDD](sdd-agents.md)) contains **its own** execution section:
 
 ```html
 <!-- frontend-progress:start -->
 <!-- frontend-progress:end -->
 ```
 
-Таблица из ledger показывает plan ID/revision, execution/integration commit, что pending/in_progress/implemented/integrated/verified/blocked/deferred, counts, remaining reasons и required gates. Обновлять в самом source plan, не в скрытой копии; canonical spec вне memory получает markers там, из memory — ссылку.
+The ledger-derived table shows plan ID/revision, execution/integration commit, pending/in_progress/implemented/integrated/verified/blocked/deferred work, counts, remaining reasons and required gates. Update the actual source plan, not a hidden copy; a canonical spec outside memory receives markers there and a link from memory.
 
-В плане и coverage зафиксировать **обе UX/UI revisions** и API/contract versions. Semantic change → новая plan revision/impact/ADR, старые результаты history, affected checks заново; не оставлять stale PASS. Полный TASK inventory source сверяет coordinator, helper natural-language spec не читает.
+Record **both UX/UI revisions** and API/contract versions in the plan and coverage. Semantic change → new plan revision/impact/ADR, historical old results and rerun affected checks; never leave stale PASS. The coordinator reconciles the complete source TASK inventory; the helper does not read natural-language specs.
 
-Frontend gates из source: project build/checks, integrated browser interactions/state coverage, responsive layouts, visual fidelity/assets, flow/API по scope и feature DoD. Нужные картинки generated/reused, actual renders просмотрены. Backend SLA-WINDOW не добавлять автоматически; performance/operational targets только если входят в frontend scope. Mocked UI checks не доказывают real API flow. Required browser gate NOT_RUN не позволяет полному plan verified даже при всех code tasks ready.
+Frontend gates come from source: project build/checks, integrated browser interactions/state coverage, responsive layouts, visual fidelity/assets, in-scope flow/API and feature DoD. Required images are generated/reused and actual renders viewed. Do not automatically add backend SLA-WINDOW; performance/operational targets apply only within frontend scope. Mocked UI checks do not establish real API flow. A required browser gate at NOT_RUN prevents full-plan verified status even when all code tasks are ready.
 
-[Общий helper](../../scripts/execution_progress.py) не выполняет tests и не проверяет правдивость evidence. Coordinator после фактического события и ledger update запускает:
+The [shared helper](../../scripts/execution_progress.py) neither runs tests nor verifies evidence truthfulness. After an actual event and ledger update, the coordinator runs:
 
 ```sh
-python3 /path/to/ai-tools/scripts/execution_progress.py progress.json --area frontend --plan plan.md
+python3 /path/to/palarran/scripts/execution_progress.py progress.json --area frontend --plan plan.md
 ```
 
-`exit 0` — structural validity, не выполнение DoD. Полный verified scope — все tasks verified плюс все required gates PASS на текущем integration HEAD. На resume проверить plan/UX/UI revisions, actual Git/assets/evidence/HEAD и зависимые изменения, затем продолжить remaining work. Нет write доступа к source plan — concrete sync blocker, не утверждать «план обновлён».
+`exit 0` means structural validity, not DoD execution. Fully verified scope requires all tasks verified and all required gates PASS on current integration HEAD. On resume, inspect plan/UX/UI revisions, actual Git/assets/evidence/HEAD and dependent changes, then continue remaining work. No write access to the source plan is a concrete synchronization blocker; do not claim “plan updated.”

@@ -1,27 +1,27 @@
-# Workflow /ux:design
+# /palarran:ux:design workflow
 
-## 1. Восстановить контекст и бизнес
+## 1. Recover context and business
 
-Найти target project отдельно от installed skill checkout. Прочитать [общий memory contract](../skills/decision-memory.md), target `.ai-development/INDEX.md`, `.ai-development/ux/INDEX.md` и относящиеся accepted decisions/concepts. Затем прочитать **все** guides `docs/ux/` и выбранные templates. Если базы нет, запросить её расположение и не подменять обязательное чтение общими знаниями.
+Locate the target project separately from the installed skill checkout. Read the [shared memory contract](../skills/decision-memory.md), target `.palarran/INDEX.md`, `.palarran/ux/INDEX.md` and relevant accepted decisions/concepts. Then read **all** `docs/ux/` guides and selected templates. If missing, request their location rather than substituting general knowledge for required reading.
 
-Разобрать описание; если его нет — README/product docs target, затем existing screen/route inventory. Зафиксировать business brief и known/proposed screen/process scope по [business.md](business.md). Неясный процесс уточнить вопросом «Что делает данный бизнес-процесс — …?»; зависимые экраны не выдумывать, независимые части продолжать. Skill authoring request не является запросом UX для бизнеса ai-tools.
+Analyze the description; without one, target README/product docs, then existing screen/route inventory. Record business brief and known/proposed screen/process scope under [business.md](business.md). Clarify unclear processes with “What does this business process—…—do?”; do not invent dependent screens, and continue independent work. A skill-authoring request does not request UX for palarran's business.
 
-## 2. Собрать и проанализировать референсы
+## 2. Collect and analyze references
 
-По [research.md](research.md) искать актуальные похожие известные сервисы: default 4, minimum 3 distinct products с объяснением; при меньшем числе пометить research incomplete. Открыть ссылки/реальные screenshots, пройти разрешённые read-only journeys либо использовать official help/tours. Для закрытого кабинета выполнить screenshot поиск, не выдать landing за исследование аккаунта. Если screenshot недоступен — unknown, не нарисованный по памяти факт.
+Under [research.md](research.md), find current similar established services: default 4, minimum 3 distinct products with explanation; fewer means incomplete research. Open sources/actual screenshots, exercise authorized read-only journeys or use official help/tours. For closed account interfaces, search screenshots instead of presenting a landing page as account research. An unavailable screenshot means unknown, not a fact reconstructed from memory.
 
-Создать cards/observation IDs и comparison одинаковых tasks по [analysis.md](analysis.md). Отметить platform/role/date/access/confidence. Каждый pattern proposal связывается с evidence и нашими ограничениями; popularity не доказательство usability. Исследование не разрешает отправку, покупки или изменение сторонних аккаунтов.
+Create cards/observation IDs and compare equivalent tasks under [analysis.md](analysis.md). Record platform/role/date/access/confidence. Every proposed pattern links to evidence and our constraints; popularity does not prove usability. Research does not authorize sending, buying or changing third-party accounts.
 
-## 3. Зафиксировать решения и состав экранов
+## 3. Record decisions and screen inventory
 
-До выбора экранов/layouts записать принятые решения с rationale и альтернативами в canonical `decisions/`, обновить общий индекс. Собрать `reuse-map.md`: existing/reuse/changed state/new screen с причинами. Предложенные, ещё не утверждённые пользователем concepts так и обозначать; агент может принять свою рабочую гипотезу на основании scope, но не приписывает её одобрение пользователю.
+Before choosing screens/layouts, record accepted decisions with rationale and alternatives in canonical `decisions/`, and update the shared index. Build `reuse-map.md`: existing/reuse/changed state/new screen with reasons. Label proposed concepts not yet approved by the user accordingly; an agent may accept a working hypothesis within scope without attributing its approval to the user.
 
-Основные screen/layout/flow/state/adaptive/copy choices имеют ADR или раздельные объяснённые subdecisions в нём по общему контракту. Отдельно описать unresolved business cases, роли/permissions, recovery и возможные последствия для существующих journeys. Не переносить чужие paywalls/permissions/регистрацию автоматически.
+Major screen/layout/flow/state/responsive/copy choices have an ADR or individually explained subdecisions within one under the shared contract. Separately describe unresolved business cases, roles/permissions, recovery and potential effects on existing journeys. Do not automatically import another product's paywalls/permissions/registration.
 
-## 4. Спроектировать и сохранить концепт
+## 4. Design and save the concept
 
 ```text
-.ai-development/
+.palarran/
   INDEX.md
   ux/
     INDEX.md
@@ -30,7 +30,7 @@
       research/
         references/R1-product.md
         comparison.md
-        evidence/                   # Только безопасные разрешённые captures, если нужны
+        evidence/                   # Safe authorized captures only, if needed
       reuse-map.md
       decisions/0001-journey.md
       concepts/
@@ -39,22 +39,22 @@
           screen-catalog.md
           flows/J01.md
           screens/S01.md
-          diagrams/                 # .mmd/preview, если экспортировали
+          diagrams/                 # .mmd/preview, if exported
           review.md
       handoff.md
       scratch/
 ```
 
-`ux/INDEX.md` — catalog concepts/revisions: product/scope/task, status (`draft`, `review-ready`, `approved`, `superseded`), link, source commit, related ADR и known gaps. Canonical decision status остаётся в общем `.ai-development/INDEX.md`; не создавать второй ADR индекс с иной истиной. `approved` только при реальном одобрении соответствующего пользователя/владельца.
+`ux/INDEX.md` is a concept/revision catalog: product/scope/task, status (`draft`, `review-ready`, `approved`, `superseded`), link, source commit, related ADR and known gaps. Canonical decision status stays in shared `.palarran/INDEX.md`; do not create another ADR index with conflicting truth. `approved` requires actual approval by the corresponding user/owner.
 
-Каждая revision сохраняется; новое `v002` ссылается на `v001`, затронутые Screen IDs и причины. Не перезаписывать approved/superseded concepts ради текущего варианта, не терять контекст старого сравнения. Самодостаточное краткое объяснение остаётся даже при недоступности remote screenshots. Полные personal data/screenshots/logs не публиковать.
+Preserve every revision; new `v002` references `v001`, affected Screen IDs and reasons. Do not overwrite approved/superseded concepts for the current variant or lose earlier comparison context. Keep a self-contained concise explanation even if remote screenshots become unavailable. Do not publish complete personal data/screenshots/logs.
 
-Заполнить [concept](../../templates/ux/concept.md), [screen](../../templates/ux/screen.md) и [reference](../../templates/ux/reference.md) templates. Для **каждого** экрана: цель/роль/entry/exit, short copy/actions, functional blocks/reading order, desktop/mobile layout diagrams, tablet transition rules, states/guards/error recovery и ссылки evidence/ADR. Global flow без screen cards не завершает задачу. Не добавлять цвета/шрифты/CSS, код приложения или polished mockups без отдельного запроса.
+Fill [concept](../../templates/ux/concept.md), [screen](../../templates/ux/screen.md) and [reference](../../templates/ux/reference.md) templates. For **every** screen: goal/role/entry/exit, concise copy/actions, functional blocks/reading order, desktop/mobile layout diagrams, tablet transition rules, states/guards/error recovery and evidence/ADR links. A global flow without screen cards does not complete the task. Do not add colors/fonts/CSS, application code or polished mockups without a separate request.
 
-## 5. Review, вопросы и handoff
+## 5. Review, questions and handoff
 
-Проверить coverage по [review.md](review.md), diagram syntax и при доступности render/visual inspection; честно отметить границы проверки. Walkthrough primary/error/back/permission journeys на narrow/phone/tablet/desktop с keyboard/long content. В отсутствие running prototype реальный interaction/browser accessibility тест — NOT RUN.
+Check coverage under [review.md](review.md), diagram syntax and available rendering/visual inspection; report verification boundaries honestly. Walk through primary/error/back/permission journeys on narrow/phone/tablet/desktop with keyboard/long content. Without a running prototype, real interaction/browser accessibility testing is NOT RUN.
 
-Не останавливать всё из-за одного вопроса: сохранить готовые parts, unresolved screens как proposed, список необходимого ответа. Но не маркировать concept review-ready, если обязательная screen coverage/adaptation/reference minimum не выполнены. Полезный draft допустим с явными gaps.
+Do not stop all work for one question: save completed parts, unresolved screens as proposed and required answers. But do not mark a concept review-ready when mandatory screen coverage/adaptation/reference minimum is missing. A useful draft is allowed with explicit gaps.
 
-Обновить общего и UX индексы, decision evidence и handoff. Краткий ответ пользователю: что за бизнес поняли, какие 3–4 продукта исследованы и в каком объёме, ссылки на concepts/screens/diagrams, главные принятые решения/unknowns, что действительно проверили. Не перечислять весь длинный report в чате. Новая задача читает сохранённые concepts и решения до нового поиска/дизайна; актуальность reference evidence и product assumptions перепроверяется по необходимости.
+Update shared and UX indexes, decision evidence and handoff. Give a concise user response: understood business, which 3–4 products were researched and to what extent, concept/screen/diagram links, major accepted decisions/unknowns and actual checks. Do not repeat the entire report in chat. The next task reads saved concepts and decisions before new research/design; refresh reference evidence and product assumptions where needed.

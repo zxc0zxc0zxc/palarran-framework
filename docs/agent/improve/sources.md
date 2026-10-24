@@ -1,11 +1,11 @@
-# Датированные первичные источники
+# Dated primary sources
 
-Inspected 2026-10-24. Авторские tutorials/cases отделены от нашего measured evidence.
+Inspected 2026-10-24. Author tutorials/cases are separate from our measured evidence.
 
-| Источник | Дата | Переносим / граница |
+| Source | Date | Transfer / boundary |
 | --- | --- | --- |
-| [OpenAI: Agent improvement loop](https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop) | 2026-05-12 | Trace→feedback→eval→Codex handoff; наш reviewed loop не требует их SDK/Promptfoo/HALO/paid judge и не наследует эффективность examples |
-| [OpenAI: Iterative repair loops](https://developers.openai.com/cookbook/examples/codex/build_iterative_repair_loops_with_codex) | 2026-05-11 | Review/repair/validate с измеримой обратной связью; notebook workflow не доказательство любой автоматической починки |
-| [Anthropic: Demystifying evals](https://www.anthropic.com/research/demystifying-evals-for-ai-agents) | 2026-01-09 | Outcome-based grader, calibration, regression/capability sets, trials; чужие цифры не наша model-quality оценка |
+| [OpenAI: Agent improvement loop](https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop) | 2026-05-12 | Trace→feedback→eval→Codex handoff; our reviewed loop needs none of their SDK/Promptfoo/HALO/paid judges and inherits no example efficiency |
+| [OpenAI: Iterative repair loops](https://developers.openai.com/cookbook/examples/codex/build_iterative_repair_loops_with_codex) | 2026-05-11 | Review/repair/validate with measurable feedback; notebook workflow does not prove arbitrary automatic repairs |
+| [Anthropic: Demystifying evals](https://www.anthropic.com/research/demystifying-evals-for-ai-agents) | 2026-01-09 | Outcome-based grading, calibration, regression/capability sets, trials; others' figures are not our model-quality assessment |
 
-Наши immutable private packets, placeholder-only treatment и one-case-per-run comparison — инженерный выбор проекта. Cost/usage/runtime semantics остаются в [agent-eval contract](../eval/contract.md). Нет требования сохранять скрытые рассуждения: нужны наблюдаемые события/ошибки, outputs, concise rationale и provenance, не приватный chain-of-thought.
+Our immutable private packets, placeholder-only treatment and one-case-per-run comparisons are project engineering choices. Cost/usage/runtime semantics remain in the [palarran-agent-eval contract](../eval/contract.md). Hidden reasoning need not be stored: use observable events/errors, outputs, concise rationale and provenance, not private chain-of-thought.

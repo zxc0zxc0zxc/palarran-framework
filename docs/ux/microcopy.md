@@ -1,29 +1,29 @@
-# Короткие тексты и информационная нагрузка
+# Concise copy and information load
 
-UI copy — то, что увидит пользователь. Внутренняя спецификация/объяснение решения хранится отдельно и не выводится в интерфейс. Пользователь явно требует короткие labels без перечисления всех возможных условий в одной кнопке.
+UI copy is what users see. Internal specifications/decision explanations stay separate and do not appear in the interface. The user explicitly requires concise labels without listing every possible condition in one button.
 
-## Основные правила
+## Core rules
 
-- Одна задача, ясный заголовок и один главный CTA на экран/текущий шаг как default; несколько равноправных действий допустимы только по природе задачи с объяснением. Не добавлять обучающие абзацы «на всякий случай».
-- CTA называет результат действия. Обычно 1–3 слова; это ориентир, не жёсткий запрет на точное «Сохранить и выйти». Нужные сумма/объект/последствие важнее искусственного лимита.
-- Details/help показывать рядом с нужным полем или по раскрытию, а не в длинной intro. Не скрывать необходимое для информированного действия в tooltip.
-- Labels не заменять placeholders; ошибки коротко называют проблему и исправление. Не дублировать один смысл в heading, subtitle, card, tooltip и button.
-- Не склеивать независимые действия/согласия в один CTA. Не обещать безопасность/результат, который система не гарантирует. Отказ/back/cancel понятны и доступны.
+- One task, a clear heading and one main CTA per screen/current step by default; equally prominent actions are allowed only when inherent to the task, with explanation. Do not add instructional paragraphs “just in case.”
+- A CTA names the action's result. Usually 1–3 words; this is guidance, not a strict ban on precise “Save and exit.” Necessary amount/object/consequence takes precedence over an artificial limit.
+- Show details/help beside the relevant field or through disclosure instead of a long introduction. Do not hide information needed for an informed action in a tooltip.
+- Do not replace labels with placeholders; errors concisely name the problem and correction. Avoid repeating one meaning in heading, subtitle, card, tooltip and button.
+- Do not combine independent actions/consents into one CTA. Do not promise security/outcomes the system cannot guarantee. Refusal/back/cancel must be clear and accessible.
 
-Основание — [GOV.UK button guidance](https://design-system.service.gov.uk/components/button/): текст соответствует действию, избыток конкурирующих CTA затрудняет следующий шаг. Краткость/лимиты и примеры ниже — наша адаптация и прямое требование пользователя; не переносим GOV.UK visual styles.
+Basis: [GOV.UK button guidance](https://design-system.service.gov.uk/components/button/) aligns text with actions and warns that competing CTAs obscure the next step. Brevity/limits and examples below are our adaptation and the user's direct requirement; we do not copy GOV.UK visual styles.
 
-| Ситуация | Неудачно | Лучше для заданного действия |
+| Situation | Poor | Better for the specified action |
 |---|---|---|
-| Согласиться с указанными условиями | «Принять условия, правила, аналитику и подтвердить возраст» | «Принять условия»; другие необходимые выборы отдельно и только если реально нужны |
-| Сохранить профиль | «Сохранить изменения вашего профиля для последующего использования» | «Сохранить» |
-| Отправить платёж | «Продолжить» при списании денег | «Оплатить 2 400 ₽» |
-| Ошибка запроса | «В процессе взаимодействия с сервером произошла непредвиденная ошибка» | «Не удалось загрузить. Повторить» |
-| Пустой поиск | Длинное объяснение механизма поиска | «Ничего не найдено» + уместное «Изменить запрос» |
+| Agree to stated terms | “Accept terms, rules, analytics and confirm age” | “Accept terms”; other necessary choices separately, only when actually required |
+| Save profile | “Save your profile changes for future use” | “Save” |
+| Submit payment | “Continue” when charging money | “Pay ₽2,400” |
+| Request error | “An unexpected error occurred while communicating with the server” | “Could not load. Retry” |
+| Empty search | Long explanation of search mechanics | “No results” + appropriate “Change query” |
 
-Короткий текст не должен прятать цену, необратимое удаление, условия доступа к данным или необходимый смысл согласия. Требуемое содержание определяется действующим product/правовым требованием; скилл не выдумывает универсальный набор legal/analytics/age check на каждом экране и не заявляет юридическую достаточность подписи.
+Concise copy must not conceal price, irreversible deletion, data-access terms or necessary consent meaning. Required content follows actual product/legal requirements; the skill invents no universal legal/analytics/age check for every screen and claims no legal sufficiency for a label.
 
 ## Copy inventory
 
-Для каждого экрана фиксировать только реально нужные строки: heading, primary/secondary actions, field labels, необходимые hints, empty/error/success и accessible names. Дополнительный текст должен иметь purpose. Предпочитать одну короткую фразу, примеры/ссылки по месту. Длина переводов и screen-reader label включены в адаптацию.
+For each screen, record only necessary strings: heading, primary/secondary actions, field labels, required hints, empty/error/success and accessible names. Additional text needs a purpose. Prefer one short phrase with examples/links in context. Include translation length and screen-reader labels in adaptation.
 
-Review: можно ли понять действие без соседнего абзаца? Не происходит ли скрыто второе действие? Не удалили ли смысл ради краткости? Не стал ли internal rationale пользовательским текстом? Если label не объясняется без абзаца, сначала проверить сам flow/элемент, а не добавлять абзац автоматически.
+Review: is the action understandable without an adjacent paragraph? Is a second action hidden? Was meaning lost for brevity? Did internal rationale become user-facing copy? If a label needs a paragraph to make sense, first inspect the flow/element instead of adding a paragraph automatically.

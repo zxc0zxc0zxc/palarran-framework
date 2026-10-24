@@ -95,7 +95,7 @@ def expected_links(client, names):
 
 def prepare(source, target, client=None):
     target = safe(target); require(target.is_dir())
-    safe(target/'.ai-tools/backups'); safe(target/'.ai-development/INDEX.md')
+    safe(target/'.ai-tools/backups'); safe(target/'.palarran/INDEX.md')
     receipt = load(target/'.ai-tools/installation.json'); require(receipt['version'] in (1,2))
     require(re.fullmatch('[0-9a-f]{40,64}',receipt['revision']) is not None)
     require(client is None or client == receipt['client'])
@@ -104,9 +104,12 @@ def prepare(source, target, client=None):
     require(marker['version'] == 1 and marker['revision'] == receipt['revision'])
     require(type(receipt['files']) is dict and sha(read(target/'.ai-tools/library/.ai-tools-library.json')) == receipt['files'].get('.ai-tools/library/.ai-tools-library.json'))
     old = marker['files']; require(type(old) is dict)
-    require(all((setup.public(relative(n)) or n=='.ai-development/INDEX.md') and re.fullmatch('[0-9a-f]{64}',h) for n,h in old.items()))
+    require(all((setup.public(relative(n)) or n in ('.palarran/INDEX.md','.ai-development/INDEX.md')) and re.fullmatch('[0-9a-f]{64}',h) for n,h in old.items()))
     require(all(receipt['files'].get('.ai-tools/library/'+n)==h for n,h in old.items()))
     revision, upstream = setup.library(source)
+    if receipt.get("preferences") is not None:
+        from palarran_config import selected
+        upstream = selected(upstream,receipt["preferences"].get("packages"))
     names = sorted(Path(n).parent.name for n in upstream if re.fullmatch(r'skills/[^/]+/SKILL.md',n))
     after_links = expected_links(receipt['client'],names)
     current = tree(target/'.ai-tools/library'); current.pop('.ai-tools-library.json')
@@ -149,7 +152,7 @@ def prepare(source, target, client=None):
     if release.exists(): require({n:sha(v[0]) for n,v in tree(release).items()} == {n:sha(v[0]) for n,v in clean.items()})
     usage_path = target/'.ai-tools/USAGE.md'; usage = read(usage_path)
     baseline_usage = receipt['files'].get('.ai-tools/USAGE.md')
-    new_usage = usage.replace(('Source revision: '+receipt['revision']).encode(),('Source revision: '+revision).encode(),1) if sha(usage)==baseline_usage else usage
+    new_usage = setup.usage_text(revision,names) if sha(usage)==baseline_usage else usage
     config_custom = False
     if receipt['client'] in ('claude','both'):
         try:
@@ -271,12 +274,12 @@ def update(source,target,client=None,plan=False,event=lambda _:None):
             atomic(tx/('before-'+name),before); atomic(tx/('after-'+name),after)
         record = dict(phase='PREPARED',backup=backup,from_revision=report['from_revision'],revision=report['revision'],old_tree=signature(prepared['current']),new_tree=signature(prepared['files']),before_links=prepared['before_links'],after_links=prepared['after_links'])
         atomic(tx/'transaction.json',encoded(record)); atomic(active,encoded(dict(backup=backup)))
-        task = 'update-'+tx.name[7:]; journal = target/'.ai-development/setup'/task
-        decision = '# Ownership-aware update\n\n## Контекст и основание\n\nExplicit operator update request.\n\n## Выбор и объяснение\n\nThree-way hashes preserve local changes; conflicting edits stop before replacement. Settings stay untouched.\n\n## Альтернативы\n\nBlind replacement would discard user work.\n\n## Источники и evidence\n\nPinned public source '+report['revision']+'; private backup '+backup+'.\n\n## Последствия и пересмотр\n\nRollback guarded by current hashes; memory connectivity is separate from file success.\n\n## Применение и проверка\n\nAttempt receipt; final status in handoff.\n'
+        task = 'update-'+tx.name[7:]; journal = target/'.palarran/setup'/task
+        decision = '# Ownership-aware update\n\n## Context and basis\n\nExplicit operator update request.\n\n## Choice and rationale\n\nThree-way hashes preserve local changes; conflicting edits stop before replacement. Settings stay untouched.\n\n## Alternatives\n\nBlind replacement would discard user work.\n\n## Sources and evidence\n\nPinned public source '+report['revision']+'; private backup '+backup+'.\n\n## Consequences and review\n\nRollback guarded by current hashes; memory connectivity is separate from file success.\n\n## Application and verification\n\nAttempt receipt; final status in handoff.\n'
         decision='---\nid: setup/'+task+'/0001\nstatus: accepted\ndate: '+datetime.now().astimezone().date().isoformat()+'\ndecision_basis: operator-request\n---\n'+decision
         try:
             atomic(journal/'decisions/0001.md',decision.encode())
-            index = target/'.ai-development/INDEX.md'; prior = read(index) if index.exists() else b''
+            index = target/'.palarran/INDEX.md'; prior = read(index) if index.exists() else b''
             atomic(index,prior+('\n[Skill update '+report['revision'][:12]+'](setup/'+task+'/decisions/0001.md)\n').encode())
             require(signature(tree(target/'.ai-tools/library')) == record['old_tree'])
             os.rename(target/'.ai-tools/library',tx/'original'); os.rename(staged,target/'.ai-tools/library'); event('bundle-swapped')

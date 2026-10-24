@@ -4,16 +4,16 @@ Status: draft. Date/region/reporting currency/entity scope/source reports. Appli
 
 | Metric | Entity/product | Period/as-of/currency | Definition/gross-net/unit | Value/range/unknown | Classification / E-ID |
 |---|---|---|---|---|---|
-| Revenue/MRR/ARR/GMV | не смешивать | заполнить | заполнить | unknown пока нет evidence | заполнить |
+| Revenue/MRR/ARR/GMV | do not mix | fill | fill | unknown without evidence | fill |
 
-## Нормализация и scenarios
+## Normalization and scenarios
 
-Disclosed отдельно от provider estimated и conditional scenario. Exact inputs/E-IDs, formulas, periods, conversion assumptions/ranges и dominant uncertainty. Low/base/high не statistical CI. Если нужно — воспроизводимый локальный расчёт по safe aggregate inputs; API calls не подразумеваются.
+Separate disclosed values, provider estimates and conditional scenarios. Exact inputs/E-IDs, formulas, periods, conversion assumptions/ranges and dominant uncertainty. Low/base/high is not a statistical CI. If needed, use reproducible local calculations on safe aggregate inputs; API calls are not implied.
 
-## Свой business model
+## Our business model
 
-Paid unit, contribution margin/costs, cohort retention/churn caveats, paid/blended CAC, payback sensitivity. Отсутствующие inputs → unknown, не рыночный benchmark.
+Paid unit, contribution margin/costs, cohort retention/churn caveats, paid/blended CAC, payback sensitivity. Missing inputs mean unknown, not market benchmarks.
 
-## Decision и handoff
+## Decision and handoff
 
-Что можно утверждать, что неизвестно, какой data/test изменит решение; rationale/alternatives/consequences/ADR refs. No trading/deployment recommendation.
+Supported claims, unknowns and decision-changing data/tests; rationale/alternatives/consequences/ADR refs. No trading/deployment recommendation.

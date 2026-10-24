@@ -1,42 +1,42 @@
-# Security: секреты, доверие и supply chain
+# Security: secrets, trust and supply chain
 
 ## Trust boundaries
 
-| Уровень | Разрешено | Запрещено |
+| Level | Allowed | Forbidden |
 |---|---|---|
-| Fork/untrusted PR/MR | Lint/tests с synthetic secrets, ограниченный read source, отдельный cache scope | Prod identities, trusted cache write, registry release publish, private management runners |
-| Reviewed protected source | Build/test candidate, publish в разрешённый registry | Автоматическое полномочие менять любой environment |
-| Promotion controller/job | Проверить eligibility и изменить конкретный environment contract | Выполнять arbitrary scripts из выбранного user ref с deploy credentials |
-| Runtime deploy controller | Применить разрешённый manifest локально/через scoped API | Получать команды shell из CI input, обслуживать произвольные registry/repositories |
+| Fork/untrusted PR/MR | Lint/tests with synthetic secrets, limited source reads, separate cache scope | Production identities, trusted-cache writes, registry-release publication, private management runners |
+| Reviewed protected source | Build/test candidate, publish to authorized registry | Automatic authority to change any environment |
+| Promotion controller/job | Verify eligibility and change a specific environment contract | Execute arbitrary scripts from selected user refs with deployment credentials |
+| Runtime deployment controller | Apply authorized manifests locally/through scoped APIs | Receive shell commands from CI inputs or serve arbitrary registries/repositories |
 
-CI config, reusable workflows/includes, Dockerfiles и environment registry — исполняемая часть supply chain: CODEOWNERS/review, pinned trusted refs и branch protection. Не разрешать автору app change самому отключать обязательный policy gate. Основание — [Microsoft governed templates](https://learn.microsoft.com/en-us/security/zero-trust/sfi/governed-pipeline-templates); provider mechanisms выбираются отдельно.
+CI config, reusable workflows/includes, Dockerfiles and environment registries are executable supply-chain components: use CODEOWNERS/review, pinned trusted refs and branch protection. Application-change authors cannot independently disable required policy gates. Basis: [Microsoft governed templates](https://learn.microsoft.com/en-us/security/zero-trust/sfi/governed-pipeline-templates); select provider mechanisms separately.
 
 ## Identity
 
-Использовать OIDC/federation при наличии provider поддержки: ограничить issuer, audience, repository/project ID, protected ref, environment и trusted workflow claims по возможностям trust policy. `id-token: write` само по себе не ограничивает cloud роль нужным окружением. Если federation нет — короткий scoped app/deploy token с rotation и expiry, никогда SSH private key к target.
+Use OIDC/federation where supported: restrict issuer, audience, repository/project ID, protected ref, environment and trusted-workflow claims as trust policies allow. `id-token: write` alone does not restrict cloud roles to required environments. Without federation, use short-lived scoped application/deployment tokens with rotation/expiry, never target SSH private keys.
 
-Build получает registry publish только на свой image; promotion — право изменить только свой environment/path; runtime — pull и нужные secret refs. Отдельные identities dev/test/prod. Нет долгоживущего cluster-admin kubeconfig в CI. Секреты приложения обычно извлекаются runtime secret provider, не проходят через build job.
+Build gets registry publishing only for its own image; promotion may modify only its own environment/path; runtime gets pull and necessary secret refs. Separate dev/test/prod identities. No long-lived cluster-admin kubeconfig in CI. Runtime secret providers normally retrieve application secrets without passing them through build jobs.
 
-## Никаких секретов в выводе
+## No secrets in output
 
-Запрещены `set -x`, debug trace/service debug при secrets, `env/printenv`, dump contexts, `curl -v` с auth, вывод response bodies без allowlist, логирование команд с password/token в argv, `.env`/kubeconfig/IaC plan upload. Также проверить test assertions, exception stacks, HTTP recording, SQL connection strings, Composer/npm/pip auth errors и application startup output.
+Forbid `set -x`, debug trace/service debugging with secrets, `env/printenv`, context dumps, authenticated `curl -v`, response bodies without allowlists, logging commands with passwords/tokens in argv and `.env`/kubeconfig/IaC-plan uploads. Also inspect test assertions, exception stacks, HTTP recordings, SQL connection strings, Composer/npm/pip auth errors and application startup output.
 
-Masking в [GitHub](https://docs.github.com/en/actions/reference/security/secure-use) и [GitLab variables](https://docs.gitlab.com/ci/variables/) — дополнительный слой; преобразованный, фрагментированный или намеренно выведенный секрет может его обойти. Mask runtime-generated credentials **до** использования, но не печатать их намеренно даже для проверки masking. Передавать credentials через provider credential helper/защищённый file mount/standard input там, где интерфейс поддерживает; исключать из artifacts и очищать ephemeral workspace.
+Masking in [GitHub](https://docs.github.com/en/actions/reference/security/secure-use) and [GitLab variables](https://docs.gitlab.com/ci/variables/) is an extra layer; transformed, fragmented or deliberately printed secrets may bypass it. Mask runtime-generated credentials **before** use, but do not deliberately print them even to test masking. Pass credentials through provider credential helpers/protected file mounts/standard input where supported; exclude from artifacts and clean ephemeral workspaces.
 
-Reports тоже данные: JUnit, coverage HTML, Playwright trace/screenshots/videos, service logs, core dumps могут содержать токены и PII. Synthetic accounts/data; redaction, restricted artifact access и retention; без dump всего workspace по `always()`. Контролировать exception messages и sanitization, не только console. Если инструмент безопасно не фильтрует данные, ограничить capture или отключить чувствительный capture с альтернативной диагностикой.
+Reports are data too: JUnit, coverage HTML, Playwright traces/screenshots/videos, service logs and core dumps may contain tokens/PII. Use synthetic accounts/data, redaction, restricted artifact access and retention; no entire-workspace dumps under `always()`. Control exception messages/sanitization, not just console output. When tools cannot safely filter data, bound capture or disable sensitive capture with alternative diagnosis.
 
-Build secrets подавать через [BuildKit secret mounts](https://docs.docker.com/build/building/secrets/), не Docker `ARG`/`ENV` или copied auth files. Mount не спасает от вредоносного `RUN`, который копирует секрет в слой или пишет в stdout. Private dependency installs — отдельная reviewed trust boundary; lockfile scripts/plugins способны выполнять код. Credentials на чтение private packages минимальны и не доступны forks.
+Supply build secrets through [BuildKit secret mounts](https://docs.docker.com/build/building/secrets/), not Docker `ARG`/`ENV` or copied auth files. Mounts cannot protect against malicious `RUN` copying secrets into layers or stdout. Private-dependency installation is a separate reviewed trust boundary; lockfile scripts/plugins can execute code. Private-package read credentials are minimal and unavailable to forks.
 
-## Integrity артефакта
+## Artifact integrity
 
-Проверить source commit, builder/workflow identity и inputs, image digest, SBOM и vulnerability policy, provenance/signature. Создание attestation без проверки перед deployment не является enforcement. [GitHub attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations) — возможная реализация; для GitLab выбрать совместимый signer/verifier, не предполагать идентичность механизмов.
+Verify source commit, builder/workflow identity and inputs, image digest, SBOM/vulnerability policy, provenance/signature. Creating attestations without predeployment verification is not enforcement. [GitHub attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations) are one implementation; for GitLab, choose compatible signers/verifiers instead of assuming identical mechanisms.
 
-Сканировать и зависимости, и итоговый runtime image; severity/fix availability/исключения с owner+expiry заданы policy. Не заменять build test только CVE scanner. Trusted release publish не потребляет неподтверждённые executables/artifacts/cache из непроверенного PR. Container build без privileged runner предпочтителен; если выбран Docker-in-Docker с privileged, явно обосновать изоляцию отдельного ephemeral pool и запрет prod network.
+Scan dependencies and final runtime images; policy defines severity/fix availability/exceptions with owner+expiry. CVE scanners do not replace build tests. Trusted release publishing must not consume unverified executables/artifacts/caches from unreviewed PRs. Prefer container builds without privileged runners; if privileged Docker-in-Docker is chosen, explicitly justify isolated ephemeral pools and no production network.
 
-## Приёмка и реагирование
+## Acceptance and response
 
-До включения реальных secrets прогнать synthetic sentinel только в изолированном harness: инструменты используют фиктивное значение нормальным путём; сканер проверяет logs/reports/cache/image history и layers, включая диагностические failure paths и известные encoding patterns. Не писать sentinel специально в public job output и не выводить совпавшие строки scanner-ом: только file/job ID и тип утечки. Это тест известных путей, не математическая гарантия отсутствия любого covert channel.
+Before enabling real secrets, run synthetic sentinels only in an isolated harness: tools consume fake values through normal paths; scanners check logs/reports/cache/image history/layers, including diagnostic failure paths and known encoding patterns. Do not deliberately print sentinels in public job output or have scanners print matching lines: report only file/job ID and leak type. This tests known paths, not mathematical absence of all covert channels.
 
-Negative tests: fork не получает deploy identity; неверные audience/ref/env не проходят IAM; неизвестный env и чужой registry/release отвергаются; debug capture с секретами блокируется; неподписанный/неeligible digest не разворачивается; prod config change требует нужного reviewer; cache poisoning не пересекает trust scope.
+Negative tests: forks cannot obtain deployment identity; wrong audiences/refs/environments fail IAM; unknown environments/foreign registries/releases are rejected; debug capture with secrets is blocked; unsigned/ineligible digests are not deployed; production config changes need required reviewers; cache poisoning cannot cross trust scopes.
 
-При утечке: отозвать/ротировать credential → остановить доступ/выпуски из затронутой identity → ограничить/удалить чувствительные logs/artifacts/cache по provider процедуре → определить доступ и затронутые releases → повторная проверка. Удаление строки из YAML не отзывает уже опубликованный секрет.
+On leakage: revoke/rotate credentials → stop access/releases from affected identity → restrict/delete sensitive logs/artifacts/caches under provider procedures → determine access/affected releases → reverify. Removing a YAML line does not revoke an already published secret.

@@ -8,74 +8,115 @@ import shutil
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-PACKAGES = {
-    "skills": {"manifest": "plugins/skills/plugin.json", "skills": ["skills-setup"], "docs": ["docs/skills", "docs/setup", "docs/memory", "docs/infra"]},
-    "memory": {"manifest": "plugins/memory/plugin.json", "skills": ["memory-recall", "memory-learn"], "docs": ["docs/skills", "docs/memory", "docs/infra"]},
-    "vps": {"manifest": "plugins/vps/plugin.json", "skills": ["vps-inspect", "vps-manage"], "docs": ["docs/skills", "docs/memory", "docs/infra"]},
-    "mcp": {"manifest": "plugins/mcp/plugin.json", "skills": ["mcp-build"], "docs": ["docs/skills", "docs/mcp"]},
-    "app": {"manifest": "plugins/app/plugin.json", "skills": ["app-verify"], "docs": ["docs/skills", "docs/app"]},
-    "science": {"manifest": "plugins/science/plugin.json", "skills": ["science-preprint"], "docs": ["docs/skills", "docs/science"]},
-    "agent": {
-        "manifest": "plugins/agent/plugin.json",
-        "skills": ["agent-eval", "agent-improve"],
-        "docs": ["docs/skills", "docs/agent"],
-    },
-    "ml": {
-        "manifest": "plugins/ml/plugin.json",
-        "skills": ["ml-plan", "ml-hypotheses", "ml-model", "ml-data", "ml-cost", "ml-train", "ml-benchmark"],
-        "docs": ["docs/skills", "docs/ml"],
-    },
-    "product": {
-        "manifest": "plugins/product/plugin.json",
-        "skills": ["product-define", "product-market", "product-compare", "product-revenue", "product-acquisition", "product-b2b", "product-b2c"],
-        "docs": ["docs/skills", "docs/product"],
-    },
-    "backend": {
-        "manifest": "plugins/backend/plugin.json",
-        "skills": ["backend-plan", "backend-build"],
-        "docs": ["docs/skills", "docs/backend"],
-    },
-    "frontend": {
-        "manifest": "plugins/frontend/plugin.json",
-        "skills": ["frontend-plan", "frontend-build", "ui-design", "ux-design"],
-        "docs": ["docs/skills", "docs/ux", "docs/ui", "docs/frontend"],
-    },
-    "ui": {
-        "manifest": "plugins/ui/plugin.json",
-        "skills": ["ui-design", "ux-design"],
-        "docs": ["docs/skills", "docs/ux", "docs/ui"],
-    },
-    "ci-cd": {
-        "manifest": "plugins/ci-cd/plugin.json",
-        "skills": ["ci-cd-github", "ci-cd-gitlab"],
-        "docs": ["docs/skills", "docs/infra", "docs/ci-cd"],
-    },
-    "infra-plan": {
-        "manifest": ".claude-plugin/plugin.json",
-        "skills": ["infra-plan-low", "infra-plan-med", "infra-plan-high"],
-        "docs": ["docs/skills", "docs/infra"],
-    },
-    "ux": {
-        "manifest": "plugins/ux/plugin.json",
-        "skills": ["ux-design"],
-        "docs": ["docs/skills", "docs/ux"],
-    },
-}
+PACKAGES = {'palarran-setup': {'manifest': 'plugins/palarran-setup/plugin.json',
+                    'skills': ['palarran-setup'],
+                    'docs': ['docs/skills', 'docs/setup', 'docs/memory', 'docs/infra', 'docs/app'],
+                    'domain': 'skills'},
+ 'palarran-memory': {'manifest': 'plugins/palarran-memory/plugin.json',
+                     'skills': ['palarran-memory-recall', 'palarran-memory-learn', 'palarran-memorize', 'palarran-remember', 'palarran-memorize-session', 'palarran-remember-session', 'palarran-vacuum'],
+                     'docs': ['docs/skills', 'docs/memory', 'docs/infra', 'docs/app'],
+                     'domain': 'memory'},
+ 'palarran-vps': {'manifest': 'plugins/palarran-vps/plugin.json',
+                  'skills': ['palarran-vps-inspect', 'palarran-vps-manage'],
+                  'docs': ['docs/skills', 'docs/memory', 'docs/infra', 'docs/setup', 'docs/app'],
+                  'domain': 'vps'},
+ 'palarran-mcp': {'manifest': 'plugins/palarran-mcp/plugin.json',
+                  'skills': ['palarran-mcp-build'],
+                  'docs': ['docs/skills', 'docs/mcp'],
+                  'domain': 'mcp'},
+ 'palarran-app': {'manifest': 'plugins/palarran-app/plugin.json',
+                  'skills': ['palarran-app-verify'],
+                  'docs': ['docs/skills', 'docs/app'],
+                  'domain': 'app'},
+ 'palarran-science': {'manifest': 'plugins/palarran-science/plugin.json',
+                      'skills': ['palarran-science-preprint'],
+                      'docs': ['docs/skills', 'docs/science'],
+                      'domain': 'science'},
+ 'palarran-agent': {'manifest': 'plugins/palarran-agent/plugin.json',
+                    'skills': ['palarran-agent-eval', 'palarran-agent-improve'],
+                    'docs': ['docs/skills', 'docs/agent'],
+                    'domain': 'agent'},
+ 'palarran-ml': {'manifest': 'plugins/palarran-ml/plugin.json',
+                 'skills': ['palarran-ml-plan',
+                            'palarran-ml-hypotheses',
+                            'palarran-ml-model',
+                            'palarran-ml-data',
+                            'palarran-ml-cost',
+                            'palarran-ml-train',
+                            'palarran-ml-benchmark'],
+                 'docs': ['docs/skills', 'docs/ml'],
+                 'domain': 'ml'},
+ 'palarran-product': {'manifest': 'plugins/palarran-product/plugin.json',
+                      'skills': ['palarran-product-define',
+                                 'palarran-product-market',
+                                 'palarran-product-compare',
+                                 'palarran-product-revenue',
+                                 'palarran-product-acquisition',
+                                 'palarran-product-b2b',
+                                 'palarran-product-b2c'],
+                      'docs': ['docs/skills', 'docs/product'],
+                      'domain': 'product'},
+ 'palarran-backend': {'manifest': 'plugins/palarran-backend/plugin.json',
+                      'skills': ['palarran-backend-plan', 'palarran-backend-build'],
+                      'docs': ['docs/skills', 'docs/backend'],
+                      'domain': 'backend'},
+ 'palarran-frontend': {'manifest': 'plugins/palarran-frontend/plugin.json',
+                       'skills': ['palarran-frontend-plan',
+                                  'palarran-frontend-build',
+                                  'palarran-ui-design',
+                                  'palarran-ux-design'],
+                       'docs': ['docs/skills', 'docs/ux', 'docs/ui', 'docs/frontend'],
+                       'domain': 'frontend'},
+ 'palarran-ui': {'manifest': 'plugins/palarran-ui/plugin.json',
+                 'skills': ['palarran-ui-design', 'palarran-ux-design'],
+                 'docs': ['docs/skills', 'docs/ux', 'docs/ui'],
+                 'domain': 'ui'},
+ 'palarran-ci-cd': {'manifest': 'plugins/palarran-ci-cd/plugin.json',
+                    'skills': ['palarran-ci-cd'],
+                    'docs': ['docs/skills', 'docs/infra', 'docs/ci-cd'],
+                    'domain': 'ci-cd'},
+ 'palarran-infra': {'manifest': 'plugins/palarran-infra/plugin.json',
+                    'skills': ['palarran-infra-plan', 'palarran-infrastructure-incident'],
+                    'docs': ['docs/skills', 'docs/infra'],
+                    'domain': 'infra-plan'},
+ 'palarran-ux': {'manifest': 'plugins/palarran-ux/plugin.json',
+                 'skills': ['palarran-ux-design'],
+                 'docs': ['docs/skills', 'docs/ux'],
+                 'domain': 'ux'}}
+ALIASES = {'skills': 'palarran-setup',
+ 'memory': 'palarran-memory',
+ 'vps': 'palarran-vps',
+ 'mcp': 'palarran-mcp',
+ 'app': 'palarran-app',
+ 'science': 'palarran-science',
+ 'agent': 'palarran-agent',
+ 'ml': 'palarran-ml',
+ 'product': 'palarran-product',
+ 'backend': 'palarran-backend',
+ 'frontend': 'palarran-frontend',
+ 'ui': 'palarran-ui',
+ 'ci-cd': 'palarran-ci-cd',
+ 'infra-plan': 'palarran-infra',
+ 'ux': 'palarran-ux'}
 
 
 def build_package(namespace, output, root=ROOT):
+    namespace = ALIASES.get(namespace, namespace)
+    if namespace == 'palarran':return build_bundle(output, root)
     config = PACKAGES[namespace]
+    plugin_name = namespace
+    namespace = config['domain']
     root = root.resolve()
     output = Path(output).absolute()
     if output.exists() or output.is_symlink():
         raise FileExistsError("Output already exists; choose a new directory (no overwrite)")
     # An output inside these source trees would recursively include its own staging copy.
-    sources = [root / "docs", root / "templates"]
+    sources = [root / "docs", root / "templates", root / "packages"]
     sources += [root / "skills" / name for name in config["skills"]]
     if any(output.resolve().is_relative_to(source.resolve()) for source in sources):
         raise ValueError("Output must not be inside a packaged source tree")
     manifest = json.loads((root / config["manifest"]).read_text())
-    if manifest["name"] != namespace:
+    if manifest["name"] != plugin_name:
         raise ValueError("Plugin namespace mismatch")
     # Copy reviewed documentation and explicit template resources only. Never sweep
     # ignored .terraform binaries, .env files or local artifacts into a package.
@@ -83,7 +124,7 @@ def build_package(namespace, output, root=ROOT):
     paths = sorted(path for directory in doc_roots for path in directory.rglob("*.md"))
     paths += [root / "skills" / name / "SKILL.md" for name in config["skills"]]
     resources = [
-        "templates/ai-development/decision.md",
+        "templates/palarran/decision.md",
         "templates/infra/README.md",
         "templates/infra/low/compose.yaml", "templates/infra/low/Caddyfile",
         "templates/infra/low/.env.example", "templates/infra/low/init-app.sql",
@@ -95,7 +136,7 @@ def build_package(namespace, output, root=ROOT):
     infra_resources = list(resources)
     if namespace in {"ux", "ui", "frontend"}:
         resources = [
-            "templates/ai-development/decision.md",
+            "templates/palarran/decision.md",
             "templates/ux/concept.md", "templates/ux/screen.md", "templates/ux/reference.md",
         ]
     if namespace in {"ui", "frontend"}:
@@ -114,7 +155,7 @@ def build_package(namespace, output, root=ROOT):
         ]
     if namespace == "backend":
         resources = [
-            "templates/ai-development/decision.md", "templates/backend/foundation.md",
+            "templates/palarran/decision.md", "templates/backend/foundation.md",
             "templates/backend/spec.md", "templates/backend/plan.md",
             "templates/backend/reliability.md", "templates/backend/test-matrix.md",
             "templates/backend/agent-task.md", "templates/backend/progress.example.json",
@@ -124,7 +165,7 @@ def build_package(namespace, output, root=ROOT):
         ]
     if namespace == "product":
         resources = [
-            "templates/ai-development/decision.md", "templates/product/brief.md",
+            "templates/palarran/decision.md", "templates/product/brief.md",
             "templates/product/research.md", "templates/product/competitors.md",
             "templates/product/economics.md", "templates/product/channels.md",
             "templates/product/pipeline-mvp.md",
@@ -132,7 +173,7 @@ def build_package(namespace, output, root=ROOT):
         ]
     if namespace == "ml":
         resources = [
-            "templates/ai-development/decision.md", "templates/ml/experiment.md",
+            "templates/palarran/decision.md", "templates/ml/experiment.md",
             "templates/ml/data-card.md", "templates/ml/benchmark.md",
             "templates/ml/progress.example.json", "templates/ml/cost.example.json",
             "templates/ml/pipeline-stage.example.json",
@@ -141,19 +182,21 @@ def build_package(namespace, output, root=ROOT):
             "templates/ml/data-mixture.example.json", "templates/ml/data-preparation.example.json",
         ]
     if namespace in {"memory", "vps"}:
-        resources = ["templates/ai-development/decision.md", "templates/memory/.env.example", "templates/memory/compose.yaml", "templates/memory/ai-tools-memory.service", "templates/memory/client.example.json", "templates/memory/case.example.json", "templates/memory/deployment-plan.md", "scripts/memory_ops.py", "scripts/memory_acceptance.py", "scripts/vps_ops.py", "scripts/infra_inventory.py", "memory/__init__.py", "memory/service.py", "memory/proxy.py", "mcp/catalog/server.py"]
+        resources = ["templates/palarran/decision.md", "templates/memory/.env.example", "templates/memory/compose.yaml", "templates/memory/palarran-memory.service", "templates/memory/client.example.json", "templates/memory/case.example.json", "templates/memory/deployment-plan.md", "scripts/memory_ops.py", "scripts/memory_acceptance.py", "scripts/memory_context.py", "scripts/memory_vacuum.py", "scripts/vps_ops.py", "scripts/infra_inventory.py", "memory/__init__.py", "memory/service.py", "memory/proxy.py", "mcp/catalog/server.py"]
     if namespace in {"memory", "vps"}:
-        resources += infra_resources[1:]
+        resources += infra_resources[1:] + ["docs/setup/vps-stack.md"]
     if namespace == "mcp":
-        resources = ["templates/ai-development/decision.md", "templates/mcp/build-plan.md", "templates/mcp/catalog.example.json", "scripts/mcp_build.py", "mcp/catalog/server.py"]
+        resources = ["templates/palarran/decision.md", "templates/mcp/build-plan.md", "templates/mcp/catalog.example.json", "scripts/mcp_build.py", "mcp/catalog/server.py"]
     if namespace == "app":
-        resources = ["templates/ai-development/decision.md", "templates/app/verify/scenarios.md", "templates/app/verify/report.md", "scripts/app_verify.py", "scripts/app_verify_browser.cjs", "scripts/ml_data.py"]
+        resources = ["templates/palarran/decision.md", "templates/app/verify/scenarios.md", "templates/app/verify/report.md", "scripts/app_verify.py", "scripts/app_verify_browser.cjs", "scripts/ml_data.py"]
     if namespace == "science":
-        resources = ["templates/ai-development/decision.md", "templates/science/main.tex", "templates/science/claim-evidence.md", "scripts/science_preprint.py", "scripts/ml_data.py"]
+        resources = ["templates/palarran/decision.md", "templates/science/main.tex", "templates/science/claim-evidence.md", "scripts/science_preprint.py", "scripts/ml_data.py"]
     if namespace == "agent":
-        resources = ["templates/ai-development/decision.md", "templates/agent-eval/protocol.md", "templates/agent-improve/review.md", "templates/agent-improve/incident.example.json"]
+        resources = ["templates/palarran/decision.md", "templates/palarran-agent-eval/protocol.md", "templates/palarran-agent-improve/review.md", "templates/palarran-agent-improve/incident.example.json"]
     if namespace == "skills":
-        resources += ["scripts/project_setup.py", "scripts/project_update.py"]
+        resources += ["scripts/project_setup.py", "scripts/project_update.py", "scripts/palarran_config.py", "scripts/package_plugin.py", "templates/memory/compose.yaml", "templates/memory/palarran-memory.service"]
+    if namespace == "skills":
+        resources += ['packages/core/coordination/__init__.py', 'packages/core/coordination/service.py', 'packages/core/coordination/client.py', 'packages/core/coordination/proxy.py', 'packages/core/coordination/AGENTS.md', 'packages/core/coordination/docs/README.md', 'packages/core/coordination/docs/contract.md', 'packages/core/coordination/docs/wire.md', 'packages/core/coordination/docs/operations.md', 'packages/core/coordination/templates/palarran-coordination.service', 'packages/core/coordination/templates/client.env.example', 'packages/core/coordination/templates/tunnel.service.example', 'mcp/catalog/server.py']
     resources += ["templates/agents/root.md", "templates/agents/module.md",
                   "scripts/memory_cycle.py", "scripts/memory_ops.py", "scripts/keenable_auth.py", "templates/memory/lesson.example.json",
                   "memory/__init__.py", "memory/service.py"]
@@ -192,9 +235,34 @@ def build_package(namespace, output, root=ROOT):
     return output
 
 
+def build_bundle(output, root=ROOT):
+    """Union reviewed domain resources; never sweep a repository or private state."""
+    root=Path(root).resolve();output=Path(output).absolute()
+    if output.exists() or output.is_symlink():raise FileExistsError('Output already exists')
+    if any(output.resolve().is_relative_to(root/name) for name in ('skills','docs','templates')):
+        raise ValueError('Output must not be inside a packaged source tree')
+    output.parent.mkdir(parents=True,exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='.palarran-bundle-',dir=output.parent) as directory:
+        temporary=Path(directory);bundle=temporary/'bundle';bundle.mkdir()
+        for namespace in sorted(PACKAGES):
+            package=build_package(namespace,temporary/namespace,root)
+            for source in package.rglob('*'):
+                if not source.is_file():continue
+                relative=source.relative_to(package)
+                if str(relative)=='.claude-plugin/plugin.json':continue
+                dest=bundle/relative;dest.parent.mkdir(parents=True,exist_ok=True)
+                if dest.exists() and dest.read_bytes()!=source.read_bytes():raise ValueError('Conflicting package resource')
+                if not dest.exists():shutil.copyfile(source,dest)
+        target=bundle/'.claude-plugin/plugin.json';target.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copyfile(root/'plugins/palarran/plugin.json',target)
+        if output.exists() or output.is_symlink():raise FileExistsError('Output appeared during packaging')
+        bundle.rename(output)
+    return output
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("namespace", choices=sorted(PACKAGES))
+    parser.add_argument("namespace", choices=sorted(set(PACKAGES)|set(ALIASES)|{'palarran'}))
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     try:

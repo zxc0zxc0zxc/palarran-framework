@@ -1,20 +1,21 @@
-# Межпроектная инженерная память
+# Cross-project engineering memory
 
-Бесплатный self-hosted graph+fulltext без внешних LLM API: Neo4j Community, небольшой Python service, MCP stdio gateway через SSH-туннель. Это отдельный слой над project-local ADR и Graphify. Память возвращает опыт с условиями применимости, а не инструкции или разрешения.
+Self-hosted graph/fulltext without an external model API: Neo4j Community, a small Python service and a local MCP stdio gateway through a private SSH tunnel. This supplements project-local ADRs and Graphify. Retrieved experience carries applicability limits; it is not an instruction or an execution permission. Hosting still consumes your own server resources.
 
-Обязательно читать [sources](sources.md), [architecture](architecture.md), [contract](contract.md), [operations](operations.md), [workflow](workflow.md) и [память решений](../skills/decision-memory.md). Skill checkout и target roots различаются.
+Read [sources](sources.md), [architecture](architecture.md), [contract](contract.md), [operations](operations.md), [workflow](workflow.md), [context commands](context-package.md) and [decision memory](../skills/decision-memory.md). The skill checkout and target project are different roots.
 
-Первый профиль — один доверенный владелец и несколько его проектов/агентов. Не multi-tenant SaaS, нет HA и скрытых paid jobs. Семантического поиска/автоматической классификации нет. Native fulltext ищет слова; агент может уточнить запрос синонимами/переводом в своём текущем бюджете.
+The initial profile supports one trusted owner across several projects/agents. It is not a multi-tenant SaaS or HA deployment. Native fulltext searches literal terms; semantic retrieval, automatic classification and hidden paid jobs are absent. An agent may refine a query with synonyms or translations within its existing scope/budget.
 
-| Слой | Источник правды |
+| Layer | Authority |
 | --- | --- |
-| Локальный код/ADR | Текущий проект, commit и оригинальные файлы |
-| Graphify | Optional fresh code-only navigation текущего проекта |
-| Общая память | Отобранные карточки, provenance, связи и feedback |
-| Артефакты | Проверенные обезличенные тексты по SHA-256 вне Git |
+| Local code and ADRs | Current project, source commit and original files |
+| Graphify | Optional fresh code-only navigation |
+| Shared knowledge | Selected cards, provenance, relations and feedback |
+| Artifacts | Reviewed sanitized text, addressed by SHA256 outside Git |
+| Quick context and sessions | Private bounded project notes/handoffs, not verified global facts |
 
-Интерфейсы и ограничения runtime описаны в contract; deployment templates инертны до review. Установка skill не регистрирует MCP глобально и не открывает VPS.
+The selectable memory package provides memorize short/long, remember, session save/restore and reviewed vacuum. See the [command contract](context-package.md). Owner-context candidates remain distinct from reviewed global engineering findings. Installing a skill does not globally register MCP, open VPS ports or start deployment.
 
-R&D findings — полноценная часть общей памяти: [research profile](../skills/research-memory.md). При отборе уроков приоритет у применимых результатов/отрицательных findings с условиями и evidence; кодовые patches сохраняются при пользе, массового импорта нет.
+[Research findings](../skills/research-memory.md) include applicable negative and inconclusive results with conditions/evidence. Prefer transferable findings when selecting lessons; retain useful code patches without bulk imports.
 
-Все скиллы используют [автоматический цикл](../skills/global-memory.md): bounded recall до работы и verified sanitized learn после проверок. Автопубликация — только при явной owner policy; отсутствие сервиса не блокирует основную задачу.
+Every skill follows the [global cycle](../skills/global-memory.md): bounded recall before work and verified sanitized publication after actual checks. Automatic publication requires explicit owner policy. An unavailable service does not block the primary local task.

@@ -1,75 +1,77 @@
-# Подключение ai-tools к проекту
+# Connect Palarran to a project
 
-Сценарий: пользователь говорит Codex или Claude «подключи ai-tools к этому проекту, проверь память и объясни команды». Агент читает этот guide и target AGENTS/INDEX, устанавливает библиотеку, выполняет doctor и сообщает проверенный результат. Сам install не запускает разработку, обучение или deploy.
+A user asks Codex or Claude to install Palarran, check memory and explain its commands. The agent reads this guide and target AGENTS/INDEX, installs the library, runs doctor and reports observed results. Installation does not start application development, training or deployment.
 
-Единый вход: [`/skills:setup`](skill.md), CLI `project_setup.py setup`. Он выбирает install/update по receipt, проверяет память и объясняет native команды; явные install/update остаются доступны.
+The unified entry is [`/palarran:setup`](skill.md), backed by `project_setup.py setup`. It selects installation/update from the receipt, checks memory and explains native commands. Explicit install/update operations remain available. [Package and language configuration](configuration.md).
 
-## Первичные источники
+## Primary sources
 
-Проверены 2026-10-24, rolling docs: [OpenAI MCP](https://developers.openai.com/codex/mcp/) — user config и stdio; [OpenAI skills](https://developers.openai.com/codex/skills/) — repo `.agents/skills`; [Claude skills](https://code.claude.com/docs/en/skills) — `.claude/skills`; [Claude MCP](https://code.claude.com/docs/en/mcp) — project `.mcp.json`, approvals и scope. macOS local `man launchd.plist`: RunAtLoad, KeepAlive, ThrottleInterval; это login LaunchAgent, не daemon до входа пользователя.
+Rolling official documentation checked2026-10-24: [OpenAI MCP](https://developers.openai.com/codex/mcp/) for user configuration and stdio; [OpenAI skills](https://developers.openai.com/codex/skills/) for repository `.agents/skills`; [Claude skills](https://code.claude.com/docs/en/skills) for `.claude/skills`; [Claude MCP](https://code.claude.com/docs/en/mcp) for project `.mcp.json`, approvals and scope. Local macOS `man launchd.plist` defines RunAtLoad, KeepAlive and ThrottleInterval. A login LaunchAgent starts after user login, not as a pre-login system daemon.
 
-## Установка
+## Installation
 
-Из полного доверенного checkout ai-tools:
+From a complete trusted Palarran checkout:
 
 ```sh
-python3 scripts/project_setup.py install --target /ABSOLUTE/project --client both --plan
-python3 scripts/project_setup.py install --target /ABSOLUTE/project --client both
+python3 scripts/project_setup.py install --target /ABSOLUTE/project --client codex \
+  --packages backend app --skills-language en --code-language en --docs-language en --plan
+# Review the proposal, then repeat without --plan.
 python3 scripts/project_setup.py doctor --target /ABSOLUTE/project
 ```
 
-Client codex/claude/both. Source — только public tracked файлы выбранного commit HEAD, без dirty/untracked work, Git history, journals/state/credentials. Public bundle сохраняется в target `.ai-tools/library`, discovery links относительные и переносятся с проектом. Не устанавливать голые SKILL.md без shared docs/templates/scripts. Pin/source hashes записаны в manifest; upgrade не подразумевается повторным install.
+Choose `codex`, `claude` or explicitly `both`. First setup asks for missing packages and each output-language preference; automation supplies flags or checked config. Source distribution includes public tracked files from the selected HEAD commit, excluding dirty/untracked work, Git history, target journals/state and credentials. The pinned library lives in target `.ai-tools/library`; relative discovery links move with the project. Do not install bare SKILL.md files without shared guides/templates/helpers. The manifest records revision and source hashes. Repeating install is not an upgrade mechanism.
 
-Existing skill/config collision, symlink parent, modified owned bundle или changed managed AGENTS section — остановка до overwrites, не «починка» чужих файлов. Existing AGENTS сохраняется, добавляется маленький managed entry; Claude CLAUDE.md тоже получает ссылку на usage без замены правил. Project .mcp.json для Claude содержит только launch command, без credentials. Client approvals не обходить; wire doctor не доказывает принятие trust dialog.
+An existing skill/config collision, symlink parent, changed owned bundle or modified managed AGENTS section blocks replacement. Preserve existing AGENTS and add a small managed entry; Claude's CLAUDE.md also receives a usage link without replacing rules. Project `.mcp.json` contains a launch command rather than credentials. Do not bypass client approvals: wire connectivity does not prove a trust dialog was accepted.
 
-Install создаёт target decision/installation receipt/usage и не исполняет application tests/code/hooks. --plan без записи/network/global config. Doctor — bounded actual stdio initialize/list/search с максимум 3 карточками; сохраняет только counts/status, не содержимое памяти. Missing memory — NOT_READY, не PASS. Платных model calls нет. Пользователь получает путь `.ai-tools/USAGE.md`, список доступных команд и честные gaps. Новый/перезапущенный client обнаруживает installed skills; не выдумывать UI discovery proof.
+Install writes a target decision, receipt and usage guide; it executes no application tests, code or hooks. `--plan` writes nothing and performs no network/global configuration changes. Doctor performs bounded actual stdio initialize/list/search with at most3 cards and reports counts/status rather than memory contents. Missing memory is NOT_READY, never PASS. No model is called. Explain `.ai-tools/USAGE.md`, installed commands and remaining gaps. A new/restarted client may be required; do not invent UI discovery evidence.
 
-## Global memory prerequisite
+## Global memory prerequisites
 
-Global env и project overrides следуют [memory operations](../memory/operations.md). Первый раз оператор отдельно разрешает global MCP и persistent tunnel. Project installer не переписывает user config и не включает launchd; если prerequisites отсутствуют, агент показывает конкретный blocker и не запрашивает повторно уже разрешённое действие. Не копировать credentials в проекты.
+Global env and project overrides follow [memory operations](../memory/operations.md). The first global MCP and persistent tunnel setup needs explicit owner scope. Project installation does not rewrite user configuration or start launchd. Explain missing prerequisites, and do not ask again for an action already authorized. Never copy global credentials into projects.
 
-Global MCP запускается из закреплённого public bundle в `~/.zxc0zxc0zxc/runtime/<commit>/`, а не изменяемого checkout. Codex entry `engineering-memory` хранит command/args с явным --global, не bearer/reviewer values. Project Claude MCP и doctor также используют --global: случайный app .env не меняет shared memory endpoint. Env overrides остаются доступны в explicit CLI и отдельно настроенных project integrations. Перед изменением private backup config; существующий одноимённый чужой entry не перезаписывать.
+Global MCP runs from a pinned public snapshot under `~/.palarran/runtime/<commit>/`, not the mutable checkout. Codex's `engineering-memory` entry stores command/args with explicit `--global`, without bearer/reviewer values. Project Claude MCP and doctor also use `--global`: an app `.env` cannot redirect shared-memory connectivity. Explicit CLI/project integrations can still select a project env. Back up private configuration before changes and do not replace an unrelated same-name entry. Existing global installations require the [coordinated migration](palarran.md), not a silent path rewrite.
 
-macOS LaunchAgent `io.zxc0zxc0zxc.memory-tunnel` запускается при входе пользователя и перезапускает SSH с throttling. Он использует global env, strict known_hosts, no agent forwarding, loopback18791 и ExitOnForwardFailure. SSH key должен работать из noninteractive/login environment; не хранить SSH password в plist/env/argv. Network outage не превращать в retried memory writes. После sleep/wake требуется фактическая проверка, постоянную доступность не обещаем.
+The owned macOS LaunchAgent `io.palarran.memory-tunnel` starts at login and restarts SSH with throttling. It uses global env, trusted known_hosts, no agent forwarding, loopback18791 and ExitOnForwardFailure. The SSH key must work noninteractively after login; passwords never belong in plist/env/argv. A network outage does not authorize replaying memory writes. Verify connectivity after sleep/wake; do not promise uninterrupted availability.
 
-## Проверка и откат
+## Verification and removal
 
-Проверить actual config command и pinned bytes, launchctl state, native MCP initialize/list/search из нового project CWD. Убить только owned SSH child в разрешённом recovery test, дождаться нового PID и повторить authenticated doctor. Не запускать Codex model task ради проверки подключения.
+Check actual registered commands, pinned source bytes, launchctl state and native MCP initialize/list/search from a fresh project CWD. In an explicitly authorized recovery test, stop only the owned SSH child, observe its new PID and repeat authenticated doctor. Do not run a model task just to test connectivity.
 
-Откат global: `codex mcp remove engineering-memory`; `launchctl bootout gui/UID/io.zxc0zxc0zxc.memory-tunnel`; затем убрать только owned plist/runtime после проверки ссылок и сохранить backups. Project uninstall пока manual: удалить только manifest-owned unchanged links/files/managed sections; пользовательские изменения сохранять. Никакого git reset/clean, secret deletion или remote DB removal.
+Global removal: `codex mcp remove engineering-memory`, then `launchctl bootout gui/UID/io.palarran.memory-tunnel`; remove only owned plist/runtime files after checking references, keeping backups. Project uninstall remains manual: remove only manifest-owned unchanged links/files/managed sections and preserve user edits. No git reset/clean, secret deletion or remote database removal.
 
-## Автоматическое использование опыта
+## Automatic experience reuse
 
-Все новые skill bundles содержат mandatory global-memory guide и scripts/memory_cycle.py. После отдельного owner authorization `python3 scripts/memory_cycle.py enable` включает bounded recall и verified publication для всех проектов владельца; сам project install этого не делает. При выключенной/отсутствующей policy — local draft/deferred. [Контракт цикла](../skills/global-memory.md). Existing pinned project bundles не обновляются молча: для них нужен reviewed upgrade; глобальный MCP уже работает с этим существующим API и не требует расширения прав или нового server deploy.
+New skill bundles include the mandatory global-memory guide and `scripts/memory_cycle.py`. After separate owner authorization, `python3 scripts/memory_cycle.py enable` enables bounded recall and verified publication across the owner's projects. Project installation does not enable that policy. Without policy, use local drafts/deferred publication. See the [cycle contract](../skills/global-memory.md). Existing pinned bundles need a reviewed upgrade; the current remote API does not require new privileges or server deployment for this cycle.
 
-## Безопасное обновление
+## Safe updates
 
-Проверены2026-10-24: [Git merge](https://git-scm.com/docs/git-merge) — three-way/pre-merge concepts; [Python os.replace](https://docs.python.org/3/library/os.html#os.replace) — atomic rename одного объекта. Наш multi-file update не ACID transaction: private intent, backups и guarded recovery нужны отдельно. Installer не вызывает git merge/hooks/merge drivers и не меняет Git index проекта.
+Primary references checked2026-10-24: [Git merge](https://git-scm.com/docs/git-merge) for three-way concepts and [Python os.replace](https://docs.python.org/3/library/os.html#os.replace) for atomic replacement of one object. Palarran's multi-file update is not an ACID transaction: private intent, backups and guarded recovery remain necessary. The installer never invokes Git merge/hooks/drivers or changes the target Git index.
 
-Из нового доверенного checkout с committed HEAD:
+From a new trusted checkout with committed HEAD:
 
 ```sh
 python3 scripts/project_setup.py update --target /ABSOLUTE/project --plan
 python3 scripts/project_setup.py update --target /ABSOLUTE/project
 ```
 
-Client наследуется из installation receipt; update не добавляет второй client и не меняет credentials/user MCP/SSH/owner policy. AGENTS.md, CLAUDE.md, .mcp.json, .env и app code остаются byte-for-byte. Custom USAGE сохраняется; актуальный pin — installation.json. Неизменённая USAGE получает новую revision. Внутри library сравниваются old upstream hashes, local и new upstream: independent local edit/delete сохраняется, одинаковое local/new принимается, пересечение изменений или new-path collision => CONFLICT до записи. Unowned файлы сохраняются, symlink/special files внутри bundle не переносятся автоматически. Удалённый upstream skill с local edits требует review. --plan без записи/network; повтор того же update не заменяет файлы, но повторяет readonly health check.
+Inherit client and package scope from the receipt; never silently add a client/package or change credentials, user MCP, SSH or owner policy. Preserve AGENTS.md, CLAUDE.md, .mcp.json, .env and app code byte-for-byte. Preserve custom USAGE; installation.json is the authoritative source pin. Regenerate unchanged USAGE for the new release.
 
-Остановить активных агентов/клиентов на время смены каталога. Сначала полный preflight, затем private backup/intent, target ADR, swap library, owned discovery links и receipt. User-owned links не заменяются. Backup в .ai-tools/backups/ ignored/private; содержит исходный bundle с локальными данными, не публиковать. Pristine public release в .ai-tools/releases/ используется для doctor: carried scripts/проектные hooks не исполняются. Custom working bundle не становится public source для export/install. Global wire PASS не доказывает работоспособность изменённого project MCP launcher или client UI: customized integration явно NOT_VERIFIED.
+Inside the library compare old upstream hashes, local files and incoming upstream. Preserve independent local edits/deletions; accept identical local/incoming content. Overlapping changes and new-path collisions produce CONFLICT before writes. Keep unowned regular files, but never carry symlinks/special files automatically. A removed upstream skill with local edits requires review. `--plan` writes nothing or connects; same-revision updates leave files unchanged and repeat read-only health.
 
-После update обязательны initialize/list/search глобальной памяти с --global из target CWD. Health NOT_READY даёт UPDATED_MEMORY_NOT_READY и exit2; обновление файлов при этом завершено. Не повторять apply ради сети: повторить doctor. Application execution/paid calls отсутствуют.
+Stop active clients/agents while swapping the library. After full preflight, write private backup/intent and target ADR, then swap the library, owned discovery links and receipt. Never replace user-owned links. `.ai-tools/backups/` is private/ignored and can contain local data. Doctor uses pristine public files in `.ai-tools/releases/`, never carried scripts or project hooks. A customized working library cannot become an export/install source. Global wire PASS does not verify a customized project launcher or client UI; report CUSTOMIZED_NOT_VERIFIED.
 
-При обычной I/O ошибке попытка rollback только по совпадающим expected hashes/links. Crash/изменение файлов другим процессом => RECOVERY_REQUIRED, новый update блокируется. Guarded explicit recovery:
+After update, global initialize/list/search from target CWD is mandatory. Health failure gives UPDATED_MEMORY_NOT_READY and exit2 even when file updates completed. Repeat doctor after fixing connectivity; do not replay apply for a network failure. No application execution or paid calls are performed.
+
+For ordinary I/O failure, rollback only when current hashes/links match expected transaction state. Crashes or concurrent changes yield RECOVERY_REQUIRED and block new updates. Guarded explicit recovery:
 
 ```sh
 python3 scripts/project_setup.py rollback --target /ABSOLUTE/project --plan
 python3 scripts/project_setup.py rollback --target /ABSOLUTE/project
-# Для завершённой версии указать backup из update receipt:
 python3 scripts/project_setup.py rollback --target /ABSOLUTE/project --backup .ai-tools/backups/update-TRANSACTION_ID
 ```
 
-Rollback отказывается перезаписывать новые пользовательские изменения; сохранить backup и разобрать diff. Нет force/reset/clean и автоматического replay. Cache/backups/attempt ADR сохраняются для review; старые глобальные runtime/tunnel этим не обновляются.
+Rollback refuses to overwrite new user changes. Keep the backup and review the diff; no force/reset/clean or automatic replay. Retain caches/backups/attempt ADRs for review. Project updates do not update older global runtimes/tunnels.
 
 ## Optional shared web search
 
-[Keenable context retrieval](../skills/context-retrieval.md) is separate from memory: global key/header helper and native remote MCP, no key in project/TOML. Project setup may check an existing integration by explicit scope, but does not silently install/repair it or disable built-in search. Actual content-call quota/usage and host discovery are separate from metadata handshake.
+[Keenable retrieval](../skills/context-retrieval.md) is separate from memory: a global key/header helper and native remote MCP, without a key in project/TOML. Project setup can inspect an existing integration within explicit scope, but never silently install/repair it or disable built-in search. Content quota/usage and actual host discovery are distinct from metadata connectivity.

@@ -1,45 +1,45 @@
-# Общий workflow CI/CD скиллов
+# Shared CI/CD skill workflow
 
-Применяется к `ci-cd-github` и `ci-cd-gitlab`. Это workflow подготовки/изменения реального проекта; не разрешение активировать deploy любого найденного production environment.
+Applies to `palarran-ci-cd` and `palarran-ci-cd`. This prepares/changes an actual project; it does not authorize activating deployment on every discovered production environment.
 
-## 1. Контекст до выбора
+## 1. Context before choices
 
-Прочитать [обязательный журнал решений](../skills/decision-memory.md): target `.ai-development/INDEX.md` → связанные accepted ADR/context → сверка предпосылок. Определить target project отдельно от checkout скилла. При первом запуске создать task context/index; каждый новый принятый выбор объяснить до зависимого изменения, в handoff сослаться на использованные IDs.
+Read the [required decision journal](../skills/decision-memory.md): target `.palarran/INDEX.md` → related accepted ADR/context → assumption checks. Identify target project separately from skill checkout. On first use, create task context/index; explain each new accepted choice before dependent changes and link reused IDs in handoff.
 
-Далее прочитать все common guides, provider guide и обнаруженные stack guides по [контракту](skill-contract.md). Эти локальные документы обязательны; проверять актуальную version-specific документацию для применяемых инструментов и функций. Недоступная база — blocker архитектурных рекомендаций, а не повод подменить её памятью.
+Then read all shared guides, provider guide and detected stack guides under the [contract](skill-contract.md). These local documents are mandatory; check current version-specific documentation for tools/features used. Missing references block architectural advice, not justify replacing them with memory.
 
-## 2. Discovery и intent
+## 2. Discovery and intent
 
-Проверить manifests/lockfiles/workspaces/test scripts, существующие CI и Dockerfiles, `.delivery/` и принятые решения. Не открывать credentials, `.env`, state или private app data. Найти все Go modules, Composer packages, JS packages, Python projects, Cargo members и shared dependencies. Не навязывать новый framework/package manager/host ради шаблона.
+Inspect manifests/lockfiles/workspaces/test scripts, existing CI/Dockerfiles, `.delivery/` and accepted decisions. Do not open credentials, `.env`, state or private application data. Find all Go modules, Composer packages, JS packages, Python projects, Cargo members and shared dependencies. Do not impose new frameworks/package managers/hosts for a template.
 
-Уточнить только отсутствующие существенные сведения: provider version/tier, runner architecture/capacity, registry/backend, envs, policy auto/manual и prod approvals, target identities/ресурсы и владельцы, migrations/rollback, timings и budget. Уже сохранённое не спрашивать повторно; stale metadata отметить и по разрешению сверить control-plane API. SSH/scp/rsync/Ansible-over-SSH/туннели не запрашивать и не использовать даже для bootstrap.
+Clarify only missing material facts: provider version/tier, runner architecture/capacity, registry/backend, environments, automatic/manual policy/production approvals, target identities/resources/owners, migrations/rollback, timings and budget. Do not re-ask stored information; flag stale metadata and verify through control-plane APIs when authorized. Do not request/use SSH/scp/rsync/Ansible-over-SSH/tunnels even for bootstrap.
 
-Следовать объёму запроса. Если пользователь просит только план, создать reviewable plan/ADR/config drafts и не менять активные workflows/settings. Если просит реализовать — автономно подготовить рабочие изменения выбранного проекта и необходимые проверки. Наличие API credentials не разрешает сменить unrelated environments/permissions. Права на конкретный scope, уже данные пользователем, не переспрашивать.
+Follow requested scope. Planning-only requests produce reviewable plan/ADR/config drafts without active workflow/settings changes. Implementation requests autonomously produce working changes/necessary checks for the selected project. API credentials do not authorize unrelated environment/permission changes. Do not re-ask user-granted authority for concrete scope.
 
-## 3. Решения и reviewable результат
+## 3. Decisions and reviewable output
 
-Записать выбор backend, CI graph, test scope/selection, caches/shards, runner resources, artifact trust, env selection, config/schema, identity, logging, concurrency/stale protection и rollback в `.ai-development/ci-cd/<task>/decisions/`. Подтверждённый прежний выбор использовать через `reuses`, новый заменяющий — через `supersedes`. Рекомендации из источника и собственную адаптацию различать.
+Record backend, CI graph, test scope/selection, caches/shards, runner resources, artifact trust, environment selection, config/schema, identity, logging, concurrency/stale protection and rollback choices in `.palarran/ci-cd/<task>/decisions/`. Reaffirm earlier choices through `reuses`, replacements through `supersedes`. Distinguish source recommendations from our adaptation.
 
-Артефакты task: `context.md`, `plan.md` с pipeline/trust Mermaid, `acceptance.md`, `handoff.md`; scratch отдельно. Actual workflows/config/scripts создаются в штатных путях проекта, не в папке установленного скилла:
+Task artifacts: `context.md`, `plan.md` with pipeline/trust Mermaid, `acceptance.md`, `handoff.md`; scratch separate. Actual workflows/config/scripts belong in normal project paths, not installed skill directories:
 
-- GitHub: адаптированные `.github/workflows/` и versioned reusable blocks; GitLab: `.gitlab-ci.yml`/versioned includes/components.
-- `.delivery/project.yaml`, environments, JSON Schema(s) **под фактически выбранный контракт**, semantic validation и безопасные identity/secret references. Ни docs example, ни YAML parse не являются готовой schema validation. Проверить unknown fields/env/ref/backend/registry и связь service/env/image/target identity; bootstrap status `unverified` блокирует активный deploy.
-- Общие test/build commands проекта, Docker/package changes только по нужде. Toolchain/actions/includes/base images pinned и проверены; placeholders означают draft. Не создавать фиктивный success deploy job, если backend/API/agent отсутствует.
-- Release/build evidence: exact source+inputs+digest, required test/scans/provenance; deploy record exact env/desired/observed identity. Одноразовая сборка и packaged-candidate smoke до продвижения, исключения Next build-time config явно оформлены.
-- Test/cache/performance budget и измерения; security/log/artifact policy; runbooks rollback/migrations/controller unavailable/identity rotation.
+- GitHub: adapted `.github/workflows/` and versioned reusable blocks; GitLab: `.gitlab-ci.yml`/versioned includes/components.
+- `.delivery/project.yaml`, environments, JSON Schema(s) **for the actual selected contract**, semantic validation and safe identity/secret references. Neither documentation examples nor YAML parse are ready schema validation. Check unknown fields/environment/ref/backend/registry and service/environment/image/target-identity binding; bootstrap status `unverified` blocks active deployment.
+- Shared project test/build commands, Docker/package changes only as needed. Pin/verify toolchains/actions/includes/base images; placeholders mean draft. Do not create fake successful deployment jobs when backend/API/agent is absent.
+- Release/build evidence: exact source+inputs+digest, required tests/scans/provenance; deployment record with exact environment/desired/observed identity. Build once/package-candidate smoke before promotion; record Next build-time-config exceptions explicitly.
+- Test/cache/performance budgets/measurements; security/log/artifact policy; rollback/migration/controller-unavailable/identity-rotation runbooks.
 
-Короткое саммари должно объяснять что меняется, почему (ADR IDs + первоисточники), ожидаемый performance эффект/стоимость, ограничения и blockers. Credentials не включать даже в examples. При secrets prerequisite использовать штатный protected input/secret manager, не чат и не command argv.
+Concise summaries explain changes, why (ADR IDs + primary sources), expected performance effect/cost, limitations and blockers. Never include credentials even in examples. Secret prerequisites use established protected input/secret managers, not chat or command argv.
 
-## 4. Проверки до активации
+## 4. Checks before activation
 
-Проверить с доступными инструментами: workflow/provider lint под нужную версию, shell/static analysis, schemas+semantic negative tests, stack test commands и packaged artifact smoke, зависимости graph/required gates, cache miss/cold/warm, controlled synthetic secret-leak harness по [security](security.md). Не исполнять неизвестные repository scripts с privileges/secrets без проверки их trust и effects.
+Use available tools to check version-appropriate workflow/provider lint, shell/static analysis, schemas/semantic negative tests, stack test commands/packaged-artifact smoke, dependency graph/required gates, cache miss/cold/warm and controlled synthetic secret-leak harness under [security](security.md). Do not execute unknown repository scripts with privileges/secrets without reviewing trust/effects.
 
-Изолированный test repo/runtime — для реальных trigger/identity/env lock/stale tests, затем разрешённые environments. Недостающие credentials/tools/targets отметить NOT RUN; сохранять все остальные полезные результаты и blockers. Не отключать security gate/полный fallback, чтобы «прошло». Speedup — только observed timings на сопоставимом workload, отдельно queue и rollout observation.
+Use isolated test repositories/runtimes for actual trigger/identity/environment-lock/stale tests, then authorized environments. Mark missing credentials/tools/targets NOT RUN while preserving other useful results/blockers. Do not disable security gates/full fallback to “make it pass.” Speedup means observed comparable-workload timings, separating queue/rollout observation.
 
-## 5. Автоматический deploy и handoff
+## 5. Automatic deployment and handoff
 
-Когда включение входит в уже разрешённый scope и prerequisites проверены, активировать именно утверждённые events/env policy. Далее эти triggers работают автоматически без chat prompt на каждый run. Manual button — настроенная опция того же contract, не единственная форма prod authorization.
+When activation is already authorized and prerequisites verified, activate the exact approved event/environment policy. Those triggers then operate automatically without chat prompts for each run. Manual buttons are configured options of the same contract, not the only production-authorization form.
 
-Зелёный статус только после exact desired/observed revision+digest, readiness/smoke и policy observation; Git push/PR merge не являются deployment success. При failure — stop/совместимый rollback через desired state/API, без SSH и arbitrary root commands. Active prod migration/rollout не отменять как устаревший PR CI. Для нового destructive scope показать конкретные последствия и остановить зависимую операцию до разрешения.
+Green status requires exact desired/observed revision+digest, readiness/smoke and policy observation; Git pushes/PR merges are not deployment success. On failure, stop/perform compatible rollback through desired state/API without SSH/arbitrary root commands. Do not cancel active production migration/rollout like superseded PR CI. For new destructive scope, show concrete consequences and stop dependent operations until authorized.
 
-Обновить decision verification, INDEX и handoff: paths/IDs, что implemented/activated/verified, PASS/FAIL/NOT RUN, timings, pending blockers, следующий шаг. `.delivery/` — действующая конфигурация, `.ai-development/` — rationale/context, raw logs/секреты не сохраняются ни в одном из них.
+Update decision verification, INDEX and handoff: paths/IDs, implemented/activated/verified work, PASS/FAIL/NOT RUN, timings, pending blockers and next step. `.delivery/` is current configuration; `.palarran/` is rationale/context; neither stores raw logs/secrets.

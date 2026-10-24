@@ -1,32 +1,32 @@
 # Workflow: context → foundation → feature spec → handoff
 
-## Вход и границы
+## Inputs and boundaries
 
-`/backend:plan {фича}` читает target repo и сохраняет plan. Нет описания — посмотреть roadmap/product context и спросить, какую фичу планируем; не выбирать самовольно. Параллельно собрать независимый context/foundation inventory. Не просить SSH credentials; не запускать app/tests/benchmark/DB queries, не устанавливать dependencies и не создавать worktrees/agents. Нужные схемы/contracts/code sketches хранятся только как inert plan artifacts.
+`/palarran:backend:plan {feature}` reads target repositories and saves plans. Without a description inspect roadmap/product context and ask which feature to plan; never choose unilaterally. Collect independent context/foundation inventory meanwhile. No SSH credentials, application/tests/benchmarks/DB queries, dependency installs or worktrees/agents. Required schemas/contracts/code sketches remain inert planning artifacts only.
 
-Прочитать общий и backend indexes, relevant accepted ADR, existing specs/UX/UI/frontend contracts при наличии, code/schema/tests/infra/CI docs. Existing SDD constitution/spec convention использовать, не дублировать конфликтующие specs. Record baseline SHA/relevant dirty diff, source versions, stack, workload/infra/team facts, constraints и unknowns. Критичные unknowns уточнить рано, независимые части планировать с assumptions.
+Read shared/backend indexes, relevant accepted ADRs, existing specs/UX/UI/frontend contracts when available, code/schema/tests/infrastructure/CI docs. Reuse existing SDD constitutions/spec conventions rather than conflicting duplicate specs. Record baseline SHA/relevant dirty diffs, source versions, stack, workload/infrastructure/team facts, constraints and unknowns. Clarify critical unknowns early; plan independent work under assumptions.
 
-## Порядок
+## Sequence
 
-1. **Foundation gate:** existing backend/stack → reuse review с аргументацией. Нет → [foundation-stack](foundation-stack.md) и [architecture](architecture.md), alternatives/выбор, modules/deploy shape, data/storage/cache/queue fit, protocols/auth/test/observability/resources. Не начинать детальный feature task plan на неразрешённой фундаментальной развилке; conditional outline явно условный.
-2. **Feature specification:** business outcome/non-goals, R/AC/INV IDs, actors/permissions/state transitions, dependency/contracts и примеры outcomes; map existing modules/reuse. Каждый принятый выбор в canonical ADR до зависимого planning изменения; proposed/agent recommendation не равны user approval.
-3. **Technical design:** context-specific modules/interfaces/API/events, data/transactions/migrations, cache или отказ с trigger, performance/capacity, SLA proposal/SLI/SLO/RPO/RTO и security. Ссылки на реально прочитанные primary sources, выводы/ограничения, diagrams основных и failure flows. Snippets только атрибутированные или явно собственные sketches.
-4. **Test/delivery plan:** feature-specific edges, concurrency/partial failure/invariant tests, numerical thresholds, future commands/env, rollout/data compatibility/recovery и operational owners. Plan не исполняет тесты; expected evidence отдельно от actual.
-5. **SDD agent tasks:** dependency DAG, touch/contract ownership, worktree/branch/base plan, isolated resources, serial integration и per-task/feature DoD. Выполнять future worktree setup только в последующем authorized execution, не этим skill.
-6. **Consistency review:** каждый requirement/edge/invariant → acceptance/design/task/test/DoD; contracts и migration совместимы, targets feasible under assumptions, parallel lanes не меняют одни shared files. Исправить пробелы плана. Draft при blocking gaps; review-ready при полной plan coverage, не «реализация проверена».
+1. **Foundation gate:** existing backend/stack → reasoned reuse review. Otherwise use [foundation-stack](foundation-stack.md) and [architecture](architecture.md), alternatives/choices, modules/deployment shape, data/storage/cache/queue fit, protocols/auth/testing/observability/resources. Do not start detailed feature tasks across unresolved foundation choices; conditional outlines stay explicitly conditional.
+2. **Feature specification:** business outcomes/non-goals, R/AC/INV IDs, actors/permissions/state transitions, dependencies/contracts and outcome examples; map existing modules/reuse. Record accepted choices in canonical ADRs before dependent planning changes; proposals/agent recommendations are not user approval.
+3. **Technical design:** contextual modules/interfaces/API/events, data/transactions/migrations, cache or reasoned omission with triggers, performance/capacity, SLA proposal/SLI/SLO/RPO/RTO and security. Cite actually read primary sources with conclusions/limits and main/failure-flow diagrams. Snippets are attributed or explicitly original sketches only.
+4. **Test/delivery plan:** feature-specific edges, concurrency/partial-failure/invariant tests, numerical thresholds, future commands/environments, rollout/data compatibility/recovery and operational owners. Plans do not run tests; distinguish expected evidence from actual outcomes.
+5. **SDD agent tasks:** dependency DAG, touch/contract ownership, worktree/branch/base plan, isolated resources, serial integration and task/feature DoD. Future worktree setup runs only in later authorized execution, not this skill.
+6. **Consistency review:** every requirement/edge/invariant → acceptance/design/task/test/DoD; contracts/migrations compatible, targets feasible under assumptions, parallel lanes do not edit shared files. Fix plan gaps. Blocking gaps mean draft; full planning coverage means review-ready, not verified implementation.
 
-## Сохранение
+## Preservation
 
 ```text
-.ai-development/
+.palarran/
   INDEX.md
   backend/
     INDEX.md
     <task>/
       context.md
-      foundation.md              # выбор или обоснованный reuse
-      spec.md                    # или ссылка на existing canonical specs
-      contracts/                 # inert schemas/examples, если нужны
+      foundation.md              # selection or justified reuse
+      spec.md                    # or reference existing canonical specs
+      contracts/                 # inert schemas/examples when needed
       plan.md                    # design/diagrams/capacity/cache/data/rollout
       reliability.md             # SLA proposal + SLI/SLO/budgets/RPO/RTO
       test-matrix.md
@@ -36,10 +36,10 @@
       handoff.md
 ```
 
-Можно объединить файлы для малого scope или использовать existing spec layout, сохранив anchors/mapping/index и единый источник принятого решения. Старые revisions/причины не стирать, менять через supersedes/reuses. Planning artifacts пишутся в target, не installed plugin/cache; app source и deploy configs не меняются.
+Small scopes may combine files or reuse existing spec layouts while preserving anchors/mapping/index and one accepted-decision source of truth. Keep old revisions/reasons through supersedes/reuses. Write planning artifacts in target, not installed plugin/cache; application source/deployment configs remain unchanged.
 
-Handoff: понятый scope и foundation, ключевые decisions/alternatives/source links, proposed SLA/нагрузка и feasibility gaps, edge/test coverage, tasks/critical path/parallel ownership, DoD, rollout/recovery и вопросы. Следующий агент получает конкретные входы, а не указание «сам разберись». План сам по себе не разрешает implementation/deploy и не доказывает performance/SLA.
+Handoff: understood scope/foundations, key decisions/alternatives/source links, proposed SLA/load/feasibility gaps, edge/test coverage, tasks/critical path/parallel ownership, DoD, rollout/recovery and questions. Give the next agent concrete inputs rather than “figure it out.” Plans alone neither authorize implementation/deployment nor prove performance/SLA.
 
-## Progress с момента создания плана
+## Progress from plan creation
 
-Создать [canonical progress.json и marked section](../progress.md) по полному TASK inventory, planned gates и source revision; все execution checks `NOT_RUN`, tasks `pending`. Structural helper проверяет только artifacts и синхронизирует section, application tests не исполняет. Plan-ready — согласованность design, не feature done. Source design revisions сохраняются, а последующий `/backend:build` обновляет status в **этом же плане**, с commit/evidence и remaining tasks. Existing plans без section получают её перед execution без перезаписи requirements.
+Create [canonical progress.json and marked section](../progress.md) from full TASK inventories, planned gates and source revisions; all execution checks `NOT_RUN`, tasks `pending`. Structural helpers validate artifacts/synchronize sections only; they never run application tests. Plan-ready means coherent design, not feature completion. Preserve source-design revisions; later `/palarran:backend:build` updates status in **this same plan**, with commits/evidence/remaining tasks. Add missing sections to existing plans before execution without overwriting requirements.

@@ -105,10 +105,10 @@
           "kind": "command",
           "argv": [
             "/usr/bin/python3",
-            "/absolute/path/to/ai-tools/examples/agent-eval/check_build.py"
+            "/absolute/path/to/palarran/examples/palarran-agent-eval/check_build.py"
           ],
           "pins": [
-            "/absolute/path/to/ai-tools/examples/agent-eval/check_build.py"
+            "/absolute/path/to/palarran/examples/palarran-agent-eval/check_build.py"
           ]
         }
       ]

@@ -1,44 +1,44 @@
 # TypeScript / Next.js
 
-Определить Node и Next версии, package manager/lockfile, monorepo packages, App/Pages Router, SSR/SSG/ISR, build-time data fetching, backend API, test framework и target hosting. Для обычного TypeScript сервиса применять общие правила, Next-specific разделы пометить неприменимыми.
+Identify Node/Next versions, package manager/lockfile, monorepo packages, App/Pages Router, SSR/SSG/ISR, build-time data fetching, backend API, test framework and target hosting. For ordinary TypeScript services, apply shared rules and mark Next-specific sections inapplicable.
 
-## Рекомендуемый DAG
+## Recommended DAG
 
-| Ветка | Содержание | Оптимизация/границы |
+| Branch | Contents | Optimization/boundaries |
 |---|---|---|
-| Format/lint/types | Реальные scripts проекта, ESLint и `tsc --noEmit` где применимо | Независимые jobs; не считать `next build` заменой lint в любой версии |
-| Unit/component | Существующий Vitest/Jest или иной runner | Workers под RAM, affected graph только проверенный |
-| Integration | API routes/server actions/auth/DB contracts | Ephemeral data/services, без production credentials |
+| Format/lint/types | Actual project scripts, ESLint and `tsc --noEmit` where applicable | Independent jobs; `next build` does not replace lint in every version |
+| Unit/component | Existing Vitest/Jest or other runner | RAM-bounded workers, verified affected graph only |
+| Integration | API routes/server actions/auth/DB contracts | Ephemeral data/services, no production credentials |
 | Build | Production Next artifact/container | `.next/cache`, lockfile, toolchain/base digest |
-| E2E | Playwright critical journeys против собранного кандидата | Shards и browser coverage по риску, без повторного build каждого shard |
-| Security | Dependency policy, image scan, secrets/public bundle checks | Не только `npm audit` и не blanket ignore findings |
+| E2E | Playwright critical journeys against built candidate | Risk-based shards/browser coverage, no rebuild per shard |
+| Security | Dependency policy, image scan, secrets/public-bundle checks | More than `npm audit`; no blanket finding suppression |
 
-Lockfile определяет manager: [npm ci](https://docs.npmjs.com/cli/v11/commands/npm-ci/) требует согласованного lock; pnpm/yarn frozen/immutable flags выбрать под pinned manager. Не смешивать package managers и не выполнять unpinned `npx` installation в trusted release. Installer lifecycle scripts тоже исполняемый код, особенно при private dependency credentials.
+Lockfiles determine package managers: [npm ci](https://docs.npmjs.com/cli/v11/commands/npm-ci/) requires consistent locks; select pnpm/yarn frozen/immutable flags for pinned managers. Do not mix managers or run unpinned `npx` installs in trusted releases. Installer lifecycle scripts are executable too, especially with private-dependency credentials.
 
-## Кеширование и E2E
+## Caching and E2E
 
-[Next CI caching](https://nextjs.org/docs/app/guides/ci-build-caching): сохранять `.next/cache` в scope OS/arch/Node/Next/lock/config/trust и релевантных build inputs. Это **не готовый deploy artifact**. Cache может содержать fetched data: не допускать production private data в cache, доступный PR. Caching package-manager store обычно безопаснее слепого reuse `node_modules`; monorepo task cache требует completeness inputs и trusted writers.
+[Next CI caching](https://nextjs.org/docs/app/guides/ci-build-caching): preserve `.next/cache` scoped by OS/architecture/Node/Next/lock/config/trust and relevant build inputs. This is **not a ready deployment artifact**. Caches may contain fetched data: keep private production data out of PR-accessible caches. Caching package-manager stores is usually safer than blind `node_modules` reuse; monorepo task caches require complete inputs/trusted writers.
 
-Build один раз на release candidate; E2E shards запускаются против этого image/изолированных instance с одинаковым digest. [Playwright sharding](https://playwright.dev/docs/test-sharding) настраивается с учётом file/test granularity и fixture изоляции, reports объединяются после проверки всех shards. [Playwright CI](https://playwright.dev/docs/ci) не рекомендует считать browser binary caching универсальным ускорением; prebuilt browser image должен соответствовать package version, OS dependencies и arch.
+Build once per release candidate; E2E shards target that image/isolated instances with identical digest. [Playwright sharding](https://playwright.dev/docs/test-sharding) accounts for file/test granularity/fixture isolation; merge reports after checking all shards. [Playwright CI](https://playwright.dev/docs/ci) does not recommend treating browser-binary caching as universal acceleration; prebuilt browser images must match package versions, OS dependencies and architecture.
 
-Production env не используется для E2E fixtures. Trace/screenshots/HTML могут хранить headers/cookies/PII; ограничить capture, redaction/access/retention, не upload всего каталога. Не заменять ожидаемые network conditions фиксированными sleeps. Большой E2E suite вынести в отдельные shards, критичные journeys остаются release gate, дополнительные browsers не превращать в никогда не запускаемые jobs.
+Do not use production environments for E2E fixtures. Traces/screenshots/HTML may retain headers/cookies/PII; restrict capture, redaction/access/retention without uploading entire directories. Do not replace network-condition waits with fixed sleeps. Split large E2E suites into separate shards; critical journeys remain release gates and extra browsers must not become never-run jobs.
 
-## Build once: важное ограничение Next.js
+## Build once: important Next.js limitation
 
-[`NEXT_PUBLIC_*`](https://nextjs.org/docs/app/guides/environment-variables) встраиваются в клиентский bundle во время build. Переменная в prod container не изменит уже встроенный test API URL. Server-side static generation и обращения к CMS тоже могут зафиксировать данные/конфиг при сборке. Публичный client config не должен содержать secrets вообще.
+[`NEXT_PUBLIC_*`](https://nextjs.org/docs/app/guides/environment-variables) values are embedded in client bundles at build time. Production-container variables cannot change embedded test API URLs. Server-side static generation/CMS calls may also freeze data/configuration during builds. Public client configuration must contain no secrets.
 
-Предпочтительное решение для одного digest dev→test→prod: одинаковые public build inputs, same-origin API маршруты или специально спроектированный non-secret runtime configuration endpoint; server secrets читать на runtime там, где route/rendering mode реально это позволяет. Не обещать, что «все env становятся runtime» автоматически. Runtime config endpoint доступен клиенту и возвращает только разрешённые публичные поля.
+Preferred approach for one dev→test→prod digest: identical public build inputs, same-origin API routes or a deliberately designed nonsecret runtime-configuration endpoint; read server secrets at runtime where route/rendering modes actually permit it. Do not promise that all environment variables automatically become runtime values. Client-accessible runtime-config endpoints return only authorized public fields.
 
-Если проекту необходимы разные build-time значения, зафиксировать исключение: отдельные immutable build variants, каждый со своей идентичностью/digest и проверками. Нельзя называть их продвижением одного и того же artifact. Скилл обсуждает этот выбор до генерации deploy pipeline.
+If different build-time values are necessary, record an exception: separate immutable build variants with individual identities/digests/checks. Do not call them promotion of one artifact. Discuss this choice before generating deployment pipelines.
 
-## Packaging, scaling и deploy
+## Packaging, scaling and deployment
 
-[Standalone output](https://nextjs.org/docs/app/api-reference/config/next-config-js/output) уменьшает runtime package, но проверить копирование `public`/`.next/static` и traced monorepo files; standalone не автоматически включает всё. Для native modules/image optimization проверить libc/arch/runtime deps. Server smoke запускается из production image, не dev server.
+[Standalone output](https://nextjs.org/docs/app/api-reference/config/next-config-js/output) reduces runtime packages, but verify copying `public`/`.next/static` and traced monorepo files; standalone does not automatically include everything. Check libc/architecture/runtime dependencies for native modules/image optimization. Server smoke runs from production images, not development servers.
 
-[Self-hosting](https://nextjs.org/docs/app/guides/self-hosting) требует отдельной проработки cache consistency/invalidation и совместимости нескольких instances/builds. Shared cache, version skew/server actions и graceful rollout — runtime вопросы, которые CI не решает одним `next build`. У runtime cache есть ограниченные writable paths; read-only rootfs настраивать по фактическим требованиям.
+[Self-hosting](https://nextjs.org/docs/app/guides/self-hosting) needs separate cache consistency/invalidation and multi-instance/build compatibility design. Shared caches, version skew/server actions and graceful rollout are runtime questions CI cannot solve with one `next build`. Runtime caches have bounded writable paths; configure read-only rootfs from actual requirements.
 
-Deploy через GitOps или managed hosting API; если PaaS пересобирает source на каждом environment, это отдельный backend contract, не незаметное нарушение build-once. Проверить возможность deploy prebuilt artifact и переносимость adapter, не объявлять любой OCI image пригодным для всех hosting providers.
+Deploy through GitOps or managed-hosting APIs; PaaS rebuilding source for every environment is a separate backend contract, not a hidden build-once violation. Verify prebuilt-artifact deployment/adapter portability instead of claiming any OCI image suits all hosting providers.
 
-## Приёмка
+## Acceptance
 
-PR required lint/types/tests и production build не обходятся флагами ignore errors; exact image проходит E2E; публичные URL dev/test не протекают в prod bundle; secrets не найдены в bundles/source maps/reports/cache; standalone assets и native modules доступны; Node/Next versions pinned; cache miss корректен; observed deploy показывает release digest и успешные SSR/API journeys. До выполнения этих проверок статический документ не даёт production-ready статус.
+Required PR lint/types/tests/production builds cannot bypass errors with ignore flags; exact images pass E2E; public dev/test URLs do not leak into production bundles; secrets absent from bundles/source maps/reports/caches; standalone assets/native modules available; Node/Next versions pinned; cache misses handled; observed deployment shows release digest/successful SSR/API journeys. Before these checks run, static documentation establishes no production-ready status.

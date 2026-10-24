@@ -1,54 +1,54 @@
-# Скорость без потери тестового сигнала
+# Speed without losing test signal
 
-## Измерение и исходные цели
+## Measurements and initial objectives
 
-Измерять отдельно queue wait, checkout, dependency install, cache restore/save, build, unit/integration/E2E, security scans, artifact transfer, promotion queue, rollout и observation. p50/p95 по стеку и размеру change, cold/warm cache и runner class; дополнительно runner-minutes/cost, flake rate, cache hit rate и regression escapes. Нельзя улучшать график, исключив ожидание runner или спрятав обязательные тесты в never-run job.
+Measure queue wait, checkout, dependency install, cache restore/save, build, unit/integration/E2E, security scans, artifact transfer, promotion queue, rollout and observation separately. Record p50/p95 by stack/change size, cold/warm cache and runner class; also runner-minutes/cost, flake rate, cache hit rate and regression escapes. Do not improve charts by excluding runner wait or hiding required tests in never-run jobs.
 
-Наши **предварительные бюджеты для небольшого/среднего сервиса**, согласуются после baseline:
+Our **provisional budgets for small/medium services**, agreed after baseline:
 
-| Участок | Стартовая цель p95 | Условие |
+| Segment | Initial p95 objective | Condition |
 |---|---|---|
-| Первый полезный lint/unit feedback | ≤ 3 min | Включая очередь, достаточный runner capacity |
-| PR/MR required checks | ≤ 10 min warm / ≤ 15 min cold | Полный утверждённый scope; для тяжёлых Rust/E2E сначала measured budget |
-| Promotion после готового release | Нет повторной сборки | Отдельно измеряются очередь, rollout и safety observation |
-| Production observation | По SLI/трафику/риску | Не сокращается ради красивого CI wall time |
+| First useful lint/unit feedback | ≤ 3 min | Including queue, sufficient runner capacity |
+| PR/MR required checks | ≤ 10 min warm / ≤ 15 min cold | Full approved scope; heavy Rust/E2E needs measured budgets first |
+| Promotion of a ready release | No rebuild | Measure queue, rollout and safety observation separately |
+| Production observation | Based on SLI/traffic/risk | Not shortened for attractive CI wall time |
 
-Это не SLA Google/Meta и не достигнутые измерения этого репозитория. Для большого monorepo согласовать бюджеты по компонентам, а не обещать универсальные десять минут.
+These are not Google/Meta SLAs or achieved repository measurements. For large monorepos, agree component budgets instead of universal ten-minute promises.
 
-## DAG и параллелизм
+## DAG and parallelism
 
-Приблизительно: `CI wall time = queue + setup critical path + max(parallel branches) + aggregate + artifact overhead`. Формула упрощённая, реальные shared bottlenecks измеряются. Lint, unit, analysis и интеграции идут параллельно там, где независимы. Release eligibility ждёт все обязательные результаты; build/test one huge job затрудняет feedback и retries, но сотни мелких jobs могут проиграть на setup/transfer.
+Approximately: `CI wall time = queue + setup critical path + max(parallel branches) + aggregate + artifact overhead`. This simplified formula requires measurement of actual shared bottlenecks. Lint, unit, analysis and integrations run in parallel where independent. Release eligibility waits for all required results; one huge build/test job complicates feedback/retries, while hundreds of tiny jobs may lose time to setup/transfer.
 
-Разделять suite по исторической длительности, не только количеству файлов. Шард должен иметь стабильный ID, список тестов и изолированные DB/schema/ports/temp paths. Ограничить суммарные workers: `CI shards × processes × threads` относительно CPU/RAM/DB connections. Не запускать тяжёлый compile и все test workers на одном малом runner без measurements. Стоимость parallelism и queue contention показывать пользователю.
+Split suites by historical duration, not only file count. Each shard has stable ID, test inventory and isolated DB/schema/ports/temp paths. Bound total workers: `CI shards × processes × threads` relative to CPU/RAM/DB connections. Do not run heavy compilation/all test workers on one small runner without measurements. Explain parallelism cost/queue contention to the user.
 
-## Безопасный cache
+## Safe cache
 
-| Cache | Ключ/граница | Что делать при miss |
+| Cache | Key/boundary | On miss |
 |---|---|---|
-| Downloaded deps | OS/arch + manager/toolchain + lock fingerprints + trust scope | Восстановить из lockfile, проверить integrity |
-| Compiler/build | Compiler version/target/flags/features + dependencies + native inputs | Полноценная сборка |
-| Analysis | Version/config/source dependency graph | Полный analysis |
-| Container layers | Base digest + relevant inputs + trusted namespace | Сборка слоёв; никаких секретов внутри |
-| Test results | Только framework-валидированная модель всех входов | Перезапуск теста; service-dependent tests не считать hermetic |
+| Downloaded dependencies | OS/architecture + manager/toolchain + lock fingerprints + trust scope | Restore from lockfile and verify integrity |
+| Compiler/build | Compiler version/target/flags/features + dependencies + native inputs | Full build |
+| Analysis | Version/config/source dependency graph | Full analysis |
+| Container layers | Base digest + relevant inputs + trusted namespace | Build layers without secrets |
+| Test results | Only a framework-validated model of all inputs | Rerun tests; service-dependent tests are not hermetic |
 
-Dependency cache — ускорение получения, не замена `install --locked`/проверки platform requirements. Не хранить `.env`, токены, auth config, DB fixtures с PII или private package contents в доступном fork PR cache. Разделить read/write права trusted/untrusted jobs; cache poisoning может влиять на исполняемый код. [GitHub caching](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [GitLab caching](https://docs.gitlab.com/ci/caching/).
+Dependency caches speed retrieval without replacing `install --locked`/platform-requirement checks. Do not put `.env`, tokens, auth config, PII-bearing DB fixtures or private-package contents in caches accessible to fork PRs. Separate trusted/untrusted job read/write access; cache poisoning may affect executable code. [GitHub caching](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching), [GitLab caching](https://docs.gitlab.com/ci/caching/).
 
-Cache не artifact channel. Production получает immutable проверенный package/image из registry, а не «последний target/ из cache». У cache допустим eviction; pipeline должен проходить с пустым cache. [BuildKit backends](https://docs.docker.com/build/cache/backends/) позволяют экспортировать container cache; scopes/writers/retention и утечки private layers требуют проектирования.
+Cache is not an artifact channel. Production gets immutable tested packages/images from registries, not “the latest target/ from cache.” Cache eviction is acceptable; pipelines must pass with empty caches. [BuildKit backends](https://docs.docker.com/build/cache/backends/) export container caches; scopes/writers/retention/private-layer leakage need design.
 
 ## Test selection
 
-[Meta](https://engineering.fb.com/2018/11/21/developer-tools/predictive-test-selection/) показывает пользу выбора тестов при проверяемом качестве модели. Мы начинаем с простого dependency graph, без приписывания ему точности Meta. Path-only filters не покрывают shared package, schema, lockfile, compiler, Docker base или CI logic.
+[Meta](https://engineering.fb.com/2018/11/21/developer-tools/predictive-test-selection/) demonstrates selection benefits with verified model quality. We start with simple dependency graphs without claiming Meta's accuracy. Path-only filters miss shared packages, schemas, lockfiles, compilers, Docker bases and CI logic.
 
-Правила fallback: unknown diff/base SHA, invalid graph, dependency/config/CI change, generated source и security policy change → расширить scope вплоть до full suite. Always-required aggregate check не исчезает из pipeline на docs-only change: выдаёт обоснованный PASS/NO-APPLICABLE-TESTS после классификации, либо failure при неопределённости. Не скрывать failure/skipped required dependency зелёным aggregator.
+Fallback rules: unknown diff/base SHA, invalid graph, dependency/config/CI change, generated source or security-policy change → expand scope up to full suite. Always-required aggregates do not disappear for docs-only changes: return justified PASS/NO-APPLICABLE-TESTS after classification or failure on uncertainty. Do not hide failure/skipped required dependencies behind green aggregators.
 
-Для protected release full suite на актуальном release candidate обязателен по умолчанию. Выборочный release gating разрешать только после отдельного ADR с shadow full runs и измерением пропущенных регрессий; nightly full suite полезен дополнительно, но не оправдывает непроверенный release сегодня. Critical money/auth/security/migration tests всегда в required scope по impact model.
+Protected releases require full suites on current release candidates by default. Selective release gating needs a separate ADR with shadow full runs and missed-regression measurement; nightly full suites supplement but do not justify today's untested release. Critical money/auth/security/migration tests remain required under the impact model.
 
-## Дорогие тесты и flakiness
+## Expensive tests and flakiness
 
-Узкие unit/component проверки обычно дают быстрый feedback; integration tests проверяют реальные boundaries, небольшой E2E suite — critical journeys. Это адаптация [Google test strategy](https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html), не предписание фиксированного процента тестов. Coverage — диагностический сигнал, не доказательство корректности; не запускать instrumentation в каждом shard, если достаточно выделенного gate и корректного merge отчётов.
+Narrow unit/component checks usually provide fast feedback; integration tests check real boundaries, and a small E2E suite covers critical journeys. This adapts [Google test strategy](https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html), not fixed test percentages. Coverage is diagnostic, not correctness proof; do not instrument every shard when a dedicated gate/proper report merging suffices.
 
-Quarantine: причина, issue, owner, expiry, непрерывный non-blocking run и компенсирующий gate. Критичный тест нельзя просто отключить; требуется решение владельца риска. Retry ограничен и отражается в flake metrics; «зелёный после retry» сохраняет исходный сигнал ([Google flaky tests](https://testing.googleblog.com/2017/04/where-do-our-flaky-tests-come-from.html)). Fixtures и services запускаются по readiness, без fixed sleep.
+Quarantine: reason, issue, owner, expiry, continuous nonblocking execution and compensating gate. Critical tests cannot simply be disabled; the risk owner must decide. Retries are bounded and included in flake metrics; “green after retry” preserves the original signal ([Google flaky tests](https://testing.googleblog.com/2017/04/where-do-our-flaky-tests-come-from.html)). Start fixtures/services by readiness, not fixed sleeps.
 
-## Порядок оптимизации
+## Optimization order
 
-Снять baseline → найти самый дорогой critical-path участок → проверить корректность cache → убрать дубли установки/сборки → сбалансировать shards → проверить ресурсы и очереди → только затем affected selection. Сравнить одинаковый workload на cold/warm runs. Acceptance: время, стоимость и escape/flake rates записаны до/после; обязательный test scope не ухудшен; cold-cache rebuild и отмена superseded PR pipeline проверены.
+Capture baseline → identify the most expensive critical-path segment → verify cache correctness → remove duplicate installs/builds → balance shards → check resources/queues → only then affected selection. Compare identical workloads on cold/warm runs. Acceptance: before/after time, cost and escape/flake rates recorded; required test scope preserved; cold-cache rebuild and superseded-PR-pipeline cancellation tested.

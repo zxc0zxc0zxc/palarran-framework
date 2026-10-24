@@ -1,0 +1,16 @@
+{
+  "name": "palarran-science",
+  "version": "0.3.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Evidence-driven skills, shared research memory and bounded agent workflows",
+  "homepage": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "repository": "https://github.com/zxc0zxc0zxc/palarran-framework",
+  "commands": {
+    "preprint": {
+      "source": "./commands/palarran/science/preprint.md",
+      "argumentHint": "{task/context} [profile flags]"
+    }
+  }
+}

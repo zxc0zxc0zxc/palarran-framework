@@ -12,7 +12,7 @@ SSH management → strict known host; local agent → tunnel18791 → loopback s
 
 ## Apply/rollback
 
-Prepare isolated /opt/ai-tools-memory checkout/package and /var/lib/ai-tools-memory with owner/mode; back up existing configuration before replacement. Review concrete commands/needed sudo. Pull chosen image, start only graph, init schema, start only memory API, run isolated synthetic acceptance, cleanup test fixture by agreed process. No whole-project restart, firewall edits or down -v.
+Prepare isolated /opt/palarran-memory checkout/package and /var/lib/palarran-memory with owner/mode; back up existing configuration before replacement. Review concrete commands/needed sudo. Pull chosen image, start only graph, init schema, start only memory API, run isolated synthetic acceptance, cleanup test fixture by agreed process. No whole-project restart, firewall edits or down -v.
 
 Rollback stops only memory API/graph and restores previous code/image/config. Data migration/dump restoration separate explicit step; no destructive automatic rollback.
 

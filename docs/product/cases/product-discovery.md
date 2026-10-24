@@ -1,17 +1,17 @@
-# Продукт: Superhuman и Amazon
+# Product: Superhuman and Amazon
 
-## Superhuman: сегмент важнее усреднённого пользователя
+## Superhuman: the segment matters more than an average user
 
-В [статье основателя Rahul Vohra](https://review.firstround.com/how-superhuman-built-an-engine-to-find-product-market-fit/) от 2018-11-12 описаны опрос активных пользователей, сегментация и roadmap. Автор сообщает рост доли ответов о сильном разочаровании при потере продукта с 22% до 58% за три квартала. Это founder self-report, состав выборки менялся; число не является рандомизированным эффектом и не подтверждает прибыльность.
+[Founder Rahul Vohra's article](https://review.firstround.com/how-superhuman-built-an-engine-to-find-product-market-fit/), dated 2018-11-12, describes surveying active users, segmentation and a roadmap. The author reports the share expressing strong disappointment at losing the product rose from 22% to 58% over three quarters. This is founder self-report with changing sample composition; the number is not a randomized effect or proof of profitability.
 
-Наша адаптация: фиксировать eligible cohort, формулировку вопроса, numerator/denominator и сравнимость волн; отделять смену сегмента от улучшения опыта. Для pre-product стадии — problem interviews/поведенческий тест, а не выдуманный PMF survey. 40% — эвристика кейса, не универсальный release gate. Выбрать узкий JTBD, уточнить причину ценности и препятствия, связать их с минимальным roadmap. Проверять retention и оплату отдельно.
+Our adaptation: freeze eligible cohort, question wording, numerator/denominator and comparability between waves; distinguish segment changes from experience improvements. Before a product exists, use problem interviews/behavioral tests rather than an invented PMF survey. The 40% figure is a case heuristic, not a universal release gate. Choose a narrow JTBD, clarify sources of value and obstacles, and connect these to a minimal roadmap. Check retention and payment separately.
 
-## Amazon: описание результата до списка функций
+## Amazon: describe the outcome before listing features
 
-[Публикация Amazon о Working Backwards](https://www.aboutamazon.com/news/workplace/an-insider-look-at-amazons-culture-and-processes) описывает PR/FAQ как способ обсуждать будущий customer experience и ограничения до разработки. Это описание процесса, не контролируемое доказательство его эффекта.
+[Amazon's publication on Working Backwards](https://www.aboutamazon.com/news/workplace/an-insider-look-at-amazons-culture-and-processes) describes PR/FAQ as a way to discuss future customer experience and constraints before development. This describes a process, not controlled evidence of its effect.
 
-Наша адаптация для маленькой команды — краткий customer narrative, FAQ о цене/рисках/ограничениях и явные non-goals. Не копировать объём согласований большой компании. Не писать будущий успех как состоявшийся запуск; PR остаётся hypothetical.
+Our small-team adaptation is a short customer narrative, price/risk/limitations FAQ and explicit non-goals. Do not copy a large company's approval overhead. Do not describe future success as an accomplished launch; the PR remains hypothetical.
 
-## Проверка переноса
+## Transfer check
 
-Результат `/product:define`: один основной ICP, user/buyer distinction, job/problem/current workaround, предложение ценности, MVP/non-goals и measurable hypothesis. У каждой ставки evidence/unknown и способ опровергнуть. Popularity/опрос намерений не заменяют использование и оплату. Подробный контракт: [define](../define.md).
+`/palarran:product:define` delivers one primary ICP, user/buyer distinction, job/problem/current workaround, value proposition, MVP/non-goals and a measurable hypothesis. Every bet has evidence/unknowns and a way to falsify it. Popularity/intention surveys do not replace usage and payment. Detailed contract: [define](../define.md).

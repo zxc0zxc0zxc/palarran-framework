@@ -39,7 +39,7 @@ class Opener:
 class KeenableAuthTest(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name).resolve()
-        self.folder=self.root/'.zxc0zxc0zxc';self.folder.mkdir(mode=0o700)
+        self.folder=self.root/'.palarran';self.folder.mkdir(mode=0o700)
         self.env=self.folder/'.env';self.env.write_text('MEMORY_AGENT_TOKEN=unrelated-fixture\nKEENABLE_API_KEY=keen_'+'x'*40+'\n');self.env.chmod(0o600)
     def tearDown(self):self.temp.cleanup()
 

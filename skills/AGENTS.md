@@ -1,9 +1,9 @@
 # Skills
 
-Наследует root. Перед изменением skill читать docs/skills/global-memory.md, docs/skills/decision-memory.md, agents-authoring.md и его обязательный профиль в domain-contracts.md. Сначала профильная документация, затем skill/command adapter.
+Inherits root. Before skill changes read docs/skills/global-memory.md, docs/skills/decision-memory.md, agents-authoring.md and the mandatory profile in domain-contracts.md. Domain documentation precedes skill/command adapters.
 
-- SKILL.md остаётся коротким workflow с ссылками на mandatory docs. Scope plan/build, permissions и evidence не размывать ради компактности.
-- Project instructions/ADR/graph относятся к target root, не installed skill checkout. Применимые AGENTS читать перед code changes; создавать их только в разрешённом implementation scope по реальным границам.
-- Graphify optional: fresh bounded navigation, затем source; graph не заменяет источники/UX/UI/API contracts/verification или решения. Не устанавливать tools автоматически в planning run.
-- При новом skill синхронно обновить namespace plugin, .claude adapter, .agents discovery link, validator registration и packager resources. Без явного запроса пользователя не менять глобальный Codex/Claude config.
-- Проверка: scripts/validate_repo.py, offline suite и portable packaging tests. Missing tools/evidence отражать как draft/partial/NOT RUN, не выдавать за проверенный результат.
+- SKILL.md stays a concise workflow linking mandatory docs. Do not blur plan/build scope, permissions or evidence for brevity.
+- Project instructions/ADRs/graphs belong to target root, not installed skill checkouts. Read applicable AGENTS before code changes; create them only within authorized implementation scope and actual boundaries.
+- Graphify is optional: fresh bounded navigation, then original sources; graphs replace neither sources/UX/UI/API contracts/verification nor decisions. Never install tools automatically during planning.
+- New skills update namespace plugins, .claude adapters, .agents discovery links, validator registration and packager resources together. No global Codex/Claude config changes without explicit user requests.
+- Checks: scripts/validate_repo.py, offline suite and portable packaging tests. Missing tools/evidence mean draft/partial/NOT RUN, never verified outcomes.

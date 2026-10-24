@@ -1,28 +1,28 @@
 # GitHub Actions
 
-Читать вместе с [архитектурой](architecture.md), [безопасностью](security.md), [ускорением](performance.md), [environments](environments.md) и выбранными stacks. Ниже проект pipeline, **не установленные workflow files**.
+Read alongside [architecture](architecture.md), [security](security.md), [optimization](performance.md), [environments](environments.md) and selected stacks. Below is pipeline design, **not installed workflow files**.
 
-## Три workflow boundary
+## Three workflow boundaries
 
-| Workflow | Trigger | Обязанности/права |
+| Workflow | Trigger | Responsibilities/permissions |
 |---|---|---|
-| CI | `pull_request`, protected `push`, при merge queue — `merge_group` | Detect, lint/types, unit/integration/security, required aggregate. Read-only source, no deployment secrets |
-| Release | Green protected commit/tag согласно политике | Повторно проверить exact release inputs, build/test candidate, publish digest/evidence |
-| Deploy | Trusted eligible release event либо `workflow_dispatch` | Env selection, authorize, lock/freshness, GitOps/API promotion и наблюдение без SSH |
+| CI | `pull_request`, protected `push`, `merge_group` with merge queue | Detect, lint/types, unit/integration/security, required aggregate. Read-only source, no deployment secrets |
+| Release | Green protected commit/tag under policy | Recheck exact release inputs, build/test candidate, publish digest/evidence |
+| Deploy | Trusted eligible-release event or `workflow_dispatch` | Environment selection, authorization, lock/freshness, GitOps/API promotion and SSH-free observation |
 
-Не выполнять PR head с secrets через `pull_request_target`. Это privileged event; для обычных тестов выбирать `pull_request`. `workflow_run`/download artifacts тоже не превращают upstream untrusted output в безопасный executable. Release job обязан проверить trigger/ref/source run, не скачивать «первый артефакт с таким именем». Основание: [GitHub secure use](https://docs.github.com/en/actions/reference/security/secure-use).
+Do not execute PR heads with secrets through `pull_request_target`. This is a privileged event; use `pull_request` for normal tests. `workflow_run`/artifact downloads do not turn upstream untrusted output into safe executables. Release jobs must verify trigger/ref/source run instead of downloading “the first artifact with this name.” Basis: [GitHub secure use](https://docs.github.com/en/actions/reference/security/secure-use).
 
-Required aggregate запускается независимо от skipping upstream jobs и трактует failure/cancelled/missing required result как failure. Для docs-only классификация явная. Workflow-level path skipping может оставить required check ожидающим; не использовать его без учёта branch protection. Для merge queue корректно поддержать её event/merge result, иначе PR green недостаточен.
+Required aggregate runs regardless of skipped upstream jobs and treats failure/canceled/missing required results as failure. Explicitly classify docs-only changes. Workflow-level path skipping may leave required checks pending; account for branch protection before using it. Correctly support merge-queue events/merge results; a green PR otherwise remains insufficient.
 
-## DAG и reusable blocks
+## DAG and reusable blocks
 
-Job dependencies через `needs`; независимые suites/stack components — параллельно; matrix/shards по ресурсам/истории. Общие policy шаги оформлять как [reusable workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows) и versioned small actions, не копировать security logic в десять файлов. Pin reusable refs/actions по проверенному full commit SHA. Явно передавать минимальные secrets/permissions, не `secrets: inherit` по привычке; учитывать environment secrets на уровне jobs вызываемого workflow.
+Use `needs` for job dependencies; independent suites/stack components run in parallel; matrix/shards follow resources/history. Implement shared policy steps as [reusable workflows](https://docs.github.com/en/actions/how-tos/reuse-automations/reuse-workflows) and small versioned actions instead of copying security logic into ten files. Pin reusable refs/actions to verified full commit SHAs. Explicitly pass minimal secrets/permissions rather than habitual `secrets: inherit`; account for environment secrets on called-workflow jobs.
 
-Caches см. [GitHub reference](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching); artifact upload/download — transport между jobs с exact digest/run linkage, не secret storage. Неизменные deps можно кешировать, а test evidence и signed release хранить с retention для promotion/rollback. Репозиторий должен переживать cold cache.
+For caches, see [GitHub reference](https://docs.github.com/en/actions/reference/workflows-and-actions/dependency-caching); artifact upload/download transports data between jobs with exact digest/run linkage, not secret storage. Cache unchanged dependencies; retain test evidence/signed releases for promotion/rollback. The repository must tolerate cold caches.
 
-## Выбор окружения
+## Environment selection
 
-Схематичный UI-фрагмент — без deploy steps/credentials:
+Schematic UI fragment without deployment steps/credentials:
 
 ```yaml
 on:
@@ -39,20 +39,20 @@ on:
         required: true
 ```
 
-[Workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) определяет inputs/events. Choice предпочтителен для фиксированного allowlist проекта; type `environment` также существует, но выбор UI не заменяет validation. Workflow должен быть доступен для manual dispatch; защитить default-branch workflow и серверно ограничить выбранный ref. `release_id` нельзя подставлять как shell command, URL или image без проверки.
+[Workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax) defines inputs/events. Choice suits a fixed project allowlist; `environment` type also exists, but UI selection does not replace validation. The workflow must be available for manual dispatch; protect default-branch workflows and restrict selected refs server-side. Never interpolate `release_id` as shell command, URL or image without validation.
 
-До privileged job: прочитать registry из trusted config, validate env/release/ref, получить approved desired action. Deploy job указывает заранее созданный GitHub Environment и разрешённые deployment branches/tags; права и environment secrets выдаются только после его protection gates. Не создавать новый environment автоматически из ввода.
+Before privileged jobs: read registry from trusted config, validate environment/release/ref and obtain the approved desired action. Deployment jobs reference precreated GitHub Environments and allowed deployment branches/tags; grant permissions/environment secrets only after protection gates. Do not automatically create environments from input.
 
-[Доступность GitHub Environments/protection rules](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) зависит от плана и public/private visibility. В private repo нельзя предполагать наличие required reviewers на любом тарифе. При отсутствии нужной защиты выбрать контролируемый external promotion gate/другой план и зафиксировать blocker, не имитировать approval текстом в YAML.
+[GitHub Environments/protection-rule availability](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments) depends on plan/public-private visibility. Do not assume required reviewers exist on every private-repository tier. Without necessary protection, choose controlled external promotion gates/another plan and record a blocker; YAML text cannot simulate approval.
 
-## Privileges и concurrent deploy
+## Privileges and concurrent deployment
 
-База `contents: read`; `packages: write` только publish job, `id-token: write` только нужный identity/attestation job, дополнительные artifact-attestation permissions по выбранной реализации. OIDC trust bound к repo/ref/environment, а GitOps cross-repo write — GitHub App installation token с конкретным scope/paths enforcement на принимающей стороне. Repo `GITHUB_TOKEN` не считать cross-repo token.
+Baseline `contents: read`; `packages: write` only for publishing, `id-token: write` only for required identity/attestation jobs, additional artifact-attestation permissions under the chosen implementation. Bind OIDC trust to repository/ref/environment; cross-repository GitOps writes use GitHub App installation tokens with specific scope/path enforcement on the receiving side. A repository's `GITHUB_TOKEN` is not a cross-repository token.
 
-CI concurrency group per workflow/ref — cancel obsolete runs допустимо. Deploy concurrency — per **application+environment**, cancel-in-progress выключен для active changes; provider pending queue semantics проверить в актуальной версии, не обещать сохранение всех ожидающих jobs. [Concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) не даёт freshness исходного release — нужна [CAS/intent проверка](environments.md).
+CI concurrency groups are per workflow/ref; canceling obsolete runs is allowed. Deployment concurrency is per **application+environment**, with cancel-in-progress disabled for active changes; check provider pending-queue semantics in the current version without promising retention of every waiting job. [Concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) does not establish source-release freshness: use [CAS/intent checks](environments.md).
 
-Trusted management observer может читать narrow rollout status API, не выполнять app scripts. GitOps update ждёт exact revision/digest и health, managed API — конкретной revision и traffic status. Нет SSH и нет blanket production network у build runners.
+Trusted management observers may read narrow rollout-status APIs without executing application scripts. GitOps updates wait for exact revision/digest and health; managed APIs wait for specific revision/traffic status. No SSH or blanket production-network access for build runners.
 
 ## Acceptance
 
-Fork/PR не может получить deploy identity; CI event и merge queue корректны; unknown env/ref/release отвергается; кнопка не пересобирает image; green только после observed rollout+smoke; stale release не перетирает новый; protected prod policies реально доступны на выбранном плане; logs/artifacts проходят synthetic secret-leak test. YAML parse/actionlint — local checks; фактические event/permissions/OIDC/environment gates проверяются в sandbox repository после отдельного разрешения на интеграцию.
+Forks/PRs cannot obtain deployment identity; CI events/merge queue are correct; unknown environments/refs/releases are rejected; the button does not rebuild images; green follows observed rollout+smoke; stale releases cannot overwrite newer ones; protected production policies actually exist on the chosen plan; logs/artifacts pass synthetic secret-leak tests. YAML parse/actionlint are local checks; actual event/permissions/OIDC/environment gates require a sandbox repository after separate integration authorization.

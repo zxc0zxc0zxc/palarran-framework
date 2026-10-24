@@ -1,23 +1,23 @@
-# Какие данные нужны до обучения
+# Data requirements before training
 
-Начать по [Karpathy](sources.md) с prediction/generation unit, ошибок baseline и ручного осмотра разрешённой выборки. Для меняющихся фактов сравнить retrieval с обучением; SFT полезен для поведения/формата и навыка, но не надёжная база постоянно меняющейся фактологии.
+Following [Karpathy](sources.md), start with the prediction/generation unit, baseline errors and manual inspection of an authorized sample. For changing facts compare retrieval with training; SFT is useful for behavior/format and skills, but is not a reliable store of continually changing facts.
 
-План содержит goal, task family (pretraining/DAPT/SFT/preference либо non-LLM), baseline, поддерживаемые языки/варианты письма/географию, target domains и general capabilities, которыми нельзя жертвовать. Сначала выбрать модель/tokenizer/context window и реальные ограничения данных; не обещать равное качество на любом числе языков при фиксированной ёмкости.
+The plan includes goal, task family (pretraining/DAPT/SFT/preference or non-LLM), baseline, supported languages/scripts/geography, target domains and general capabilities that must be preserved. Choose model/tokenizer/context window and actual data constraints first; do not promise equal quality across arbitrarily many languages at fixed capacity.
 
 ## Coverage matrix
 
-Для каждой строки: requirement ID, домен, язык/script или mul, тип задачи/формат ответа, источник и rights evidence, unit/group, expected label/rubric, короткий/средний/длинный ответ, edge/OOD, train/validation/final-test policy, объём records/unique groups/**actual tokenizer tokens**, confidence и дефицит. Нужны реальные положительные случаи, сложные отрицательные, неоднозначные и корректные отказы там, где это функция продукта. Не добавлять blanket refusal label ко всему спорному/длинному материалу.
+Each row records requirement ID, domain, language/script or mul, task/answer format, source and rights evidence, unit/group, expected label/rubric, short/medium/long answer, edge/OOD, train/validation/final-test policy, records/unique groups/**actual tokenizer tokens**, confidence and deficits. Include real positives, hard negatives, ambiguous cases and appropriate refusals where part of product behavior. Do not blanket-label controversial/long material as refusal.
 
-Сохранить общие dialogue/instruction-following, reasoning, reading, code/math/tool-use только если это заявленные capabilities базовой модели/продукта. «General» — явно определённый набор задач, не произвольный web noise. Для domain QA нужны проверяемые основания и полные ответы; для extraction — schema/empty/no-answer/malformed inputs; для code — исполнимые tests; для retrieval — hard negatives без утечки запросов/ответов.
+Preserve general dialogue/instruction-following, reasoning, reading, code/math/tool use only where claimed capabilities of the base model/product. “General” is an explicit task set, not arbitrary web noise. Domain QA needs verifiable grounds and full answers; extraction needs schema/empty/no-answer/malformed inputs; code needs executable tests; retrieval needs hard negatives without query/answer leakage.
 
-Нет научной константы «N строк достаточно». Разложить бюджет: уникальные полезные токены × повторения × compute, annotator hours, privacy/rights review, storage, токенизация и evaluation. Sizing через learning curves/proxy pilots только в разрешённом эксперименте; Chinchilla pretraining не формула размера SFT. [LIMA](sources.md) — довод изучать качество примеров, не магическое число.
+There is no scientific constant “N rows suffice.” Break down budget into unique useful tokens × repetitions × compute, annotator hours, privacy/rights review, storage, tokenization and evaluation. Learning-curve/proxy-pilot sizing requires an authorized experiment; Chinchilla pretraining is not an SFT sizing formula. [LIMA](sources.md) motivates studying example quality, not a magic count.
 
-## Источники и разметка
+## Sources and annotation
 
-Сначала owned/разрешённые данные, затем original dataset publisher и проверка исходной/redistribution license, consent, PII, срока хранения и доступности. Unknown rights исключают use, но не запрещают описать research candidate. Для synthetic data фиксировать teacher/model/prompt/license/стоимость/фильтры; не кормить teacher final-test answers. Рекурсивные synthetic corpora без human/real-data anchors — отдельная гипотеза с independent real holdout, не бесплатная замена разнообразию.
+Start with owned/authorized data, then original dataset publishers and checks of original/redistribution licenses, consent, PII, retention and availability. Unknown rights prohibit use but do not prohibit describing a research candidate. For synthetic data record teacher/model/prompt/license/cost/filters; never feed the teacher final-test answers. Recursive synthetic corpora without human/real-data anchors are a separate hypothesis with an independent real holdout, not a free substitute for diversity.
 
-Annotation rubric описывает пограничные случаи и disagreement. Double-label/adjudication с размером выборки, по каждому language/domain/length slice, а не одно среднее. Фильтрацию и пороги выбирать на development, не на финальном test. Поисковые кандидаты/rejected reasons сохранять, чтобы следующий агент не повторял неудачный сбор.
+Annotation rubrics cover boundary cases and disagreement. Double-label/adjudicate with sample sizes by language/domain/length slice rather than one average. Select filtering/thresholds on development, not final test. Preserve discovered candidates/rejection reasons so later agents do not repeat failed collection.
 
-## Результат
+## Output
 
-[Data plan](../../../templates/ml/data-plan.md), source register, coverage gaps, минимальный readiness gate и proposed mixture hypotheses. Прежде зависимых действий сохранить решение в target `.ai-development/ml/<task>/decisions/`; `--plan` не читает raw dataset и не запускает profiling/tokenization/download/training. Без доступа реальные counts и качество unknown, а не сценарий, замаскированный под measurement.
+[Data plan](../../../templates/ml/data-plan.md), source register, coverage gaps, minimum readiness gate and proposed mixture hypotheses. Record decisions in target `.palarran/ml/<task>/decisions/` before dependent actions; `--plan` does not read raw datasets or run profiling/tokenization/download/training. Without access, actual counts and quality are unknown, never scenarios disguised as measurements.

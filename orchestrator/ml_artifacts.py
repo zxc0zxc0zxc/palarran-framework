@@ -22,7 +22,7 @@ SHA = re.compile(r'[0-9a-f]{64}')
 
 def directory(root, pipeline):
     require(isinstance(pipeline, str) and re.fullmatch(r'[0-9a-f]{32}', pipeline))
-    return safe_path(root, '.ai-development/ml/pipeline-' + pipeline)
+    return safe_path(root, '.palarran/ml/pipeline-' + pipeline)
 
 
 def source_digest(root):
@@ -33,14 +33,14 @@ def source_digest(root):
             require(not path.is_symlink())
             if path.is_file():
                 names.add(path.relative_to(root).as_posix())
-    names.update('skills/ml-' + name + '/SKILL.md' for name in STAGES)
+    names.update('skills/palarran-ml-' + name + '/SKILL.md' for name in STAGES)
     names.update('orchestrator/' + name for name in ('ml_artifacts.py', 'ml_pipeline.py', 'ml_resources.py', 'modal_adapter.py'))
     return canonical_sha({name: hashlib.sha256(read_bytes(root, name, 1048576)).hexdigest() for name in sorted(names)})
 
 
 def scope_guard(root, base, baseline):
     require(git(root, 'rev-parse', 'HEAD').decode().strip() == baseline)
-    allowed = (base + '/', '.ai-development/factory/')
+    allowed = (base + '/', '.palarran/factory/')
     for args in (('diff', '--name-only', '-z', 'HEAD'),
                  ('ls-files', '--others', '--exclude-standard', '-z'),
                  ('ls-files', '--others', '--ignored', '--exclude-standard', '-z')):
@@ -48,7 +48,7 @@ def scope_guard(root, base, baseline):
             if raw:
                 name = raw.decode('utf-8')
                 safe_path(root, name)
-                require(name in ('.ai-development/INDEX.md', '.ai-development/ml/INDEX.md') or name.startswith(allowed))
+                require(name in ('.palarran/INDEX.md', '.palarran/ml/INDEX.md') or name.startswith(allowed))
 
 
 def reference(root, ref):
@@ -103,7 +103,7 @@ def validate_prefix(root, policy, through='benchmark'):
     require(canonical_sha(context) == policy['context_sha256'])
     require(context['source_digest'] == source_digest(policy['skills_root']))
     scope_guard(root, base, context['baseline'])
-    index = read_bytes(root, '.ai-development/INDEX.md', 1048576).decode()
+    index = read_bytes(root, '.palarran/INDEX.md', 1048576).decode()
     inputs, inherited, lineage, hypotheses = {}, {}, {}, set()
     required = set()
     manifests = []
@@ -129,12 +129,12 @@ def validate_prefix(root, policy, through='benchmark'):
         for decision in catalogs['decisions'].values():
             require(decision['path'].startswith(base + '/decisions/'))
             body = reference(root, {k: decision[k] for k in ('path', 'sha256')}).decode()
-            from orchestrator.product_artifacts import HEADINGS
+            from orchestrator.product_artifacts import has_decision_sections
             identity = re.search(r'^id: (ml/[A-Za-z0-9_/-]+)$', body, re.M)
             require(identity is not None and identity[1] in index)
             require(re.search(r'^status: (accepted|proposed)$', body, re.M) is not None)
             require(decision['id'] in index and decision['id'] in body)
-            require(all('## ' + heading in body for heading in HEADINGS))
+            require(has_decision_sections(body))
         require(bool(catalogs['decisions']))
         for unknown in catalogs['unknowns'].values():
             require(type(unknown['critical']) is bool and unknown['disposition'] in ('unresolved', 'resolved'))

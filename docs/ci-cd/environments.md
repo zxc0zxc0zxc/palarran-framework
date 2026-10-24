@@ -1,8 +1,8 @@
-# Память проекта, выбор стенда и promotion
+# Project memory, environment selection and promotion
 
-## Версионированная конфигурация
+## Versioned configuration
 
-Будущая интеграция хранит non-secret сведения в проекте:
+Future integration stores nonsecret project information:
 
 ```text
 .delivery/
@@ -10,12 +10,12 @@
   environments/dev.yaml       # target identity, capacity, deployment contract
   environments/test.yaml
   environments/prod.yaml
-  # Причины решений — в .ai-development/ci-cd/<task>/decisions/
+  # Decision rationale lives in .palarran/ci-cd/<task>/decisions/
 ```
 
-Это контракт для генерируемой скиллом конфигурации, не конфиг активной машины в ai-tools. YAML examples ниже — иллюстрация контракта. На этапе скилла нужны schema validation и semantic checks; свободный YAML не считать безопасным исполнением. В public repo реальные hostnames/IP и topology могут быть конфиденциальны: использовать logical IDs/ссылку на private registry, не раскрывая inventory.
+This is a contract for skill-generated configuration, not active-host configuration in palarran. YAML examples below illustrate the contract. Skill application requires schema validation and semantic checks; arbitrary YAML is not safe execution. Real hostnames/IPs/topology may be confidential in public repositories: use logical IDs/private-registry references without exposing inventory.
 
-Пример одного environment:
+Example environment:
 
 ```yaml
 schema_version: 1
@@ -54,35 +54,35 @@ policy:
   config_owner_review_required: true
 ```
 
-Role/secret refs — идентификаторы, **не значения**. Capacity/architecture/namespace/network/storage/controller/API endpoint references, resource budgets и health contract сохраняются между запусками. Нужны `verified_at`, источник сведений, infra config commit и owner; устаревшую заявленную RAM не выдавать за allocatable capacity. Обновление через reviewed PR/MR или авторизованное чтение control-plane API, без SSH. Несовпадение target identity/arch/namespace блокирует deployment до разрешения drift.
+Role/secret refs are identifiers, **not values**. Preserve capacity/architecture/namespace/network/storage/controller/API endpoint references, resource budgets and health contract across runs. Require `verified_at`, information source, infrastructure-config commit and owner; do not present stale stated RAM as allocatable capacity. Update through reviewed PR/MR or authorized control-plane API reads without SSH. Target identity/architecture/namespace mismatch blocks deployment until drift is resolved.
 
-Repo содержит desired configuration; actual deployed release берётся из controller/provider status и append-only audit records, а не ручного редактирования `last_deployed: latest`. Store deployment evidence вне Git при необходимости объёма/секретности, в Git только безопасная ссылка/идентификатор. Не коммитить доступные URLs с credentials.
+The repository holds desired configuration; actual deployed release comes from controller/provider status and append-only audit records, not manual `last_deployed: latest` edits. Store deployment evidence outside Git when volume/privacy requires; Git holds only safe references/identifiers. Do not commit usable URLs containing credentials.
 
 ## Release manifest
 
-Обязательные поля: release ID, source repository/commit, registry repository и immutable digest (для multiarch также manifest/platform evidence), builder identity/run ID, toolchain/lock/config/policy fingerprints, test/scans results и scope, provenance reference, creation time, compatible migration/config contract. Manifest сам integrity-protected; пользовательский digest не является доказательством eligibility.
+Required fields: release ID, source repository/commit, registry repository and immutable digest (multiarch also needs manifest/platform evidence), builder identity/run ID, toolchain/lock/config/policy fingerprints, test/scan results and scope, provenance reference, creation time, compatible migration/config contract. Protect manifest integrity; a user-provided digest does not prove eligibility.
 
-Разделить immutable build record и deployment record `{release, env, expected_previous, desired_revision, observed_revision/digest, status, actor, timestamps, approvals}`. Runtime config/secret versions фиксировать ссылками/версиями, но без содержимого. Продвижение сохраняет tested artifact; новые build-time inputs требуют нового release (особенно [Next.js](stacks/typescript-nextjs.md)).
+Separate immutable build records from deployment records `{release, env, expected_previous, desired_revision, observed_revision/digest, status, actor, timestamps, approvals}`. Record runtime-config/secret versions through references/versions without contents. Promotion preserves the tested artifact; new build-time inputs require a new release (especially [Next.js](stacks/typescript-nextjs.md)).
 
-## Кнопка или автоматический trigger
+## Button or automatic trigger
 
-| Режим | Вход | Проверки |
+| Mode | Input | Checks |
 |---|---|---|
-| Автоматический dev/test | Protected source/release event по политике | Eligibility, allowed ref/env, lock, readiness |
-| Ручной выбор стенда | Enum dev/test/prod + release ID | Те же gates; никаких raw script/host/secret полей |
-| Prod promotion | Успешно проверенный release с нужными lower-env evidence | Protected environment, policy approval при настройке, exact digest и свежая eligibility |
-| Rollback | Явный разрешённый previous release + причина | Особая rollback policy, миграционная совместимость, audit |
+| Automatic dev/test | Protected source/release event under policy | Eligibility, allowed ref/environment, lock, readiness |
+| Manual environment selection | Enum dev/test/prod + release ID | Same gates; no raw script/host/secret fields |
+| Production promotion | Successfully tested release with required lower-environment evidence | Protected environment, configured policy approval, exact digest and fresh eligibility |
+| Rollback | Explicit authorized previous release + reason | Special rollback policy, migration compatibility, audit |
 
-UI enum — удобство, **не авторизация**. Backend повторно проверяет env в trusted registry, actor/ref, release ownership и status; не разрешает свободный host, kube context, image repository или arbitrary GitOps path. Политика конфигурации читается из защищённой ревизии, не из произвольного выбранного app commit. Значения inputs не вставляются напрямую в shell.
+UI enums provide convenience, **not authorization**. The backend rechecks environment in trusted registry, actor/ref, release ownership and status; no free-form host, kube context, image repository or arbitrary GitOps path. Read configuration policy from a protected revision, not any selected application commit. Never interpolate inputs directly into shells.
 
-Кнопка не требует пересборки или повторного прохождения неизменившихся тестов; нужен действующий evidence именно этого release и актуальная policy. При expiry/изменении vulnerability policy запускается нужная повторная проверка **того же digest**, не скрытый rebuild. Manual mode — опция проекта, не обязательное подтверждение каждого dev deploy.
+The button requires neither rebuild nor repetition of unchanged tests; it needs valid evidence for this exact release and current policy. On expiry/vulnerability-policy change, rerun required checks against **the same digest**, not a hidden rebuild. Manual mode is a project option, not required confirmation for every dev deployment.
 
-## Одновременность и устаревшие релизы
+## Concurrency and stale releases
 
-Environment lock охватывает promotion → apply → verification. В GitOps lock только на app CI недостаточен: записывающие другие repos/actors и controller должны участвовать в едином promotion contract. Compare-and-swap `expected_previous` + проверка актуального approved release intent предотвращают тихую перезапись; конфликт приводит к re-evaluation, не blind force push.
+Environment locks cover promotion → application → verification. A lock only on application CI is insufficient for GitOps: writers in other repositories/actors and the controller must participate in one promotion contract. Compare-and-swap `expected_previous` plus current approved release-intent checks prevent silent overwrite; conflicts trigger reevaluation, not blind force push.
 
-[GitHub concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) и [GitLab resource groups](https://docs.gitlab.com/ci/resource_groups/) дают provider-механизмы, но не заменяют release freshness check. Порядок ожидания job не гарантирует порядок исходных commits. GitLab имеет [outdated deploy protection](https://docs.gitlab.com/ci/environments/deployment_safety/), его семантику проверить относительно выбранного workflow.
+[GitHub concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency) and [GitLab resource groups](https://docs.gitlab.com/ci/resource_groups/) provide mechanisms without replacing release-freshness checks. Waiting-job order does not guarantee source-commit order. GitLab has [outdated deployment protection](https://docs.gitlab.com/ci/environments/deployment_safety/); check semantics against the selected workflow.
 
-Не отменять активный prod rollout/migration при новом commit. Можно отменять superseded PR CI и ещё не начатые разрешённые deployments; начатый change доводится до определённого состояния/rollback. Emergency rollback не маскируется под обычный старый pipeline retry: отдельная авторизованная операция с причиной и ограниченным scope.
+Do not cancel active production rollouts/migrations on new commits. Superseded PR CI and authorized deployments not yet started may be canceled; started changes reach a defined state/rollback. Emergency rollback is not disguised as a normal old-pipeline retry: it is a separate authorized operation with reason and bounded scope.
 
-Причины любого принятого выбора хранятся по [общему правилу памяти](../skills/decision-memory.md) в `.ai-development/`, а не в дублирующем `.delivery/decisions/`. Перед новым запуском читать журнал вместе с текущими конфигурациями.
+Rationale for every accepted choice follows [shared memory rules](../skills/decision-memory.md) in `.palarran/`, not duplicate `.delivery/decisions/`. Read the journal together with current configurations before a new run.

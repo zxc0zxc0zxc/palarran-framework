@@ -2,17 +2,17 @@
 
 Stage: pre-build / post-polish. Exact product/report revisions, E/ADR refs. Research status / execution readiness; tests NOT_RUN, market validated=false.
 
-## Сегмент и оффер
-Geo/language/job/trigger, user/payer, current substitute, price/retention known vs assumptions. Cash cap unknown → 0; cap/test, общий период, time budget; research model budget отдельно.
+## Segment and offer
+Geo/language/job/trigger, user/payer, current substitute, known price/retention versus assumptions. Unknown cash cap → 0; cap/test, total period, time budget; research-model budget separate.
 
-## Кандидаты каналов и price register
+## Channel candidates and price register
 | Candidate / public URL / format | Audience fit + evidence | Q-ID / date / currency / unit / quote class | Full cash costs / time / unknowns | Eligibility / decision / reason |
 |---|---|---|---|---|
 
-Free-first; максимум 2–3 обоснованных теста, без добивки платными каналами. Отдельно expensive rejected, unknown quote и unavailable/zero placeholders. Бартер включает себестоимость, доставку, production и время.
+Free-first; at most 2–3 justified tests without paid-channel filler. Separate expensive rejections, unknown quotes and unavailable/zero placeholders. Barter includes cost of goods, delivery, production and time.
 
-## Карточки тестов
-Offer/creative/CTA, конкретная площадка/автор или intent group, access/eligibility, primary outcome, denominator/window, attribution/dedup, cap/time/stop/owner; все conversions пока hypotheses/unknown. Не выдавать views за paid/retained CAC.
+## Test cards
+Offer/creative/CTA, specific platform/creator or intent group, access/eligibility, primary outcome, denominator/window, attribution/dedup, cap/time/stop/owner; conversions remain hypotheses/unknown. Views do not establish paying/retained CAC.
 
-## Кейсы и решения
-Российский и иностранный startup mechanism, fit/limits/контрпример; Q/E/ADR refs. До build: кому/как продаём и какой дешёвый тест доступен. После polish: delta actual capabilities/landing/onboarding/payment + свежие цены. Unknowns, blockers, следующий scoped handoff; нет автоматической публикации/закупки/outreach.
+## Cases and decisions
+Russian and foreign startup mechanisms, fit/limits/counterexamples; Q/E/ADR refs. Before build: buyer/sales path and available inexpensive tests. After polish: actual-capability/landing/onboarding/payment changes + fresh prices. Unknowns, blockers, next scoped handoff; no automatic publication/purchases/outreach.

@@ -1,51 +1,51 @@
-# Шаблон результата infra-plan
+# Infra-plan output template
 
-Скопировать структуру в `plans/<target>/<date>/plan.md`, заполнить под конкретную машину. Не оставлять её универсальным чеклистом. Артефакты вне Git по умолчанию; публиковать только обезличенные после проверки.
+Copy this structure into `plans/<target>/<date>/plan.md` and fill it for the specific host. Do not leave it as a generic checklist. Artifacts stay outside Git by default; publish only anonymized material after review.
 
-## 1. Саммари для решения
+## 1. Decision summary
 
-Режим `inventory`/`--plan`, профиль low/med/high, цель, выбранный стек, ресурсы, estimated monthly cost/источник/дата, главные SPOF и unresolved blockers. В конце — вариант исправить либо начать deploy конкретной ревизии.
+Mode `inventory`/`--plan`, profile low/med/high, goal, selected stack, resources, estimated monthly cost/source/date, main SPOFs and unresolved blockers. End with the option to revise or begin deployment of the specific revision.
 
-## 2. Основания и состояние
+## 2. Basis and current state
 
-Repo commit базы знаний, перечень прочитанных `docs/infra/plan/*.md`, дата source verification. Таблица: параметр / значение / наблюдали или сообщил пользователь / evidence / уверенность. Неизвестные OS/arch/disk/CIDR/нагрузка — явно. Existing workloads и ограничения миграции.
+Knowledge-base repository commit, list of read `docs/infra/plan/*.md`, source-verification date. Table: parameter / value / observed or user-provided / evidence / confidence. Explicitly identify unknown OS/architecture/disk/CIDR/load. Existing workloads and migration constraints.
 
-## 3. Требования и sizing
+## 3. Requirements and sizing
 
-SLI/SLO/error budget, RPO/RTO и почему; бюджет с compute/storage/backups/LB/NAT/traffic/telemetry/ops. Capacity worksheet с peak и headroom, отказным сценарием, surge capacity; owners, maintenance window и acceptance targets.
+SLI/SLO/error budget, RPO/RTO and reasons; budget including compute/storage/backups/LB/NAT/traffic/telemetry/operations. Capacity worksheet with peak/headroom, failure scenario and surge capacity; owners, maintenance window and acceptance targets.
 
-## 4. Схемы взаимодействий
+## 4. Interaction diagrams
 
-Обязательны две Mermaid-схемы: data plane и management/delivery plane. Указать фактические Internet → firewall/LB → ingress → container/Kubernetes service/pods → DB и app → egress → внешние системы. Отдельно SSH/VPN, GitHub Actions → registry/GitOps → Argo → API, если эти компоненты выбраны; для low объяснить отсутствие Kubernetes/Argo.
+Two Mermaid diagrams are mandatory: data plane and management/delivery plane. Show actual Internet → firewall/LB → ingress → container/Kubernetes service/pods → DB and application → egress → external systems. Separately show SSH/VPN, GitHub Actions → registry/GitOps → Argo → API if selected; for low, explain absence of Kubernetes/Argo.
 
-Обозначить trust boundaries, направление/ports/TLS, узлы/зоны, storage и backup вне отказного домена. Mermaid сохранять в Markdown. Если renderer недоступен, дать рядом текстовое описание и отметить, что визуальный render не проверен. Не выдавать красивую схему за доказательство работающих правил.
+Identify trust boundaries, direction/ports/TLS, nodes/zones, storage and backups outside the failure domain. Keep Mermaid in Markdown. Without a renderer, add adjacent text descriptions and state that visual rendering was not verified. Do not present an attractive diagram as proof of working rules.
 
-## 5. Безопасность и flow matrix
+## 5. Security and flow matrix
 
-Таблица source/identity → destination/identity → protocol/port → purpose → enforcement layer → IPv4/IPv6 → allow/deny verification → owner. Host, pod и management egress отдельно. SSH rescue, RBAC, secret storage/rotation, image provenance, audit, threat model и исключения с expiry.
+Table: source/identity → destination/identity → protocol/port → purpose → enforcement layer → IPv4/IPv6 → allow/deny verification → owner. Separate host, pod and management egress. SSH rescue, RBAC, secret storage/rotation, image provenance, audit, threat model and expiring exceptions.
 
-## 6. Конфигурации
+## 6. Configurations
 
-`config/` содержит адаптированные IaC/OS/runtime/network/GitOps/CI/storage/observability файлы по выбранной архитектуре. Список exact versions и откуда взяты. Для каждого файла — назначение, prerequisite, способ безопасной передачи секретов, dependency/order. Незавершённые параметры — draft/blocker; не заявлять deploy-ready.
+`config/` contains adapted IaC/OS/runtime/network/GitOps/CI/storage/observability files for the selected architecture. List exact versions and sources. For every file: purpose, prerequisite, secure secret-delivery method, dependency/order. Incomplete parameters mean draft/blocker; do not claim deployment-ready.
 
-## 7. Data и recovery
+## 7. Data and recovery
 
-Data inventory: store / объём / рост / access mode / consistency / encryption / owner / RPO/RTO / backup mechanism / retention / restore drill. Секреты, ключи, IaC state и cluster datastore отдельно. План миграции и rollback для существующих данных.
+Data inventory: store / volume / growth / access mode / consistency / encryption / owner / RPO/RTO / backup mechanism / retention / restore drill. Separate secrets, keys, IaC state and cluster datastore. Migration and rollback plan for existing data.
 
-## 8. ADR и открытые вопросы
+## 8. ADRs and open questions
 
-Ссылки на canonical записи `.ai-development/infra/<task>/decisions/` по [общему правилу](../../skills/decision-memory.md), применимые кейсы из `decisions.md`, альтернативы, первоисточник рядом с утверждением, наша адаптация, стоимость/риск, owner, trigger пересмотра и blocker. Не приписывать компаниям наши конкретные конфигурации или sizing.
+Link canonical `.palarran/infra/<task>/decisions/` records under the [shared rule](../../skills/decision-memory.md), applicable cases from `decisions.md`, alternatives, primary sources near claims, our adaptation, cost/risk, owner, reconsideration trigger and blocker. Do not attribute our specific configurations or sizing to companies.
 
-## 9. План развёртывания и отката
+## 9. Deployment and rollback plan
 
-Этап / предполагаемый diff / предварительные условия / change owner / потенциальный простой / verify / rollback / abort condition. Разрешение пользователя на конкретный план/ревизию; отдельно replacement/destruction и расширение scope. Для default пока не получено разрешение — только план, не применение.
+Stage / expected diff / preconditions / change owner / potential downtime / verify / rollback / abort condition. User authorization for the concrete plan/revision; separately address replacement/destruction and scope expansion. In default mode, before authorization only planning is allowed, not application.
 
-## 10. Проверки готовности
+## 10. Readiness checks
 
-Каждая строка: criterion / численный target / команда или воспроизводимая процедура / expected result / observed result / evidence / статус PASS, FAIL, NOT RUN. Включить positive/negative ingress/egress, TLS, независимый SSH, rollout/rollback, alert delivery, DB restore и RPO/RTO, ресурсы; high — node/zone failure в разрешённом окне.
+Each row: criterion / numerical target / command or reproducible procedure / expected result / observed result / evidence / PASS, FAIL, NOT RUN status. Include positive/negative ingress/egress, TLS, independent SSH, rollout/rollback, alert delivery, DB restore/RPO/RTO and resources; high adds node/zone failure within an authorized window.
 
-В `--plan` live tests пометить NOT RUN, данные — user-provided, deploy status — NOT DEPLOYED. Отдельно перечислить local validation и её ограничения.
+In `--plan`, mark live tests NOT RUN, data user-provided and deployment status NOT DEPLOYED. List local validation and its limitations separately.
 
-## 11. Runbooks и handoff
+## 11. Runbooks and handoff
 
-Владелец и канал incidents, инструкции bad deploy/disk full/host lost/DB restore/secret rotation/upgrades. Ссылка на все локальные артефакты и короткое саммари: что готово, что остаётся неизвестным, что блокирует deploy. Пользователь должен иметь возможность исправить план или дать команду на выполнение без восстановления контекста из чата.
+Incident owner/channel, instructions for bad deployment/disk full/host loss/DB restore/secret rotation/upgrades. Link all local artifacts with a short summary: ready items, remaining unknowns and deployment blockers. The user must be able to revise the plan or order execution without reconstructing context from chat.

@@ -19,12 +19,12 @@ def packet(root, pipeline, stage, context_sha, skills_root, route):
     if stage=='acquisition':profiles += [route]
     sources=set()
     for profile in profiles:
-        skill=skills_root/'skills'/('product-'+profile)/'SKILL.md';sources.add(skill)
+        skill=skills_root/'skills'/('palarran-product-'+profile)/'SKILL.md';sources.add(skill)
         for link in re.findall(r'(?<!!)\[[^\]]*\]\(([^)\s]+)\)',skill.read_text()):
             if link.startswith(('https:', 'http:', '#')):continue
             source=(skill.parent/link.split('#',1)[0]).resolve()
             if not source.is_relative_to(skills_root) or source.suffix!='.md':raise ValueError('Unsafe source guide')
-            if '/skills/product-' in str(source) and source!=skill:continue
+            if '/skills/palarran-product-' in str(source) and source!=skill:continue
             sources.add(source)
     text=['# Verified materialized context: '+stage,
           'Complete pinned mandatory source guides below: read this packet once; do not reread identical guides. Canonical original files remain authoritative.',

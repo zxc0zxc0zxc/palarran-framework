@@ -34,7 +34,7 @@ for line in sys.stdin:
             'skills/README.md':'# Synthetic skill catalog\n',
             'skills/demo/SKILL.md':'---\nname: demo\ndescription: Synthetic fixture\n---\n',
             'docs/skills/decision-memory.md':'# Fixture shared guide\n',
-            '.ai-development/private.md':'Do not distribute project journal',
+            '.palarran/private.md':'Do not distribute project journal',
             '.env':'private-fixture-do-not-distribute',
         }
         for name,body in files.items():
@@ -53,7 +53,7 @@ for line in sys.stdin:
         setup.install(self.source,self.target,'both')
         lib=self.target/'.ai-tools/library'
         self.assertNotIn('DIRTY', (lib/'skills/demo/SKILL.md').read_text())
-        for name in ('.env','.ai-development/private.md','scripts/untracked.py'):
+        for name in ('.env','.palarran/private.md','scripts/untracked.py'):
             self.assertFalse((lib/name).exists())
         self.assertEqual(setup.library(lib)[0],result['revision'])
 

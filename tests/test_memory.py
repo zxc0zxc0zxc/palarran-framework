@@ -229,7 +229,7 @@ class MemoryTest(unittest.TestCase):
 
     def test_global_project_explicit_and_profile_scopes(self):
         home=self.root/'home';home.mkdir()
-        global_path=home/'.zxc0zxc0zxc/.env';global_path.parent.mkdir(mode=0o700)
+        global_path=home/'.palarran/.env';global_path.parent.mkdir(mode=0o700)
         global_path.write_text('VPS_HOST=global.example\nVPS_USER=deploy\nMEMORY_URL=http://127.0.0.1:18791\nMEMORY_AGENT_TOKEN='+('g'*40)+'\n');global_path.chmod(0o600)
         project=self.root/'project';project.mkdir();(project/'.git').mkdir()
         nested=project/'a/b';nested.mkdir(parents=True)

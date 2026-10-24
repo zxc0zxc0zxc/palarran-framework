@@ -1,32 +1,32 @@
-# Открытые кейсы и аргументация
+# Open cases and rationale
 
-Это каталог вопросов для ADR, а не предписанный ответ. В каждом конкретном плане разобрать применимые решения и минимум альтернативу. Неприменимые вопросы кратко пометить. Неразрешённый deploy blocker нельзя замаскировать дефолтом.
+This is an ADR question catalog, not prescribed answers. Each concrete plan must address applicable decisions and at least one alternative. Briefly mark inapplicable questions. Do not disguise an unresolved deployment blocker as a default.
 
-## Формат ADR
+## ADR format
 
-`ID → вопрос → факты/допущения → варианты → выбранный вариант → причина → первоисточник → наша адаптация → риск/стоимость → owner → когда пересмотреть → blocker?`
+`ID → question → facts/assumptions → options → chosen option → reason → primary source → our adaptation → risk/cost → owner → when to reconsider → blocker?`
 
-## Каталог
+## Catalog
 
-| Кейс | Стартовое направление и компромисс | Основание и граница |
+| Case | Initial direction and tradeoff | Basis and boundary |
 |---|---|---|
-| Compose или Kubernetes | Low: Compose снижает платформенную нагрузку; med/high: Kubernetes при нужде в API/orchestration. Больше компонентов требует владельцев | [Google simplicity](https://sre.google/sre-book/simplicity/); конкретные профили — наше решение |
-| Single-node или HA | Single-node дешевле, но не переживает потерю хоста. HA требует независимых узлов и всех зависимостей | [K3s embedded etcd](https://docs.k3s.io/datastore/ha-embedded); quorum относится к datastore, не ко всему приложению |
-| Managed или self-managed Kubernetes/DB | Managed снимает часть обслуживания, добавляет стоимость/зависимость/региональные ограничения; self-managed требует измеримого ops capacity | [Netflix ownership](https://netflixtechblog.com/full-cycle-developers-at-netflix-a08c31f83249); выбор managed — наша адаптация, не рекомендация Netflix |
-| Flannel или Cilium | Flannel + K3s policy controller достаточны для простого L3/L4; Cilium интересен при FQDN policy/visibility, но требует проверки compatibility и migration | [K3s CNI options](https://docs.k3s.io/networking/basic-network-options), [NetworkPolicy scope](https://kubernetes.io/docs/concepts/services-networking/network-policies/) |
-| Ingress или Gateway API | Выбрать поддерживаемый controller; Gateway API полезен при разделении infra/app ролей. Проверить feature/version support и CRDs | [Kubernetes Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/); не выбирать неподдерживаемый controller по старому примеру |
-| Default-deny egress или staged restriction | Default-deny лучше ограничивает lateral movement/exfiltration; bootstrap/update/DNS могут сломаться. Сначала explicit flows, затем enforce | [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/); enforcement и host-path тестировать |
-| mTLS/mesh или app TLS | High: identity/rotation могут оправдать mesh; low: TLS к внешним endpoints и DB при необходимости без тяжёлой платформы | [Meta encryption](https://engineering.fb.com/2019/05/29/security/service-encryption/); их внутренний PKI не копируем |
-| Local DB/PVC или external data | Local проще/дешевле, но связывает data с node; managed/отдельная DB меняют стоимость и failure model | [PostgreSQL backup](https://www.postgresql.org/docs/current/backup.html), [K3s restore](https://docs.k3s.io/backup-restore) |
-| Push deploy или pull GitOps | Low: bounded SSH deploy; med/high: Argo pull/scoped RBAC. Права CI, Argo и bootstrap различаются | [Argo security](https://argo-cd.readthedocs.io/en/stable/operator-manual/security/), [GitHub secure use](https://docs.github.com/en/actions/reference/security/secure-use) |
-| Recreate, blue-green или canary | Recreate дешевле, но с downtime; другие стратегии требуют RAM/capacity, metrics и schema compatibility | [Google canary](https://sre.google/workbook/canarying-releases/) |
-| Один регион или несколько | Сначала региональный HA и restore; multi-region оправдывается RTO/latency, но усложняет данные, failover и расходы | [Google SLO](https://sre.google/workbook/implementing-slos/); конкретная topology — наше решение |
-| Backup retention/immutability | Защита от удаления против storage cost и требований удаления данных; ключи/restore account должны пережить инцидент | [Restic retention](https://restic.readthedocs.io/en/stable/060_forget.html) + возможности выбранного object storage |
+| Compose or Kubernetes | Low: Compose reduces platform overhead; med/high: Kubernetes when API/orchestration is needed. More components require owners | [Google simplicity](https://sre.google/sre-book/simplicity/); concrete profiles are our decision |
+| Single-node or HA | Single-node costs less but does not survive host loss. HA needs independent nodes and all dependencies | [K3s embedded etcd](https://docs.k3s.io/datastore/ha-embedded); quorum concerns datastore, not the entire application |
+| Managed or self-managed Kubernetes/DB | Managed removes some maintenance while adding cost/dependency/regional constraints; self-managed needs measurable operations capacity | [Netflix ownership](https://netflixtechblog.com/full-cycle-developers-at-netflix-a08c31f83249); choosing managed is our adaptation, not Netflix's recommendation |
+| Flannel or Cilium | Flannel + K3s policy controller suffice for simple L3/L4; Cilium is interesting for FQDN policy/visibility but requires compatibility and migration checks | [K3s CNI options](https://docs.k3s.io/networking/basic-network-options), [NetworkPolicy scope](https://kubernetes.io/docs/concepts/services-networking/network-policies/) |
+| Ingress or Gateway API | Choose a supported controller; Gateway API helps separate infrastructure/application roles. Check feature/version support and CRDs | [Kubernetes Gateway API](https://kubernetes.io/docs/concepts/services-networking/gateway/); do not choose an unsupported controller from an old example |
+| Default-deny egress or staged restriction | Default-deny better limits lateral movement/exfiltration; bootstrap/update/DNS may break. Define explicit flows before enforcement | [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/); test enforcement and host paths |
+| mTLS/mesh or application TLS | High: identity/rotation may justify mesh; low: TLS to external endpoints and DB where necessary without a heavy platform | [Meta encryption](https://engineering.fb.com/2019/05/29/security/service-encryption/); do not copy their internal PKI |
+| Local DB/PVC or external data | Local is simpler/cheaper but binds data to nodes; managed/separate DB changes cost and failure model | [PostgreSQL backup](https://www.postgresql.org/docs/current/backup.html), [K3s restore](https://docs.k3s.io/backup-restore) |
+| Push deployment or pull GitOps | Low: bounded SSH deployment; med/high: Argo pull/scoped RBAC. CI, Argo and bootstrap permissions differ | [Argo security](https://argo-cd.readthedocs.io/en/stable/operator-manual/security/), [GitHub secure use](https://docs.github.com/en/actions/reference/security/secure-use) |
+| Recreate, blue-green or canary | Recreate is cheaper but has downtime; other strategies need RAM/capacity, metrics and schema compatibility | [Google canary](https://sre.google/workbook/canarying-releases/) |
+| One region or several | Start with regional HA and restore; multi-region is justified by RTO/latency but complicates data, failover and costs | [Google SLO](https://sre.google/workbook/implementing-slos/); concrete topology is our decision |
+| Backup retention/immutability | Deletion protection versus storage cost and data-deletion requirements; keys/restore account must survive incidents | [Restic retention](https://restic.readthedocs.io/en/stable/060_forget.html) + selected object storage capabilities |
 
-## Как обсуждать с пользователем
+## Discussing choices with the user
 
-Сначала факты target, затем применимый источник и наша рекомендация. Например: «На машине 2 GiB, одна app и допустим downtime при reboot. Compose уменьшает операционные расходы; это адаптация принципа простоты Google, не их стандарт для VPS. Переходим к K3s при необходимости Kubernetes API и после расчёта памяти». Источник компании не доказывает sizing, SLO или безопасность нашего target.
+Start with target facts, then applicable sources and our recommendation. Example: “The host has 2 GiB, one application and acceptable reboot downtime. Compose reduces operational overhead; this adapts Google's simplicity principle rather than their VPS standard. Move to K3s when Kubernetes API is needed and after memory budgeting.” A company's source does not establish our target's sizing, SLO or security.
 
-Зафиксировать несогласованные параметры: budget ceiling, downtime, DB locality, RPO/RTO, extra nodes, DNS ownership, строгость egress, операционный владелец. У каждого blocker — конкретное требуемое действие; уточнения задавать до зависимого deploy, но продолжать независимые части плана.
+Record unagreed parameters: budget ceiling, downtime, DB locality, RPO/RTO, extra nodes, DNS ownership, egress strictness and operations owner. Every blocker has a concrete required action; clarify before dependent deployment while continuing independent planning.
 
-Принятые решения и причины фиксируются по [общему контракту](../../skills/decision-memory.md) в target `.ai-development/`; этот документ остаётся каталогом вопросов. Следующая задача обязана читать относящиеся к ней accepted записи и учитывать контекст.
+Record accepted decisions and rationale under the [shared contract](../../skills/decision-memory.md) in target `.palarran/`; this document remains a question catalog. The next task must read relevant accepted records and account for their context.

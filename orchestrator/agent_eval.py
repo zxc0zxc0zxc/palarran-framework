@@ -208,7 +208,7 @@ def workflow(suite, path, sha):
     policy = copy.deepcopy(suite['policy'])
     if PYTHON not in policy['executables']:
         policy['executables'].append(PYTHON)
-    result = dict(version=1, name='agent-eval', plan_revision=suite['revision'],
+    result = dict(version=1, name='palarran-agent-eval', plan_revision=suite['revision'],
                   limits=suite['limits'], policy=policy, tasks=tasks)
     for name in ('ai_policy', 'usage_policy'):
         if name in suite:
@@ -257,7 +257,7 @@ def binding(state, run):
     with closing(_store(state)) as store:
         record = dict(store.get(run))
     flow = json.loads(record['workflow'])
-    if hashlib.sha256(record['workflow'].encode()).hexdigest() != record['workflow_sha256'] or flow['name'] != 'agent-eval':
+    if hashlib.sha256(record['workflow'].encode()).hexdigest() != record['workflow_sha256'] or flow['name'] != 'palarran-agent-eval':
         raise ValueError('Bound eval workflow required')
     argv = flow['tasks'][0]['verify'][0]
     if argv[:3] != [PYTHON, HARNESS, 'check'] or len(argv) != 11:

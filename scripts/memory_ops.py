@@ -15,7 +15,7 @@ ENV_KEYS={'VPS_HOST','VPS_USER','VPS_PORT','VPS_IDENTITY_FILE','NEO4J_IMAGE','NE
 
 
 def global_env(home=None):
-    return Path(home or Path.home())/'.zxc0zxc0zxc'/'.env'
+    return Path(home or Path.home())/'.palarran'/'.env'
 
 
 def project_env(cwd=None):

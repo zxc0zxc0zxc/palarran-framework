@@ -1,21 +1,21 @@
 # B2B sales plan — <product> / v001
 
-Stage: pre-build / post-polish. Product revision / source reports / E-IDs / ADR refs. Report status и execution readiness отдельно; actual contacts/sales NOT_RUN.
+Stage: pre-build / post-polish. Product revision / source reports / E-IDs / ADR refs. Separate report status from execution readiness; actual contacts/sales NOT_RUN.
 
-## Покупатель и ограничения
-ICP / geo / job / buyer / user / current substitute / supported offer. Cash cap (unknown → 0), per-test cap, time cap, валюта/период. Research/model budget отдельно. Small-fit 1–30 человек или 1–3 точки; independent ownership проверить.
+## Buyer and constraints
+ICP / geo / job / buyer / user / current substitute / supported offer. Cash cap (unknown → 0), per-test cap, time cap, currency/period. Research/model budget separate. Small-fit 1–30 people or 1–3 locations; verify independent ownership.
 
-## Кандидаты
+## Candidates
 | Candidate / public URL | Size / locations / parent evidence + date | Buyer / public business contact URL | Observed trigger → pain hypothesis | Fit / classification / next check |
 |---|---|---|---|---|
 
-Отдельно qualified / conditional / rejected и причина. До 10, не добивать список; Similarweb N/A не zero. Ни одного вымышленного buyer/контакта.
+Separate qualified / conditional / rejected with reasons. Up to 10 without filler; Similarweb N/A is not zero. Never invent buyers/contacts.
 
-## Оффер и sales plan
-Outcome, bounded pilot/support, actual/proposed price, себестоимость/onboarding, alternative, публичный путь доступа. Черновики первого обращения и follow-up, batch/cadence/stop как proposal; ничего не отправлено.
+## Offer and sales plan
+Outcome, bounded pilot/support, actual/proposed price, cost/onboarding, alternative, public access route. First-contact/follow-up drafts and proposed batch/cadence/stops; nothing sent.
 
-## Воронка и проверка
-Eligible → contact → conversation → pilot → paid → retained; metric/denominator/window, cash/time cap, owner, proposed success/stop, evidence gaps. Estimates отдельно от observed. Price register Q-IDs/full costs; если нет cap/quote, paid conditional.
+## Funnel and verification
+Eligible → contact → conversation → pilot → paid → retained; metric/denominator/window, cash/time cap, owner, proposed success/stops, evidence gaps. Estimates separate from observations. Price register Q-IDs/full costs; missing caps/quotes leave paid options conditional.
 
-## Решения и handoff
-Cases applicability/limits; ADR refs, product revision delta, unknowns/blockers, ближайший дешёвый тест, review перед build и после polish. Market validated=false до реальных подтверждений.
+## Decisions and handoff
+Case applicability/limits; ADR refs, product-revision changes, unknowns/blockers, cheapest next test, reviews before build/after polish. Market validated=false until actual confirmation.

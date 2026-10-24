@@ -31,7 +31,7 @@ class GraphContextTest(unittest.TestCase):
             return (graph.VERSION + '\n').encode()
         if argv[3] == 'extract':
             self.assertIn('--code-only', argv); self.assertIn('--no-cluster', argv); self.assertIn('--no-dedup', argv)
-            source = Path(argv[4]); self.assertFalse((source / '.env').exists()); self.assertFalse((source / '.ai-development').exists())
+            source = Path(argv[4]); self.assertFalse((source / '.env').exists()); self.assertFalse((source / '.palarran').exists())
             out = Path(argv[argv.index('--out') + 1]) / 'graphify-out'; out.mkdir(parents=True)
             value = dict(nodes=[dict(id='app_calculate', label='calculate()', source_file=str(source / 'app.py'), source_location='L1')],
                          edges=[], input_tokens=0, output_tokens=0)
@@ -66,7 +66,7 @@ class GraphContextTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'stale_graph'): graph.checked(self.root)
 
     def test_private_paths_symlinks_and_ignored_files_do_not_enter_corpus(self):
-        for name in ('.delivery/private.py', '.ai-development/history.py', 'vendor/lib.py', 'artifacts/train.py', '.env/config.py'):
+        for name in ('.delivery/private.py', '.palarran/history.py', 'vendor/lib.py', 'artifacts/train.py', '.env/config.py'):
             path = self.root / name; path.parent.mkdir(parents=True, exist_ok=True); path.write_text('secret = "not to be indexed"')
         with tempfile.TemporaryDirectory() as outside:
             target = Path(outside) / 'outside.py'; target.write_text('external = True')

@@ -1,26 +1,26 @@
-# Данные для обучения: план, качество, смесь и целостность
+# Training data: planning, quality, mixtures and integrity
 
-Это углублённая обязательная база `/ml:data`, а не новый training runner. Сначала [научные источники](sources.md), [планирование потребности](planning.md), затем [очистка](cleaning.md), [домены и языки](mixtures.md), [сохранение полных ответов](answer-integrity.md), [контракт инструментов](tools.md) и [критерии приёмки](evaluation.md). Общий ML [контракт](../contracts.md) и [память решений](../../skills/decision-memory.md) сохраняются.
+This is the detailed mandatory foundation for `/palarran:ml:data`, not a new training runner. Start with [scientific sources](sources.md), [data requirements](planning.md), then [cleaning](cleaning.md), [domains and languages](mixtures.md), [complete answers](answer-integrity.md), [tool contracts](tools.md) and [acceptance criteria](evaluation.md). The shared ML [contract](../contracts.md) and [decision memory](../../skills/decision-memory.md) still apply.
 
-Garbage in → garbage out — полезная инженерная эвристика, не теорема, не гарантия после очистки и не количественный закон масштабирования. Шумная разметка, утечки, неверный sampling и обрезанные completions способны испортить результат; «чистый» корпус ещё не доказывает достаточность покрытия или полезность модели. Проверяем данные и downstream поведение отдельно.
+Garbage in → garbage out is a useful engineering heuristic, not a theorem, a post-cleaning guarantee or a quantitative scaling law. Noisy labels, leakage, incorrect sampling and truncated completions can damage outcomes; a “clean” corpus does not establish sufficient coverage or model usefulness. Check data and downstream behavior separately.
 
 ```mermaid
 flowchart TD
-  R[Требования и ошибки продукта] --> P[Coverage: задачи × домены × языки × длины]
-  P --> S[Источники, права, версии]
+  R[Requirements and product errors] --> P[Coverage: tasks × domains × languages × lengths]
+  P --> S[Sources, rights, versions]
   S --> C[Raw snapshot → checks → dedup → grouped splits]
   C --> A[Exact tokenizer/template/collator audit]
-  A --> M[Token mixture plan и лимиты повторов]
-  M --> G{Data gates и разрешение training?}
-  G -->|нет| B[Blocked / новые данные / пересмотр плана]
-  G -->|да| T[Отдельный bounded ML experiment]
-  T --> E[Domain и general regression benchmark]
+  A --> M[Token mixture plan and repeat caps]
+  M --> G{Data gates and training authorization?}
+  G -->|no| B[Blocked / new data / revised plan]
+  G -->|yes| T[Separate bounded ML experiment]
+  T --> E[Domain and general regression benchmark]
 ```
 
-Первая реализация — stdlib CPU CLI `scripts/ml_data.py`: profile, prepare, audit-tokens, mix-plan. Только локальные разрешённые JSONL, без download/API/GPU/install. Text/chat adapters реализованы; изображения, аудио, preference pairs, near-dedup at web scale и собственно tokenizer/trainer требуют профильных адаптеров. Не выдавать эту ограниченную реализацию за FineWeb/Dolma или гарантию отсутствия PII/contamination.
+Initial implementation is stdlib CPU CLI `scripts/ml_data.py`: profile, prepare, audit-tokens, mix-plan. Authorized local JSONL only; no download/API/GPU/install. Text/chat adapters exist; images, audio, preference pairs, web-scale near-dedup and actual tokenizer/trainer need specialist adapters. Do not present this limited implementation as FineWeb/Dolma or a guarantee of no PII/contamination.
 
 ## Local text data gate
 
-[Реальный tokenizer/collator и mandatory preparation gate](pipeline.md). Explicit data_preparation policy; legacy non-text не получает фиктивный PASS.
+[Real tokenizer/collator and mandatory preparation gate](pipeline.md). Explicit data_preparation policy; legacy non-text receives no fictitious PASS.
 
-Runtime adapter использует [verified local tokenizer/collator pipeline](pipeline.md), отдельный от standalone provided-tensor audit.
+The runtime adapter uses the [verified local tokenizer/collator pipeline](pipeline.md), separate from the standalone provided-tensor audit.

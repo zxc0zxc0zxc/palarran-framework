@@ -57,7 +57,7 @@ def save(path, value):
 
 
 def home_root(home=None):
-    return safe(Path(home or Path.home()) / '.zxc0zxc0zxc')
+    return safe(Path(home or Path.home()) / '.palarran')
 
 
 def enable(home=None):
@@ -121,8 +121,17 @@ def validate(target, value):
         text(name, 256); p = Path(name)
         require(not p.is_absolute() and '..' not in p.parts and ':' not in name and '\\' not in name)
         return safe(target / p)
-    relative(source['adr'])
-    subprocess.run(['git', '-C', str(target), 'cat-file', '-e', actual + ':' + source['adr']], check=True, capture_output=True)
+    require(type(gate['checks']) is list and 1 <= len(gate['checks']) <= 16)
+    adr_path = relative(source['adr'])
+    if Path(source['adr']).parts[0] == '.palarran':
+        # Private rationale is not a Git resource; bind its exact bytes through a declared check.
+        adr = read(adr_path, limit=65536)
+        require(re.search(r'^status: accepted$', adr.decode('utf-8'), re.M) is not None)
+        require(any(type(check) is dict and check.get('evidence') == source['adr'] and
+                    check.get('status') == 'PASS' and check.get('sha256') == hashlib.sha256(adr).hexdigest()
+                    for check in gate.get('checks', [])))
+    else:
+        subprocess.run(['git', '-C', str(target), 'cat-file', '-e', actual + ':' + source['adr']], check=True, capture_output=True)
     require(type(gate['checks']) is list and 1 <= len(gate['checks']) <= 16)
     names = set()
     for check in gate['checks']:

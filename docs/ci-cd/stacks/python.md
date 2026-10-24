@@ -1,38 +1,38 @@
 # Python
 
-Сначала определить `pyproject.toml`/requirements и lock strategy, pinned Python version, package/service/CLI, framework, compiled dependencies, extras/groups, DB/queue и tests. Не мигрировать существующий Poetry/pip-tools проект на uv только ради модного template. Предпочтительный новый вариант — uv при совместимости; [общая фактура](../evidence.md) объясняет автоматизацию и полноту проверок, а не выбор package manager.
+First identify `pyproject.toml`/requirements and lock strategy, pinned Python version, package/service/CLI, framework, compiled dependencies, extras/groups, DB/queue and tests. Do not migrate existing Poetry/pip-tools projects to uv merely for a fashionable template. Prefer uv for new compatible setups; [shared evidence](../evidence.md) supports automation/check completeness, not package-manager selection.
 
 ## DAG
 
-| Ветка | Scope | Оптимизация |
+| Branch | Scope | Optimization |
 |---|---|---|
-| Quality | Ruff/formatter check, mypy/pyright по проекту | Отдельные pinned tools/config, без duplicated full analysis |
-| Unit | pytest, markers по контракту | xdist при изоляции, unit без внешних сервисов |
-| Integration | DB/migrations/API/background jobs | Readiness, worker-specific resources, без prod credentials |
-| Package | Wheel/sdist или OCI candidate | Проверка production install/import/startup, build inputs fixed |
-| Security | Locked dependency audit + runtime image policy | Policy exceptions scoped/expiring, reports sanitized |
-| Compatibility | Required supported Python/platforms/extras | Не размножать все тяжёлые tests по декартову произведению без нужды |
+| Quality | Ruff/formatter check, project mypy/pyright | Separate pinned tools/config, no duplicate full analysis |
+| Unit | pytest, contract-defined markers | xdist with isolation; units without external services |
+| Integration | DB/migrations/API/background jobs | Readiness, worker-specific resources, no production credentials |
+| Package | Wheel/sdist or OCI candidate | Production install/import/startup checks, fixed build inputs |
+| Security | Locked-dependency audit + runtime-image policy | Scoped expiring policy exceptions, sanitized reports |
+| Compatibility | Required supported Python/platforms/extras | Avoid needlessly multiplying all heavy tests across the Cartesian product |
 
-Для uv-проекта [locked sync](https://docs.astral.sh/uv/concepts/projects/sync/) проверяет согласованность lock с metadata. Например, при определённой группе `test`: `uv sync --locked --group test`, затем `uv run --no-sync pytest`. Имя группы и наличие dev/type tools взять из проекта. `--frozen` использует lock без той же проверки актуальности; не подменять им проверку drift. Если pip — fully resolved pinned requirements/hashes по принятому workflow, не незапланированный latest resolve.
+For uv projects, [locked sync](https://docs.astral.sh/uv/concepts/projects/sync/) checks lock/metadata consistency. For an existing `test` group, for example: `uv sync --locked --group test`, then `uv run --no-sync pytest`. Derive group names/dev/type tools from the project. `--frozen` uses locks without the same freshness check; do not substitute it for drift checking. With pip, use fully resolved pinned requirements/hashes under the accepted workflow, not unplanned latest resolution.
 
-## Cache и параллельность
+## Cache and parallelism
 
-Официальные [uv GitHub](https://docs.astral.sh/uv/guides/integration/github/) и [GitLab](https://docs.astral.sh/uv/guides/integration/gitlab/) guides дают интеграции cache и pin tools. Ключ/доступ учитывает uv/Python/OS/arch/lock/native ABI и trust; uv cache предпочтительнее переносимого между несовместимыми runners `.venv`. Runtime virtualenv всё равно синхронизировать из lock. Credentials/private index auth не кешировать и не выводить в URL/installer stderr.
+Official [uv GitHub](https://docs.astral.sh/uv/guides/integration/github/) and [GitLab](https://docs.astral.sh/uv/guides/integration/gitlab/) guides cover cache integration/tool pinning. Keys/access account for uv/Python/OS/architecture/lock/native ABI/trust; prefer uv cache over moving `.venv` across incompatible runners. Still synchronize runtime virtualenv from lock. Do not cache credentials/private-index authentication or expose them in URLs/installer stderr.
 
-[pytest-xdist](https://pytest-xdist.readthedocs.io/en/stable/distribution.html): выбрать scheduling mode под suite, учитывать scope fixtures и общее потребление ресурсов. Session fixture может создаваться на разных workers; DB/schema, temp files, ports и users изолировать. Тесты с глобальным состоянием сериализовать либо исправить, не прятать flakiness retries.
+[pytest-xdist](https://pytest-xdist.readthedocs.io/en/stable/distribution.html): choose scheduling mode for the suite, account for fixture scope/aggregate resources. Session fixtures may be created on multiple workers; isolate DB/schema, temporary files, ports and users. Serialize or fix global-state tests instead of hiding flakiness with retries.
 
-[pytest cache/last-failed](https://docs.pytest.org/en/stable/how-to/cache.html) — удобство локального feedback, **не full release gate**. CI не должен проходить только потому, что запустил `--lf` на старом cache. Coverage с xdist требует корректного объединения и оценки всех shards; reports/fixtures без настоящих DSN/tokens. Число workers ограничить RAM/DB, а не только ядрами.
+[pytest cache/last-failed](https://docs.pytest.org/en/stable/how-to/cache.html) helps local feedback; it is **not a full release gate**. CI must not pass merely by running `--lf` against old cache. Coverage with xdist needs proper merging/all-shard assessment; reports/fixtures contain no real DSN/tokens. Limit workers by RAM/DB, not only cores.
 
 ## Production package
 
-[uv package guide](https://docs.astral.sh/uv/guides/package/) описывает build distributions. Проверить isolated build dependencies и зафиксировать build backend/toolchain: lock runtime dependencies не автоматически фиксирует все isolated build deps. Секреты private indexes — только trusted download/build boundary с минимальными правами.
+[uv package guide](https://docs.astral.sh/uv/guides/package/) describes distribution builds. Check isolated build dependencies and pin build backend/toolchain: locked runtime dependencies do not automatically pin all isolated build dependencies. Private-index secrets belong only in trusted download/build boundaries with minimal rights.
 
-Wheel с C/Rust extensions привязан к ABI/platform; проверить target Python/libc/arch. Pure Python wheel также требует install/import smoke с production dependencies без test-only extras. Multi-stage OCI переносит только нужный wheel/runtime environment, не `tests/.env`, caches или весь developer virtualenv. Не считать successful unit test на macOS доказательством Linux image compatibility.
+Wheels with C/Rust extensions depend on ABI/platform; verify target Python/libc/architecture. Pure-Python wheels also need production-dependency install/import smoke without test-only extras. Multi-stage OCI copies only necessary wheels/runtime environment, not `tests/.env`, caches or entire developer virtualenvs. Successful macOS unit tests do not prove Linux-image compatibility.
 
-Web/worker startup, readiness, graceful shutdown и process count проектируются по приложению; миграции — serialized job через разрешённый deployment backend. DB schema совместима с old/new releases, queue tasks versioned. Container digest и runtime config identities сохраняются при promotion; никакого SSH и remote pip install на работающий host.
+Design web/worker startup, readiness, graceful shutdown and process count for the application; migrations use serialized jobs through authorized deployment backends. DB schemas remain compatible with old/new releases; version queue tasks. Preserve container digest/runtime-config identities during promotion; no SSH/remote pip install on running hosts.
 
-## Provider mapping и приёмка
+## Provider mapping and acceptance
 
-Одинаковые scripts используются в GitHub jobs и GitLab jobs, отличаются cache transport/event/identity contracts. Compatibility matrix minimal required set на PR, остальной scheduled scope дополнительно; supported release targets имеют evidence до deploy.
+GitHub/GitLab jobs use identical scripts with different cache-transport/event/identity contracts. PR compatibility matrices cover minimal required sets, other scheduled scope is additional; supported release targets have evidence before deployment.
 
-Acceptance: stale lock fail, cold-cache pass, required tests не сведены к last-failed, xdist без resource collisions, production wheel/image import+startup и целевые integrations проходят, secrets отсутствуют в pytest traceback/JUnit/artifacts/layers, timing/cost измерены, точный digest наблюдается после rollout. Версии Python/uv/framework не выбирать по плавающему latest.
+Acceptance: stale lock fails, cold cache passes, required tests are not reduced to last-failed, xdist has no resource collisions, production wheel/image import/startup and target integrations pass, secrets absent from pytest traceback/JUnit/artifacts/layers, timing/cost measured, exact digest observed after rollout. Do not select Python/uv/framework versions from floating latest.

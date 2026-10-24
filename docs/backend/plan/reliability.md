@@ -1,32 +1,32 @@
-# Обязательный SLA proposal и измеримые SLO
+# Mandatory SLA proposals and measurable SLOs
 
-[Google SRE](https://sre.google/sre-book/service-level-objectives/) различает SLI (измерение), SLO (цель) и SLA (соглашение с последствиями). Поэтому **каждый план содержит SLA proposal**, а не только произвольные «99.9%». Агент проектирует условия, но не заключает договор/не обещает credits или штрафы от имени владельца. Existing SLA/обязательства из проекта учитывать прежде новых целей.
+[Google SRE](https://sre.google/sre-book/service-level-objectives/) distinguishes SLI (measurement), SLO (objective) and SLA (agreement with consequences). Thus **every plan contains an SLA proposal**, not arbitrary “99.9%” alone. Agents design terms without making agreements or promising owner credits/penalties. Existing project SLA/obligations precede new targets.
 
-## SLA proposal: заполнить обязательно
+## SLA proposal: required fields
 
-По [шаблону](../../../templates/backend/reliability.md): user journey/service scope, измерительная точка и источник, numerical availability/latency или async completion target, окно, поддерживаемый workload/размеры и regions/hours, valid request definition, exclusions с причиной и отдельной видимостью, measurement dispute/owner, incident/support response, последствия breach и status. Нет согласованных business terms — явно `proposed, not agreed`; предложить технические действия (эскалация/ограничение release), коммерческие условия оставить владельцу. Не «выставить действующий SLA» без полномочий.
+Use the [template](../../../templates/backend/reliability.md): user journey/service scope, measurement point/source, numerical availability/latency or asynchronous completion target, window, supported workload/sizes/regions/hours, valid-request definition, reasoned separately visible exclusions, measurement disputes/owner, incident/support response, breach consequences and status. Without agreed business terms mark `proposed, not agreed`; propose technical actions (escalation/release restrictions), leaving commercial terms to owners. Never establish an active SLA without authority.
 
-Если нет telemetry/входных цифр, **предложить числовые provisional targets** с явными assumptions и validation gate, не оставить весь раздел TBD. Критичные неизвестные спросить; независимые части планировать. Оценить feasibility по infra/dependencies/on-call и стоимость повышения цели. Single host/process/DB — общие failure points: не назначать четыре девятки просто потому, что backend написан на Go. Если цель пользователя выше capability, показать gap и варианты infra/scope/стоимости, не понижать молча.
+Without telemetry/input figures **propose numerical provisional targets** with explicit assumptions/validation gates rather than leaving everything TBD. Ask about critical unknowns while planning independent work. Assess feasibility against infrastructure/dependencies/on-call and the cost of higher targets. Single hosts/processes/DBs share failure points: do not assign four nines because the backend uses Go. If requested targets exceed capabilities show gaps and infrastructure/scope/cost options rather than silently lowering them.
 
 ## SLI/SLO contract
 
-| Поле | Требование |
+| Field | Requirement |
 |---|---|
-| Availability/success | Numerator «good», denominator «eligible», status/business outcome, timeout/cancel/invalid/client error policy; доли не скрывают failures |
-| Latency | Boundary, valid operation, percentile или доля faster-than threshold, target, окно и workload; не одно среднее |
-| Async/freshness | Время от accepted до durable completion/read availability; queue age/replay lag, max staleness где применимо |
-| Correctness | Business invariants; data corruption/double effect не маскировать общей availability долей |
-| Measurement | Counter/histogram/event points, labels без PII/unbounded cardinality, source owner, missing-data treatment |
-| Budget/alert | Допустимая bad fraction, release/degradation policy, burn signal и escalation owner |
+| Availability/success | Good numerator, eligible denominator, status/business outcome, timeout/cancel/invalid/client-error policy; proportions must not hide failures |
+| Latency | Boundary, valid operation, percentile or proportion faster than threshold, target, window and workload; not one average |
+| Async/freshness | Time from acceptance to durable completion/read availability; queue age/replay lag, applicable maximum staleness |
+| Correctness | Business invariants; data corruption/double effects must not hide in overall availability |
+| Measurement | Counter/histogram/event points, labels without PII/unbounded cardinality, source owner, missing-data treatment |
+| Budget/alert | Allowed bad fraction, release/degradation policy, burn signals and escalation owner |
 
-Для request-based SLO error budget = `(1 - target_good_fraction) × eligible_events`. Time-based «минуты простоя» — другой denominator; не пересчитывать request budget в минуты без допущений. Для 99.9% из 1,000,000 eligible requests budget 1,000 bad requests. Пример — арифметика, не рекомендуемая всем цель. SLO rolling 30 days — возможное окно, выбрать по продукту/контракту.
+For request-based SLOs error budget = `(1 - target_good_fraction) × eligible_events`. Time-based downtime minutes use another denominator; converting request budgets to minutes needs assumptions. At 99.9% for 1,000,000 eligible requests, budget is 1,000 bad requests. This demonstrates arithmetic, not a universal target. A rolling 30-day SLO is one possible window; select by product/contract.
 
-[Google SRE workbook](https://sre.google/workbook/alerting-on-slos/) показывает alerting по расходу error budget. Наш план определяет actionable owner и multi-window/burn-rate thresholds под свой SLO; не копировать paging thresholds без traffic/on-call контекста. Для low-traffic нужны правила малой выборки/дополнительные synthetic probes, а не division by zero или ложный «100%» при отсутствии событий.
+The [Google SRE workbook](https://sre.google/workbook/alerting-on-slos/) describes error-budget alerting. Our plans define actionable owners and multi-window/burn-rate thresholds for their SLOs; never copy paging thresholds without traffic/on-call context. Low traffic needs small-sample rules/additional synthetic probes rather than division by zero or false “100%” without events.
 
-## Resilience и recovery
+## Resilience and recovery
 
-[Amazon](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/) описывает timeouts, bounded retries/backoff/jitter и риск усиления перегрузки. В plan: deadline propagation, attempt/retry budget, safe idempotent retry conditions, caller cancellation, concurrency limits/backpressure/load shedding и поведение при частичном отказе. Не включать retries на каждом слое независимо. Circuit breaker не обязательная деталь любого API; режимы recovery нужно уметь тестировать.
+[Amazon](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/) describes timeouts, bounded retries/backoff/jitter and overload amplification. Plans define deadline propagation, attempt/retry budgets, safe idempotent retry conditions, caller cancellation, concurrency limits/backpressure/load shedding and partial-failure behavior. Do not enable retries independently at every layer. Circuit breakers are not mandatory API details; recovery modes must be testable.
 
-Для data-bearing features определить **RPO/RTO**: какой loss window допустим, target restore time и точка начала измерения, зависимости backups/PITR/replication, будущий restore drill и owner. Для «никаких потерянных подтверждённых операций» описать durability boundary/infra gap; backup раз в сутки не доказывает RPO=0. Если recovery цели унаследованы — дать ссылку/применимость, не написать N/A без анализа.
+For data-bearing features define **RPO/RTO**: tolerated loss windows, restore-time targets/start points, backup/PITR/replication dependencies, future restore drills and owners. For no lost acknowledged operations describe durability boundaries/infrastructure gaps; daily backups do not prove RPO=0. Reference inherited recovery targets and applicability rather than declaring N/A without analysis.
 
-Все targets в planning — proposed/estimated либо inherited verified-by-source, не измеренный PASS. Набор tests и rollout checks должен ссылаться на эти цели и failure modes.
+All planning targets are proposed/estimated or inherited verified-by-source, not measured PASS. Tests/rollout checks must reference these goals and failure modes.

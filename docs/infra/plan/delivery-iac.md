@@ -1,46 +1,46 @@
-# IaC, bootstrap и доставка
+# IaC, bootstrap and delivery
 
-## Разделение инструментов
+## Tool separation
 
-| Слой | Инструмент | Владение |
+| Layer | Tool | Ownership |
 |---|---|---|
-| VM, network, firewall, LB, volumes, DNS, IAM | Terraform/OpenTofu + provider API | Один owner ресурса и защищённый state |
-| OS packages, users, SSH, sysctl, runtime | Ansible или cloud-init на новой машине | Версионированная идемпотентная конфигурация |
-| Kubernetes platform/app resources | Helm/Kustomize + Argo CD | Git desired state, scoped permissions |
-| Small single-host app | Compose + release manifest | Отдельная авторизованная deploy job/operator |
+| VM, network, firewall, LB, volumes, DNS, IAM | Terraform/OpenTofu + provider API | One resource owner and protected state |
+| OS packages, users, SSH, sysctl, runtime | Ansible or cloud-init on a new host | Versioned idempotent configuration |
+| Kubernetes platform/application resources | Helm/Kustomize + Argo CD | Git desired state, scoped permissions |
+| Small single-host application | Compose + release manifest | Separate authorized deployment job/operator |
 
-Terraform не обязателен, если провайдер не имеет API или машина уже выдана. В этом случае спроектировать Ansible host configuration и описать manual prerequisites; не заменять полноценную configuration management цепочками `remote-exec`. Существующий сервер сначала обследуется. При переводе под IaC — import и review на отсутствие replacement/data loss, а не создание «такого же» ресурса поверх него.
+Terraform is optional when the provider lacks an API or the host is already provisioned. In that case, design Ansible host configuration and document manual prerequisites; do not replace proper configuration management with `remote-exec` chains. Inspect existing servers first. When adopting IaC, import and review for replacement/data loss instead of creating an “equivalent” resource over the existing one.
 
-[Terraform-пример](../../../templates/infra/terraform-hcloud/main.tf) предназначен только для **нового** Hetzner server. Это конкретный provider adapter; для другого провайдера подобрать поддерживаемый provider и пересобрать ресурсы. Terraform и OpenTofu не считать безусловно взаимозаменяемыми: зафиксировать выбранную версию, проверить provider/backend совместимость и lockfile.
+The [Terraform example](../../../templates/infra/terraform-hcloud/main.tf) is only for a **new** Hetzner server. This is a specific provider adapter; for another provider, choose a supported provider and rebuild resources. Do not assume Terraform/OpenTofu interchangeability: pin the selected version and check provider/backend compatibility and lockfile.
 
-## State и изменение ресурсов
+## State and resource changes
 
-State, saved plans и tfvars могут содержать секреты; `sensitive` лишь скрывает часть вывода ([HashiCorp](https://developer.hashicorp.com/terraform/language/state/sensitive-data)). Использовать удалённый backend с encryption, IAM, locking/versioning по его возможностям, раздельные state environments и backup. Не хранить access tokens в HCL. OIDC — предпочтительно там, где провайдер его поддерживает; не обещать OIDC для любого API ([GitHub OIDC](https://docs.github.com/en/actions/concepts/security/openid-connect)).
+State, saved plans and tfvars may contain secrets; `sensitive` only hides some output ([HashiCorp](https://developer.hashicorp.com/terraform/language/state/sensitive-data)). Use a remote backend with encryption, IAM, locking/versioning as supported, separate state environments and backups. Store no access tokens in HCL. Prefer OIDC where the provider supports it; do not promise OIDC for every API ([GitHub OIDC](https://docs.github.com/en/actions/concepts/security/openid-connect)).
 
-Для target-specific конфигов pin CLI/provider/module versions и commit lockfile; автоматически обновлять только через review. Перед apply нужен plan с отображением create/update/delete/replacement, стоимостью и blast radius; применять сохранённый просмотренный plan, учитывать drift. Destroy/data-bearing replacement требует отдельного понятного решения. `prevent_destroy` защищает от части ошибок, но не заменяет backup и разграничение прав.
+For target-specific configurations, pin CLI/provider/module versions and commit lockfiles; automatic updates require review. Before apply, prepare a plan showing create/update/delete/replacement, cost and blast radius; apply the saved reviewed plan and account for drift. Destroy/data-bearing replacement requires a separate clear decision. `prevent_destroy` protects against some mistakes but replaces neither backups nor access separation.
 
-В `--plan` не запускать provider refresh, remote backend init или data sources. HCL parse/format и статический review не подтверждают существование VM type/региона, quotas или доступность API. В реальном deploy после разрешения это проверяется live.
+In `--plan`, do not run provider refresh, remote-backend init or data sources. HCL parse/format and static review do not establish VM-type/region existence, quotas or API availability. Verify these live during actual deployment after authorization.
 
-## Bootstrap без циклических зависимостей
+## Bootstrap without dependency cycles
 
-1. Создать/импортировать cloud resources и management path. Cloud-init на **новом** host не должен содержать долгоживущие секреты.
-2. Подготовить OS и runtime; для K3s — version pin, проверка installer/binary, CNI, private API, datastore и encryption. Не исполнять непроверенный `curl | sh` с root.
-3. Установить storage/ingress controllers, DNS, default policies с bootstrap allowlists; затем Argo CRDs/controller и AppProjects.
-4. Передать Argo read-only Git credentials и внешние secrets через выделенный bootstrap канал. Argo не может получить начальный ключ только из зашифрованного Git, если decrypt key ещё не существует.
-5. Передать дальнейшее управление platform/app ресурсами GitOps и убрать избыточные bootstrap права. Не поручать одновременно Terraform и Argo управление одним Kubernetes объектом.
+1. Create/import cloud resources and management paths. Cloud-init on a **new** host must contain no long-lived secrets.
+2. Prepare OS and runtime; for K3s, pin version and verify installer/binary, CNI, private API, datastore and encryption. Do not run unverified `curl | sh` as root.
+3. Install storage/ingress controllers, DNS and default policies with bootstrap allowlists, then Argo CRDs/controller and AppProjects.
+4. Deliver read-only Git credentials and external secrets to Argo through a dedicated bootstrap channel. Argo cannot obtain an initial key solely from encrypted Git if the decryption key does not yet exist.
+5. Hand ongoing platform/application resource management to GitOps and remove excessive bootstrap permissions. Do not assign Terraform and Argo simultaneous ownership of one Kubernetes object.
 
 ## GitHub Actions
 
-App pipeline: lint/tests → build в ephemeral runner → scan/policy → push image → digest/SBOM/provenance → PR в environment manifests. Scanning policy: severity, fix availability, exception owner/expiry. Происхождение артефакта и подпись проверяются отдельно; attestations имеют смысл только с verification policy.
+Application pipeline: lint/tests → build on ephemeral runner → scan/policy → push image → digest/SBOM/provenance → PR to environment manifests. Scanning policy: severity, fix availability, exception owner/expiry. Verify artifact provenance and signatures separately; attestations matter only with a verification policy.
 
-Permissions по job: `contents: read` как база, `packages: write` только publish job, `id-token: write` только job, использующей OIDC/attestation. GitHub App с узким scope для cross-repo GitOps PR; обычный repo token не считать автоматически пригодным для другого repo. Не вставлять недоверенные branch/PR title прямо в shell; передавать через безопасно обработанные inputs/env. Использовать concurrency для serial deploy и защищённые environments с правилами доступа по возможностям GitHub плана. См. [GitHub token permissions](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token).
+Per-job permissions: `contents: read` baseline, `packages: write` only for publishing, `id-token: write` only for jobs using OIDC/attestation. Use a narrowly scoped GitHub App for cross-repository GitOps PRs; do not assume a normal repository token suits another repository. Do not interpolate untrusted branch/PR titles directly into shells; pass safely handled inputs/environment values. Use concurrency for serial deployments and protected environments with access rules supported by the GitHub plan. See [GitHub token permissions](https://docs.github.com/en/actions/tutorials/authenticate-with-github_token).
 
-Low: авторизованный deploy забирает известный release digest, применяет Compose, проверяет health и откатывает image при сбое. SSH deploy identity без произвольного root shell, с ограниченным wrapper; доступ к Docker socket фактически повышает привилегии и должен быть назван. Не размещать универсальный build runner на production host.
+Low: authorized deployment fetches a known release digest, applies Compose, checks health and rolls back the image on failure. SSH deployment identity has a restricted wrapper instead of arbitrary root shell; Docker-socket access effectively elevates privileges and must be stated. Do not place a general-purpose build runner on production hosts.
 
-Med/high: Argo сам читает environment repo, CI не пушит напрямую в Kubernetes API. Argo RBAC/AppProject ограничивают destinations, repos и resource kinds; privileged platform repo отдельно от tenant manifests ([Argo security](https://argo-cd.readthedocs.io/en/stable/operator-manual/security/)). [Пример AppProject](../../../templates/infra/kubernetes/appproject.yaml) не является установкой Argo CD и не даёт platform bootstrap прав.
+Med/high: Argo reads the environment repository itself; CI does not push directly to Kubernetes API. Argo RBAC/AppProject limit destinations, repositories and resource kinds; privileged platform repositories are separate from tenant manifests ([Argo security](https://argo-cd.readthedocs.io/en/stable/operator-manual/security/)). The [AppProject example](../../../templates/infra/kubernetes/appproject.yaml) is not an Argo CD installation and grants no platform-bootstrap permissions.
 
-## Релиз и rollback
+## Release and rollback
 
-Хранить digest, commit/config, migrations и предыдущую рабочую версию. Для DB — expand/contract с совместимостью старой и новой версии; destructive migration отделена от app deploy и имеет restore plan. Git revert откатывает desired state, но не возвращает удалённые записи/volume. Auto-prune stateful ресурсов выключать или ограничивать согласно ADR.
+Keep digest, commit/config, migrations and the previous working version. For DB, use expand/contract with old/new compatibility; destructive migrations are separate from application deployment and have restore plans. Git revert rolls back desired state without restoring deleted records/volumes. Disable or limit stateful-resource auto-prune according to ADR.
 
-Canary/blue-green выбирать по цене дополнительной capacity, качеству метрик и возможности автоматического abort; учесть фоновые jobs, очереди, schema compatibility. [Google canarying](https://sre.google/workbook/canarying-releases/) — источник принципа измеримого постепенного изменения, не универсальных порогов. Проверка: pipeline не может взять prod secrets из fork PR, digest прослеживается до commit, неуспешный rollout останавливается, rollback проверен на тестовом окружении.
+Choose canary/blue-green based on extra-capacity cost, metric quality and automatic-abort capability; account for background jobs, queues and schema compatibility. [Google canarying](https://sre.google/workbook/canarying-releases/) supports measurable gradual change, not universal thresholds. Verify that fork PRs cannot obtain production secrets, digests trace to commits, failed rollouts stop and rollback is tested in a test environment.

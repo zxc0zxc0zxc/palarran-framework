@@ -58,7 +58,7 @@ class RuntimeContextTest(unittest.TestCase):
 
     def test_private_scope_symlink_and_malformed_fields_rejected(self):
         self.files()
-        for paths in (['../escape.py'], ['/tmp/absolute.py'], ['.env/config.py'], ['.ai-development'], [{}]):
+        for paths in (['../escape.py'], ['/tmp/absolute.py'], ['.env/config.py'], ['.palarran'], [{}]):
             with self.subTest(paths=paths), self.assertRaises(ValueError): validate(dict(paths=paths))
         (self.target / 'alpha/AGENTS.override.md').symlink_to(self.target / 'AGENTS.md')
         with self.assertRaises(ValueError): assemble(self.target, self.task())

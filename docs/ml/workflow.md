@@ -1,44 +1,44 @@
-# Workflow, полномочия и память ML
+# ML workflow, authority and memory
 
-## До выбора эксперимента
+## Before choosing an experiment
 
-Определи target root отдельно от установленного checkout, прочитай target README, ML code/config, `.ai-development/INDEX.md`, связанные accepted ADR и прошлые отрицательные результаты. Не сканируй весь архив и не загружай веса ради изучения проекта. Укажи reused IDs, текущий commit/dirty patch fingerprint, факты и неизвестные требования. Если неясна prediction unit/label/продуктовая цель, задай конкретный вопрос; независимый обзор источников продолжай.
+Resolve the target root separately from the installed checkout; read target README, ML code/config, `.palarran/INDEX.md`, relevant accepted ADRs and earlier negative results. Do not scan the whole archive or download weights to understand the project. Record reused IDs, current commit/dirty-patch fingerprint, facts and unknown requirements. If prediction unit/label/product goal is unclear, ask a focused question while continuing independent source review.
 
-Применяется общий [decision-memory contract](../skills/decision-memory.md). Выбор датасета, модели, метрики, split, compute, остановки и итоговой интерпретации имеет concise rationale/evidence/alternatives/consequences **до** зависимого действия. Это инженерные объяснения и наблюдаемые шаги, не приватный reasoning trace.
+The shared [decision-memory contract](../skills/decision-memory.md) applies. Dataset, model, metric, split, compute, stopping and final interpretation choices need concise rationale/evidence/alternatives/consequences **before** dependent action. These are engineering explanations and observable steps, not private reasoning traces.
 
-## Режимы
+## Modes
 
-Plan/hypotheses/model/cost: local context + public official research + planning artifacts/aggregate calculations. Не устанавливать dependencies, не скачивать weights/dataset shards, не запускать training/eval/application code, не создавать cloud resources. Public pricing page допустима для обновления cost assumptions; аккаунтные billing/API calls не следуют из запроса оценки.
+Plan/hypotheses/model/cost: local context + public official research + planning artifacts/aggregate calculations. No dependency installs, weight/dataset-shard downloads, training/eval/application execution or cloud resource creation. Public pricing pages may refresh cost assumptions; an estimate request does not imply account billing/API calls.
 
-`--plan` у data/train/benchmark сохраняет ту же границу. Data default — каталог источников/recipe; `--prepare` разрешает только согласованный объём данных, storage и локальную обработку. Protected/paid corpus, cloud uploads, генерация synthetic data через платные API требуют соответствующего scope и бюджета. Не проси секреты в чате; используй существующий secret manager/environment без вывода значений.
+`--plan` for data/train/benchmark preserves the same boundary. Data defaults to a source catalog/recipe; `--prepare` permits only agreed data volume, storage and local processing. Protected/paid corpora, cloud uploads and synthetic generation through paid APIs need corresponding scope and budget. Never request secrets in chat; use existing secret managers/environments without printing values.
 
-Train без `--plan` готовит конкретный reviewable запуск и выполняет его, если текущий запрос уже разрешает этот experiment/config/compute/budget. Если разрешения нет, сначала подготовь launch packet, затем запроси только недостающее разрешение; не переспрашивай уже разрешённое. Историческое ADR «запуск разрешён» само по себе не новые полномочия. Запрос «создай ML скиллы» не разрешает обучение. `--status` читает только указанный доступный run, не создаёт job, volume или tracker и не возобновляет работу.
+Train without `--plan` prepares a concrete reviewable run and executes it if the current request already authorizes that experiment/config/compute/budget. Without authorization, prepare the launch packet first and ask only for missing permission; do not ask again for already authorized actions. A historical “run authorized” ADR is not fresh authority. “Create ML skills” does not authorize training. `--status` only reads the specified accessible run; no job/volume/tracker creation or resume.
 
-Benchmark без `--plan` может выполнить утверждённый протокол в имеющейся разрешённой локальной среде. Не создавай Modal/GPU jobs, платных LLM judges или внешние uploads без budget/scope. Нет runtime — сохранить готовый протокол со статусом not_run, не изображать измерения.
+Benchmark without `--plan` may execute the approved protocol in the existing authorized local environment. Do not create Modal/GPU jobs, paid LLM judges or external uploads without budget/scope. Without a runtime preserve the ready protocol as not_run; never pretend to measure results.
 
-## План и прогресс
+## Plan and progress
 
-Canonical `.ai-development/ml/<task>/progress.json` и исходный plan содержат revision, задачи и оставшиеся gates. Coordinator обновляет ledger и derived таблицу в плане; у каждой задачи `pending/running/completed/blocked`, evidence refs и checked subject fingerprint. Нет второй самостоятельной истины в dashboard. Это ML protocol: существующий `execution_progress.py` обслуживает backend/frontend и автоматически сюда не применяется.
+Canonical `.palarran/ml/<task>/progress.json` and the source plan retain revision, tasks and remaining gates. The coordinator updates the ledger and derived plan table; each task has `pending/running/completed/blocked`, evidence refs and checked-subject fingerprint. A dashboard is not another independent truth. This is an ML protocol: existing `execution_progress.py` serves backend/frontend and does not automatically apply here.
 
-Experiment spec получает неизменяемую revision/hash. Изменение source/model/data/tokenizer/split/hyperparameters/метрики — новая revision; прежний PASS не наследуется без проверки влияния. Run attempt привязан к одному набору hashes. Нельзя задним числом поменять threshold для прохода уже увиденного test.
+The experiment spec gets an immutable revision/hash. Changing source/model/data/tokenizer/split/hyperparameters/metrics creates a new revision; prior PASS is not inherited without impact review. One run attempt binds one hash set. Never retroactively change a threshold to pass an already viewed test.
 
 ```mermaid
 stateDiagram-v2
     [*] --> planned
-    planned --> ready: проверены входы и конкретные полномочия
-    ready --> running: записан attempt и зарезервирован расход
-    running --> trained: terminal receipt и checkpoint
-    running --> failed: известный terminal outcome
-    running --> unknown: потерян ответ или lease
-    unknown --> reconciled: provider outcome проверен
-    reconciled --> ready: только разрешённый новый attempt
-    trained --> benchmarked: независимый frozen evaluation
-    benchmarked --> accepted: все заранее заданные gates
-    benchmarked --> rejected: провалены критерии
+    planned --> ready: verified inputs and exact authority
+    ready --> running: recorded attempt and reserved spending
+    running --> trained: terminal receipt and checkpoint
+    running --> failed: known terminal outcome
+    running --> unknown: lost response or lease
+    unknown --> reconciled: verified provider outcome
+    reconciled --> ready: authorized new attempt only
+    trained --> benchmarked: independent frozen evaluation
+    benchmarked --> accepted: all predefined gates
+    benchmarked --> rejected: failed criteria
 ```
 
-Unknown outcome блокирует повторный запуск: сначала сверить provider job ID, checkpoint и расход. Failed/rejected не стирать из сравнений и бюджета. Resume — новый attempt c parent, общим ceiling и подтверждённым checkpoint; не новая бесплатная история.
+An unknown outcome blocks another run: reconcile provider job ID, checkpoint and spending first. Do not remove failed/rejected results from comparisons or budgets. Resume is a new attempt with a parent, shared ceiling and verified checkpoint, not a new free history.
 
 ## Handoff
 
-Передай source refs/ADR/H-IDs, checkpoint URI+hash без tokens, измеренные метрики с размером/единицами, все attempts и cost dispositions, что реализовано/проверено/не запускалось, blockers и следующий самый дешёвый тест. Обнови target INDEX. Plan-ready/trained не authorizes deploy/publication/model upload; данные не пересылаются внешнему tracker по умолчанию.
+Hand off source refs/ADR/H-IDs, checkpoint URI+hash without tokens, measured metrics with sample sizes/units, all attempts/cost dispositions, implemented/verified/not-run distinctions, blockers and the cheapest next test. Update target INDEX. Plan-ready/trained does not authorize deployment/publication/model upload; data is not sent to an external tracker by default.

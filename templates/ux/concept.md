@@ -1,42 +1,42 @@
-# Concept v001 — Название и scope
+# Concept v001 — Name and scope
 
-Статус: draft. Это заполняемый шаблон; не готовый или approved концепт.
+Status: draft. Fillable template, not a ready or approved concept.
 
-## Бизнес и основания
+## Business and basis
 
-Роли, primary jobs, входы/успех, известные constraints. Источник brief: описание пользователя либо target README/product docs с commit. Прочитанные previous concepts/accepted ADR и что из них применимо.
+Roles, primary jobs, entry/success conditions, known constraints. Brief source: user description or target README/product docs with commit. Read previous concepts/accepted ADRs and explain applicability.
 
 ## Research coverage
 
-Список разных продуктов R1…R4, relevance, links/cards, методы доступа и ограничения. Default 4; minimum 3 с объяснением. Меньше трёх — incomplete. Facts, screenshot observations и inference разделены; нет заявлений о measured usability без tests.
+Distinct products R1…R4, relevance, links/cards, access methods/limits. Default 4; minimum 3 with explanation. Fewer than three means incomplete. Separate facts, screenshot observations and inference; no measured-usability claims without tests.
 
-## Screen и journey catalog
+## Screen and journey catalog
 
-| Screen ID | Role / goal | Existing/reuse/change/new | Card и journey links | States | Desktop/mobile/tablet | ADR |
+| Screen ID | Role / goal | Existing/reuse/change/new | Card and journey links | States | Desktop/mobile/tablet | ADR |
 |---|---|---|---|---|---|---|
-| S01 | Заполнить | Заполнить | Заполнить | Применимые | Schemes/rules links | Заполнить |
+| S01 | Fill | Fill | Fill | Applicable | Schemes/rules links | Fill |
 
-Для каждого in-scope экрана отдельная screen card по [шаблону](screen.md); неприменимые зоны явно объяснить, не оставлять пустыми. Journey flow references реальные Screen IDs. Объяснить reuse/new через reuse-map.
+Each in-scope screen gets a separate card using the [template](screen.md); explain inapplicable areas explicitly rather than leaving blanks. Journey flows reference actual Screen IDs. Explain reuse/new through reuse-map.
 
 ## Journey overview
 
-Учебная схема — заменить под проект:
+Illustrative diagram: replace for the project:
 
 ```mermaid
 flowchart LR
-  E[Вход] --> S01[S01 Основная задача]
-  S01 -->|Действие| S02[S02 Результат]
-  S02 -->|Назад с сохранением контекста| S01
+  E[Entry] --> S01[S01 Primary task]
+  S01 -->|Action| S02[S02 Result]
+  S02 -->|Back with preserved context| S01
 ```
 
-## Основные решения
+## Main decisions
 
-Ссылки на canonical `.ai-development/<area>/<task>/decisions/`; причина порядка экранов/блоков, evidence observation IDs и ограничения. UI copy остаётся короткой; этот rationale не вставляется на экран.
+Link canonical `.palarran/<area>/<task>/decisions/`; explain screen/block ordering with evidence observation IDs and limitations. Keep UI copy short; do not insert this rationale into screens.
 
-## Проверки и открытые вопросы
+## Checks and open questions
 
-Coverage, diagram parse/render, expert walkthrough/adaptation, actual prototype testing — отдельно PASS/FAIL/NOT RUN с evidence. Что именно спросить у пользователя о неясном процессе. Review-ready только после обязательных coverage checks; approved — только с фактическим одобрением.
+Coverage, diagram parse/render, expert walkthrough/adaptation and actual prototype tests get separate PASS/FAIL/NOT RUN with evidence. Identify specific user questions about unclear processes. Review-ready requires mandatory coverage checks; approved requires actual approval.
 
 ## Revision/handoff
 
-Parent revision, supersedes/reuses, affected Screen IDs, что изменилось и почему. Ссылки для UX catalog и следующей задачи; старую версию не перезаписывать.
+Parent revision, supersedes/reuses, affected Screen IDs, changes/reasons. Links for UX catalog/next tasks; do not overwrite earlier revisions.

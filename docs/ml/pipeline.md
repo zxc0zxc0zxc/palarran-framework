@@ -1,12 +1,12 @@
-# ML pipeline в bounded runtime
+# ML pipeline in the bounded runtime
 
-Перед использованием: [контракт](pipeline-contract.md), [ML workflow](workflow.md), общие runtime limits в checkout: docs/product-factory/contract.md и usage-accounting.md. Сам runtime поставляется в полном ai-tools checkout, не в portable ML skill package. Источники ML-рекомендаций остаются в [cases](cases.md) и [sources](sources.md). Ни один integrity PASS не доказывает качество модели или invoice correctness.
+Before use: [contract](pipeline-contract.md), [ML workflow](workflow.md), and shared checkout runtime limits in docs/product-factory/contract.md and usage-accounting.md. The runtime ships in the full Palarran checkout, not the portable ML skill package. ML recommendation sources remain in [cases](cases.md) and [sources](sources.md). No integrity PASS proves model quality or invoice correctness.
 
-## Маршрут
+## Route
 
 ```mermaid
 flowchart TD
-    I[Идея и explicit budget policies] --> H[ml:hypotheses]
+    I[Idea and explicit budget policies] --> H[ml:hypotheses]
     H --> P[ml:plan]
     P --> M[ml:model]
     M --> D[ml:data research]
@@ -14,38 +14,38 @@ flowchart TD
     C --> T[ml:train --plan launch packet]
     T --> B[ml:benchmark --plan frozen protocol]
     B --> A{Private approval exact prefix digest}
-    A -->|нет| N[needs_input: без execution attempt]
-    A -->|да| F[Supervised local fit]
+    A -->|no| N[needs_input: no execution attempt]
+    A -->|yes| F[Supervised local fit]
     F --> E[Independent local evaluation]
-    E --> V[Final rerun всех stable gates]
+    E --> V[Final rerun of every stable gate]
     V --> R[Report: accept/reject/inconclusive]
     F --> X[Budget, timeout, unknown: stop]
     E --> X
 ```
 
-Семь skills сначала формируют согласованный пакет. Два execution tasks запускают заранее заданные доверенные commands. Агент не запускает training/evaluation внутри planning stage, не вызывает nested model/paid APIs и не скачивает данные/веса. Подготовка/получение данных входит только в конкретно разрешённый execution command и его бюджет; research report сам её не разрешает.
+Seven skills first produce a consistent packet. Two execution tasks run predefined trusted commands. The agent does not train/evaluate inside a planning stage, invoke nested model/paid APIs or download data/weights. Data preparation/acquisition belongs only to a specifically authorized execution command and its budget; a research report does not authorize it.
 
-Используется существующий single-writer leased worker с owned Git worktree, immutable snapshot, independent verifiers и final subject fingerprint. `create` ничего не исполняет. Нужны clean committed **target** и отдельный private state; installed skills checkout может иметь новые локальные docs, их content digest pinning проверяется на каждом этапе.
+This uses the existing single-writer leased worker with an owned Git worktree, immutable snapshot, independent verifiers and final subject fingerprint. `create` executes nothing. A clean committed **target** and separate private state are required; the installed skills checkout may contain new local docs whose content-digest pins are checked at every stage.
 
-## Бюджеты и полномочия
+## Budgets and authority
 
-`ml-create` требует explicit `ai-policy`, `usage-policy` и `execution-policy`. Никаких автоматических AI tariffs/увеличения потолка. Роли planning/implementation/simple используют переданные model profiles; подготовка execution packet не требует самой дорогой модели. Все семь AI calls имеют stage/run token/USD guards. Train/evaluate получают каждый reserve, billed cost rate/fixed extras, max_seconds и bounded output. Общий ceiling >= AI envelope + оба resource reserves; неизвестные extras сначала разрешаются/резервируются оператором, не превращаются в ноль.
+`ml-create` requires explicit `ai-policy`, `usage-policy` and `execution-policy`. No automatic AI tariffs/ceiling increases. Planning/implementation/simple roles use supplied model profiles; preparing an execution packet does not require the most expensive model. All seven AI calls have stage/run token/USD guards. Train/evaluate each receive a reserve, billed cost rate/fixed extras, max_seconds and bounded output. The shared ceiling >= AI envelope + both resource reserves; the operator must first resolve/reserve unknown extras, never replace them with zero.
 
-После семи stages `work` останавливается перед fit. `status` показывает review digest; `ml-approve --prefix-sha DIGEST` связывает конкретные manifests/lineage/commands/protocol и неизменный budget. Это явный operator action после review, а не вывод агента/исторический ADR. Затем обычный `work` продолжает с fit, без повторного вызова предыдущих skills. Истечение run deadline не сбрасывается approval.
+After seven stages, `work` stops before fit. `status` shows the review digest; `ml-approve --prefix-sha DIGEST` binds exact manifests/lineage/commands/protocol and an unchanged budget. This is an explicit operator action after review, not agent inference or a historical ADR. Normal `work` then continues with fit without reinvoking earlier skills. Approval does not reset the run deadline.
 
-Resource usage: supervisor wall-time estimate отдельно от cumulative adapter report; provider invoice остаётся unknown. Reserve расходуется/удерживается по всем attempts; unknown блокирует execution/повтор, требует `ml-reconcile` после доказанной остановки. `resolve` не является reconciliation resource usage. Повтор после resume тратит оставшийся shared envelope; automatic replay отключён. При budget stop процессная группа завершается, следующие tasks не стартуют. Поллинг/telemetry не дают гарантированного invoice hard cap.
+Resource usage: supervisor wall-time estimate separately from cumulative adapter reports; provider invoices remain unknown. Reserves are spent/held across all attempts; unknown outcomes block execution/retry and require `ml-reconcile` after proven termination. `resolve` is not resource-usage reconciliation. Resume consumes the remaining shared envelope; automatic replay is disabled. On a budget stop, terminate the process group and do not start later tasks. Polling/telemetry do not guarantee an invoice hard cap.
 
-## Поддерживаемая execution граница
+## Supported execution boundary
 
-v001 поддерживает только trusted **foreground local** commands/process groups: CPU/GPU на том же host, без detach, remote launch, network billing и скрытых retries. Rate — явная экономическая оценка; локальный cash cost может быть нулём только по явному выбранному accounting scope, а не неизвестной цене. Actual usage report должен исходить от trusted adapter, не narrative модели. Финальная telemetry обязательна даже при нулевой цене.
+v001 supports only trusted **foreground local** commands/process groups: CPU/GPU on the same host, without detach, remote launches, network billing or hidden retries. The rate is an explicit economic estimate; local cash cost may be zero only under an explicitly selected accounting scope, never because price is unknown. Actual usage reports must come from a trusted adapter, not model narrative. Final telemetry is mandatory even at zero price.
 
-Modal execution подключён отдельным [Sandbox adapter](modal-adapter.md): durable remote identity, metrics, stop/lookup и удержание billing reserves. Local subprocess не использовать для remote launch. Никаких live paid tests.
+Modal execution uses a separate [Sandbox adapter](modal-adapter.md): durable remote identity, metrics, stop/lookup and held billing reserves. Do not launch remote work through a local subprocess. No live paid tests.
 
-Проверка только offline: fake CLI agents и настоящий маленький local training/evaluation fixture без сети/LLM/GPU. Это проверка runtime pipeline, не качество прикладной модели. Новый paid run не входит в разработку этой возможности.
+Offline verification only: fake CLI agents and a real tiny local training/evaluation fixture without network/LLM/GPU. This checks the runtime pipeline, not application-model quality. Developing this capability does not authorize a new paid run.
 
-## Практический запуск
+## Practical launch
 
-Подготовь idea.md, reviewed model/usage policies и адаптируй examples/ml-pipeline/execution.example.json: реальные абсолютные пути к interpreter/job и полный список исполняемых dependency files. Нули в example относятся только к cash scope синтетического local fixture, исключают оборудование/электричество и не являются бесплатным Modal тарифом. В example total=3, resource reserves=1+1, поэтому AI envelope должен быть <=1; это арифметический пример, не рекомендация бюджета прикладной модели.
+Prepare idea.md and reviewed model/usage policies; adapt examples/ml-pipeline/execution.example.json with real absolute interpreter/job paths and the complete list of executable dependency files. Example zeroes describe only the synthetic local fixture's cash scope, exclude hardware/electricity and are not a free Modal tariff. Example total=3 and resource reserves=1+1 require an AI envelope <=1; this is arithmetic, not an application-model budget recommendation.
 
 ```sh
 python3 -m orchestrator ml-create --idea-file /path/idea.md --target /path/target --state /path/private-state --adapter codex --agent /absolute/codex --ai-policy /path/ai-policy.json --usage-policy /path/usage-policy.json --execution-policy /path/execution.json
@@ -53,23 +53,23 @@ python3 -m orchestrator work --state /path/private-state --run RUN_ID
 python3 -m orchestrator status --state /path/private-state --run RUN_ID
 ```
 
-Model policy должна покрывать семь calls: шесть planning и один implementation для train launch packet, например max_calls=7 и достаточные weighted units. Usage stages — ml-hypotheses, ml-plan, ml-model, ml-data, ml-cost, ml-train, ml-benchmark; каждый с отдельным token/USD cap. Цены/модели задаются выбранным оператором snapshot, автоматически не подтягиваются. Для Codex incremental usage доступен --transport app-server. Этот шаг реально вызывает CLI и тратит утверждённый AI budget.
+The model policy must cover seven calls: six planning and one implementation call for the training launch packet, for example max_calls=7 with sufficient weighted units. Usage stages are palarran-ml-hypotheses, palarran-ml-plan, palarran-ml-model, palarran-ml-data, palarran-ml-cost, palarran-ml-train, palarran-ml-benchmark; each has its own token/USD cap. Prices/models come from an operator-selected snapshot, not automatic retrieval. Codex incremental usage is available through --transport app-server. This step really invokes a CLI and consumes the authorized AI budget.
 
-После review всех семи reports/ADR/lineage/protocol и execution commands:
+After reviewing all seven reports/ADRs/lineage/protocol and execution commands:
 
 ```sh
 python3 -m orchestrator ml-approve --state /path/private-state --run RUN_ID --prefix-sha REVIEWED_DIGEST
 python3 -m orchestrator work --state /path/private-state --run RUN_ID
 ```
 
-При unknown: подтвердить остановку **всех** локальных descendants, сверить cumulative usage, выполнить ml-reconcile, затем generic resolve только если run needs_input и scope по-прежнему разрешён. Reconcile не возвращает терминальный budget-exhausted run в работу. Recovery не продлевает run deadline и не обещает, что ещё одна попытка вместится в budget. Предыдущие выходные checkpoint/evaluation при разрешённом retry архивируются, не стираются.
+For unknown outcomes: confirm termination of **all** local descendants, reconcile cumulative usage with ml-reconcile, then use generic resolve only if the run needs_input and scope remains authorized. Reconciliation does not reactivate a terminal budget-exhausted run. Recovery does not extend the run deadline or promise another attempt fits the budget. Archive prior checkpoint/evaluation outputs on an authorized retry rather than deleting them.
 
-Status содержит AI observed usage, estimated/adapter-reported resource costs, held reserves, combined observed basis и unknown invoice. Project progress.json/execution-plan.md — derived task snapshot; final verification читается из private runtime status. Large checkpoint и evaluation.json находятся в private artifact_root; финальные gates читают actual bytes снова, поэтому замена модели после PASS даёт stale.
+Status includes observed AI usage, estimated/adapter-reported resource costs, held reserves, combined observed basis and unknown invoices. Project progress.json/execution-plan.md are derived task snapshots; final verification comes from private runtime status. Large checkpoints and evaluation.json live in private artifact_root; final gates reread actual bytes, so replacing a model after PASS yields stale.
 
 ## Local text data gate
 
-[Реальный tokenizer/collator и mandatory preparation gate](data/pipeline.md). Explicit data_preparation policy; legacy non-text не получает фиктивный PASS.
+[Real tokenizer/collator and mandatory preparation gate](data/pipeline.md). Explicit data_preparation policy; legacy non-text receives no fictitious PASS.
 
 ## Training diagnostics / reports
 
-Optional frozen `execution_policy.diagnostics` подключает [runtime diagnostics](debugging/runtime.md) (в ML-разделе — `debugging/runtime.md`). Fit/evaluate instrumentation пишет private bounded stream, coordinator отслеживает rules и собирает report/gallery/CSV/SVG. При terminal/stop/failure — immutable report revision; `python3 -m orchestrator ml-report --state /private/state --run RUN` восстанавливает report без training/provider calls. `status` read-only. Optional `preprint=true` экспортирует LaTeX evidence draft без AI call, compile/submission NOT RUN. Legacy без diagnostics получает partial report, не diagnostics PASS.
+Optional frozen `execution_policy.diagnostics` enables [runtime diagnostics](debugging/runtime.md) (within the ML section: `debugging/runtime.md`). Fit/evaluate instrumentation writes a private bounded stream; the coordinator tracks rules and assembles report/gallery/CSV/SVG. Terminal/stop/failure produces an immutable report revision; `python3 -m orchestrator ml-report --state /private/state --run RUN` recovers reports without training/provider calls. `status` is read-only. Optional `preprint=true` exports a LaTeX evidence draft without an AI call; compilation/submission NOT RUN. Legacy runs without diagnostics receive partial reports, not diagnostics PASS.

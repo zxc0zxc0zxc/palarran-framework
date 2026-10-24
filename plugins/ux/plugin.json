@@ -1,9 +1,0 @@
-{
-  "name": "ux",
-  "version": "0.1.0",
-  "author": {"name": "zxc0zxc0zxc"},
-  "description": "Business-led adaptive UX research and per-screen diagrams with persistent decision context",
-  "commands": {
-    "design": {"source": "./.claude/commands/ux/design.md"}
-  }
-}

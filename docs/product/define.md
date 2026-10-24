@@ -1,18 +1,18 @@
-# /product:define — сам продукт
+# /palarran:product:define — the product itself
 
-Сначала [Superhuman/Amazon](cases/product-discovery.md), [evidence](evidence.md), [workflow](workflow.md). Наша рекомендация — начать с customer outcome и узкого сегмента, затем согласовать scope. Это перенос кейсов, не обещание их результата.
+First read [Superhuman/Amazon](cases/product-discovery.md), [evidence](evidence.md), [workflow](workflow.md). We recommend starting with a customer outcome and narrow segment, then agreeing on scope. This transfers case lessons, not their promised results.
 
-Прочитать description или target README, existing product/UX/architecture/constraints и decisions. Existing бизнес не заменять более модным. Уточнить business process, если user/buyer, job или transaction непонятны; не писать всё подряд для B2B и B2C.
+Read the description or target README, existing product/UX/architecture/constraints and decisions. Do not replace an existing business with a fashionable one. Clarify the business process if the user/buyer, job or transaction is unclear; do not indiscriminately cover both B2B and B2C.
 
-Выход по [brief](../../templates/product/brief.md):
+Output using the [brief](../../templates/product/brief.md):
 
-- ICP и кто платит/пользуется/принимает решение; job/trigger/current workaround, частота/тяжесть проблемы и evidence.
-- Одно ясное value proposition, отличие от ближайшей замены, ограничения/неудобства и switching costs.
-- Proposed business model, оплачиваемая единица, free/paid boundary и стоимость обслуживания. Цена — гипотеза без customer validation.
-- MVP с одним end-to-end useful outcome, scope/non-goals, assumptions/risks и dependency on market/compare/revenue/acquisition revisions, когда они уже есть. Отсутствующие refs — gaps, не повод создавать фальшивые исследования.
-- Metric tree: ценность → activation → повторное использование/retention → оплата; событие, cohort, denominator/window, proposed threshold и его основание. [Google HEART](https://research.google/pubs/measuring-the-user-experience-on-a-large-scale-user-centered-metrics-for-web-applications/) помогает связать цели и сигналы; не все категории нужны любому продукту.
-- Критические H-IDs, cheapest falsifying test, success/stop/pivot criteria, owner/budget/window. Числовые targets помечать proposed, не benchmark из соседней отрасли.
+- ICP and who pays/uses/decides; job/trigger/current workaround, problem frequency/severity and evidence.
+- One clear value proposition, differentiation from the closest substitute, limitations/inconveniences and switching costs.
+- Proposed business model, billing unit, free/paid boundary and cost to serve. Price is a hypothesis without customer validation.
+- MVP with one useful end-to-end outcome, scope/non-goals, assumptions/risks and dependencies on market/compare/revenue/acquisition revisions when available. Missing references are gaps, not grounds for fabricated research.
+- Metric tree: value → activation → reuse/retention → payment; event, cohort, denominator/window, proposed threshold and rationale. [Google HEART](https://research.google/pubs/measuring-the-user-experience-on-a-large-scale-user-centered-metrics-for-web-applications/) helps connect goals and signals; not every category is needed for every product.
+- Critical H-IDs, cheapest falsifying test, success/stop/pivot criteria, owner/budget/window. Label numerical targets proposed, not benchmarks borrowed from another industry.
 
-Схема business flow обязательна: actor → trigger → useful outcome → delivery/payment/return path, включая ключевой failure/отказ. UX handoff перечисляет процессы/сущности/ограничения; не навязывает экраны, стиль или стек. Условия инженерного planning handoff: определён пользовательский outcome, scope/AC, договорённости/unknowns и source revision. Это не запуск build.
+A business-flow diagram is mandatory: actor → trigger → useful outcome → delivery/payment/return path, including the main failure/rejection. The UX handoff lists processes/entities/constraints; it does not prescribe screens, style or stack. Engineering-planning handoff requires a defined user outcome, scope/AC, agreements/unknowns and source revision. It does not start a build.
 
-DoD: brief согласован с actual context, каждый важный вывод traceable, решение build/test/stop аргументировано либо needs_input, риски/эксперименты не названы выполненными.
+DoD: the brief matches actual context, every important conclusion is traceable, the build/test/stop decision is reasoned or needs_input, and risks/experiments are not described as completed.

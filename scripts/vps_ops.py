@@ -42,7 +42,7 @@ def main():
         base,destination=command(load_env(args.env,keys={'VPS_HOST','VPS_USER','VPS_PORT','VPS_IDENTITY_FILE'},global_scope=args.global_scope))
         if args.operation=='tunnel':
             return subprocess.call(base+['-N','-o','ExitOnForwardFailure=yes','-L','127.0.0.1:18791:127.0.0.1:18791']+destination)
-        script=REMOTE_SCRIPT if args.operation=='inspect' else 'systemctl is-active ai-tools-memory.service; ss -lnt | head -n 80; df -h -l\n'
+        script=REMOTE_SCRIPT if args.operation=='inspect' else 'systemctl is-active palarran-memory.service ai-tools-memory.service; ss -lnt | head -n 80; df -h -l\n'
         status,raw=collect(base+['-o','ClearAllForwardings=yes']+destination+['sh -s'],script=script)
         value=raw.decode('utf-8',errors='replace')
         value=re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]','',value)

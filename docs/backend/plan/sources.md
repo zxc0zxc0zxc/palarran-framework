@@ -1,27 +1,27 @@
-# Первичные источники и применимость
+# Primary sources and applicability
 
-Проверено **2026-10-18**. Компании показывают решения своих задач, не универсальные best practices для любого масштаба. Case studies исторические: не утверждать их актуальную внутреннюю топологию сегодня. У источника в feature plan указывать version/date, observation и нашу адаптацию.
+Checked **2026-10-18**. Companies describe solutions to their own problems, not universal best practices at every scale. Historical case studies do not establish current internal topology. Feature-plan source references include version/date, observations and our adaptations.
 
-| Источник | Что используем | Когда/с какими ограничениями |
+| Source | What we use | Applicability/limits |
 |---|---|---|
-| [Shopify: Deconstructing the Monolith](https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity) | Компонентные/доменные границы внутри большого монолита | Модульность без обязательного network split; не Shopify-size deployment по умолчанию |
-| [Uber: Domain-Oriented Microservice Architecture](https://www.uber.com/blog/microservice-architecture/) | Домены/ownership как ответ на сложность service fleet | Для существующей multi-service сложности, не обоснование microservices для MVP |
-| [Martin Fowler: Monolith First](https://martinfowler.com/bliki/MonolithFirst.html) | Экспертный аргумент об эволюции границ | Авторская позиция, не company benchmark и не закон |
-| [Google SRE: Service Level Objectives](https://sre.google/sre-book/service-level-objectives/) | SLI/SLO/SLA, пользовательская граница и tail | Соглашение с последствиями отличается от технической цели; targets наши |
-| [Google SRE: Alerting on SLOs](https://sre.google/workbook/alerting-on-slos/) | Error budget/burn-based alerting | Настроить под traffic/on-call, не копировать thresholds |
-| [Amazon: Timeouts, retries, backoff with jitter](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/) | Partial failure, bounded retry и overload amplification | Target deadlines/retry budget должны быть измеримы и связаны с idempotency |
-| [Meta/Facebook: Scaling Memcache, NSDI 2013](https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf) | Look-aside cache, invalidation/consistency и масштаб | Исторический paper, не рецепт fleet на VPS; изучен PDF |
-| [Stripe: Online migrations](https://stripe.com/blog/online-migrations) | Поэтапная совместимая migration/reconciliation | Защитные stages адаптировать к объёму и DB, не copy-paste dual writes |
-| [Stripe: Idempotent requests](https://docs.stripe.com/api/idempotent_requests) | Явные key/request/retry semantics | Конкретный API contract; retention не универсальный TTL |
-| [AWS: Transactional outbox](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html) | DB mutation + durable delivery intent | Для dual-write риска; duplicates/consumer idempotency остаются |
-| [PostgreSQL: Isolation](https://www.postgresql.org/docs/current/transaction-iso.html), [indexes](https://www.postgresql.org/docs/current/indexes-multicolumn.html), [EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html) | Transaction guarantees, index/query plan evidence | При проверке current docs указывали v18; применять docs installed version, ANALYZE исполняет запрос |
-| [Redis: Eviction](https://redis.io/docs/latest/develop/reference/eviction/) | Memory/eviction policy и cache role | Не путать теряемый cache с durable idempotency/source of truth |
-| [Google API Design Guide](https://cloud.google.com/apis/design) | Формализация API | Существующий protocol/conventions важнее wholesale migration |
-| [Software Engineering at Google: Testing](https://abseil.io/resources/swe-book/html/ch11.html) | Назначение/уровни тестов | Не универсальная процентная test pyramid |
-| [OWASP API Security 2023](https://owasp.org/API-Security/editions/2023/en/0x11-t10/) | Object/property authorization, resource abuse | Input для конкретной threat/test модели, не full audit |
-| [GitHub Spec Kit](https://github.com/github/spec-kit) | Spec → plan → tasks, агентный handoff | Наш skill не устанавливает toolkit и не исполняет implement |
-| [Git worktree](https://git-scm.com/docs/git-worktree) | Несколько checkouts одной repo | Общие Git/resources не изолированы как sandbox; execution здесь только план |
+| [Shopify: Deconstructing the Monolith](https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity) | Component/domain boundaries inside large monoliths | Modularity without compulsory network separation; no Shopify-scale default deployment |
+| [Uber: Domain-Oriented Microservice Architecture](https://www.uber.com/blog/microservice-architecture/) | Domains/ownership address service-fleet complexity | Existing multi-service complexity, not justification for MVP microservices |
+| [Martin Fowler: Monolith First](https://martinfowler.com/bliki/MonolithFirst.html) | Expert argument about evolving boundaries | Author position, not company benchmark/law |
+| [Google SRE: Service Level Objectives](https://sre.google/sre-book/service-level-objectives/) | SLI/SLO/SLA, user boundaries and tails | Agreements with consequences differ from technical objectives; targets are ours |
+| [Google SRE: Alerting on SLOs](https://sre.google/workbook/alerting-on-slos/) | Error-budget/burn-based alerting | Adapt to traffic/on-call; do not copy thresholds |
+| [Amazon: Timeouts, retries, backoff with jitter](https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/) | Partial failure, bounded retries and overload amplification | Target deadlines/retry budgets must be measurable/idempotency-linked |
+| [Meta/Facebook: Scaling Memcache, NSDI 2013](https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf) | Look-aside caching, invalidation/consistency and scale | Historical paper, not a VPS-fleet recipe; PDF inspected |
+| [Stripe: Online migrations](https://stripe.com/blog/online-migrations) | Staged compatible migrations/reconciliation | Adapt protective stages to volume/DB; never copy-paste dual writes |
+| [Stripe: Idempotent requests](https://docs.stripe.com/api/idempotent_requests) | Explicit key/request/retry semantics | Specific API contract; retention is not a universal TTL |
+| [AWS: Transactional outbox](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html) | DB mutation + durable delivery intent | Dual-write risks; duplicates/consumer idempotency remain |
+| [PostgreSQL: Isolation](https://www.postgresql.org/docs/current/transaction-iso.html), [indexes](https://www.postgresql.org/docs/current/indexes-multicolumn.html), [EXPLAIN](https://www.postgresql.org/docs/current/using-explain.html) | Transaction guarantees, index/query-plan evidence | Current docs showed v18 at inspection; use installed-version docs, ANALYZE executes queries |
+| [Redis: Eviction](https://redis.io/docs/latest/develop/reference/eviction/) | Memory/eviction policies and cache roles | Disposable caches are not durable idempotency/source of truth |
+| [Google API Design Guide](https://cloud.google.com/apis/design) | Formalized APIs | Existing protocols/conventions precede wholesale migrations |
+| [Software Engineering at Google: Testing](https://abseil.io/resources/swe-book/html/ch11.html) | Test purposes/levels | No universal percentage-based test pyramid |
+| [OWASP API Security 2023](https://owasp.org/API-Security/editions/2023/en/0x11-t10/) | Object/property authorization, resource abuse | Inputs for specific threat/test models, not full audits |
+| [GitHub Spec Kit](https://github.com/github/spec-kit) | Spec → plan → tasks, agent handoff | Our skill neither installs the toolkit nor runs implementation |
+| [Git worktree](https://git-scm.com/docs/git-worktree) | Multiple checkouts of one repository | Shared Git/resources are not sandbox isolation; execution is planned only here |
 
-Ни один snippet в базе не выдаётся за company code без provenance/license: [наши sketches](contracts.md) отмечены явно.
+No snippet is labeled company code without provenance/license: [our sketches](contracts.md) are explicit.
 
-Go/PHP/TypeScript/Python/Rust здесь — candidates по constraints, не сравнительный benchmark. Конкретные framework/DB/driver versions и official docs исследуются при выборе на target. Нет одинакового «лучшего backend stack» для всех feature plans.
+Go/PHP/TypeScript/Python/Rust are constraint-based candidates, not comparative benchmarks. Research exact framework/DB/driver versions and official docs when selecting for targets. There is no single best backend stack for every feature plan.

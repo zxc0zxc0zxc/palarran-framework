@@ -1,25 +1,25 @@
 # Research report — <scope> / <revision>
 
-Status: draft. Target/region/language/time window/retrieval date/source refs: заполнить.
+Status: draft. Target/region/language/time window/retrieval date/source refs: fill.
 
-## Краткий вывод
+## Concise conclusion
 
-Evidence-backed demand/uncertainty/next decision. Applied case и ограничения переноса.
+Evidence-backed demand/uncertainty/next decision. Applied cases and transfer limits.
 
-## Scope и метод
+## Scope and method
 
-Buyer/job, query clusters, sampling/filtering, source families, provider access/tool/version/budget/coverage. Missing evidence и alternative explanations.
+Buyer/job, query clusters, sampling/filtering, source families, provider access/tool/version/budget/coverage. Missing evidence and alternative explanations.
 
 ## Evidence ledger
 
 | E-ID | Claim / value | Classification | Source / publisher / publication | Retrieval / as-of / period / geo | Unit / method | Limits / confidence rationale |
 |---|---|---|---|---|---|---|
-| E-01 | заполнить или unknown | observed/disclosed/estimated/hypothesis/scenario/unknown | заполнить | заполнить | заполнить/N/A | заполнить |
+| E-01 | fill or unknown | observed/disclosed/estimated/hypothesis/scenario/unknown | fill | fill | fill/N/A | fill |
 
-## Segments и sizing
+## Segments and sizing
 
-Eligible customer unit; TAM/SAM/SOM definitions/horizon; inputs/E-IDs/assumptions/dedup; lower/base/upper only if justified; otherwise unknown. Trend source chart и scaling basis либо concept diagram без выдуманного ряда.
+Eligible customer unit; TAM/SAM/SOM definitions/horizon; inputs/E-IDs/assumptions/dedup; lower/base/upper only when justified, otherwise unknown. Trend-source chart/scaling basis or concept diagram without invented series.
 
-## Проверка и handoff
+## Verification and handoff
 
-Contradictory evidence, gaps, proposed falsifying tests/thresholds/owners/caps; not_run. Decisions/ADR и downstream revision refs. Research completion отдельно от validated market.
+Contradictory evidence, gaps, proposed falsifying tests/thresholds/owners/caps; not_run. Decisions/ADRs and downstream revision refs. Research completion is separate from market validation.

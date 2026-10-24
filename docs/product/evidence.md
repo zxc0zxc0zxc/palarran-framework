@@ -1,20 +1,20 @@
-# Evidence contract для всех пяти скиллов
+# Evidence contract for all five skills
 
-Каждый существенный вывод и число ссылаются на E-ID. Не выдавать текст поисковой выдачи, LLM memory или пересказ без первоисточника за проверенное содержание. Найти исходное раскрытие, прочитать релевантный фрагмент; недоступность записать.
+Every material conclusion and number references an E-ID. Search snippets, LLM memory or a retelling without the primary source are not verified content. Find the original disclosure and read the relevant passage; record unavailable access.
 
-| Тип | Смысл | Пример границы |
+| Type | Meaning | Boundary example |
 |---|---|---|
-| observed | Самостоятельно наблюдённая страница/доступный результат | Видна цена или объявление; actual sales неизвестны |
-| disclosed | Компания/основатель/регулятор раскрыли значение | Founder account отдельно от audited filing |
-| estimated | Сторонний provider оценивает метрику | Similarweb/Appfigures estimate, не analytics владельца |
-| hypothesis | Наше проверяемое объяснение | Вероятный канал привлечения |
-| scenario | Расчёт при явных assumptions | Revenue low/base/high при заданном paid share |
-| unknown | Нет пригодных данных | Не подменять нулём или выдуманным диапазоном |
+| observed | A page/available result independently observed | A price or ad is visible; actual sales remain unknown |
+| disclosed | A company/founder/regulator disclosed a value | A founder account differs from an audited filing |
+| estimated | A third-party provider estimates a metric | Similarweb/Appfigures estimate, not owner analytics |
+| hypothesis | Our testable explanation | A likely acquisition channel |
+| scenario | A calculation under explicit assumptions | Low/base/high revenue for an assumed paid share |
+| unknown | No usable data | Never replace with zero or an invented range |
 
-E-record: `id`, `claim`, `classification`, `source_url`/доступный artifact ref, `publisher`, `published_at` (либо unknown), `retrieved_at`, `metric_as_of`, `period`, `geography`, `entity_product`, `unit`, `method`, `value_or_range`, `limitations`, `confidence` с объяснением. N/A объяснять. Для нечислового claim units/period могут быть N/A. URL без токенов/auth query. Confidence low/medium/high — качественная оценка, не выдуманная вероятность.
+E-record: `id`, `claim`, `classification`, `source_url`/accessible artifact reference, `publisher`, `published_at` (or unknown), `retrieved_at`, `metric_as_of`, `period`, `geography`, `entity_product`, `unit`, `method`, `value_or_range`, `limitations`, reasoned `confidence`. Explain N/A. Non-numerical claims may have N/A units/period. URLs contain no tokens/auth query. Low/medium/high confidence is qualitative, not an invented probability.
 
-Связать inference/scenario с input E-IDs и формулой. Три перепечатки одного пресс-релиза — один источник, не triangulation. Искать противоречащие данные, объяснять различия периода/определений, сохранять unresolved disagreement. Не усреднять разные revenue bases. Старый approved artifact не становится свежим автоматически.
+Connect inferences/scenarios to input E-IDs and formulas. Three copies of one press release are one source, not triangulation. Seek contradictory evidence, explain period/definition differences and preserve unresolved disagreement. Do not average different revenue bases. An old approved artifact is not automatically fresh.
 
-Отчёт краткий: вывод → evidence → ограничение → решение/следующий тест. Подробные таблицы в appendix. Сохранять sanitized excerpts/metadata; не raw responses с credentials/PII, закрытые customer exports или чужие полные статьи. Primary links у claim, даты/применимость — в sources.
+Keep reports concise: conclusion → evidence → limitation → decision/next test. Detailed tables belong in an appendix. Preserve sanitized excerpts/metadata, not raw responses with credentials/PII, private customer exports or others' complete articles. Primary links accompany claims; dates/applicability belong in sources.
 
-Статусы: `draft`, `research_complete`, `needs_input`, `blocked`. Research complete означает покрытые вопросы и явные gaps; не означает PMF/market validation. Experimental outcomes отдельно `not_run`, `observed`, `inconclusive`. Гипотезу не переводить в validated из-за готового отчёта.
+Statuses: `draft`, `research_complete`, `needs_input`, `blocked`. Research complete means covered questions and explicit gaps, not PMF/market validation. Experimental outcomes remain separately `not_run`, `observed`, `inconclusive`. A completed report does not validate a hypothesis.

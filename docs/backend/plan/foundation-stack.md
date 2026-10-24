@@ -1,26 +1,26 @@
-# Foundation сначала, фича потом
+# Foundations first, features second
 
-## Исследование без live действий
+## Research without live actions
 
-Прочитать target README/product specs, instructions/decision indexes, существующие languages/runtime/lockfiles, routes/contracts/schema/tests, local CI/delivery/infra descriptions. Инфраструктуру оценить по доступным configs/документам, не SSH/cloud inspection. Зафиксировать baseline commit и relevant dirty changes; неизвестные CPU/RAM/network/storage/traffic/on-call отметить assumptions и запросить критичные данные. Не читать `.env`, private keys, customer dumps или secret-bearing state.
+Read target README/product specs, instructions/decision indexes, existing languages/runtime/lockfiles, routes/contracts/schema/tests and local CI/delivery/infrastructure descriptions. Assess infrastructure from available configs/docs, not SSH/cloud inspection. Record baseline commits/relevant dirty changes; mark unknown CPU/RAM/network/storage/traffic/on-call as assumptions and ask for critical inputs. Do not read `.env`, private keys, customer dumps or credential-bearing state.
 
-Если backend есть — foundation review заканчивается выводом **reuse** с версиями/границами, capabilities/gaps и причинами. Не перепланировать весь продукт ради одной фичи. Если нет backend либо определённого stack — сначала заполнить [foundation](../../../templates/backend/foundation.md): domain/workload, deploy shape, language/runtime/framework, modules, storage, API/event format, auth/tenant boundary, local dev/testing/CI, observability и infra fit. Установку всего этого только запланировать.
+If a backend exists, finish foundation review with **reuse**, versions/boundaries, capabilities/gaps and reasons. Do not replan the whole product for one feature. Without a backend/defined stack first complete [foundation](../../../templates/backend/foundation.md): domain/workload, deployment shape, language/runtime/framework, modules, storage, API/event format, auth/tenant boundaries, local development/testing/CI, observability and infrastructure fit. Plan installation only.
 
-## Выбор стека — наша контекстная матрица
+## Stack selection: our contextual matrix
 
-| Кандидат | Возможные основания | Что проверить до выбора |
+| Candidate | Possible reasons | Check before selection |
 |---|---|---|
-| Go | Concurrent I/O/network services, existing team/code, простой deploy artifact | Domain/library fit, memory/GC/latency budget, SQL/tooling |
+| Go | Concurrent I/O/network services, existing team/code, simple deployment artifact | Domain/library fit, memory/GC/latency budget, SQL/tooling |
 | PHP | Existing Laravel/Symfony/product expertise, transactional web app | Worker/runtime/concurrency model, queue lifetime, ops support |
-| TypeScript | Общие типы/ecosystem с frontend, I/O APIs, existing Node runtime | CPU-bound jobs отдельно при необходимости, runtime validation/async/resource limits |
-| Python | Existing domain/data/ML libraries, team productivity, async/sync integration | Runtime/process model и workload; не обещать CPU throughput без benchmark |
-| Rust | Обоснованные memory/safety/latency требования и команда | Complexity/time-to-deliver, drivers/toolchain/ops; не назначать только за репутацию скорости |
-| Existing JVM/.NET/другой | Реальный backend/team ecosystem | Сохранить при пригодности; список выше не закрытый |
+| TypeScript | Shared types/ecosystem with frontend, I/O APIs, existing Node runtime | Separate CPU-bound jobs when needed, runtime validation/async/resource limits |
+| Python | Existing domain/data/ML libraries, team productivity, async/sync integration | Runtime/process model and workload; never promise CPU throughput without benchmarks |
+| Rust | Justified memory/safety/latency requirements and team expertise | Complexity/delivery time, drivers/toolchain/operations; not speed reputation alone |
+| Existing JVM/.NET/other | Actual backend/team ecosystem | Preserve when suitable; the list is open-ended |
 
-Эта таблица не сравнительный benchmark и не endorsement компаний. Не переносить generic claims о языке в цифры SLA. Сравнить 2–3 **реальные** альтернативы, выбрать минимально достаточную по team skill, ecosystem, constraints, hiring/maintenance, deploy footprint и migration cost. Для конкретных API/runtime versions проверить official docs, если предлагаем новую технологию.
+This table is neither a comparative benchmark nor company endorsement. Generic language claims must not become SLA numbers. Compare 2–3 **real** alternatives and select the minimum sufficient option by team skills, ecosystem, constraints, hiring/maintenance, deployment footprint and migration costs. Check official API/runtime-version docs when proposing new technology.
 
-Relational DB — кандидат при relational invariants/transactions/access patterns; document/KV/time-series/search/object storage выбирать по запросам, consistency и объёму, а не тренду. Search index/read model обычно derived, его rebuild/lag указать. Cache/queue/оркестратор **не обязательны по умолчанию**. Обосновать каждый новый stateful component, resource/cost/backup/monitoring owner.
+Relational DBs suit relational invariants/transactions/access patterns; select document/KV/time-series/search/object storage by queries, consistency and volume, not fashion. Search indexes/read models are usually derived; specify rebuild/lag. Caches/queues/orchestrators are **not mandatory by default**. Justify every new stateful component and its resource/cost/backup/monitoring owner.
 
 ## Gate foundation → feature
 
-Определены module/data ownership, proposed stack с alternatives, API/event style и versioning, auth/data boundary, deployment/resources/test strategy, numerical workload assumptions и critical unknowns. При blocking вопросах foundation остаётся proposed; downstream feature outline возможен условно, но не execution-ready task plan с ложной определённостью. Если язык уже установлен, code sketches/interfaces/queries адаптируются к нему; planning не изменяет build files.
+Define module/data ownership, proposed stack/alternatives, API/event style/versioning, auth/data boundaries, deployment/resources/test strategy, numerical workload assumptions and critical unknowns. Blocking questions leave foundations proposed; downstream feature outlines may be conditional, never execution-ready task plans with false certainty. With an established language adapt sketches/interfaces/queries to it; planning changes no build files.

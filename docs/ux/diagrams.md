@@ -1,46 +1,46 @@
-# Как строить UX-диаграммы
+# Build UX diagrams
 
-Markdown+Mermaid — основной переносимый формат. При доступном renderer сохранять и проверять preview/SVG; для передачи можно экспортировать `.mmd`. Применение Figma/tldraw или прототипа — отдельный выбранный output, не prerequisite этого скилла. Ни sitemap, ни sequence diagram backend API не заменяют экранный UX.
+Markdown+Mermaid is the primary portable format. With an available renderer, save and inspect preview/SVG; export `.mmd` for handoff when useful. Figma/tldraw or a prototype is a separately selected output, not a skill prerequisite. Neither a sitemap nor a backend API sequence diagram replaces screen UX.
 
-## Три уровня
+## Three levels
 
-| Уровень | Что показывает | Обязательный результат |
+| Level | Shows | Required output |
 |---|---|---|
-| User flow | Роль, вход, задача, переходы, guards, выход и recovery | Связанные Screen ID и подписи действий |
-| Screen layout | Какие функциональные блоки и в каком порядке/соседстве | Desktop и mobile схемы **каждого** экрана + пояснение/адаптация tablet |
-| State flow | Loading/empty/ready/error/permission/pending/success и переходы | State graph для интерактивного экрана; статический имеет явное обоснование N/A |
+| User flow | Role, entry, task, transitions, guards, exit and recovery | Linked Screen IDs and action labels |
+| Screen layout | Functional blocks and their order/proximity | Desktop and mobile diagrams for **every** screen + explanation/tablet adaptation |
+| State flow | Loading/empty/ready/error/permission/pending/success and transitions | State graph for interactive screens; explicit N/A rationale for static screens |
 
-Stable IDs: journeys `J01`, screens `S01`, blocks `B01`, states `S01.loading`. Один screen card описывает role/goal/data/действия/layout/состояния/entry/exit/evidence/ADR; unrelated цели не прячутся за одним ID. Повторно используемые экраны сохраняют ID через revisions. Каждая стрелка перехода имеет действие/event и, если нужно, guard; расположение блоков не изображать как пользовательские клики.
+Stable IDs: journeys `J01`, screens `S01`, blocks `B01`, states `S01.loading`. A screen card describes role/goal/data/actions/layout/states/entry/exit/evidence/ADR; unrelated goals must not hide behind one ID. Reused screens retain IDs across revisions. Every transition arrow has an action/event and guard if needed; do not depict block placement as user clicks.
 
-## Учебный user flow
+## Educational user flow
 
 ```mermaid
 flowchart LR
-  E[Вход] --> S01[S01 Поиск]
-  S01 -->|Найти| S02[S02 Результаты]
-  S02 -->|Открыть| S03[S03 Детали]
-  S03 -->|Назад: сохранить запрос| S02
-  S02 -->|Изменить запрос| S01
-  S03 -->|Сохранить при доступе| END[Результат сохранён]
+  E[Entry] --> S01[S01 Search]
+  S01 -->|Search| S02[S02 Results]
+  S02 -->|Open| S03[S03 Details]
+  S03 -->|Back: preserve query| S02
+  S02 -->|Change query| S01
+  S03 -->|Save with access| END[Result saved]
 ```
 
-Это вымышленный пример структуры, не наблюдение Google/Яндекса. Если сохранение требует auth, бизнес должен определить возврат после входа и сохранение intent; не добавлять login-screen только потому, что он привычен. Отдельно записать deep links, back/browser back, dismissed overlays, timeout и retry semantics.
+This is a fictional structural example, not an observation of Google/Yandex. If saving requires auth, the business must define return after login and intent preservation; do not add a login screen merely because it is familiar. Separately record deep links, back/browser back, dismissed overlays, timeout and retry semantics.
 
-## Учебный layout одного экрана S02
+## Educational layout for screen S02
 
-`---` означает соседство/порядок чтения, **не переход**. Схема семантическая: не обещает точное расположение после автоматической раскладки Mermaid. Таблица блоков под схемой — точный контракт их порядка/приоритета. Не использовать styling/colors/fonts/spacing tokens как UX-решения.
+`---` means proximity/reading order, **not a transition**. This is a semantic diagram, not a guarantee of exact placement after Mermaid automatic layout. The block table below the diagram is the exact order/priority contract. Do not use styling/colors/fonts/spacing tokens as UX decisions.
 
 Desktop:
 
 ```mermaid
 flowchart TB
-  subgraph PAGE["S02 Результаты: desktop"]
+  subgraph PAGE["S02 Results: desktop"]
     direction TB
-    H["Шапка: навигация и поиск"]
-    subgraph MAIN["Основная область"]
+    H["Header: navigation and search"]
+    subgraph MAIN["Main area"]
       direction LR
-      F["Фильтры: вторичное действие"]
-      R["Результаты: список и статус"]
+      F["Filters: secondary action"]
+      R["Results: list and status"]
       F --- R
     end
     H --- MAIN
@@ -51,28 +51,28 @@ Mobile:
 
 ```mermaid
 flowchart TB
-  subgraph PAGE["S02 Результаты: mobile"]
+  subgraph PAGE["S02 Results: mobile"]
     direction TB
-    H["Навигация: Назад"] --- Q["Поисковый запрос"]
-    Q --- F["Фильтры: раскрыть панель"]
-    F --- R["Результаты и статус"]
-    R --- M["Загрузить ещё: если нужно"]
+    H["Navigation: Back"] --- Q["Search query"]
+    Q --- F["Filters: open panel"]
+    F --- R["Results and status"]
+    R --- M["Load more: if needed"]
   end
 ```
 
-Пояснение: результаты — основная задача; фильтры доступны без постоянной боковой колонки. При закрытии панели focus возвращается кнопке, параметры сохраняются. Tablet: боковая колонка появляется только если список остаётся читаемым, иначе mobile pattern. Это **наш предложенный** responsive contract для примера, не заимствованный доказанный паттерн.
+Explanation: results are the main task; filters remain available without a permanent sidebar. Closing the panel returns focus to its button and preserves parameters. Tablet: show a sidebar only if the list remains readable; otherwise use the mobile pattern. This is **our proposed** responsive contract for the example, not a borrowed proven pattern.
 
-Для реального экрана перечислить priority/region/order, sticky/scroll behavior, keyboard reading order, touch/hover alternatives и `show / move / collapse / omit` для каждого блока. Нельзя прятать обязательную функцию на mobile без альтернативного пути.
+For a real screen, list priority/region/order, sticky/scroll behavior, keyboard reading order, touch/hover alternatives and `show / move / collapse / omit` for each block. Do not hide a mandatory mobile function without an alternative path.
 
-## Учебный state graph S02
+## Educational state graph for S02
 
 ```mermaid
 stateDiagram-v2
   [*] --> Loading
-  state "Загрузка" as Loading
-  state "Результаты" as Ready
-  state "Ничего не найдено" as Empty
-  state "Не удалось загрузить" as Error
+  state "Loading" as Loading
+  state "Results" as Ready
+  state "No results" as Empty
+  state "Could not load" as Error
   Loading --> Ready: response with items
   Loading --> Empty: response without items
   Loading --> Error: request failed
@@ -81,12 +81,12 @@ stateDiagram-v2
   Ready --> Loading: new query
 ```
 
-У graph есть state table: trigger/guard, видимые блоки и короткие строки, доступные действия, какой ввод/позиция сохраняются, куда направляется focus. Не все состояния требуют отдельных screens; error внутри формы обычно остаётся тем же Screen ID. Pending submit защищён от double submit; retry не должен дублировать платёж/отправку. Какие failures применимы определяется процессом, а не универсальным списком из ста пунктов.
+Each graph has a state table: trigger/guard, visible blocks and concise strings, available actions, preserved input/position and focus destination. Not every state needs a separate screen; an error within a form usually keeps the same Screen ID. Pending submission prevents double submit; retry must not duplicate payments/sends. Applicable failures come from the process, not a universal hundred-item checklist.
 
-## Гигиена и проверка
+## Hygiene and checks
 
-[Flowchart syntax](https://mermaid.js.org/syntax/flowchart.html) и [state diagrams](https://mermaid.js.org/syntax/stateDiagram.html) — первичные references. Уникальные ASCII node IDs, пользовательские строки в quoted labels, простые graph types и короткие подписи уменьшают renderer incompatibility. Не использовать навигационные URLs с auth tokens, external assets, custom JS или inline HTML ради красоты.
+[Flowchart syntax](https://mermaid.js.org/syntax/flowchart.html) and [state diagrams](https://mermaid.js.org/syntax/stateDiagram.html) are primary references. Unique ASCII node IDs, user strings in quoted labels, simple graph types and short labels reduce renderer incompatibility. Do not add navigation URLs with auth tokens, external assets, custom JS or inline HTML for decoration.
 
-Не строить один нечитаемый граф на всё приложение. Journey index + flow per journey + screen/state cards дают переход между обзором и деталями. Проверить syntax parser; при возможности render и визуально прочитать. Если только syntax parse — прямо так и назвать, не писать «визуально проверено».
+Avoid a single unreadable graph for the entire application. Journey index + flow per journey + screen/state cards connect overview and detail. Check syntax with a parser; render and visually read when possible. If only syntax was parsed, state that instead of claiming visual verification.
 
-Проверки связности: все in-scope screens есть в catalog и диаграммах; для каждой стрелки известен target, action/guard; у каждого required state есть вход/выход/recovery или объяснение terminal; нет orphan screens, unreachable success, role leaks и потери введённого без решения. На схеме нет технических endpoint/debug labels в пользовательских UI областях.
+Connectivity checks: all in-scope screens appear in catalog and diagrams; every arrow has a known target, action/guard; every required state has entry/exit/recovery or an explanation of terminal status; no orphan screens, unreachable success, role leaks or unexplained loss of input. User-facing UI regions contain no technical endpoint/debug labels.

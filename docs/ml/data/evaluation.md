@@ -1,19 +1,19 @@
-# Data readiness и независимая проверка
+# Data readiness and independent verification
 
-До launch: frozen data/model/tokenizer/template/config/transform hashes, права/consent, train-only preprocessing, group/duplicate separation, реальные domain/language/length/sources counts, full-response/loss mask/EOS/collator checks и реализуемый mixture plan. Missing cell/unknown rights/tokenization не превращать в ноль или «готово».
+Before launch: frozen data/model/tokenizer/template/config/transform hashes, rights/consent, train-only preprocessing, group/duplicate separation, actual domain/language/length/source counts, full-response/loss-mask/EOS/collator checks and a feasible mixture plan. Missing cells/unknown rights/tokenization never become zero or “ready.”
 
-| Gate | Минимальная evidence | Если нет |
+| Gate | Minimum evidence | When missing |
 | --- | --- | --- |
-| Rights/provenance | source register + approval evidence + exclusions | blocked use; research candidate допустим |
+| Rights/provenance | source register + approval evidence + exclusions | use blocked; research candidates allowed |
 | Split/leakage | exact/group assertions, near/translation/benchmark audit scope | exact-only ≠ leakage-free; remaining audit NOT_RUN |
-| Content/labels | sampled annotation/quality review по slices, disagreement | schema-valid ≠ factual/correct |
-| Privacy | локальный профильный scan и review; controlled storage | marker scan ≠ PII-free |
+| Content/labels | sampled annotation/quality review by slice, disagreement | schema-valid ≠ factual/correct |
+| Privacy | specialized local scan and review; controlled storage | marker scan ≠ PII-free |
 | Tokens/answers | actual tokenizer/template/collator tensors, unmasked targets/end tokens, no truncation | inventory token counts unknown; no ready mixture |
-| Mix feasibility | joint quotas, floors, repeats, source/length review и realized sampler test | planned, а не sampled |
+| Mix feasibility | joint quotas, floors, repeats, source/length review and realized sampler test | planned, not sampled |
 | Regression | base/adapted domain+general frozen suite, per-language metrics, N/uncertainty | training/quality benefit NOT_RUN |
 
-Independent data verification повторно читает manifest+shards, проверяет digests, exact group/duplicate constraints и tokenized record bindings. Изменение raw/prepared/tokens/policy инвалидирует downstream audit/plan. Script report — арифметика/контракт, не самоаттестация dataset author. Token IDs/producer flags не доказывают соответствие исходному тексту без проверки local tokenizer/template pipeline.
+Independent data verification rereads manifests+shards, verifies digests, exact group/duplicate constraints and tokenized-record bindings. Raw/prepared/token/policy changes invalidate downstream audit/plans. A script report is arithmetic/contract checking, not dataset-author self-attestation. Token IDs/producer flags do not prove correspondence to source text without checking the local tokenizer/template pipeline.
 
-Сначала дешёвые schema/golden fixtures, затем ручной audit и только разрешённый tokenizer/collator smoke, после этого разрешённый tiny pilot/learning curve; дорогие сеты/LLM judges/GPU не следуют из data skill. Unit tests нашего CLI — только synthetic CPU fixtures, не научная репликация paper. Финальное улучшение проверяется `/ml:benchmark`/`/agent:eval` по frozen applicable protocol; деньги и прежние unknowns сохраняются в existing runtime, новый data helper их не обнуляет.
+Start with inexpensive schema/golden fixtures, then manual audit and only authorized tokenizer/collator smoke tests, followed by an authorized tiny pilot/learning curve; the data skill does not imply expensive datasets/LLM judges/GPUs. CLI unit tests are synthetic CPU fixtures, not scientific paper replication. Final improvement is checked through `/palarran:ml:benchmark`/`/palarran:agent:eval` under a frozen applicable protocol; the existing runtime preserves spending/prior unknowns, and a new data helper does not reset them.
 
-Сохранять prep status, все reasons/counts и список NOT_RUN; rejected rows не исчезают из denominator. В target memory только safe aggregates/private refs. Data artifacts/IDs/token arrays могут раскрывать raw text и принадлежат private store; token IDs тоже не анонимизация.
+Preserve preparation status, every reason/count and NOT_RUN list; rejected rows stay in the denominator. Target memory contains safe aggregates/private refs only. Data artifacts/IDs/token arrays may reveal raw text and belong in private storage; token IDs are not anonymization.

@@ -1,40 +1,40 @@
 # PHP
 
-Определить composer manifests/workspaces, framework (Laravel/Symfony/другое), PHP version/extensions, PHP-FPM/CLI/long-running workers, DB/queue/migrations и существующие test commands. HHVM/Tupperware исторических статей Meta не является основанием навязать проекту другой runtime. Общие аргументы — [фактура](../evidence.md).
+Identify Composer manifests/workspaces, framework (Laravel/Symfony/other), PHP version/extensions, PHP-FPM/CLI/long-running workers, DB/queue/migrations and existing test commands. Historical Meta HHVM/Tupperware articles do not justify imposing another runtime. Shared rationale: [evidence](../evidence.md).
 
-## DAG и воспроизводимость
+## DAG and reproducibility
 
-| Ветка | Содержание | Практика |
+| Branch | Contents | Practice |
 |---|---|---|
-| Validate/style | `composer validate --strict`, pinned formatter в check-mode, syntax checks по scope | Не менять файлы автоматически в required job |
-| Static analysis | PHPStan или существующий Psalm, стабильный baseline policy | Полный анализ с штатным result cache, не только changed files |
-| Unit/integration | PHPUnit; ParaTest при доказанной изоляции | Real DB/queue для границ, отдельные resources на worker |
-| Coverage | Выделенный required/scheduled scope согласно policy | Xdebug/PCOV только где нужен; не замедлять все jobs |
-| Dependencies | Composer audit и отдельная runtime image policy | Lockfile, PHP/extensions compatibility, исключения с expiry |
-| Candidate | Production deps + app container + startup/HTTP/worker smoke | Не выкатывать test vendor directory |
+| Validate/style | `composer validate --strict`, pinned formatter check mode, scoped syntax checks | No automatic file changes in required jobs |
+| Static analysis | PHPStan or existing Psalm, stable baseline policy | Full analysis with native result cache, not only changed files |
+| Unit/integration | PHPUnit; ParaTest with proven isolation | Real DB/queue at boundaries, separate worker resources |
+| Coverage | Dedicated required/scheduled scope under policy | Xdebug/PCOV only where needed; do not slow every job |
+| Dependencies | Composer audit and separate runtime-image policy | Lockfile, PHP/extensions compatibility, expiring exceptions |
+| Candidate | Production dependencies + application container + startup/HTTP/worker smoke | Do not deploy test vendor directories |
 
-В CI `composer install`, не `composer update`. Dev dependencies нужны тестам/analysis, production stage — `--no-dev` и оптимизированный autoload после проверки совместимости. `--no-interaction --prefer-dist` полезны для автоматизации; plugins/scripts review обязателен. `--no-scripts --no-plugins` — опция отдельного dependency stage, если последующие необходимые действия вызваны явно; слепое отключение ломает framework setup. Команды и [platform checks/audit](https://getcomposer.org/doc/03-cli.md) адаптируются к pinned Composer и приложениям.
+CI uses `composer install`, not `composer update`. Tests/analysis need development dependencies; production stages use `--no-dev` and optimized autoload after compatibility checks. `--no-interaction --prefer-dist` helps automation; plugin/script review is mandatory. `--no-scripts --no-plugins` may suit a separate dependency stage if necessary later actions are explicit; blind disabling breaks framework setup. Adapt commands and [platform checks/audit](https://getcomposer.org/doc/03-cli.md) to pinned Composer/applications.
 
-Нельзя применять `--ignore-platform-reqs` ради зелёной сборки. Проверить actual runtime extensions/ABI/libc, а не только `config.platform` при разрешении lock. Composer auth file/token не сохраняется в image/cache; trusted package download stage и plugins не получают prod secrets.
+Do not use `--ignore-platform-reqs` to get green builds. Check actual runtime extensions/ABI/libc, not just `config.platform` during lock resolution. Keep Composer auth files/tokens out of images/caches; trusted package-download stages/plugins receive no production secrets.
 
-## Оптимизация
+## Optimization
 
-Cache Composer downloads с PHP/Composer/lock/trust metadata; кеширование `vendor` требует строгих platform/config keys и повторной валидации, оно не default вместо install. Изоляция cache writer от fork MR/PR.
+Cache Composer downloads with PHP/Composer/lock/trust metadata; `vendor` caching requires strict platform/config keys and revalidation, not a default substitute for install. Isolate cache writers from fork MRs/PRs.
 
-[PHPStan result cache](https://phpstan.org/user-guide/result-cache) использует dependency analysis: сохранять стабильный полный список paths и version/config/lock inputs, не передавать только git diff. Это конкретный пример безопасной оптимизации анализа без уменьшения охвата.
+[PHPStan result cache](https://phpstan.org/user-guide/result-cache) uses dependency analysis: retain a stable complete path list and version/config/lock inputs instead of only git diff. This demonstrates safe analysis optimization without reducing coverage.
 
-[ParaTest](https://github.com/paratestphp/paratest) требует проверки совместимости PHPUnit и тестов. Worker/process token использовать для DB/schema, Redis namespace, temp files и ports. Глобальные fixtures и shared test user могут ломать параллелизм. Число workers подбирать по CPU/RAM/connection limits, не «все ядра» без измерений.
+[ParaTest](https://github.com/paratestphp/paratest) requires PHPUnit/test compatibility checks. Use worker/process tokens for DB/schema, Redis namespace, temporary files and ports. Global fixtures/shared test users may break parallelism. Size workers by CPU/RAM/connection limits rather than unmeasured “all cores.”
 
-[PHPUnit coverage](https://docs.phpunit.de/en/12.4/code-coverage.html) зависит от driver; pin подходящую версию PHPUnit под runtime проекта, не обновлять проект до 12.4 только из-за ссылки. Coverage reports объединять с проверкой полноты shard set; instrumentation выключена в обычных быстрых jobs, где она не требуется.
+[PHPUnit coverage](https://docs.phpunit.de/en/12.4/code-coverage.html) depends on driver; pin an appropriate PHPUnit version for project runtime instead of upgrading to 12.4 because of this link. Merge coverage reports with complete-shard-set checks; disable instrumentation in normal fast jobs where unnecessary.
 
 ## Production semantics
 
-Один image включает production deps и versioned source, а secrets/DSN приходят runtime. Для Laravel/Symfony проверить framework config/container cache: не запекать dev/prod secrets в build cache или generated PHP files. Если config cache зависит от environment, генерировать безопасно при startup/revision initialization с реальным runtime config, без dump его содержимого. Это наша адаптация под выбранный framework; перед реализацией прочитать version-specific framework docs.
+One image contains production dependencies/versioned source; secrets/DSN arrive at runtime. For Laravel/Symfony, check framework config/container cache: do not bake dev/prod secrets into build caches/generated PHP files. Environment-dependent config caches are generated safely at startup/revision initialization with actual runtime config and no content dumps. This is our framework-specific adaptation; read version-specific framework docs before implementation.
 
-Web и queue workers обновляются согласованно; old/new versions должны понимать сообщения и schema в переходном окне. Миграция — отдельная идемпотентная serialized операция через runtime/controller API; не выполняется одновременно каждой PHP-FPM replica. OPcache/worker lifecycle привязать к immutable replacement/restart, не remote `git pull`.
+Update web/queue workers coherently; old/new versions must understand messages/schema during transition. Migrations are separate idempotent serialized operations through runtime/controller APIs, not simultaneous execution by every PHP-FPM replica. Bind OPcache/worker lifecycle to immutable replacement/restart, not remote `git pull`.
 
-Rollback: предыдущий digest + совместимые config/schema/queue contracts. Destructive migration и необратимые side effects требуют отдельного recovery plan. No SSH/scp/rsync/remote composer install.
+Rollback: previous digest + compatible config/schema/queue contracts. Destructive migrations/irreversible side effects need separate recovery plans. No SSH/scp/rsync/remote composer install.
 
-## Provider mapping и приёмка
+## Provider mapping and acceptance
 
-GitHub/GitLab orchestration из общих guides, test scripts одинаковы локально и в CI. Release stage не переиспользует vendor artifact из untrusted pipeline. Проверки: framework boot с production deps; extension compatibility; DB migration и rollback compatibility; worker restart/drain; cold/warm cache timing; отсутствие race при ParaTest; отсутствие credentials в exception/test reports, generated config и layer history. Показать, какой шаг экономит время и как измерено, не обещать benchmark без target.
+GitHub/GitLab orchestration follows shared guides; test scripts are identical locally/in CI. Release stages do not reuse vendor artifacts from untrusted pipelines. Check framework boot with production dependencies; extension compatibility; DB migration/rollback compatibility; worker restart/drain; cold/warm cache timing; no ParaTest races; no credentials in exception/test reports, generated config or layer history. Identify time-saving steps and measurements without promising benchmarks without a target.

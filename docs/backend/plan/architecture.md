@@ -1,35 +1,35 @@
-# Архитектура: выбирать по ограничениям, развивать по сигналам
+# Architecture: choose by constraints, evolve by signals
 
-Ни число пользователей, ни количество строк сами по себе не выбирают архитектуру. Сначала workload, доменные инварианты, команда, deploy cadence, failure/isolation requirements и эксплуатационный бюджет. Ниже — **наши decision criteria**, а не правила, которым следуют все упомянутые компании.
+Neither user count nor line count alone chooses architecture. Start with workload, domain invariants, team, deployment cadence, failure/isolation requirements and operational budget. These are **our decision criteria**, not rules followed by every named company.
 
-## Deployment и модульность — разные оси
+## Deployment and modularity are separate axes
 
-| Подход | Когда рассматривать | Цена/ограничения | Сигнал следующего шага |
+| Approach | When to consider | Cost/constraints | Next-step signal |
 |---|---|---|---|
-| Простой монолит с понятными слоями | Небольшая команда, меняющийся домен, один deploy/DB, ограниченный host | Нужно удерживать зависимости и тестируемость; общий release/failure domain | Измеренная связность мешает изменениям — выделить domain modules |
-| Модульный монолит | Несколько business capabilities, общая транзакционная модель, независимые части кода | Один deploy остаётся; границы надо обеспечивать imports/interfaces/ownership tests | Конкретный module требует отдельного scale/deploy/isolation и владелец готов его поддерживать |
-| Несколько deployables, например API + worker | Синхронные запросы и тяжёлые jobs имеют разные CPU/latency/retry потребности | Queue/worker supervision и idempotency; это ещё не обязательно микросервисы | Разные bounded contexts и independent ownership |
-| Микросервисы по доменам | Доказанная независимость release/scale/security, команды-владельцы, observability и operations | Network failures, versioned contracts, cross-service consistency, delivery overhead | Новая boundary должна устранять конкретный bottleneck, не умножать synchronous chatter |
-| Serverless/managed backend | Burst/event workloads, подходящий provider/runtime и operational модель | Limits/cold-start/cost/lock-in, внешние state boundaries | Проверить tail latency, workload и exit cost |
+| Simple monolith with clear layers | Small team, changing domain, one deployment/DB, limited host | Maintain dependencies/testability; shared release/failure domain | Measured coupling obstructs changes: introduce domain modules |
+| Modular monolith | Several business capabilities, shared transactional model, independent code areas | Still one deployment; enforce boundaries through imports/interfaces/ownership tests | A specific module needs separate scaling/deployment/isolation and its owner can operate it |
+| Multiple deployables, such as API + worker | Synchronous requests and heavy jobs have different CPU/latency/retry needs | Queue/worker supervision and idempotency; not necessarily microservices yet | Distinct bounded contexts and independent ownership |
+| Domain microservices | Demonstrated release/scale/security independence, owning teams, observability and operations | Network failures, versioned contracts, cross-service consistency, delivery overhead | New boundaries must remove specific bottlenecks, not multiply synchronous chatter |
+| Serverless/managed backend | Bursty/event workloads with suitable provider/runtime and operational model | Limits/cold starts/cost/lock-in, external state boundaries | Check tail latency, workload and exit costs |
 
-**Многомодульность** — организация кода/сборки, не синоним microservices. В одном deploy можно иметь modules с публичными interfaces; monorepo может содержать много deployables, polyrepo — один тесно связанный процесс. Package/module boundaries выбирать по business ownership/data invariants, не создавать отдельный service для каждой таблицы.
+**Multiple modules** organize code/builds; they are not synonymous with microservices. One deployment can contain modules with public interfaces; monorepos can contain many deployables and polyrepos one tightly coupled process. Select package/module boundaries by business ownership/data invariants, never one service per table.
 
-В [Shopify](https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity) описан путь структурирования крупного монолита вокруг компонентов. Полезный вывод для нас: domain boundaries можно улучшать без немедленного сетевого разделения. [Uber DOMA](https://www.uber.com/blog/microservice-architecture/) отвечает на сложность уже крупной service architecture через доменную организацию. Это не доказательство необходимости Uber-scale topology для нового VPS. [Monolith First](https://martinfowler.com/bliki/MonolithFirst.html) — позиция Martin Fowler, не отчёт конкретного бигтеха и не абсолютный запрет на services с первого дня.
+[Shopify](https://shopify.engineering/deconstructing-monolith-designing-software-maximizes-developer-productivity) describes organizing a large monolith around components. Our takeaway: domain boundaries can improve without immediate network separation. [Uber DOMA](https://www.uber.com/blog/microservice-architecture/) addresses an already large service architecture's complexity through domain organization, not proof that new VPS projects need Uber-scale topology. [Monolith First](https://martinfowler.com/bliki/MonolithFirst.html) is Martin Fowler's position, not a specific big-tech report or an absolute ban on services from day one.
 
-## Внутри выбранной формы
+## Inside the chosen shape
 
-- Layered/transaction script — компактный CRUD с простыми rules. Не создавать domain framework ради одного endpoint.
-- Ports/adapters — несколько внешних integrations или необходимость изолировать policy от transport/storage. Число interfaces определяется реальной boundary, не папками шаблона.
-- Rich domain model — сложные состояния/инварианты и язык предметной области; описать aggregate/transaction boundary, не механически всё переводить в DDD.
-- Async/event-driven — долгие jobs, fan-out, independent consumers, tolerated lag. Явно описать ordering, delivery, dedup/replay/backpressure. Queue не исправляет неверный transaction design.
-- CQRS/read projections — измеренная разница write/read models или дорогие views. Для простой выдачи не нужны отдельные stores.
-- Event sourcing — нужен authoritative event history/replay с понятной evolution и retention; не путать с audit log/outbox. Цена reconstruction/privacy/schema evolution должна быть оправдана.
+- Layered/transaction script: compact CRUD with simple rules. Do not build domain frameworks for one endpoint.
+- Ports/adapters: multiple external integrations or separating policy from transport/storage. Actual boundaries, not template folders, determine interface count.
+- Rich domain model: complex states/invariants and domain language; describe aggregate/transaction boundaries rather than mechanically applying DDD everywhere.
+- Async/event-driven: long jobs, fan-out, independent consumers, tolerated lag. Specify ordering, delivery, dedup/replay/backpressure. Queues do not fix bad transaction design.
+- CQRS/read projections: measured write/read-model differences or expensive views. Simple reads do not need separate stores.
+- Event sourcing: authoritative event history/replay with understood evolution/retention; distinguish audit logs/outboxes. Justify reconstruction/privacy/schema-evolution costs.
 
-Для каждой применимой альтернативы записать constraint fit, ожидаемую пользу, operational cost, rejected alternatives и **измеримый trigger пересмотра**. Небольшой single-host проект не получает Kafka/mesh/multi-region просто из-за фичи. Высокая критичность на малом host может потребовать изменения инфраструктуры: отметить gap, а не обещать HA внутри одной машины.
+For each applicable alternative record constraint fit, expected benefits, operational cost, rejected alternatives and **measurable reconsideration triggers**. A feature alone does not justify Kafka/mesh/multi-region in small single-host projects. Critical workloads on small hosts may need infrastructure changes: record gaps rather than promising single-machine HA.
 
-## Схемы плана
+## Plan diagrams
 
-Сделать deployment/data ownership diagram и sequence для основного и сбойного сценария; ER/state diagram при соответствующей фиче. Обозначить sync/async, transaction boundary, source of truth и failure domains. Только существующие/предлагаемые нужные компоненты; следующий пример показывает обозначения, не универсальную архитектуру:
+Create deployment/data-ownership diagrams and main/failure scenario sequences; add ER/state diagrams when applicable. Mark sync/async, transaction boundaries, source of truth and failure domains. Include only needed existing/proposed components; the example illustrates notation, not universal architecture:
 
 ```mermaid
 flowchart LR
@@ -40,4 +40,4 @@ flowchart LR
   DB -. proposed outbox relay .-> Worker[Worker process]
 ```
 
-В конкретном плане отсутствие cache/worker обозначить решением, а не добавлять их ради схемы.
+In concrete plans record cache/worker absence as a decision instead of adding them for diagram completeness.

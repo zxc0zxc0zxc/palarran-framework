@@ -1,40 +1,40 @@
-# Frontend build: от UX/UI к работающему приложению
+# Frontend build: from UX/UI to a working application
 
-`/frontend:build` реализует интерфейс **в целевом проекте** по source UX и UI revisions. Это следующий шаг после `/ux:design` и `/ui:design`: routes, components, tokens/assets, состояния и взаимодействия становятся кодом приложения. Вызов скилла не означает deployment или backend rewrite.
+`/palarran:frontend:build` implements an interface **in the target project** from source UX and UI revisions. It follows `/palarran:ux:design` and `/palarran:ui:design`: routes, components, tokens/assets, states and interactions become application code. Invoking the skill does not imply deployment or a backend rewrite.
 
-## Обязательный контракт
+## Mandatory contract
 
-- Читать [общую память решений](../skills/decision-memory.md), target UX/UI/frontend indexes и relevant accepted ADR. Каждый принятый implementation choice объяснять до зависимого изменения; сохранять для следующих задач.
-- Зафиксировать UX и UI revisions, screen/state/block IDs, scope, actual assets/tokens и ограничения. Не редизайнить молча, не выбирать новую палитру/дизайн-систему. Исходники: [UX](../ux/README.md), [UI](../ui/README.md).
-- Переиспользовать stack, package manager/lockfile, components, routes, API client, tests и conventions проекта. React/Next.js — возможные реализации, не обязательное условие.
-- Реализовать весь in-scope интерфейс, включая состояния и реальные действия; missing backend/contract обозначать явно. Mocked fixtures не выдавать за работающую интеграцию.
-- **Адаптивность обязательна**: narrow/mobile/tablet/desktop, промежуточные размеры, long content, keyboard/focus, zoom, overflow и effects fallbacks.
-- Существующие UI assets переиспользовать. Если дизайну нужна отсутствующая картинка — **сгенерировать и включить в приложение** по [правилам assets](implementation.md). Реальные product images/логотипы не подделывать.
-- **Обязательно открыть приложение в браузере**, пройти действия/состояния и посмотреть renders, исправить найденные дефекты. Successful build, screenshot без просмотра и mocked data не заменяют browser acceptance.
-- Нет browser/runtime/backend access — честный partial/blocked verification с NOT RUN и конкретным остатком; не утверждать, что задача полностью проверена. Доступную независимую работу довести до результата.
+- Read [shared decision memory](../skills/decision-memory.md), target UX/UI/frontend indexes and relevant accepted ADRs. Explain every accepted implementation choice before dependent changes; preserve it for later tasks.
+- Record UX and UI revisions, screen/state/block IDs, scope, actual assets/tokens and constraints. Do not silently redesign or choose a new palette/design system. Sources: [UX](../ux/README.md), [UI](../ui/README.md).
+- Reuse the project's stack, package manager/lockfile, components, routes, API client, tests and conventions. React/Next.js are possible implementations, not prerequisites.
+- Implement the entire in-scope interface, including states and real actions; explicitly identify missing backend capabilities/contracts. Do not present mocked fixtures as a working integration.
+- **Responsiveness is mandatory**: narrow/mobile/tablet/desktop, intermediate sizes, long content, keyboard/focus, zoom, overflow and effects fallbacks.
+- Reuse existing UI assets. If a required design image is missing, **generate it and include it in the application** under the [asset rules](implementation.md). Do not fabricate real product images/logos.
+- **Open the application in a browser**, exercise actions/states, view renders and fix defects found. A successful build, an unviewed screenshot and mocked data do not replace browser acceptance.
+- Without browser/runtime/backend access, report partial/blocked verification honestly, with NOT RUN and specific remaining work; do not claim full verification. Complete available independent work.
 
-## База
+## Guides
 
-| Документ | Назначение |
+| Document | Purpose |
 |---|---|
-| [source-contract.md](source-contract.md) | Входные UX/UI revisions, coverage и конфликты |
-| [implementation.md](implementation.md) | Stack/reuse/components, data, безопасность и картинки |
-| [responsive.md](responsive.md) | Адаптивная реализация и доступность |
-| [browser-verification.md](browser-verification.md) | Фактическая browser проверка, visual fidelity и evidence |
-| [quality.md](quality.md) | Tests/build/performance без фиктивных гарантий |
-| [workflow.md](workflow.md) | Последовательность и durable context |
-| [sources.md](sources.md) | Первичные документы и границы claims |
+| [source-contract.md](source-contract.md) | Input UX/UI revisions, coverage and conflicts |
+| [implementation.md](implementation.md) | Stack/reuse/components, data, security and images |
+| [responsive.md](responsive.md) | Responsive implementation and accessibility |
+| [browser-verification.md](browser-verification.md) | Actual browser checks, visual fidelity and evidence |
+| [quality.md](quality.md) | Tests/build/performance without invented guarantees |
+| [workflow.md](workflow.md) | Sequence and durable context |
+| [sources.md](sources.md) | Primary documents and claim boundaries |
 
-[Coverage template](../../templates/frontend/coverage.md), [browser review](../../templates/frontend/browser-review.md), [handoff](../../templates/frontend/handoff.md). Documentation-first authoring не означает, что ai-tools нуждается в app frontend или что чужое приложение уже проверено.
+[Coverage template](../../templates/frontend/coverage.md), [browser review](../../templates/frontend/browser-review.md), [handoff](../../templates/frontend/handoff.md). Documentation-first authoring does not mean palarran needs an application frontend or that another application has already been verified.
 
-## SDD, worktree agents и прогресс
+## SDD, worktree agents and progress
 
-До реализации использовать готовый execution plan либо подготовить его из source UX/UI: [SDD/agents/DoD](sdd-agents.md). Independent ready tasks — internal agents в owned отдельных worktrees с explicit cwd и runtime isolation, shared files под одним owner, sequential integration и browser review общего результата.
+Before implementation, use an existing execution plan or prepare one from source UX/UI: [SDD/agents/DoD](sdd-agents.md). Independent ready tasks use internal agents in separate owned worktrees with explicit cwd and runtime isolation, one owner for shared files, sequential integration and browser review of the combined result.
 
-[Прогресс прямо в source plan](progress.md) показывает plan ID/revision, обе UX/UI versions, code/integration commits, выполненные/remaining TASK IDs, check evidence и blockers. `implemented` не равно `verified`. Canonical ledger и [shared protocol](../skills/execution-progress.md) переиспользуют backend механизм, frontend gates остаются browser/responsive/visual/flow-specific.
+[Progress directly in the source plan](progress.md) shows plan ID/revision, both UX/UI versions, code/integration commits, completed/remaining TASK IDs, check evidence and blockers. `implemented` does not mean `verified`. The canonical ledger and [shared protocol](../skills/execution-progress.md) reuse the backend mechanism; frontend gates remain specific to browser/responsive/visual/flow checks.
 
-Templates: [execution plan](../../templates/frontend/plan.md), [progress](../../templates/frontend/progress.example.json), [agent packet](../../templates/frontend/agent-task.md). Наличие полного execution plan не отменяет требования фактической browser проверки.
+Templates: [execution plan](../../templates/frontend/plan.md), [progress](../../templates/frontend/progress.example.json), [agent packet](../../templates/frontend/agent-task.md). A complete execution plan does not remove the requirement for actual browser checks.
 
-## Отдельное планирование
+## Separate planning
 
-[`/frontend:plan {фича}`](plan/README.md) создаёт SDD spec/API contracts/edge test matrix/DoD/future task packets и pending progress по UX/UI/context, затем **останавливается до реализации**. `/frontend:build` принимает этот plan; если пользователь сразу запросил build без готового плана, compact inline planning внутри build сохраняется. Planning-only и execution scope не смешиваются.
+[`/palarran:frontend:plan {feature}`](plan/README.md) creates an SDD spec/API contracts/edge test matrix/DoD/future task packets and pending progress from UX/UI/context, then **stops before implementation**. `/palarran:frontend:build` consumes this plan; when the user requests a build directly without a prepared plan, compact inline planning within build remains available. Keep planning-only and execution scopes separate.

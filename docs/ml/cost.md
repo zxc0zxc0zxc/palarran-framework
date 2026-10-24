@@ -1,31 +1,31 @@
-# Оценка стоимости и общий бюджет
+# Cost estimates and the shared budget
 
-Оценка предшествует запуску и не запускает GPU для собственного подтверждения. Public [Modal pricing](https://modal.com/pricing) — vendor tariff, не connected account и не invoice. В report обязательно `as_of`, USD/единицы, выбранный Modal product (Functions vs Sandboxes), regional/contract assumptions, hardware/count, physical CPU cores и RAM GiB, длительность всех phases/attempts. Public rates перепроверяются перед конкретным paid approval; в offline `--plan` используй датированный snapshot и явно отметь возможную устарелость.
+Estimate before launch; estimation does not start a GPU to validate itself. Public [Modal pricing](https://modal.com/pricing) is a vendor tariff, not a connected account or invoice. Reports require `as_of`, USD/units, selected Modal product (Functions versus Sandboxes), regional/contract assumptions, hardware/count, physical CPU cores and RAM GiB, and durations for all phases/attempts. Recheck public rates before a concrete paid approval; offline `--plan` uses a dated snapshot with possible staleness explicitly noted.
 
-## Считать весь experiment
+## Count the entire experiment
 
-Для одного сценария compute:
+Compute for one scenario:
 
 `sum_attempts(seconds × (GPU_count × GPU_USD_per_second + billed_physical_CPU × CPU_rate + billed_RAM_GiB × RAM_rate))`.
 
-При разных timings/resources phases считаются отдельными строками. Время — billed container duration, включая relevant load/eval/checkpoint/idle intervals; training step time сам по себе меньше end-to-end. CPU/RAM у Functions могут биллиться по большему из requested и actual; ephemeral disk может повышать RAM billing basis. Это [правила Modal resources](https://modal.com/docs/guide/resources), поэтому вводи billable resource scenario, а не только requests.
+With different phase timings/resources, use separate rows. Time is billed container duration, including relevant loading/evaluation/checkpoint/idle intervals; training-step time alone is shorter than end-to-end time. Functions CPU/RAM can be billed on the greater of requested and actual usage; ephemeral disk can increase the RAM billing basis. These are [Modal resource rules](https://modal.com/docs/guide/resources), so enter a billable-resource scenario, not requests alone.
 
-Сверху: preprocessing/build, dataset/model download, baseline, pilot, failed/OOM attempts, resume/replayed work, ablations/seeds, validation/final benchmark/judges, checkpoint/export/storage/egress, внешний annotation/synthetic API, subscription/taxes где применимо. Unknown extra остаётся unknown; credit entitlement не считать до подтверждения доступного остатка. Cash charge, credit consumption и economic cost раздельно. Запас для unknowns не превращает unknown в известный ноль.
+Add preprocessing/builds, dataset/model downloads, baseline, pilot, failed/OOM attempts, resume/replayed work, ablations/seeds, validation/final benchmark/judges, checkpoint/export/storage/egress, external annotation/synthetic APIs and subscriptions/taxes where applicable. Unknown extras remain unknown; do not count credit entitlement until its available balance is confirmed. Separate cash charges, credit consumption and economic cost. Contingency for unknowns does not turn them into known zeroes.
 
 ## Low/base/high
 
-Время оценивай из representative measured throughput, либо пометь borrowed/assumed. Для LLM: effective processed tokens / observed aggregate useful tokens per second, включая epochs/padding/packing/accumulation и eval overhead без двойного подсчёта. Для CV — samples/second при той же resolution/augmentation. Multi-GPU efficiency не линейна; учесть communication/dataloader. Warmup, caching и cold path измерять отдельно.
+Estimate time from representative measured throughput or label it borrowed/assumed. For LLMs: effective processed tokens / observed aggregate useful tokens per second, including epochs/padding/packing/accumulation and evaluation overhead without double counting. For CV: samples/second at the same resolution/augmentation. Multi-GPU efficiency is not linear; account for communication/dataloading. Measure warmup, caching and cold paths separately.
 
-Low/base/high — сценарии, не confidence interval и не статистический гарантированный upper bound. Если high/unknown не помещаются в ceiling, уменьшить scope/модель/число trials или запросить недостающие условия; **не повышать лимит**. Для разрешения запуска нужен обоснованный reserve и bounded control plan, даже если ожидаемая цена очень мала.
+Low/base/high are scenarios, not confidence intervals or statistically guaranteed upper bounds. If high/unknown costs exceed the ceiling, reduce scope/model/trials or request the missing conditions; **do not increase the limit**. Launch authorization needs a justified reserve and bounded control plan, even when expected cost is tiny.
 
 ## Offline helper
 
-`python3 scripts/ml_cost.py templates/ml/cost.example.json` проверяет явные rates/durations/units/unknown extras, считает Decimal compute low/base/high и reserve с contingency. Нет сетевых вызовов, SDK, live price lookup, списания и запуска jobs. Все numbers example — условные; они не rate snapshot. Helper не поддерживает billing reconciliation и не является launch gate. При реальных phases вызови его для каждой строки и сложи результаты без повторного начисления общих fixed extras.
+`python3 scripts/ml_cost.py templates/ml/cost.example.json` checks explicit rates/durations/units/unknown extras and calculates Decimal low/base/high compute and a reserve with contingency. No networking, SDK, live price lookup, charges or job launches. All example numbers are hypothetical, not a rate snapshot. The helper neither reconciles billing nor acts as a launch gate. For actual phases, invoke it per row and sum without charging shared fixed extras repeatedly.
 
-Report имеет `known_total`, `unknown_extras`, `reserve`, `within_budget` (`null`, если total неполный). Даже известный итог — scenario, не spending guarantee. Не подставлять 0 за отсутствие цены. Отрицательные значения, NaN/Infinity, bool вместо чисел, неполные scenarios, неодинаковые единицы — ошибка входа.
+The report has `known_total`, `unknown_extras`, `reserve`, `within_budget` (`null` when the total is incomplete). Even a known total is a scenario, not a spending guarantee. Never replace a missing price with 0. Negative values, NaN/Infinity, booleans instead of numbers, incomplete scenarios and mismatched units are input errors.
 
-## Контроль после запуска
+## Control after launch
 
-До dispatch резервируется весь допустимый attempt envelope и доля final eval. Новая работа возможна, если confirmed spend + unresolved reserves + proposed reserve не превышают общий ceiling. В incremental ledger различай observed wall-time estimate, provider usage и invoice; поздний billing может менять оценку. Отсутствие receipt блокирует освобождение reserve. Учти provider automatic preemption/restart даже при application retries=0.
+Before dispatch reserve the entire permitted attempt envelope and final-evaluation allocation. New work requires confirmed spend + unresolved reserves + proposed reserve to stay within the shared ceiling. The incremental ledger distinguishes observed wall-time estimates, provider usage and invoices; delayed billing may revise estimates. A missing receipt blocks reserve release. Account for automatic provider preemption/restarts even with application retries=0.
 
-Нужны limits на total wall clock, attempts/restarts, steps/tokens, workers, GPU class/count, checkpoint/storage, bounded telemetry и abort controller. Stop threshold оставляет headroom на обнаружение/остановку/checkpoint и delayed accounting. Vendor [budgets](https://modal.com/docs/guide/budgets) — дополнительный workspace/environment механизм, его availability/scope/права проверяются отдельно; не менять общие limits аккаунта без разрешения. Local polling/таймер не гарантирует invoice hard cap.
+Limits are required for total wall clock, attempts/restarts, steps/tokens, workers, GPU class/count, checkpoint/storage, bounded telemetry and an abort controller. The stop threshold leaves headroom for detection/stopping/checkpointing and delayed accounting. Vendor [budgets](https://modal.com/docs/guide/budgets) are an additional workspace/environment mechanism; check availability/scope/permissions separately and do not change shared account limits without authorization. Local polling/timers do not guarantee an invoice hard cap.

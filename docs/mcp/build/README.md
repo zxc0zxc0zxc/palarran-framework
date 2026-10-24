@@ -1,6 +1,6 @@
-# /mcp:build — инструменты, которыми удобно пользоваться агенту
+# /palarran:mcp:build — tools agents can use effectively
 
-Сначала [sources](sources.md), [tool design](tool-design.md), [context](context-efficiency.md), [protocol/security](protocol-security.md), [evals](evaluation.md), [workflow](workflow.md) и [decision memory](../../skills/decision-memory.md). Вход: business task, target README/AGENTS/accepted ADR, actual API/data rights и existing stack. Выход: narrow tool contracts + implementation + independent scenario evidence, не обещание универсального доступа.
+First read [sources](sources.md), [tool design](tool-design.md), [context](context-efficiency.md), [protocol/security](protocol-security.md), [evals](evaluation.md), [workflow](workflow.md) and [decision memory](../../skills/decision-memory.md). Input: business task, target README/AGENTS/accepted ADRs, actual API/data rights and existing stack. Output: narrow tool contracts + implementation + independent scenario evidence, not universal-access promises.
 
 ```mermaid
 flowchart LR
@@ -12,4 +12,4 @@ flowchart LR
   R --> M[ADR / handoff / regression]
 ```
 
-Runtime-v001 в ai-tools: standalone scaffold/validate/smoke и dependency-free read-only catalog stdio server, pinned MCP2025-11-25 profile. Это первая concrete MCP server implementation, не HTTP/auth/SDK framework. Other project tools строятся по выбранному стеку/официальному SDK; generated example не автоматически становится production интеграцией. Нет auto activation/install/deploy/paid API calls. --plan оставляет только planning artifacts.
+Runtime-v001 in palarran: standalone scaffold/validate/smoke and a dependency-free read-only catalog stdio server, pinned MCP2025-11-25 profile. This first concrete MCP server implementation is not an HTTP/auth/SDK framework. Build other project tools with the chosen stack/official SDK; generated examples do not automatically become production integrations. No auto activation/install/deploy/paid API calls. --plan permits planning artifacts only.

@@ -1,28 +1,28 @@
-# Дизайн диагностики обучения
+# Training diagnostics design
 
-**Статус: runtime-v001.** [Runtime contract](runtime.md) реализует optional frozen diagnostics policy, bounded collectors, tracked rules, immutable generation snapshots и rolling/terminal reports. Data gate отдельно проверяет подготовку данных. Task/framework scorers и безопасная фиксация tensor state остаются ответственностью конкретного trainer hook; полный design шире generic runtime.
+**Status: runtime-v001.** The [runtime contract](runtime.md) implements optional frozen diagnostics policies, bounded collectors, tracked rules, immutable generation snapshots and rolling/terminal reports. The data gate checks preparation separately. Task/framework scorers and safe tensor-state capture remain each trainer hook's responsibility; the full design exceeds generic runtime scope.
 
-Цель — ответить: обучается ли модель корректно, улучшает ли нужную задачу, сохраняет ли полезное поведение и во что обходится результат. Loss остаётся одним из сигналов. Снижение loss/PPL при росте ошибок, обрывов или регрессий не считается успехом.
+The goal is to determine whether training is correct, improves the target task, preserves useful behavior and at what cost. Loss remains one signal. Lower loss/PPL alongside more errors, truncations or regressions is not success.
 
-## Маршрут
+## Route
 
-| Документ | Что решает |
+| Document | Responsibility |
 | --- | --- |
-| [Sources](sources.md) | Первичные источники, даты и пределы переноса |
-| [Artifacts](artifacts.md) | Какие данные сохраняем, lineage, streams, privacy и стоимость |
-| [Task metrics](task-metrics.md) | Train/validation, PPL, primary metrics и slices по задаче |
-| [Heuristics](heuristics.md) | Какая эвристика за что отвечает, когда применима и как действует |
-| [Generation probes](generations.md) | Сравнимые примеры поведения по checkpoint/time |
-| [Reports](reports.md) | Rolling/terminal report при success/stop/failure/unknown |
-| [Integration plan](integration-plan.md) | Что нужно реализовать, task DAG и offline DoD |
+| [Sources](sources.md) | Primary sources, dates and transfer limits |
+| [Artifacts](artifacts.md) | Preserved data, lineage, streams, privacy and cost |
+| [Task metrics](task-metrics.md) | Train/validation, PPL, primary metrics and task slices |
+| [Heuristics](heuristics.md) | Each heuristic's purpose, applicability and actions |
+| [Generation probes](generations.md) | Comparable behavior examples by checkpoint/time |
+| [Reports](reports.md) | Rolling/terminal reports on success/stop/failure/unknown |
+| [Integration plan](integration-plan.md) | Required implementation, task DAG and offline DoD |
 
-Основа: [Karpathy Recipe](https://karpathy.github.io/2019/04/25/recipe/) — маленькие проверяемые шаги, осмотр данных и наблюдение фиксированных примеров; [Google Rules of ML](https://developers.google.com/machine-learning/guides/rules-of-ml) — проверять pipeline и соответствие цели. Для данного проекта адаптируем fixed probes на development данных, не на скрытом final test. Наши схемы хранения/остановок — инженерный выбор, не научный результат.
+Basis: [Karpathy Recipe](https://karpathy.github.io/2019/04/25/recipe/) — small verifiable steps, data inspection and fixed-example observation; [Google Rules of ML](https://developers.google.com/machine-learning/guides/rules-of-ml) — check the pipeline and goal alignment. For this project adapt fixed probes on development data, never hidden final tests. Storage/stop schemas are our engineering choices, not scientific results.
 
 ```mermaid
 flowchart TD
   P[Experiment + task profile + budget + probes] --> F{Preflight contracts valid?}
-  F -->|Нет| B[Blocked report: no training launch]
-  F -->|Да| S[Durable start stub + approved training]
+  F -->|No| B[Blocked report: no training launch]
+  F -->|Yes| S[Durable start stub + approved training]
   S --> C[Train telemetry + bounded validation + generation snapshots]
   C --> H[Heuristic state + evidence + permitted action]
   H -->|Continue| C
@@ -33,14 +33,14 @@ flowchart TD
   R --> E[Separate frozen benchmark when authorized and budgeted]
 ```
 
-## Что фиксировать до старта
+## What to freeze before launch
 
-В immutable experiment revision: task profile, hypothesis, supervised target basis, train/dev/final-test policy, primary metric и practical delta, general/domain/language guardrails, diagnostic probe version, registry эвристик с thresholds/windows, logging/evaluation/generation/checkpoint cadence и стоимость. Все неопределённости и отключённые сигналы имеют причину. Для baseline также нужен diagnostic snapshot или явный NOT RUN; нельзя придумывать сравнение после обучения.
+In an immutable experiment revision: task profile, hypothesis, supervised-target basis, train/dev/final-test policy, primary metric and practical delta, general/domain/language guardrails, diagnostic-probe version, heuristic registry with thresholds/windows, logging/evaluation/generation/checkpoint cadence and cost. Every uncertainty/disabled signal has a reason. Baselines need a diagnostic snapshot or explicit NOT RUN too; do not invent comparisons after training.
 
-Нет общего правильного «логировать каждые N шагов». Малый run: дешёвые per-update scalars и редкие небольшие probes. Длинный run: bounded scalars + периодическая validation, rotating debug cases и exported checkpoints. Полные gradient/activation histograms только ограниченными диагностическими окнами. Выбор cadence фиксируется до запуска, overhead измеряется в разрешённом pilot; при нехватке бюджета уменьшаем необязательную диагностику по заранее описанной политике и сохраняем причину, а не повышаем ceiling.
+There is no universally correct “log every N steps.” Small runs use inexpensive per-update scalars and infrequent small probes. Long runs use bounded scalars + periodic validation, rotating debug cases and exported checkpoints. Full gradient/activation histograms belong only in bounded diagnostic windows. Freeze cadence before launch, measure overhead in an authorized pilot; when budget is insufficient reduce optional diagnostics by predefined policy and record why, never raise the ceiling.
 
-## DoD дизайна и реализации
+## Design and implementation DoD
 
-Документационный DoD: все поля, состояния, decision rules и failure paths определены; примеры явно not_run, packaged links разрешаются. Runtime DoD дополнительно требует collectors/normalizers, finalizer/recovery, artifact integrity и offline failure-injection tests из плана. Наличие этого guide или скриншота tracker не даёт runtime PASS.
+Documentation DoD: all fields, states, decision rules and failure paths defined; examples explicitly not_run, packaged links resolve. Runtime DoD additionally requires collectors/normalizers, finalizer/recovery, artifact integrity and the plan's offline failure-injection tests. This guide or a tracker screenshot does not establish runtime PASS.
 
-Шаблоны для следующей реализации: [diagnostics policy JSON](examples/diagnostics-policy.example.md), [generation snapshot JSON](examples/generation-snapshot.example.md), [training report](examples/training-report.md), [validation report](examples/validation-report.md). JSON записан в Markdown для portable docs package; все примеры NOT RUN.
+Templates for the next implementation: [diagnostics policy JSON](examples/diagnostics-policy.example.md), [generation snapshot JSON](examples/generation-snapshot.example.md), [training report](examples/training-report.md), [validation report](examples/validation-report.md). JSON is embedded in Markdown for the portable docs package; every example is NOT RUN.

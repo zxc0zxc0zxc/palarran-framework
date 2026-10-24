@@ -12,7 +12,7 @@
     "source": {
       "repo": "synthetic-example",
       "commit": "0000000000000000000000000000000000000000",
-      "adr": ".ai-development/example/decisions/0001.md"
+      "adr": ".palarran/example/decisions/0001.md"
     },
     "evidence": ["Synthetic example only; replace with actual test subject and result"],
     "privacy_reviewed": true

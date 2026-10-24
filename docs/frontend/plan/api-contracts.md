@@ -1,21 +1,21 @@
-# API contracts из потребностей интерфейса
+# API contracts from interface needs
 
-Каждый data-bearing UI action/state связать с existing или **proposed** capability. Источник: schema/version/commit/backend docs/code; отсутствие подтверждения — unknown/proposal, не работающий endpoint. Если backend нет, спланировать boundary/format и prerequisite owner/acceptance для backend, не писать его в frontend plan scope. Existing REST/GraphQL/RPC/SDK format уважать, client codegen только future task.
+Link each data-bearing UI action/state to an existing or **proposed** capability. Source: schema/version/commit/backend docs/code; lack of confirmation means unknown/proposal, not a working endpoint. Without a backend, plan its boundary/format and prerequisite owner/acceptance instead of implementing it within frontend-plan scope. Respect existing REST/GraphQL/RPC/SDK formats; client codegen is a future task only.
 
-Для operation C-ID зафиксировать:
+For each operation C-ID, record:
 
-- Screen/state/action/AC, method/path или query/event, input/output schema и examples, required/optional/null, limits, identifier/money/time units, pagination/filter/sort/order.
-- Auth/session/tenant/role/object permission и client-server boundary, safe storage/transport по existing convention. UI guard не server authorization; secrets не в bundle. Refresh/session-expiry concurrency и login return destination по UX.
-- Success/error/status mapping к конкретному UI state: field/global errors, forbidden/not-found/conflict/rate limit/server/network/malformed response. Copy краткая, machine code отдельно, retryability/Retry-After по backend contract.
-- Deadlines/cancellation, request dedup/cache key/freshness/invalidation, stale-response handling, optimistic update/rollback/reconcile, duplicate submit и idempotency/server-side side effects.
-- Version compatibility/unknown fields/enums, capability/feature rollout, upload/download/stream/reconnect где нужны; mock/real availability, backend owner и contract freeze gate.
+- Screen/state/action/AC, method/path or query/event, input/output schema and examples, required/optional/null, limits, identifier/money/time units, pagination/filter/sort/order.
+- Auth/session/tenant/role/object permission and client-server boundary, safe storage/transport under existing conventions. A UI guard is not server authorization; keep secrets out of bundles. Refresh/session-expiry concurrency and login return destination follow UX.
+- Success/error/status mapping to specific UI states: field/global errors, forbidden/not-found/conflict/rate limit/server/network/malformed response. Keep copy concise and machine codes separate; retryability/Retry-After follow the backend contract.
+- Deadlines/cancellation, request dedup/cache key/freshness/invalidation, stale-response handling, optimistic update/rollback/reconciliation, duplicate submit and idempotency/server-side side effects.
+- Version compatibility/unknown fields/enums, capability/feature rollout, upload/download/stream/reconnect where needed; mock/real availability, backend owner and contract freeze gate.
 
-[OpenAPI 3.1.1](https://spec.openapis.org/oas/v3.1.1.html) — конкретный reference для HTTP schema; это не принудительная миграция и не утверждение latest version. Проверить используемый dialect/toolchain. Static TypeScript тип сам по себе не проверяет runtime payload. [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html) — возможный standard problem response, если выбран/поддержан API; не требовать поменять существующий error format ради клиента.
+[OpenAPI 3.1.1](https://spec.openapis.org/oas/v3.1.1.html) is a specific HTTP-schema reference, not a forced migration or a latest-version claim. Check the dialect/toolchain in use. Static TypeScript types alone do not validate runtime payloads. [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html) is a possible standard problem response if selected/supported by the API; do not require existing error formats to change for the client.
 
-[AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) позволяет отменять web operations. Наша важная граница: отменённый fetch не доказывает, что сервер не выполнил mutation. Unknown outcome after timeout требует status lookup/idempotent retry/reconciliation, а не нового blind submit. Disabled button не заменяет server idempotency.
+[AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController) can cancel web operations. Our important boundary: an aborted fetch does not prove the server did not execute a mutation. An unknown outcome after timeout needs status lookup/idempotent retry/reconciliation, not another blind submission. A disabled button does not replace server idempotency.
 
 ## Contract-to-state matrix
 
-[Шаблон](../../../templates/frontend/api-contract.md): C-ID/source status → request/preconditions → response/failure → state/copy/action → consistency/retry → TASK/T/owner. Для поискового запроса A→B спланировать out-of-order response test: поздний A не затирает B. Для optimistic mutation — rollback при explicit failure и отдельный unknown outcome path. Для nullable/empty response — не случайный crash или ложный success.
+[Template](../../../templates/frontend/api-contract.md): C-ID/source status → request/preconditions → response/failure → state/copy/action → consistency/retry → TASK/T/owner. For search A→B, plan an out-of-order response test: late A must not overwrite B. For optimistic mutation, specify rollback after explicit failure and a separate unknown-outcome path. Nullable/empty responses must not cause accidental crashes or false success.
 
-Fixtures synthetic и contract-aligned. Мок поможет воспроизвести errors/loading в будущих tests, но не докажет доступность/совместимость backend. Inert schema/contracts хранить в planning area или existing canonical specs, не подменять app API clients/servers в planning skill.
+Fixtures are synthetic and contract-aligned. A mock helps reproduce errors/loading in future tests but does not establish backend availability/compatibility. Keep inert schemas/contracts in the planning area or existing canonical specs; do not replace application API clients/servers in the planning skill.

@@ -1,10 +1,10 @@
-# Low: небольшой VPS
+# Low: small VPS
 
-Прочитать вместе с [общими правилами](README.md) и [workflow](workflow.md). Начальный ориентир: 1–2 vCPU, 1–4 GiB RAM, SSD; реальная вместимость подтверждается измерением приложения. На 1 GiB не размещать вслепую DB, приложение и полный observability stack.
+Read alongside [shared rules](README.md) and [workflow](workflow.md). Starting guideline: 1–2 vCPU, 1–4 GiB RAM, SSD; actual capacity requires application measurements. Do not blindly place a DB, application and full observability stack on 1 GiB.
 
-## Предпочтительная архитектура
+## Preferred architecture
 
-Поддерживаемый Linux LTS + Docker Engine/Compose + Caddy (либо знакомый команде поддерживаемый proxy). Приложения и DB в разных сетевых сегментах Compose, наружу публикуются только proxy-порты. Kubernetes и Argo CD не обязательны. Это наша адаптация [Google simplicity](https://sre.google/sre-book/simplicity/) и поддерживаемого [single-server Compose](https://docs.docker.com/compose/how-tos/production/).
+Supported Linux LTS + Docker Engine/Compose + Caddy (or a supported proxy familiar to the team). Applications and DB use separate Compose network segments; expose only proxy ports externally. Kubernetes and Argo CD are optional. This is our adaptation of [Google simplicity](https://sre.google/sre-book/simplicity/) and supported [single-server Compose](https://docs.docker.com/compose/how-tos/production/).
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
   O[Operator] -->|VPN or restricted SSH| VPS
 ```
 
-Bridge между proxy/app — отдельная trust boundary от DB сети; не добавлять DB к ingress network. Контейнеры на одном хосте не являются изоляцией от администратора/root хоста.
+The proxy/app bridge is a separate trust boundary from the DB network; do not add the DB to the ingress network. Containers on one host do not isolate workloads from that host's administrator/root.
 
 ```mermaid
 flowchart LR
@@ -35,38 +35,38 @@ flowchart LR
   H --> T[Health check and release result]
 ```
 
-## Ресурсы и контейнеры
+## Resources and containers
 
-- Сначала бюджет RAM: OS/runtime + app peak + DB cache/connections + deploy headroom + backup compression. Сумма не должна рассчитываться по idle-потреблению; зафиксировать запас и пороги.
-- Не собирать образы на production VPS. Фиксировать image digest, arch, resource limits, restart policy, healthcheck. Приложение: non-root, drop capabilities, no-new-privileges, read-only filesystem где совместимо, writable tmpfs/volume только по потребности.
-- Docker daemon и docker group дают высокий доступ к хосту; socket не монтировать в app/proxy. Rootless — возможный вариант с отдельной проверкой портов, cgroups и ограничений ([Docker](https://docs.docker.com/engine/security/rootless/)).
-- [Пример Compose/Caddy](../../../templates/infra/README.md) требует подставить образы и адаптировать приложение; секреты читать из защищённых файлов, Compose secrets сами по себе не vault.
+- Budget RAM first: OS/runtime + application peak + DB cache/connections + deployment headroom + backup compression. Do not calculate the total from idle consumption; record headroom and thresholds.
+- Do not build images on the production VPS. Pin image digest, architecture, resource limits, restart policy and healthcheck. Application: non-root, drop capabilities, no-new-privileges, read-only filesystem where compatible, writable tmpfs/volumes only as needed.
+- Docker daemon and docker group grant extensive host access; do not mount the socket in applications/proxies. Rootless is an option requiring separate port, cgroup and limitation checks ([Docker](https://docs.docker.com/engine/security/rootless/)).
+- The [Compose/Caddy example](../../../templates/infra/README.md) requires actual images and application adaptation; read secrets from protected files. Compose secrets alone are not a vault.
 
-## Сеть и безопасность
+## Network and security
 
-| Поток | Доступ | Контроль |
+| Flow | Access | Control |
 |---|---|---|
-| Internet → proxy | TCP 443; TCP 80 только redirect/ACME при выбранном challenge | Provider firewall + host rules; IPv4 и IPv6 |
-| Operator → SSH | TCP выбранный SSH port из VPN/admin CIDR | Verified key; rescue path |
-| Proxy → app | Только app port по bridge | Нет public app/DB ports |
-| App → DB | Только DB port и отдельный DB account | DB не публикуется на host |
-| App → Internet | Только выбранные API через proxy/host forwarding controls | Явные destinations, DNS, TLS |
-| Host → dependencies | DNS TCP/UDP 53 к resolver, NTP UDP 123 к time server, HTTPS 443 к repos/registry/backup | Отдельный host egress allowlist |
+| Internet → proxy | TCP 443; TCP 80 only for redirect/ACME under the selected challenge | Provider firewall + host rules; IPv4 and IPv6 |
+| Operator → SSH | TCP selected SSH port from VPN/admin CIDR | Verified key; rescue path |
+| Proxy → application | Application port only over bridge | No public application/DB ports |
+| Application → DB | DB port and separate DB account only | DB not published on host |
+| Application → Internet | Selected APIs only through proxy/host forwarding controls | Explicit destinations, DNS, TLS |
+| Host → dependencies | DNS TCP/UDP 53 to resolver, NTP UDP 123 to time server, HTTPS 443 to repos/registry/backup | Separate host egress allowlist |
 
-В default Docker bridge исходящие соединения обычно разрешены. `internal: true` изолирует backend сеть, но app с дополнительной outbound-сетью всё ещё может выходить в Интернет. В конкретном плане реализовать egress proxy с политикой либо backend-aware forwarding rules; пример Compose **не реализует строгий egress allowlist**. На старте допустима документированная временная host HTTPS-exception с owner/deadline, но не заявление о default-deny.
+Default Docker bridges usually allow outbound connections. `internal: true` isolates a backend network, but an application with an additional outbound network can still reach the Internet. Implement an egress proxy with policy or backend-aware forwarding rules in the concrete plan; the Compose example **does not implement a strict egress allowlist**. A documented temporary host HTTPS exception with owner/deadline is acceptable initially, but not a default-deny claim.
 
-Не полагаться только на UFW для опубликованных контейнерных портов: [Docker описывает обход UFW](https://docs.docker.com/engine/network/packet-filtering-firewalls/). Для iptables backend учитывать `DOCKER-USER`; для nftables — правила выбранного backend, не смешивать инструкции. Снаружи проверить закрытые 5432/6379/8080 и IPv6, если включён. Не отключать управление правилами Docker без полноценной замены.
+Do not rely solely on UFW for published container ports: [Docker documents the UFW bypass](https://docs.docker.com/engine/network/packet-filtering-firewalls/). For the iptables backend, account for `DOCKER-USER`; for nftables, use the selected backend's rules without mixing instructions. Externally check closed 5432/6379/8080 and IPv6 if enabled. Do not disable Docker rule management without a complete replacement.
 
-## Deploy, данные и операции
+## Deployment, data and operations
 
-GitHub Actions: tests → build → scan → push digest → проверяемый release manifest. Deploy отдельным шагом через приватный доступ, с ограничением полномочий; обычному app CI не нужен root SSH. Публичный self-hosted runner на production не ставить. Для single replica Compose recreate обычно означает простой; blue/green только при достаточной RAM и совместимых миграциях.
+GitHub Actions: tests → build → scan → push digest → verifiable release manifest. Deployment is a separate step through private access with limited authority; normal application CI does not need root SSH. Do not install a public self-hosted runner on production. For a single replica, Compose recreate usually means downtime; blue/green requires sufficient RAM and compatible migrations.
 
-DB на локальном volume допустима при принятом риске потери хоста. Для исходного плана предложить RPO 24 h / RTO 4 h как **обсуждаемые цели** для некритичного проекта; интервалы и restore замерить, не обещать по наличию cron. Для важных денег/данных рассмотреть PITR или managed DB уже на low. Snapshots не заменяют DB-consistent backup и off-host копию ([PostgreSQL](https://www.postgresql.org/docs/current/backup.html)).
+A DB on a local volume is acceptable with acknowledged host-loss risk. For an initial noncritical-project plan, propose RPO 24 h / RTO 4 h as **objectives for discussion**; measure intervals and restore time rather than promising them because cron exists. For important financial/data workloads, consider PITR or managed DB even at low scale. Snapshots do not replace DB-consistent backups and an off-host copy ([PostgreSQL](https://www.postgresql.org/docs/current/backup.html)).
 
-Минимум эксплуатации: внешний uptime probe, alert на disk/inodes, OOM/restarts, TLS expiry, ошибки/latency, возраст и ошибки backup. Логи ротировать; агенты по ресурсу; внешняя проверка должна переживать отказ VPS. Runbooks: потеря хоста, переполнение диска, восстановление DB, откат image, обновление OS и сертификатов.
+Minimum operations: external uptime probe; alerts for disk/inodes, OOM/restarts, TLS expiry, errors/latency, backup age/failures. Rotate logs; size agents to available resources; external checks must survive VPS failure. Runbooks: host loss, disk full, DB restore, image rollback, OS and certificate updates.
 
-## Открытые кейсы и приёмка
+## Open cases and acceptance
 
-План обязан обсудить: локальная/managed DB; Compose/rootless; deploy downtime или blue/green; строгий egress либо временное исключение; почему Kubernetes пока не окупается. Обоснования — [ADR-каталог](decisions.md), выбранные альтернативы и критерии пересмотра.
+The plan must discuss local/managed DB; Compose/rootless; deployment downtime versus blue/green; strict egress versus temporary exception; why Kubernetes does not yet justify its cost. Rationale uses the [ADR catalog](decisions.md), chosen alternatives and reconsideration criteria.
 
-Готовность: новая SSH-сессия работает; наружу только утверждённые ports; app после restart поднимается; rollback на предыдущий digest проверен; backup восстановлен на отдельном target; alert доставлен; фактические downtime/RPO/RTO записаны. Потеря единственного хоста означает остановку сервиса — это явный SPOF, а не HA.
+Readiness: a new SSH session works; only approved ports are public; the application starts after restart; rollback to previous digest tested; backup restored on a separate target; alert delivered; actual downtime/RPO/RTO recorded. Losing the only host stops service: this is an explicit SPOF, not HA.

@@ -1,33 +1,33 @@
-# Edge cases и тестирование инвариантов
+# Edge cases and invariant testing
 
-План задаёт воспроизводимые tests, не обещание «100% coverage». [Software Engineering at Google: Testing Overview](https://abseil.io/resources/swe-book/html/ch11.html) полезен как первичный источник о размерах/назначении тестов. Наша стратегия: больше быстрых локальных проверок business rules, реальная DB/integration там, где mocks не воспроизводят transaction/driver behavior, contract и ограниченные end-to-end проверки critical journeys. Пропорции не назначаются магическим процентом для всех проектов.
+Plans define reproducible tests, not promises of “100% coverage.” [Software Engineering at Google: Testing Overview](https://abseil.io/resources/swe-book/html/ch11.html) is a primary source on test sizes/purposes. Our strategy: more fast local business-rule checks, real DB/integration where mocks cannot reproduce transactions/drivers, contracts and bounded end-to-end checks of critical journeys. No magical universal test proportions.
 
-Для каждого requirement/invariant и риска назначить test ID, layer, setup/preconditions, stimulus (в том числе concurrent interleaving), **ожидаемый observable outcome**, cleanup/isolation и future command/tool/environment. Критичные N/A обосновать. Test execution остаётся **NOT RUN (planning)**. DoD будущей реализации требует actual evidence, не заменяется написанной таблицей.
+For every requirement/invariant/risk assign test ID, layer, setup/preconditions, stimulus including concurrent interleavings, **expected observable outcomes**, cleanup/isolation and future command/tool/environment. Justify critical N/A cases. Test execution stays **NOT RUN (planning)**. Future implementation DoD needs actual evidence, not a completed table.
 
-## Матрица рисков — адаптировать к фиче
+## Risk matrix: adapt to the feature
 
-| Риск/edge | Что проверить, не ограничиваясь happy path |
+| Risk/edge | Checks beyond happy paths |
 |---|---|
-| Inputs/границы | Пусто/отсутствует/null/zero/negative/max/overflow/oversized/Unicode/precision; invalid enum/version/timezone/DST по домену |
-| Access | Unauthenticated, wrong role/object/field/tenant, enumeration, revoked access; запрет read/write/side effect |
-| State | Неправильный переход, repeated terminal action, expired/deleted resource, stale version/optimistic conflict |
-| Idempotency | Same key+payload, changed payload, concurrent duplicate, key scope/expiry и crash/timeout после commit |
+| Inputs/boundaries | Empty/missing/null/zero/negative/max/overflow/oversized/Unicode/precision; domain-specific invalid enums/versions/timezones/DST |
+| Access | Unauthenticated, wrong role/object/field/tenant, enumeration, revoked access; prohibited reads/writes/side effects |
+| State | Invalid transitions, repeated terminal actions, expired/deleted resources, stale versions/optimistic conflicts |
+| Idempotency | Same key+payload, changed payload, concurrent duplicates, key scope/expiry and crash/timeout after commit |
 | Transaction concurrency | Two writers, lost update/write skew, uniqueness race, lock/deadlock/serialization retry, ordering; assert business invariant |
-| External side effect | Before/after remote commit timeout, partial success, repeated response/webhook, retry exhaustion и reconciliation |
-| Messaging/jobs | Duplicate/out-of-order/delayed/poison, worker crash до/после ack, replay, DLQ recovery, backlog/lease expiry где есть |
+| External side effects | Timeout before/after remote commit, partial success, repeated responses/webhooks, retry exhaustion and reconciliation |
+| Messaging/jobs | Duplicate/out-of-order/delayed/poison messages, worker crashes before/after ACK, replay, DLQ recovery, applicable backlog/lease expiry |
 | Cache | Cold/miss/stampede/hot key, eviction/unavailable, stale populate/invalidation race, auth/tenant key isolation |
 | Data migration | Old/new schema/app coexist, concurrent writes/backfill, restart checkpoint, corrupted row, verification mismatch, cleanup gate |
-| Performance/resource | Normal/peak/burst/soak, timeout/overload/load shedding, pool exhaustion, cardinality/N+1 и memory/queue bounds |
-| Recovery | Dependency down/slow, shutdown/restart, backup/restore и RPO/RTO, compensations; при отсутствии компонента explicit N/A |
+| Performance/resources | Normal/peak/burst/soak, timeout/overload/load shedding, pool exhaustion, cardinality/N+1 and memory/queue bounds |
+| Recovery | Down/slow dependencies, shutdown/restart, backups/restores and RPO/RTO, compensation; explicit N/A for absent components |
 
-Предметные edges обязательно добавить: деньги/валюты/округления, бронирования/квоты, time windows, pagination under writes, ownership transfer, personal-data deletion — по фиче, а не заполнять всё одной общей матрицей.
+Add actual domain edges: money/currencies/rounding, bookings/quotas, time windows, pagination under writes, ownership transfer, personal-data deletion as relevant; one generic matrix does not suffice for every feature.
 
-## Исполнимость будущих тестов
+## Future test executability
 
-Property-based проверки для доменных инвариантов, state-machine/model tests для transitions, fuzzing/parser tests там, где есть такой риск; не обязать полный набор инструментов простой CRUD фиче. Concurrency tests задают controlled barrier/interleaving и проверяют конечное durable state, не просто «нет exception». Fault tests контролируют момент сбоя, mock/system boundary и восстановление. Для clocks/randomness — deterministic seed/fake time где возможно, без произвольных sleeps.
+Use property tests for domain invariants, state-machine/model tests for transitions, fuzzing/parser tests where warranted; do not require every tool for simple CRUD. Concurrency tests control barriers/interleavings and assert final durable state, not merely no exceptions. Fault tests control failure timing, mock/system boundaries and recovery. Use deterministic seeds/fake clocks where possible instead of arbitrary sleeps.
 
-Integration план использует isolated local/test DB с production-like constraints/version; migrations и API schema checks reproducible. Для performance — dataset/load/thresholds по [performance](performance.md). Секреты/production payloads не копируются в fixtures; destructive/failure injection — только будущий явно ограниченный sandbox execution.
+Integration plans use isolated local/test DBs with production-like constraints/versions; migrations/API-schema checks are reproducible. Performance uses [performance](performance.md) datasets/load/thresholds. Do not copy secrets/production payloads into fixtures; destructive/failure injection belongs only to future explicitly bounded sandbox execution.
 
 ## Risk coverage gate
 
-Все critical requirements/invariants имеют positive/negative/edge tests с ожидаемым outcome; существенные concurrency/partial failure/migration cases покрыты, N/A объяснены. Contract compatibility, SLA/SLO measurement, rollback/restore имеют проверку. Line/branch coverage можно задать как дополнительный project target, но она не подменяет edge coverage. Плановые тесты не помечаются PASS.
+Every critical requirement/invariant has positive/negative/edge tests with expected outcomes; cover significant concurrency/partial-failure/migration cases and justify N/A. Contract compatibility, SLA/SLO measurement, rollback/restores have checks. Line/branch coverage may be additional project targets but does not replace edge coverage. Never mark planned tests PASS.

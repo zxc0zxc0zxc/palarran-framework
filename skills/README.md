@@ -1,72 +1,226 @@
-# Индекс скиллов
+# Skill packages
 
-Полный checkout: [root README](../README.md) · [документация](../docs/README.md) · [AGENTS](../AGENTS.md) · [общие contracts](../docs/skills/README.md).
+[README](../README.md) · [Documentation](../docs/README.md) · [Configuration](../docs/setup/configuration.md) · [Command catalog](catalog.json) · [Package catalog](packages.json)
 
-**35 уникальных скиллов.** Slash-команды — project/plugin adapters; переносимый вызов в Codex использует `$skill-name`. Точный workflow, defaults/flags и mandatory docs определяет linked SKILL.md. Этот каталог не запускает действия и не заменяет профильные инструкции.
+**38 canonical skills in 15 selectable packages.** Choose package IDs at setup; `setup` is always included. Shared guide/helper dependencies are carried for portability, while unselected skills receive no discovery links.
 
-| Slash-команда | Переносимый skill / SKILL.md | Назначение |
+Codex uses `$palarran-*`. The unified Claude plugin exposes `/palarran:...`; standalone Claude discovery uses `/palarran-...`. These are separate interfaces.
+
+```sh
+python3 scripts/project_setup.py setup --target /ABSOLUTE/project --client codex \
+  --packages backend app memory --skills-language en --code-language en --docs-language en --plan
+```
+
+| Package | What it adds | Location / prerequisites |
 | --- | --- | --- |
-| `/skills:setup` | [`$skills-setup`](skills-setup/SKILL.md) | Автовыбор install/update, сохранение правок, global memory и usage |
-| `/infra-plan:low` | [`$infra-plan-low`](infra-plan-low/SKILL.md) | Небольшой VPS, Compose и read-only inventory; --plan offline |
-| `/infra-plan:med` | [`$infra-plan-med`](infra-plan-med/SKILL.md) | VDS/K3s/GitOps; --plan offline |
-| `/infra-plan:high` | [`$infra-plan-high`](infra-plan-high/SKILL.md) | HA Kubernetes/DR; --plan offline |
-| `/ci-cd:github` | [`$ci-cd-github`](ci-cd-github/SKILL.md) | GitHub Actions, fast feedback и deploy без CI SSH |
-| `/ci-cd:gitlab` | [`$ci-cd-gitlab`](ci-cd-gitlab/SKILL.md) | GitLab CI/CD, test/cache/release gates |
-| `/ux:design` | [`$ux-design`](ux-design/SKILL.md) | Бизнес/references → responsive экранные flows/states |
-| `/ui:design` | [`$ui-design`](ui-design/SKILL.md) | UX + references → visual preview/tokens/components |
-| `/frontend:plan` | [`$frontend-plan`](frontend-plan/SKILL.md) | SDD/API/UX/UI/edge cases/DoD; только план |
-| `/frontend:build` | [`$frontend-build`](frontend-build/SKILL.md) | Реализация по плану, responsive/browser verification |
-| `/backend:plan` | [`$backend-plan`](backend-plan/SKILL.md) | Stack/architecture/data/contracts/SLO; только план |
-| `/backend:build` | [`$backend-build`](backend-build/SKILL.md) | SDD implementation, invariant tests и progress |
-| `/product:define` | [`$product-define`](product-define/SKILL.md) | ICP/JTBD, business model, MVP и success criteria |
-| `/product:market` | [`$product-market`](product-market/SKILL.md) | Спрос/рынок/тренды и evidence |
-| `/product:compare` | [`$product-compare`](product-compare/SKILL.md) | Конкуренты/замены/pricing/positioning |
-| `/product:revenue` | [`$product-revenue`](product-revenue/SKILL.md) | Reported revenue, estimates и economics scenarios |
-| `/product:acquisition` | [`$product-acquisition`](product-acquisition/SKILL.md) | Каналы аналогов и planned funnel tests |
-| `/product:b2b` | [`$product-b2b`](product-b2b/SKILL.md) | Первые небольшие клиенты, offer/outreach plan |
-| `/product:b2c` | [`$product-b2c`](product-b2c/SKILL.md) | Бесплатные/дешёвые каналы и acquisition plan |
-| `/ml:plan` | [`$ml-plan`](ml-plan/SKILL.md) | Experiment/baseline/metrics/budget/stop/DoD |
-| `/ml:hypotheses` | [`$ml-hypotheses`](ml-hypotheses/SKILL.md) | Проверяемые гипотезы и bounded ablations |
-| `/ml:model` | [`$ml-model`](ml-model/SKILL.md) | Модель/метод/no-training baseline под задачу |
-| `/ml:data` | [`$ml-data`](ml-data/SKILL.md) | Research/splits/mix; --prepare только разрешённые данные |
-| `/ml:cost` | [`$ml-cost`](ml-cost/SKILL.md) | Offline cost scenarios/ресурсы/attempts/unknowns |
-| `/ml:train` | [`$ml-train`](ml-train/SKILL.md) | Authorized bounded training; --plan/--status modes |
-| `/ml:benchmark` | [`$ml-benchmark`](ml-benchmark/SKILL.md) | Frozen independent quality/slices/latency/cost protocol |
-| `/app:verify` | [`$app-verify`](app-verify/SKILL.md) | Business scenarios через browser/API/readonly DB; --plan без execution |
-| `/memory:recall` | [`$memory-recall`](memory-recall/SKILL.md) | Bounded cross-project graph/fulltext recall с applicability |
-| `/memory:learn` | [`$memory-learn`](memory-learn/SKILL.md) | Evidence-backed candidate/promotion/reuse feedback |
-| `/vps:inspect` | [`$vps-inspect`](vps-inspect/SKILL.md) | Readonly SSH inventory, --plan offline |
-| `/vps:manage` | [`$vps-manage`](vps-manage/SKILL.md) | Разрешённые host/service operations с rollback |
-| `/mcp:build` | [`$mcp-build`](mcp-build/SKILL.md) | Task-oriented MCP tools, bounded results, evals; --plan без execution |
-| `/agent:improve` | [`$agent-improve`](agent-improve/SKILL.md) | Failure/feedback → regression + skill diff + paired evidence; --plan без execution |
-| `/agent:eval` | [`$agent-eval`](agent-eval/SKILL.md) | Frozen задачи, independent graders, tokens/USD/time; --plan offline |
-| `/science:preprint` | [`$science-preprint`](science-preprint/SKILL.md) | LaTeX статья по evidence эксперимента; без запусков и публикации |
+| [`setup`](#setup) | Install, update and check the project connection. | Local library; checks an existing global memory connection |
+| [`product`](#product) | Product definition, market evidence, competitors, revenue and first customers. | Local project; no service installed |
+| [`ux`](#ux) | Responsive business flows, screen states and interaction diagrams. | Local project; no service installed |
+| [`ui`](#ui) | Responsive visual concepts, design systems, tokens and generated assets. | Local project; no service installed |
+| [`frontend`](#frontend) | SDD feature planning and browser-verified interface implementation. | Local project; no service installed |
+| [`backend`](#backend) | Architecture, API/data contracts, SDD implementation and reliability checks. | Local project; no service installed |
+| [`infra`](#infra) | Scale-aware VPS/Compose, K3s and Kubernetes infrastructure planning. | Local project; no service installed |
+| [`ci-cd`](#ci-cd) | GitHub/GitLab delivery for Go, PHP, Next.js, Python and Rust. | Local project; no service installed |
+| [`vps`](#vps) | Read-only host inspection and concrete authorized server/app-stack operations. | Local skills; SSH target only for authorized operations |
+| [`ml`](#ml) | Hypotheses, experiment/model/data/cost planning, supervised training and benchmarks. | Local planning; training needs explicit scope/budget/provider |
+| [`science`](#science) | Evidence-grounded LaTeX experiment reporting. | Local project; no service installed |
+| [`app`](#app) | Independent business acceptance through browser, API and read-only DB checks. | Local project; no service installed |
+| [`agent`](#agent) | Frozen task evaluations and regression-driven skill improvements. | Local project; no service installed |
+| [`mcp`](#mcp) | Task-oriented agent tools, compact results, security and evaluations. | Local project; no service installed |
+| [`memory`](#memory) | Quick notes, VPS context, structured session handoffs, recall and reviewed cleanup. | Local notes; optional configured private VPS memory |
 
-## Namespace packages
+## setup
 
-| Namespace | Manifest | Включённые профили |
+Install, update and check the project connection.
+
+Install selector: `--packages setup`. Portable Claude plugin: `palarran-setup`.
+
+| Unified command | Native skill | Arguments |
 | --- | --- | --- |
-| infra-plan | [root plugin](../.claude-plugin/plugin.json) | low, med, high |
-| ci-cd | [manifest](../plugins/ci-cd/plugin.json) | github, gitlab |
-| ux | [manifest](../plugins/ux/plugin.json) | design |
-| ui | [manifest](../plugins/ui/plugin.json) | design + UX dependency |
-| frontend | [manifest](../plugins/frontend/plugin.json) | plan/build + UI/UX dependencies |
-| backend | [manifest](../plugins/backend/plugin.json) | plan/build |
-| product | [manifest](../plugins/product/plugin.json) | define/market/compare/revenue/acquisition/b2b/b2c |
-| ml | [manifest](../plugins/ml/plugin.json) | plan/hypotheses/model/data/cost/train/benchmark |
-| memory | [manifest](../plugins/memory/plugin.json) | recall, learn |
-| vps | [manifest](../plugins/vps/plugin.json) | inspect, manage |
-| mcp | [manifest](../plugins/mcp/plugin.json) | build |
-| app | [manifest](../plugins/app/plugin.json) | verify |
-| agent | [manifest](../plugins/agent/plugin.json) | eval, improve |
-| science | [manifest](../plugins/science/plugin.json) | preprint |
+| `/palarran:setup` | [`$palarran-setup`](palarran-setup/SKILL.md) | `{target?} [--client codex|claude|both] [--plan]` |
 
-Сборка: `python3 scripts/package_plugin.py NAMESPACE --output /new/absolute/path` из root checkout. Профильный package содержит mandatory docs/templates/helpers, но не весь runtime или target memory. Details: [подключение](../README.md#skills-usage).
+## product
 
-## Правила маршрутизации
+Product definition, market evidence, competitors, revenue and first customers.
 
-- Plan/research commands сохраняют plan/evidence/decisions; переход к build/cloud/train/deploy не подразумевается.
-- Infra default — read-only inventory, `--plan` без доступа; ML data default — research, `--prepare` требует scope; flags сверять с SKILL.md.
-- Decisions/progress/outputs сохранять в target `.ai-development`, не в installed skill checkout.
-- Code graph: [freshness → bounded query → source](../docs/skills/graph-context.md); документы и AGENTS читать напрямую.
-- Новый skill добавляется одновременно в inventory/discovery/adapters/manifest/packager/validator; обновить этот каталог и badge count.
+Install selector: `--packages product`. Portable Claude plugin: `palarran-product`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:product:define` | [`$palarran-product-define`](palarran-product-define/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:product:market` | [`$palarran-product-market`](palarran-product-market/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:product:compare` | [`$palarran-product-compare`](palarran-product-compare/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:product:revenue` | [`$palarran-product-revenue`](palarran-product-revenue/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:product:acquisition` | [`$palarran-product-acquisition`](palarran-product-acquisition/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:product:b2b` | [`$palarran-product-b2b`](palarran-product-b2b/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:product:b2c` | [`$palarran-product-b2c`](palarran-product-b2c/SKILL.md) | `{task/context} [profile flags]` |
+
+## ux
+
+Responsive business flows, screen states and interaction diagrams.
+
+Install selector: `--packages ux`. Portable Claude plugin: `palarran-ux`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:ux:design` | [`$palarran-ux-design`](palarran-ux-design/SKILL.md) | `{task/context} [profile flags]` |
+
+## ui
+
+Responsive visual concepts, design systems, tokens and generated assets.
+
+Install selector: `--packages ui`. Portable Claude plugin: `palarran-ui`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:ui:design` | [`$palarran-ui-design`](palarran-ui-design/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ux:design` | [`$palarran-ux-design`](palarran-ux-design/SKILL.md) | `{task/context} [profile flags]` |
+
+## frontend
+
+SDD feature planning and browser-verified interface implementation.
+
+Install selector: `--packages frontend`. Portable Claude plugin: `palarran-frontend`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:frontend:plan` | [`$palarran-frontend-plan`](palarran-frontend-plan/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:frontend:build` | [`$palarran-frontend-build`](palarran-frontend-build/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ui:design` | [`$palarran-ui-design`](palarran-ui-design/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ux:design` | [`$palarran-ux-design`](palarran-ux-design/SKILL.md) | `{task/context} [profile flags]` |
+
+## backend
+
+Architecture, API/data contracts, SDD implementation and reliability checks.
+
+Install selector: `--packages backend`. Portable Claude plugin: `palarran-backend`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:backend:plan` | [`$palarran-backend-plan`](palarran-backend-plan/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:backend:build` | [`$palarran-backend-build`](palarran-backend-build/SKILL.md) | `{task/context} [profile flags]` |
+
+## infra
+
+Scale-aware VPS/Compose, K3s and Kubernetes infrastructure planning.
+
+Install selector: `--packages infra`. Portable Claude plugin: `palarran-infra`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:infra:plan` | [`$palarran-infra-plan`](palarran-infra-plan/SKILL.md) | `{low|med|high} [--plan]` |
+
+## ci-cd
+
+GitHub/GitLab delivery for Go, PHP, Next.js, Python and Rust.
+
+Install selector: `--packages ci-cd`. Portable Claude plugin: `palarran-ci-cd`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:ci-cd` | [`$palarran-ci-cd`](palarran-ci-cd/SKILL.md) | `{github|gitlab} [--plan]` |
+
+## vps
+
+Read-only host inspection and concrete authorized server/app-stack operations.
+
+Install selector: `--packages vps`. Portable Claude plugin: `palarran-vps`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:vps:inspect` | [`$palarran-vps-inspect`](palarran-vps-inspect/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:vps:manage` | [`$palarran-vps-manage`](palarran-vps-manage/SKILL.md) | `{task/context} [profile flags]` |
+
+The package stays on the agent workstation. Application deployment copies only its reviewed runtime/artifacts to the VPS, never the skills. [Application stack workflow](../docs/setup/vps-stack.md).
+
+## ml
+
+Hypotheses, experiment/model/data/cost planning, supervised training and benchmarks.
+
+Install selector: `--packages ml`. Portable Claude plugin: `palarran-ml`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:ml:plan` | [`$palarran-ml-plan`](palarran-ml-plan/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ml:hypotheses` | [`$palarran-ml-hypotheses`](palarran-ml-hypotheses/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ml:model` | [`$palarran-ml-model`](palarran-ml-model/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ml:data` | [`$palarran-ml-data`](palarran-ml-data/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ml:cost` | [`$palarran-ml-cost`](palarran-ml-cost/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ml:train` | [`$palarran-ml-train`](palarran-ml-train/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:ml:benchmark` | [`$palarran-ml-benchmark`](palarran-ml-benchmark/SKILL.md) | `{task/context} [profile flags]` |
+
+## science
+
+Evidence-grounded LaTeX experiment reporting.
+
+Install selector: `--packages science`. Portable Claude plugin: `palarran-science`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:science:preprint` | [`$palarran-science-preprint`](palarran-science-preprint/SKILL.md) | `{task/context} [profile flags]` |
+
+## app
+
+Independent business acceptance through browser, API and read-only DB checks.
+
+Install selector: `--packages app`. Portable Claude plugin: `palarran-app`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:app:verify` | [`$palarran-app-verify`](palarran-app-verify/SKILL.md) | `{task/context} [profile flags]` |
+
+## agent
+
+Frozen task evaluations and regression-driven skill improvements.
+
+Install selector: `--packages agent`. Portable Claude plugin: `palarran-agent`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:agent:eval` | [`$palarran-agent-eval`](palarran-agent-eval/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:agent:improve` | [`$palarran-agent-improve`](palarran-agent-improve/SKILL.md) | `{task/context} [profile flags]` |
+
+## mcp
+
+Task-oriented agent tools, compact results, security and evaluations.
+
+Install selector: `--packages mcp`. Portable Claude plugin: `palarran-mcp`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:mcp:build` | [`$palarran-mcp-build`](palarran-mcp-build/SKILL.md) | `{task/context} [profile flags]` |
+
+## memory
+
+Quick notes, VPS context, structured session handoffs, recall and reviewed cleanup.
+
+Install selector: `--packages memory`. Portable Claude plugin: `palarran-memory`.
+
+| Unified command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:memory:recall` | [`$palarran-memory-recall`](palarran-memory-recall/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:memory:learn` | [`$palarran-memory-learn`](palarran-memory-learn/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:memorize` | [`$palarran-memorize`](palarran-memorize/SKILL.md) | `{short|long} {note} [--plan]` |
+| `/palarran:remember` | [`$palarran-remember`](palarran-remember/SKILL.md) | `{query} [--plan]` |
+| `/palarran:memorize:session` | [`$palarran-memorize-session`](palarran-memorize-session/SKILL.md) | `[--long] [--plan]` |
+| `/palarran:remember:session` | [`$palarran-remember-session`](palarran-remember-session/SKILL.md) | `[--long] @file [--plan]` |
+| `/palarran:vacuum` | [`$palarran-vacuum`](palarran-vacuum/SKILL.md) | `[--long] [--plan]` |
+
+The explicit memorize/remember/session/vacuum commands are the main context interface. Existing memory:learn/recall preserve the verified-findings workflow. Long notes/session snapshots are separate owner-context candidates; generic vacuum does not physically purge the VPS database.
+
+## Packages being designed
+
+These are documentation-stage designs, not installable package selectors yet.
+
+| Planned package | Commands | Design |
+| --- | --- | --- |
+| `git` | `git:commit`, `git:history`, `git:conflicts`, `git:mr` | [Git workflow](../docs/git/README.md) |
+| `docs` | `doc:architecture`, `doc:feature`, `doc:api` | [Documentation workflow](../docs/documentation/README.md) |
+
+## Compatibility and scope
+
+[Migration](../docs/setup/palarran.md). Legacy packager selectors remain aliases, not additional public commands. Scale and CI provider are arguments. Project .palarran and agent client state are private/Git-ignored. Existing package selection is preserved during updates; changing it requires a reviewed migration. Global MCP/tunnel setup and VPS deployment are distinct from installing skills.
+
+## Incident response
+
+Infrastructure includes `/palarran:infrastructure:incident {what happened} [--plan]` ([skill](palarran-infrastructure-incident/SKILL.md)): parallel investigation, multi-developer coordination, scoped mitigation and independent recovery checks. Optional cross-machine chat requires a configured service; installation alone grants no production access.

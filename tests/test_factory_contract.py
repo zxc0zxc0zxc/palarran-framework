@@ -314,9 +314,9 @@ class FactoryContractTests(unittest.TestCase):
         task = value["tasks"][0]
         del task["argv"]
         task.update(adapter=adapter, executable=sys.executable,
-                    prompt="Read /skills/backend-build/SKILL.md and mandatory docs; "
+                    prompt="Read /skills/palarran-backend-build/SKILL.md and mandatory docs; "
                     "implement target plan revision v001 and DoD; "
-                    "read target .ai-development/ decision memory; "
+                    "read target .palarran/ decision memory; "
                     "exit failure on any unresolved question.")
         return value
 

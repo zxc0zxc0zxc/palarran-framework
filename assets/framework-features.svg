@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1060" viewBox="0 0 1800 1060" role="img" aria-label="More than a collection of skills."><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#a4a4a5" stroke-width="1.3"/></marker></defs><rect width="1800" height="1060" rx="32" fill="#0b0b0c"/><g font-family="Arial, Helvetica, sans-serif">
+<text x="72" y="81" fill="#efeee9" font-size="22" letter-spacing="5">PALARRAN</text>
+<text x="72" y="147" fill="#efeee9" font-size="44" font-weight="600">More than a collection of skills.</text>
+<text x="72" y="186" fill="#a4a4a5" font-size="21">Reusable engineering controls around research, execution and verification.</text>
+<rect x="70" y="245" width="500" height="265" rx="18" fill="#111113" stroke="#343437"/>
+<text x="98" y="282" fill="#a4a4a5" font-size="15" font-weight="600">01 / CONTEXT</text>
+<text x="98" y="323" fill="#efeee9" font-size="28" font-weight="600">Find the relevant evidence</text>
+<text x="98" y="366" fill="#a4a4a5" font-size="20" font-weight="400">Scoped AGENTS + accepted decisions</text>
+<text x="98" y="400" fill="#a4a4a5" font-size="20" font-weight="400">Optional fresh, bounded Graphify queries</text>
+<text x="98" y="434" fill="#a4a4a5" font-size="20" font-weight="400">Primary web sources via optional MCP</text>
+<rect x="650" y="245" width="500" height="265" rx="18" fill="#111113" stroke="#343437"/>
+<text x="678" y="282" fill="#a4a4a5" font-size="15" font-weight="600">02 / MEMORY</text>
+<text x="678" y="323" fill="#efeee9" font-size="28" font-weight="600">Keep experience across projects</text>
+<text x="678" y="366" fill="#a4a4a5" font-size="20" font-weight="400">Project ADRs preserve the rationale</text>
+<text x="678" y="400" fill="#a4a4a5" font-size="20" font-weight="400">Graph/fulltext recalls verified findings</text>
+<text x="678" y="434" fill="#a4a4a5" font-size="20" font-weight="400">R&amp;D includes negative and partial results</text>
+<rect x="1230" y="245" width="500" height="265" rx="18" fill="#111113" stroke="#343437"/>
+<text x="1258" y="282" fill="#a4a4a5" font-size="15" font-weight="600">03 / EXECUTION</text>
+<text x="1258" y="323" fill="#efeee9" font-size="28" font-weight="600">Resume bounded workflows</text>
+<text x="1258" y="366" fill="#a4a4a5" font-size="20" font-weight="400">Durable state, task DAG and leases</text>
+<text x="1258" y="400" fill="#a4a4a5" font-size="20" font-weight="400">Explicit handoffs and recovery</text>
+<text x="1258" y="434" fill="#a4a4a5" font-size="20" font-weight="400">Unknown outcomes reconcile before retry</text>
+<rect x="70" y="590" width="500" height="265" rx="18" fill="#111113" stroke="#343437"/>
+<text x="98" y="627" fill="#a4a4a5" font-size="15" font-weight="600">04 / ACCOUNTING</text>
+<text x="98" y="668" fill="#efeee9" font-size="28" font-weight="600">Track spend and stop at caps</text>
+<text x="98" y="711" fill="#a4a4a5" font-size="20" font-weight="400">Runtime token, cost and time receipts</text>
+<text x="98" y="745" fill="#a4a4a5" font-size="20" font-weight="400">Stage/run limits survive restarts</text>
+<text x="98" y="779" fill="#a4a4a5" font-size="20" font-weight="400">Unknown usage is never treated as zero</text>
+<rect x="650" y="590" width="500" height="265" rx="18" fill="#111113" stroke="#343437"/>
+<text x="678" y="627" fill="#a4a4a5" font-size="15" font-weight="600">05 / QUALITY</text>
+<text x="678" y="668" fill="#efeee9" font-size="28" font-weight="600">Check the actual result</text>
+<text x="678" y="711" fill="#a4a4a5" font-size="20" font-weight="400">Independent app and agent evaluations</text>
+<text x="678" y="745" fill="#a4a4a5" font-size="20" font-weight="400">Exact subject, evidence and DoD</text>
+<text x="678" y="779" fill="#a4a4a5" font-size="20" font-weight="400">Training diagnostics and benchmark gates</text>
+<rect x="1230" y="590" width="500" height="265" rx="18" fill="#111113" stroke="#343437"/>
+<text x="1258" y="627" fill="#a4a4a5" font-size="15" font-weight="600">06 / OPERATIONS</text>
+<text x="1258" y="668" fill="#efeee9" font-size="28" font-weight="600">Install only what you need</text>
+<text x="1258" y="711" fill="#a4a4a5" font-size="20" font-weight="400">Selected packages + language preferences</text>
+<text x="1258" y="745" fill="#a4a4a5" font-size="20" font-weight="400">Pinned sources and ownership-aware updates</text>
+<text x="1258" y="779" fill="#a4a4a5" font-size="20" font-weight="400">Separate app-stack deployment on VPS</text>
+<text x="72" y="956" fill="#a4a4a5" font-size="20" font-weight="400">These are implemented components with explicit limits, not an autonomous production-readiness guarantee.</text>
+<text x="72" y="993" fill="#a4a4a5" font-size="19" font-weight="400">Native web MCP is not metered by the runtime. Optional integrations and live checks are reported separately.</text>
+</g></svg>

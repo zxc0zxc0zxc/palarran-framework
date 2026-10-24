@@ -1,30 +1,34 @@
-# Архитектура и retrieval
+# Architecture and retrieval
 
 ```mermaid
 flowchart LR
-  A["Agent: project ADR + fresh Graphify"] --> M["Local MCP stdio gateway"]
-  M --> T["SSH tunnel: loopback only"]
-  T --> S["Memory service: auth + fixed operations"]
-  S --> N["Neo4j CE: cards + typed edges + fulltext"]
-  S --> F["Private immutable artifacts: SHA-256"]
-  R["Reviewer credential"] --> S
-  N --> B["Offline consistent backup window"]
+  A["Agent: project ADR and fresh code graph"] --> M["Local MCP stdio gateway"]
+  M --> T["Private SSH tunnel"]
+  T --> S["Authenticated memory service"]
+  S --> N["Neo4j CE: cards, typed edges, fulltext"]
+  S --> F["Private immutable SHA256 artifacts"]
+  R["Separate reviewer credential"] --> S
+  N --> B["Consistent offline backup window"]
   F --> B
 ```
 
-Никаких public DB/MCP ports, Cypher tool, shell/URL fetch, автоматического ingestion git history или сырых сессий. DB credentials доступны только service/operator; агенты используют scoped bearer token. Neo4j CE не предоставляет нам multi-tenant RBAC: изоляция агент/reviewer — service boundary, один доверенный владелец.
+No public database/MCP port, arbitrary Cypher tool, shell/path/URL fetch, automatic Git-history ingestion or raw session import. Only the service/operator receives database credentials; agents use a scoped bearer token. Neo4j Community does not supply multi-tenant RBAC here: agent/reviewer separation is enforced by the service boundary for one trusted owner.
 
-## Граф
+## Graph model
 
-`Case` хранит problem/root_cause/solution/applies_when/limitations, тип, теги, source repo alias+commit+ADR, evidence refs. `Project` связан через ORIGINATED_IN; `Artifact` через HAS_ARTIFACT; `Feedback` через HAS_FEEDBACK. Между Case разрешены RELATES_TO, SUPERSEDES, CONTRADICTS, VALIDATED_BY. Verified cases могут описывать неудачу/anti-pattern: успешный тест не единственный вид evidence.
+Case stores problem, root cause, solution, applicability, limitations, type/tags, source alias/commit/ADR and evidence references. Project connects through ORIGINATED_IN; artifacts through HAS_ARTIFACT; feedback through HAS_FEEDBACK. Allowed case relations are RELATES_TO, SUPERSEDES, CONTRADICTS and VALIDATED_BY. A verified case can describe a failure or anti-pattern; passing tests are not the only valid evidence.
 
-Содержимое case неизменно и адресуется по hash нормализованного JSON. Повтор того же source/case идемпотентен; смысловые дубликаты агент предлагает связать после чтения originals. Исправление создаёт новую карточку + SUPERSEDES; прежняя история остаётся. Схожий текст из другого проекта не автоматически независимое подтверждение.
+Case content is immutable and addressed by a normalized-JSON hash. Repeating the same source/case is idempotent. Similar findings are reviewed against originals before proposing links. Corrections create a new card and SUPERSEDES, preserving prior history. Similar text copied into another project is not independent replication.
 
-## Двухступенчатый recall
+## Bounded retrieval
 
-1. `knowledge.search`: 3–5 коротких карточек, scopes global + явно выбранный project, literal words; fulltext score — релевантность, не confidence.
-2. `knowledge.get`: полная карточка/evidence/status; `knowledge.neighbors`: до20 соседей фиксированных типов. После этого агент проверяет applicability по текущему коду/AGENTS/ADR.
-3. `knowledge.artifact`: текст по hash, постранично по строкам. Ни произвольного пути, ни загрузки всего corpus. Patch — evidence, не команда к исполнению.
-4. После применения `knowledge.feedback`: helped/not_applicable/refuted + repo/commit/test evidence. Опровержение показывается явно; счётчик лайков не делает факт истинным.
+1. Search3–5 short cards in global plus the explicitly selected project scope, using literal terms. Fulltext score measures relevance, not confidence.
+2. Get selected full cards/evidence/status; inspect up to20 typed neighbors where needed. Verify applicability against current code/AGENTS/ADRs.
+3. Read artifacts by hash in bounded pages, not arbitrary paths or whole-corpus downloads. A patch is evidence, not an executable instruction.
+4. Record actual reuse as helped, not_applicable or refuted with exact source/commit/checks. Refutations remain visible; popularity is not truth.
 
-Ограничить fan-out, число карточек, размер JSON и время DB query. FTS индексирует краткие карточки и полные тексты артефактов блоками по4096символов. Artifact → HAS_CHUNK → ArtifactChunk; block ID зависит от hash+offset, повторное использование не дублирует блоки. Search объединяет совпадения Case/ArtifactChunk, возвращает до5карточек с matched_artifact(hash,offset); полный текст читается адресно. Candidate cap200 FTS hits ограничивает работу: это bounded retrieval, не доказательство полного охвата corpus. Текст для индекса хранится и в graph chunks, поэтому disk planning учитывает дополнительную копию + индекс. English/Russian и code symbols проверять отдельно; нет cross-language semantic guarantee.
+Bound fan-out, card count, JSON size and query duration. Fulltext indexes cards and artifact text in4096-character chunks, linked Artifact → HAS_CHUNK → ArtifactChunk. Chunk IDs depend on hash/offset, so reuse does not duplicate them. Search merges Case/ArtifactChunk hits and returns up to5 cards with matched artifact hash/offset for targeted reading. A200-hit candidate cap bounds work; it does not prove complete corpus coverage. Text chunks add another stored copy plus index overhead. Test English/Russian and code symbols separately; there is no cross-language semantic guarantee.
+
+## Context package
+
+Project quick notes are local and bounded. Explicit long notes and structured session snapshots use tagged candidate cards in the owner-context bucket, with immutable verification-type JSON artifacts where needed. They do not enter reviewed global knowledge automatically. Session restoration checks scope/hash/current references and loads context without executing saved next steps. See [context-package](context-package.md) for schemas and cleanup boundaries.

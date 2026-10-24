@@ -1,10 +1,10 @@
-# Med: VDS и средняя инфраструктура
+# Med: VDS and medium infrastructure
 
-Ориентир 4–8 vCPU, 8–32 GiB RAM на стартовом узле — бюджет для планирования, не требование K3s. Считать отдельно ресурсы control plane, Argo CD, CNI, ingress, telemetry, workloads и data. Если Kubernetes API и много сервисов не нужны, обосновать Compose. [K3s requirements](https://docs.k3s.io/installation/requirements) дают технические минимумы; это не sizing приложения.
+A guideline of 4–8 vCPU, 8–32 GiB RAM on the initial node is a planning budget, not a K3s requirement. Budget control plane, Argo CD, CNI, ingress, telemetry, workloads and data separately. If Kubernetes API and many services are unnecessary, justify Compose. [K3s requirements](https://docs.k3s.io/installation/requirements) give technical minimums, not application sizing.
 
-## Архитектура и граница HA
+## Architecture and HA boundary
 
-Предпочтительный вариант при потребности в Kubernetes — K3s + containerd + поддерживаемый ingress/Gateway controller + Argo CD. Начальный single-node может быть разумным, но node/диск/maintenance остаются SPOF. Для embedded etcd HA нужны как минимум три server-узла и нечётный quorum; два сервера не дают желаемой устойчивости ([K3s HA](https://docs.k3s.io/datastore/ha-embedded)). Три VM на одном физическом хосте не независимые отказные домены.
+When Kubernetes is needed, prefer K3s + containerd + supported ingress/Gateway controller + Argo CD. An initial single node may be sensible, but node/disk/maintenance remain SPOFs. Embedded etcd HA needs at least three server nodes and an odd quorum; two servers do not provide the intended resilience ([K3s HA](https://docs.k3s.io/datastore/ha-embedded)). Three VMs on one physical host are not independent failure domains.
 
 ```mermaid
 flowchart LR
@@ -24,21 +24,21 @@ flowchart LR
   D --> B
 ```
 
-## Сеть и host
+## Network and host
 
-- API TCP 6443 только management/control/worker CIDR по назначению. Datastore, kubelet и overlay недоступны из Internet; перечень port/protocol строить по выбранному backend из [K3s requirements](https://docs.k3s.io/installation/requirements).
-- Начальный CNI: Flannel + встроенный K3s network-policy controller, если достаточно L3/L4. Для FQDN egress/flow visibility рассмотреть Cilium и проверить совместимость kernel/K3s/MTU. При смене CNI корректно отключить конфликтующие компоненты по [K3s network options](https://docs.k3s.io/networking/basic-network-options); изменение CNI — отдельная миграция.
-- Default-deny ingress **и egress** в app namespaces, потом разрешения для ingress controller → app, app → DB, DNS TCP/UDP к cluster resolver, telemetry, нужных API. Политики работают только с enforcement; проверить отрицательным тестом, а не наличием YAML ([Kubernetes NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/)).
-- NetworkPolicy не заменяет host firewall, mTLS и RBAC; node/hostNetwork traffic проверять отдельно. Core NetworkPolicy не задаёт FQDN allowlist. Внешний HTTPS требует egress proxy или CNI-специфичного механизма, иначе получится широкий IP allowlist.
-- Согласовать pod/service/node CIDR с VPN и private network; проверить overlap, DNS, MTU, обратный маршрут и IPv6. LB/ServiceLB/NodePort/hostPort объяснить в flow matrix; не открывать весь NodePort range «на всякий случай».
+- API TCP 6443 only for management/control/worker CIDRs as applicable. Datastore, kubelet and overlay remain inaccessible from the Internet; derive the port/protocol list for the chosen backend from [K3s requirements](https://docs.k3s.io/installation/requirements).
+- Initial CNI: Flannel + K3s's built-in network-policy controller if L3/L4 is sufficient. For FQDN egress/flow visibility, consider Cilium and verify kernel/K3s/MTU compatibility. When changing CNI, disable conflicting components correctly under [K3s network options](https://docs.k3s.io/networking/basic-network-options); CNI changes are a separate migration.
+- Default-deny ingress **and egress** in application namespaces, then allow ingress controller → application, application → DB, DNS TCP/UDP to cluster resolver, telemetry and required APIs. Policies work only with enforcement; verify through negative tests, not YAML presence ([Kubernetes NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/)).
+- NetworkPolicy does not replace host firewall, mTLS and RBAC; check node/hostNetwork traffic separately. Core NetworkPolicy does not define FQDN allowlists. External HTTPS needs an egress proxy or CNI-specific mechanism; otherwise the IP allowlist becomes broad.
+- Align pod/service/node CIDRs with VPN/private network; check overlap, DNS, MTU, return route and IPv6. Explain LB/ServiceLB/NodePort/hostPort in the flow matrix; do not open the entire NodePort range “just in case.”
 
-## Контейнеры, безопасность, данные
+## Containers, security and data
 
-App namespaces: Pod Security `restricted`, namespace RBAC, отдельные service accounts, token automount выключен если API не нужен, requests/limits, probes, read-only rootfs по совместимости. Platform controllers с повышенными правами — явные исключения. K3s не делает всю host hardening сам; включить secrets encryption, audit с ротацией и ограниченными правами по [K3s hardening](https://docs.k3s.io/security/hardening-guide).
+Application namespaces: Pod Security `restricted`, namespace RBAC, separate service accounts, token automount disabled if API is unnecessary, requests/limits, probes, read-only rootfs where compatible. Elevated platform-controller privileges require explicit exceptions. K3s does not perform all host hardening automatically; enable secrets encryption and audit with rotation/limited permissions under [K3s hardening](https://docs.k3s.io/security/hardening-guide).
 
-Local-path PVC не переживает потерю узла с данными и обычно привязывает workload к storage-узлу. Нельзя обещать failover DB добавлением app replicas. Варианты: local DB + off-host consistent backup/PITR, отдельная DB машина либо managed DB. Реплицированное storage на одном узле не создаёт HA. Ресурсы оператора/дисков и quorum считать отдельно.
+Local-path PVC does not survive loss of its data-bearing node and usually binds workloads to the storage node. Do not promise DB failover by adding application replicas. Options: local DB + off-host consistent backup/PITR, separate DB host or managed DB. Replicated storage on one node creates no HA. Budget operator/disk resources and quorum separately.
 
-У single-server K3s со стандартным SQLite datastore применяется свой backup workflow; **не предписывать etcd snapshot** до проверки datastore. Для embedded etcd хранить snapshots и server token раздельно и безопасно: token нужен для восстановления ([K3s backup](https://docs.k3s.io/backup-restore)). Эти копии не включают данные всех PVC.
+Single-server K3s with its standard SQLite datastore has its own backup workflow; **do not prescribe etcd snapshots** before checking the datastore. For embedded etcd, store snapshots and server token separately and securely: the token is required for restore ([K3s backup](https://docs.k3s.io/backup-restore)). These copies do not contain all PVC data.
 
 ## Delivery plane
 
@@ -54,12 +54,12 @@ flowchart LR
   N[Nodes] -->|Pull HTTPS| REG
 ```
 
-CI не хранит cluster-admin kubeconfig. Argo CD bootstrap выполняется отдельно после установки кластера/CNI; сначала CRD, затем platform namespaces/controllers, policies и secrets, далее приложения. Не допустить deadlock: default-deny без разрешений к Git/DNS/registry может остановить bootstrap. Argo UI/API — private access/SSO/RBAC; AppProject ограничивает repo/destination/kinds. Не оставлять широкий `default` project для tenant workloads ([Argo projects](https://argo-cd.readthedocs.io/en/stable/user-guide/projects/)).
+CI stores no cluster-admin kubeconfig. Bootstrap Argo CD separately after cluster/CNI installation: first CRDs, then platform namespaces/controllers, policies and secrets, then applications. Prevent deadlock: default-deny without Git/DNS/registry access can stop bootstrap. Argo UI/API uses private access/SSO/RBAC; AppProject limits repositories/destinations/kinds. Do not leave a broad `default` project for tenant workloads ([Argo projects](https://argo-cd.readthedocs.io/en/stable/user-guide/projects/)).
 
-Автосинхронизация — на согласованной ветке и после review; pruning stateful/platform ресурсов только после отдельной оценки риска. БД-миграции совместимые expand/contract; откат Git не отменяет удаление данных. Progressive delivery только с достаточной ёмкостью и метриками; само наличие Argo CD canary не делает.
+Autosync applies to an agreed branch after review; pruning stateful/platform resources requires separate risk assessment. DB migrations use compatible expand/contract; reverting Git does not reverse data deletion. Progressive delivery requires sufficient capacity and metrics; Argo CD's presence alone does not create canary delivery.
 
-## Приёмка и рост
+## Acceptance and growth
 
-Измерить резерв RAM/CPU/disk IO, окно обновления узла, восстановить datastore и DB отдельно на тестовом target, проверить запрещённые межсервисные и исходящие потоки, rollback и внешний alert. PDB на single-node не делает обслуживание беспростойным и может блокировать drain — описать maintenance procedure.
+Measure spare RAM/CPU/disk I/O and node-update windows; restore datastore and DB separately on a test target; check denied interservice/outbound flows, rollback and external alerts. A PDB on one node does not make maintenance downtime-free and can block drain: document maintenance procedures.
 
-Открытые решения: single-node или три независимых узла; local/managed DB; Flannel/Cilium; ingress API/Gateway API; self-hosted/внешняя observability. Для каждой ветки указать [источник и ADR](decisions.md). Переход к high нужен по SLO/отказным сценариям, команде и бюджету, а не только по количеству контейнеров.
+Open decisions: single node versus three independent nodes; local/managed DB; Flannel/Cilium; ingress API/Gateway API; self-hosted/external observability. For every branch, identify [source and ADR](decisions.md). Move to high based on SLO/failure scenarios, team and budget, not container count alone.

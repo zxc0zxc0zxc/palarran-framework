@@ -39,7 +39,7 @@ def fingerprint(path):
         digest.update(value)
     frame(git(path, 'rev-parse', 'HEAD'))
     files = set(git(path, 'ls-files', '-z', '--cached', '--others', '--exclude-standard').split(b'\x00')) - {b''}
-    files.update(set(git(path, 'ls-files', '-z', '--others', '--ignored', '--exclude-standard', '--', '.ai-development/product', '.ai-development/ml', '.ai-development/INDEX.md').split(b'\x00')) - {b''})
+    files.update(set(git(path, 'ls-files', '-z', '--others', '--ignored', '--exclude-standard', '--', '.palarran/product', '.palarran/ml', '.palarran/INDEX.md').split(b'\x00')) - {b''})
     if len(files) > 10000:
         raise ValueError('Fingerprint file budget exceeded')
     total = 0

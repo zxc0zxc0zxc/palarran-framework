@@ -1,36 +1,36 @@
-# Гипотезы обучения и дизайн абляций
+# Training hypotheses and ablation design
 
-Гипотеза связывает конкретную причину ошибки с одним изменением и проверяемым исходом. «Дообучим модель и станет лучше» не задаёт опровержения. Начни с разрешённого error analysis существующих predictions/агрегатов и ограничений данных. Если результатов ещё нет, обозначь предполагаемый механизм и тест для его проверки.
+A hypothesis connects a specific cause of an error to one change and a testable outcome. “Finetune the model and it will improve” provides no falsification condition. Start with authorized error analysis of existing predictions/aggregates and data constraints. If results do not yet exist, identify the proposed mechanism and a test of it.
 
-## Карточка H-ID
+## H-ID card
 
-- **Observation/E-ID:** какой error slice/ограничение замечено, на каком числе примеров и какой revision; либо unknown.
-- **Mechanism:** почему изменение должно помочь, что может оказаться альтернативной причиной.
-- **Intervention/control:** один основной фактор, frozen split/config/baseline; что не меняется.
-- **Prediction:** primary metric, direction, practically relevant delta и guardrails с числовыми proposals.
-- **Falsification:** результат, при котором идею отклоняем; условия inconclusive и минимальный размер/precision.
+- **Observation/E-ID:** the observed error slice/constraint, number of examples and revision; otherwise unknown.
+- **Mechanism:** why the change should help and what alternative cause might explain the error.
+- **Intervention/control:** one principal factor, frozen split/config/baseline; what stays unchanged.
+- **Prediction:** primary metric, direction, practically relevant delta and guardrails with numerical proposals.
+- **Falsification:** the outcome that rejects the idea; inconclusive conditions and minimum size/precision.
 - **Resources:** cheapest diagnostic, full test budget/attempt cap, wall time, inputs/outputs, priority.
-- **Disposition:** proposed/ready/tested/supported/refuted/inconclusive с evidence; supported только в рамках данного протокола.
+- **Disposition:** proposed/ready/tested/supported/refuted/inconclusive with evidence; supported only within this protocol.
 
-Карпати рекомендует наращивать сложность постепенно. Наша адаптация: не менять одновременно dataset, tokenizer, loss, LR и архитектуру, если вопрос — эффект одного из них. Для взаимодействий допускается заранее описанный factorial design; такой эксперимент оплачивает все комбинации, а не только победителя. Основание: [Recipe](https://karpathy.github.io/2019/04/25/recipe/).
+Karpathy recommends adding complexity gradually. Our adaptation: do not change the dataset, tokenizer, loss, LR and architecture simultaneously when the question concerns one factor. Interactions may use a predefined factorial design; the experiment pays for all combinations, not just the winner. Basis: [Recipe](https://karpathy.github.io/2019/04/25/recipe/).
 
-## Примеры, а не заявленные результаты
+## Examples, not reported results
 
-| H-ID | Предположение | Дешёвое различение причин | Основной тест |
+| H-ID | Hypothesis | Inexpensive causal diagnostic | Main test |
 | --- | --- | --- | --- |
-| H-001 | Пропуски редких labels ограничивают recall | Проверка label quality и frequency по train/validation | Data curation против unchanged data при одинаковом compute |
-| H-002 | LLM знает задачу, но не соблюдает формат | Prompt/few-shot + parser baseline, error taxonomy | SFT/LoRA против исходной модели, format success и quality отдельно |
-| H-003 | Недостаточен retriever, а не generator | Recall@k с фиксированным corpus | Улучшение retrieval против finetune generator; generation guardrails |
-| H-004 | Большой context вызывает OOM/низкий throughput | Length histogram и memory pilot | Packing/bucketing против исходного loader, те же effective tokens |
+| H-001 | Missing rare labels limit recall | Check label quality and frequency on train/validation | Data curation versus unchanged data at equal compute |
+| H-002 | The LLM knows the task but violates the format | Prompt/few-shot + parser baseline, error taxonomy | SFT/LoRA versus the original model; format success and quality separately |
+| H-003 | The retriever, rather than the generator, is inadequate | Recall@k on a fixed corpus | Improve retrieval versus finetuning the generator; generation guardrails |
+| H-004 | Long context causes OOM/low throughput | Length histogram and memory pilot | Packing/bucketing versus the original loader, with the same effective tokens |
 
-Все значения результата остаются unknown до измерения. Бюджет, количество seeds и thresholds выбираются в experiment spec.
+All outcome values remain unknown until measured. Set the budget, number of seeds and thresholds in the experiment spec.
 
-## Подбор и остановка
+## Selection and stopping
 
-Ранжируй гипотезы по evidence strength, ожидаемой practically useful пользе, стоимости опровержения и зависимости от недоступных данных. Не выдавай субъективный score за вероятность успеха. Запланируй negative/control tests: shuffled labels, broken input, no retrieval, frozen weights — где они диагностируют конкретную ошибку, а не механически для каждого типа модели.
+Rank hypotheses by evidence strength, expected practical benefit, cost of falsification and dependence on unavailable data. Do not present a subjective score as a probability of success. Plan negative/control tests: shuffled labels, broken input, no retrieval, frozen weights, where they diagnose a specific error rather than mechanically for every model type.
 
-Raschka показывает зависимость LoRA результатов от rank/target modules/data и обсуждает regressions на других задачах. Используем это как повод тестировать настройку и забывание на **своих** задачах, не как универсальный rank/число epochs. [Авторский разбор экспериментов](https://magazine.sebastianraschka.com/p/practical-tips-for-finetuning-llms).
+Raschka shows how LoRA results depend on rank/target modules/data and discusses regressions on other tasks. Use this to motivate testing configuration and forgetting on **your own** tasks, not as a universal rank/epoch count. [The author's experiment analysis](https://magazine.sebastianraschka.com/p/practical-tips-for-finetuning-llms).
 
-Если бюджет позволяет только один seed, запиши ограничение надёжности; не делай вывод о стабильности. Поиск идёт на validation, final test удерживается. После просмотра final test новые гипотезы требуют новой evaluation policy/holdout revision. Отрицательные результаты, ранние остановки, число просмотренных вариантов и расход сохраняются вместе с успешными, иначе будущий агент повторит дорогое тупиковое обучение.
+If the budget permits only one seed, record the reliability limitation; do not conclude stability. Search uses validation; keep the final test held out. After viewing the final test, new hypotheses require a new evaluation policy/holdout revision. Preserve negative results, early stops, the number of inspected variants and spending alongside successes; otherwise later agents may repeat expensive dead-end training.
 
-DoD: каждая выбранная H-ID фальсифицируема, имеет control/metric/threshold/data/attempt cap, а rejected идеи имеют причины. Гипотезы не запускают sweep сами.
+DoD: every selected H-ID is falsifiable and has a control/metric/threshold/data/attempt cap; rejected ideas have reasons. Hypotheses do not launch a sweep themselves.

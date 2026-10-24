@@ -1,10 +1,10 @@
-# Product Factory: первый runtime
+# Product Factory: first runtime
 
-Runtime превращает конкретный SDD workflow в восстанавливаемый engineering run. Поверх него реализованы отдельные [product research → MVP-plan](../product/pipeline.md) и [ML](../ml/pipeline.md) pipelines. Долгоживущий автономный market-feedback loop остаётся следующим уровнем; runtime не выдумывает работу ради продолжения цикла.
+Runtime turns a specific SDD workflow into a recoverable engineering run. Separate [product research → MVP-plan](../product/pipeline.md) and [ML](../ml/pipeline.md) pipelines build on it. A long-lived autonomous market-feedback loop remains the next layer; runtime never invents work merely to continue a cycle.
 
-Читать последовательно: [архитектура](architecture.md), [контракт](contract.md), [эксплуатация](operations.md), [источники](sources.md). План собственной реализации: [SDD v001](../../.ai-development/backend/2026-10-19-product-factory/plan.md).
+Read in order: [architecture](architecture.md), [contract](contract.md), [operations](operations.md), [sources](sources.md). Implementation decisions belong to the private target journal, which is not distributed.
 
-Python >=3.9, POSIX, Git и локальный диск. Runtime не требует pip-пакетов, PostgreSQL или облака. Продукт живёт в отдельном Git repository. Skills читаются из ai-tools; решения продукта сохраняются в его `.ai-development/`. Runtime state содержит snapshot workflow, поэтому это приватные локальные данные, не Git-артефакт.
+Python >=3.9, POSIX, Git and local disk. Runtime needs no pip packages, PostgreSQL or cloud. Products live in separate Git repositories. Skills are read from palarran; product decisions live in its `.palarran/`. Runtime state includes workflow snapshots and is private local data, not a Git artifact.
 
 ```sh
 python3 -m orchestrator --help
@@ -13,23 +13,23 @@ python3 -m orchestrator work --state /path/to/private-state --run RUN_ID
 python3 -m orchestrator status --state /path/to/private-state --run RUN_ID
 ```
 
-`create` создаёт owned detached Git worktree в state; исходный checkout не редактируется. `work` запускает доверенные команды: это явная граница исполнения. Демонстрационный workflow создаёт файл и проверяет его реальное содержимое. Адаптеры `codex`/`claude` запускают установленные авторизованные CLI; [Учёт токенов/стоимости](usage-accounting.md) сохраняет реальные usage receipts и останавливает AI stages при stage/run caps. Адаптеры: новые product runs заранее фиксируют модели и allocation по [политике бюджета](model-budgets.md); generic workflows без неё явно unmanaged. Ошибка доступа/лимита/уточнение приводят к остановке, а не обходу permissions.
+`create` creates an owned detached Git worktree inside state without editing the source checkout. `work` executes trusted commands: an explicit execution boundary. The demo workflow creates a file and checks its actual content. `codex`/`claude` adapters run installed authorized CLIs; [token/cost accounting](usage-accounting.md) stores actual usage receipts and stops AI stages at stage/run caps. New product runs freeze models/allocations under [budget policy](model-budgets.md); generic workflows without it are explicitly unmanaged. Access/limit errors and clarification stop execution rather than bypass permissions.
 
-Проверить runtime на disposable target одним запуском (без LLM и сети):
+Check runtime on a disposable target in one run (without LLM/network):
 
 ```sh
 python3 scripts/factory_acceptance.py
 python3 -m unittest discover -s tests -p 'test_factory_*.py' -v
 ```
 
-[Шаблон backend agent](../../examples/product-factory/backend-agent.json) требует замены executable/skill/feature paths и verifiers на actual source DoD. Он не запускается автоматически. Для Claude заменить adapter/executable/allowlists; собственный login и разрешённые env настраиваются вне Git. Runtime добавляет explicit handoff: implemented разрешает независимые checks, needs_input приостанавливает run. Provider CLI не вызывается smoke-тестом.
+The [backend agent template](../../examples/product-factory/backend-agent.json) requires adapting executable/skill/feature paths and verifiers to actual source DoD; it never runs automatically. For Claude change adapter/executable/allowlists; configure login/allowed environment outside Git. Runtime adds explicit handoff: implemented permits independent checks; needs_input pauses the run. Smoke tests never call provider CLI.
 
 ## Product research pipeline
 
-ML эксперименты также поддерживаются отдельным [ML pipeline](../ml/pipeline.md): семь planning skills → конкретный approval → supervised local/Modal training → independent benchmark. Private resource ledger дополняет AI usage accounting; [Modal adapter](../ml/modal-adapter.md) сохраняет identity, metrics, cancellation proof и billing reserves.
+ML experiments use a separate [ML pipeline](../ml/pipeline.md): seven planning skills → concrete approval → supervised local/Modal training → independent benchmark. A private resource ledger complements AI usage accounting; the [Modal adapter](../ml/modal-adapter.md) preserves identity, metrics, cancellation proof and billing reserves.
 
-[Product pipeline](../product/pipeline.md) связывает пять product skills и итоговый synthesis MVP в существующем bounded runtime; engineering workflow API совместим.
+The [product pipeline](../product/pipeline.md) connects five product skills/final MVP synthesis in existing bounded runtime; engineering workflow API remains compatible.
 
 ## Agent evaluations
 
-[Agent eval](../agent/eval/README.md) компилирует frozen suite в existing runtime workflow с independent final gates, private usage ledger и safe quality/cost/time report. CLI: `python3 -m orchestrator.agent_eval --help`.
+[Agent eval](../agent/eval/README.md) compiles frozen suites into existing runtime workflows with independent final gates, private usage ledger and safe quality/cost/time reports. CLI: `python3 -m orchestrator.agent_eval --help`.

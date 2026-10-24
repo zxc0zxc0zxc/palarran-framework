@@ -1,33 +1,33 @@
-# Canonical, дополнительные и свои visual references
+# Canonical, additional and custom visual references
 
-## От UX research к UI research
+## From UX research to UI research
 
-Начать с source UX references и наблюдений: там уже есть релевантные бизнесы/screens. Проверить актуальность/платформу, не объявлять старый screenshot нынешним экраном. UX evidence поддерживает flow, но не автоматически выбранные colors/fonts/effects. Дополнительно изучить official foundations/components выбранной системы и как похожие реальные продукты применяют visual language.
+Start with source UX references and observations: they already identify relevant businesses/screens. Check freshness/platform instead of calling an old screenshot current. UX evidence supports flows, not automatically chosen colors/fonts/effects. Additionally study official foundations/components of the selected system and how similar real products apply visual language.
 
-Default: canonical system source + **не менее 2 дополнительных релевантных visual reference products/pages**. Не считать один и тот же screenshot дважды или method docs независимыми product examples. В custom mode присланные материалы — исходная основа; недостаток полноты можно закрывать дополнительным поиском без навязывания preset. Если источники недоступны, сохранять useful draft и coverage gaps, не выдумывать evidence ради quota.
+Default: canonical system source + **at least 2 additional relevant visual reference products/pages**. Do not count the same screenshot twice or methodological docs as independent product examples. In custom mode, supplied materials form the basis; address missing coverage through additional research without imposing a preset. If sources are unavailable, retain a useful draft and coverage gaps without inventing evidence to satisfy a quota.
 
-## Собственные материалы пользователя
+## User materials
 
-Поддерживаются URL сайтов/страниц, приложенные изображения/локальные файлы, screenshot collections, Figma links/files и краткие пожелания. До выводов открыть реальный источник/изображение доступным инструментом. Не считать название файла, alt-text или search snippet достаточным visual analysis. Если attachment недоступен, попросить приложить снова/дать доступный источник; текстовый инструмент вопросов не использовать для загрузки файла.
+Supported inputs: website/page URLs, attached images/local files, screenshot collections, Figma links/files and concise preferences. Before drawing conclusions, open the actual source/image with an available tool. Filename, alt text or search snippets do not suffice for visual analysis. If an attachment is inaccessible, ask for reattachment/an accessible source; do not use a text-question tool to upload files.
 
-Для Figma/native-specific операций сначала применить требуемые host skills/tools. Не строить единственный workflow на наличии Figma или платной gallery. Ссылку на закрытый дизайн не обходить; использовать доступный preview/присланный кадр и обозначить scope. Публичная reference research не разрешает публикацию, изменение аккаунта или покупку assets.
+Before Figma/native-specific operations, apply required host skills/tools. Do not make Figma or a paid gallery the only workflow. Do not bypass closed-design access; use available preview/supplied frame and label scope. Public reference research authorizes neither publication, account changes nor asset purchases.
 
-Уточнять неизвестное через понятные вопросы: «В этом примере берём плотность и типографику или ещё палитру?» Если пользователь уже объяснил — не спрашивать повторно. Ref может быть anti-reference: записать, что избегать. Наличие картинки не означает согласие менять весь UX по ней.
+Clarify unknowns through plain questions: “Should we take density and typography from this example, or the palette too?” Do not re-ask explained preferences. A reference can be an anti-reference: record what to avoid. An image does not imply agreement to change the entire UX around it.
 
-## Карточка и наблюдения
+## Cards and observations
 
-В [reference template](../../templates/ui/reference.md) записать: ID, source URL/file, owner/publication/access date, platform/viewport/version (unknown отдельно), canonical/additional/user/anti-reference, что действительно видно и что интерпретируем. Для конкретного наблюдения `UI-R2-O01`: attribute → evidence crop/страница → применимость → proposed token/component/Screen ID → ADR.
+In the [reference template](../../templates/ui/reference.md), record ID, source URL/file, owner/publication/access date, platform/viewport/version (unknown separately), canonical/additional/user/anti-reference, actually visible features and interpretations. For observation `UI-R2-O01`: attribute → evidence crop/page → applicability → proposed token/component/Screen ID → ADR.
 
-Разбирать: palette roles/contrast, type hierarchy, whitespace/density/grid, shapes/borders/elevation, icons/imagery, motion/state treatment, responsive differences. Не утверждать точные font/hex/spacing по пиксельной догадке: нужны published tokens/inspectable source либо явно approximate estimate. Screenshot не подтверждает hover/focus/animation/keyboard поведение.
+Analyze palette roles/contrast, type hierarchy, whitespace/density/grid, shapes/borders/elevation, icons/imagery, motion/state treatment and responsive differences. Do not claim exact font/hex/spacing from pixel guesses: use published tokens/inspectable source or explicitly approximate estimates. Screenshots do not establish hover/focus/animation/keyboard behavior.
 
-## Синтез
+## Synthesis
 
-Выбрать governing source/brand rules и указать, что заимствуем/адаптируем/отвергаем у остальных. Palette от одного, type от другого и glass от третьего допустимы только при согласованной semantic token/component системе, не механическом collage. Existing project brand/accepted UI overrides приоритетны, если пользователь не просил смену.
+Choose governing source/brand rules and state what is borrowed/adapted/rejected from other references. A palette from one, typography from another and glass from a third are allowed only within a coherent semantic token/component system, not a mechanical collage. Existing project brand/accepted UI overrides take precedence unless the user requests a change.
 
-Конфликты разрешать явно: наше UX действие/права, readability/accessibility и platform constraints сохраняются; спорный reference attribute становится proposed adaptation с альтернативой. Не переносить чужие логотипы, тексты, фотографии/real account data и font binaries как бесплатные production assets. Использовать разрешённые проектные assets, licensed substitutes или нейтральные placeholders.
+Resolve conflicts explicitly: preserve our UX actions/permissions, readability/accessibility and platform constraints; a contested reference attribute becomes a proposed adaptation with an alternative. Do not transfer others' logos, copy, photos/real account data and font binaries as free production assets. Use authorized project assets, licensed substitutes or neutral placeholders.
 
-## Evidence и ограничения
+## Evidence and limitations
 
-Screenshots/official examples — источник, generated mockups — наша визуальная гипотеза. Нельзя генерировать «скриншот Apple» и выдавать его за reference. Для remote image соблюдать доступ/preview ограничения tool host, не скачивать её в обход запрета отображения. Safe captures без personal data хранятся в task research; credentials/auth query strings и private customer content не попадают в Git.
+Screenshots/official examples are sources; generated mockups are our visual hypotheses. Do not generate an “Apple screenshot” and present it as a reference. Respect host-tool access/preview restrictions for remote images without downloading to bypass display prohibitions. Safe captures without personal data live in task research; keep credentials/auth query strings and private customer content out of Git.
 
-В итоговом reference board указать источник и связь с нашим результатом, не только красивые картинки без объяснения. Короткая практическая интерпретация, не длинный конкурентный отчёт в пользовательском UI.
+The final reference board identifies sources and connections to our result instead of showing attractive images without explanation. Provide concise practical interpretation, not long competitive reports inside user-facing UI.

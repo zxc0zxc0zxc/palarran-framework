@@ -1,162 +1,178 @@
-# AI tools
+<p align="center">
+  <img src="assets/palarran-banner.png" alt="Palarran — agent engineering framework" width="100%" />
+</p>
 
-[![Validate AI tools](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml)
-[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](docs/product-factory/README.md)
-[![Skills: 35](https://img.shields.io/badge/skills-35-2563EB)](skills/README.md)
-[![Graphify: optional](https://img.shields.io/badge/Graphify-optional-6F42C1)](docs/skills/graph-context.md)
+<p align="center">
+  <strong>Evidence-driven skills. Shared research memory. Bounded execution.</strong>
+</p>
 
-Библиотека инженерных скиллов, документации и ограниченного Python-runtime для AI-агентов. Покрывает продуктовые исследования, UX/UI, frontend/backend, CI/CD, инфраструктуру, ML и оценку агентов. Подход: **источники → план/контракты → разрешённая реализация → независимая проверка → сохранённые решения**.
+<p align="center">
+  <a href="https://github.com/zxc0zxc0zxc/palarran-framework/actions/workflows/validate.yml"><img src="https://github.com/zxc0zxc0zxc/palarran-framework/actions/workflows/validate.yml/badge.svg?branch=main" alt="Validate Palarran" /></a>
+  <a href="docs/product-factory/README.md"><img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python 3.9+" /></a>
+  <a href="skills/README.md"><img src="https://img.shields.io/badge/skills-38-555555" alt="38 skills" /></a>
+  <a href="docs/skills/graph-context.md"><img src="https://img.shields.io/badge/Graphify-optional-555555" alt="Graphify optional" /></a>
+</p>
 
-В репозитории **35 скиллов и 15 plugin namespaces**. Скиллы переносимы между проектами; runtime связывает их с версиями артефактов, бюджетами и проверками. MCP: реализованы task-oriented build skill, scaffold/validate/smoke и readonly catalog stdio reference; SDK/remote auth и model tool-use quality проверяются отдельно.
+Palarran brings research, product planning, UX/UI, engineering, infrastructure, ML and independent verification into a shared workflow for Codex and Claude:
 
-**Индексы:** [документация](docs/README.md) · [все скиллы и команды](skills/README.md) · [общие правила](docs/skills/README.md) · [инструкции агентам](AGENTS.md) · [решения проекта](.ai-development/INDEX.md).
+**Sources → specification → authorized implementation → verification → reusable findings.**
 
-## Содержание
+Choose the skill packages your project needs. Keep decisions and plans in a hidden `.palarran/` directory. Reuse verified engineering and research findings across projects through self-hosted graph memory.
 
-- [Вход для агента](#agent-entry)
-- [Каталог направлений](#catalog)
-- [Подключение скиллов](#skills-usage)
-- [Runtime и состояние возможностей](#runtime)
-- [Правила графов](#graphs)
-- [Структура репозитория](#layout)
-- [Проверки и сопровождение](#checks)
-
-<a id="agent-entry"></a>
-## Вход для агента
-
-1. Прочитать [AGENTS.md](AGENTS.md), [.ai-development/INDEX.md](.ai-development/INDEX.md) и связанные accepted ADR. Сверить решения с текущим кодом.
-2. По [карте модулей в AGENTS](AGENTS.md#модули-и-проверки) прочитать инструкции **всех затрагиваемых модулей**. Запуск из root не загружает автоматически инструкции соседних каталогов.
-3. Выбрать профиль в [domain-contracts](docs/skills/domain-contracts.md), перейти к [документации](docs/README.md) и нужному SKILL.md через [каталог скиллов](skills/README.md). Mandatory guides читаются до профильных решений.
-4. Для навигации по коду применить [graph contract](docs/skills/graph-context.md): fresh bounded query или scoped search, затем original files. Граф не заменяет AGENTS, ADR, контракты и проверки.
-5. До зависимых изменений сохранить объяснение решения по [decision-memory](docs/skills/decision-memory.md). Обновлять версию/прогресс плана и handoff; `implemented`, `verified`, `deployed` и market validation имеют разные основания.
-
-**Skill checkout и target project — разные корни.** Код продукта, его решения и результаты принадлежат target; `.ai-development/` этого репозитория хранит историю разработки ai-tools. Private runtime state, исходные данные, тензоры, credentials и checkpoints в Git не сохраняются.
-
-<a id="catalog"></a>
-## Каталог направлений
-
-| Направление | Документация | Основной результат |
-| --- | --- | --- |
-| Infrastructure | [low / med / high](docs/infra/plan/README.md) | План VPS/Compose, K3s/GitOps или HA Kubernetes; `--plan` без target access |
-| CI/CD | [GitHub / GitLab](docs/ci-cd/README.md) | Быстрые pipelines для Go, PHP, Next.js/TypeScript, Python, Rust; автоматический deploy без CI SSH |
-| UX | [Исследование и проектирование](docs/ux/README.md) | Референсы, адаптивные journeys/screens/states и диаграммы |
-| UI | [Визуальная система](docs/ui/README.md) | UX-bound responsive preview, tokens/components, 10 систем или свои референсы |
-| Frontend | [Plan](docs/frontend/plan/README.md) / [build](docs/frontend/README.md) | SDD, API-контракты, адаптивная реализация и browser acceptance |
-| Backend | [Plan](docs/backend/plan/README.md) / [build](docs/backend/build/README.md) | Архитектура/данные/SLO, SDD, edge/invariant tests, DoD и progress |
-| Product | [Исследования и первые клиенты](docs/product/README.md) | Гипотеза, рынок, аналоги, экономика, каналы, B2B/B2C и обоснованный MVP-план |
-| ML | [Эксперименты](docs/ml/README.md) / [данные](docs/ml/data/README.md) | Гипотезы, модель/метод, данные, стоимость, bounded train и benchmark |
-| App acceptance | [Business scenario verification](docs/app/verify/README.md) | Независимые browser/API/readonly DB checks, evidence и defects |
-| Engineering memory | [Graph + fulltext](docs/memory/README.md) | Neo4j CE, scoped case promotion/feedback, private artifacts и SSH VPS operations |
-| MCP tools | [Build](docs/mcp/build/README.md) | Task-oriented contracts, bounded responses, local stdio reference + generator и evals |
-| Agent improve | [Failure-driven improvements](docs/agent/improve/README.md) | Trace/feedback → regression → scoped skill diff → paired evals; без автоматических paid trials |
-| Agent eval | [Полигон](docs/agent/eval/README.md) | Независимая оценка задачи, токенов, стоимости и времени |
-| Science | [Отчёты-статьи](docs/science/README.md) | LaTeX draft по экспериментам, claim-to-evidence, limitations и reproducibility |
-
-Каждый профиль содержит первичные источники, границы применимости и templates. [Каталог скиллов](skills/README.md) связывает slash-команду с переносимым именем и точным SKILL.md. Операционные разрешения задаются конкретной задачей; установка скилла не запускает training, cloud, deploy, рекламу или outreach.
+[Documentation](docs/README.md) · [Skill catalog](skills/README.md) · [Setup](docs/setup/README.md) · [Contracts](docs/skills/README.md) · [Contributing](CONTRIBUTING.md)
 
 <a id="skills-usage"></a>
-## Подключение скиллов
+## Start with your agent
 
-**Единая команда:** `/skills:setup` (Codex: `$skills-setup`) — установка или безопасное обновление, проверка памяти и памятка. [Workflow](docs/setup/skill.md).
+Tell Codex or Claude:
 
-**Автоматически в проект:** попросите агента: «Подключи ai-tools из https://github.com/zxc0zxc0zxc/ai-tools к этому проекту для Codex/Claude, проверь глобальную память и объясни команды». Workflow и ограничения — [project setup](docs/setup/README.md). Из доверенного checkout:
+> Set up Palarran from https://github.com/zxc0zxc0zxc/palarran-framework in this project. Start with docs/setup/README.md. Ask which packages and languages I need, preserve my settings and local edits, check global memory, and explain the available commands.
 
-```sh
-python3 scripts/project_setup.py setup --target /ABSOLUTE/project --client both
-# Уже подключённый проект: сохранение локальных правок и обязательный memory check
-python3 scripts/project_setup.py update --target /ABSOLUTE/project --plan
-python3 scripts/project_setup.py update --target /ABSOLUTE/project
-```
+Installation supports English, Russian and Serbian Latin preferences independently for agent interaction, new code comments and generated documentation. The canonical skill and guide source is English. [Configuration and precedence](docs/setup/configuration.md).
 
-Все скиллы используют [цикл общей памяти](docs/skills/global-memory.md): recall перед работой и проверенные обезличенные уроки после, с owner policy и dedup; `--plan` offline.
-
-Установщик сохраняет существующие правила, закрепляет public source revision и создаёт `.ai-tools/USAGE.md`. Global MCP/tunnel подключаются один раз отдельно по явному запросу: `python3 scripts/memory_global_setup.py install`; проверка — `python3 scripts/memory_global_setup.py doctor`. Платных model calls в doctor нет.
-
-**В этом checkout:** Codex discovery использует [.agents/skills](.agents/skills), project slash adapters лежат в [.claude/commands](.claude/commands). Пример переносимого вызова: `$frontend-plan {фича}` или `$infra-plan-med --plan`. Slash-имена в каталоге обозначают namespace/адаптер; не все hosts предоставляют их как встроенные команды.
-
-**В другом проекте:** собрать нужный self-contained Claude plugin в новый output:
+From a trusted complete checkout:
 
 ```sh
-python3 scripts/package_plugin.py frontend --output /tmp/ai-tools-frontend-v001
-claude --plugin-dir /tmp/ai-tools-frontend-v001
+python3 scripts/project_setup.py setup --target /ABSOLUTE/project --client codex \
+  --packages backend frontend app \
+  --skills-language en --code-language en --docs-language en --plan
 ```
 
-Namespaces: `memory`, `vps`, `mcp`, `infra-plan`, `ci-cd`, `ux`, `ui`, `frontend`, `backend`, `product`, `ml`, `agent`, `science`, `app`. Dependencies входят в выбранный пакет; существующий output не перезаписывается. Пакет не содержит target memory, runtime state или graph cache. Корневой [.claude-plugin manifest](.claude-plugin/plugin.json) предоставляет только `infra-plan`; остальные namespace собираются отдельно.
+Review the proposal, then repeat without `--plan` to install. Choose `--client claude` or `both` when appropriate. Setup detects existing installations and uses an ownership-aware update; conflicting edits stop replacement. Updates retain the installed package selection. The generated `.ai-tools/USAGE.md` lists actual installed commands. `.ai-tools/` remains the compatible internal library store; `.palarran/` owns project context and preferences.
 
-Для другого host читайте соответствующий SKILL.md и сохраняйте относительную структуру docs/templates/scripts. Копирования одного SKILL.md недостаточно: missing mandatory docs — blocker, требуется найти полный checkout/package.
+## Self-host Palarran infrastructure
+
+Run private cross-project memory on your own VPS: Neo4j Community, a small Python API and an SSH tunnel from your workstation. Agent skills stay local; Keenable remains an optional external service.
+
+Ask your agent:
+
+> Deploy Palarran's private memory stack from this repository to my VPS using SSH alias SERVER. Follow docs/setup/self-host.md, inspect existing workloads, prepare the stack and rollback, keep service ports private, configure my local connection, and verify it. Do not install agent skills on the VPS or reveal credentials.
+
+[Step-by-step self-hosting guide](docs/setup/self-host.md) · [Memory operations](docs/memory/operations.md) · [Infrastructure profiles](docs/infra/plan/README.md)
+
+## Beyond skills
+
+Palarran adds durable decisions, reusable research findings, scoped context retrieval, resumable workflows and independent acceptance. Runtime stages track usage against explicit budgets; ownership-aware installation preserves project settings and local edits.
+
+![Palarran capabilities](assets/framework-features.png)
+
+## How it fits together
+
+Your project keeps its code, contracts and local decision history. The local agent uses Palarran's selected skills and guides, optionally retrieves primary sources through Keenable, and recalls reviewed findings from private graph memory on your VPS. Secrets stay in the private global profile.
+
+![Palarran architecture](assets/architecture.png)
+
+The diagram describes the Palarran configuration layout; existing global installations require a coordinated migration before changing their runtime paths. [Configuration](docs/setup/configuration.md) · [Memory architecture](docs/memory/architecture.md).
+
+## Development workflow
+
+Move from product evidence and UX/UI concepts to versioned engineering plans, implementation and independent checks. Delivery follows its own authorization and rollout gates; a passing build does not trigger deployment by itself.
+
+![Palarran development pipeline](assets/development-pipeline.png)
+
+[Editable diagram sources](assets/README.md) · [Runtime](docs/product-factory/README.md) · [Execution progress](docs/skills/execution-progress.md)
+
+## Pick your packages
+
+| Package | Purpose |
+| --- | --- |
+| `product` | Product definition, market, competitors, revenue, acquisition, B2B/B2C |
+| `ux`, `ui` | Responsive experience and visual concepts |
+| `frontend`, `backend` | SDD planning and implementation, contracts and progress |
+| `infra`, `ci-cd`, `vps` | Infrastructure, delivery and authorized server operations |
+| `ml`, `science` | Experiments, data, training diagnostics, benchmarks and preprints |
+| `app`, `agent` | Independent acceptance, agent evaluation and regression improvement |
+| `mcp`, `memory` | Agent tools and reusable cross-project findings |
+| `setup` | Installation and safe updates; always included |
+
+Use `--packages all` only when you want the whole library. Shared documentation and support helpers remain available for cross-domain references. [Machine-readable catalog](skills/catalog.json).
+
+## Commands
+
+| Task | Unified Claude plugin | Codex native |
+| --- | --- | --- |
+| Set up or update | `/palarran:setup` | `$palarran-setup` |
+| Infrastructure | `/palarran:infra:plan low` | `$palarran-infra-plan low` |
+| CI/CD | `/palarran:ci-cd github` | `$palarran-ci-cd github` |
+| UX / UI | `/palarran:ux:design`, `/palarran:ui:design` | `$palarran-ux-design`, `$palarran-ui-design` |
+| Frontend | `/palarran:frontend:plan`, `/palarran:frontend:build` | `$palarran-frontend-plan`, `$palarran-frontend-build` |
+| Backend | `/palarran:backend:plan`, `/palarran:backend:build` | `$palarran-backend-plan`, `$palarran-backend-build` |
+| Product | `/palarran:product:define` and research profiles | `$palarran-product-define` and profiles |
+| ML | `/palarran:ml:plan` through benchmark | `$palarran-ml-plan` and profiles |
+| Memory | `/palarran:memory:recall`, `/palarran:memory:learn` | `$palarran-memory-recall`, `$palarran-memory-learn` |
+| Verification | `/palarran:app:verify`, `/palarran:agent:eval` | `$palarran-app-verify`, `$palarran-agent-eval` |
+
+Infrastructure accepts `low|med|high`; CI/CD accepts `github|gitlab`. See [all commands and flags](skills/README.md). Standalone Claude skill discovery uses names such as `/palarran-backend-plan`; namespaced aliases require the plugin.
+
+Build a portable Claude plugin from reviewed resources:
+
+```sh
+python3 scripts/package_plugin.py palarran --output /NEW/palarran-plugin
+claude --plugin-dir /NEW/palarran-plugin
+```
+
+Individual plugin selectors include `palarran-backend`, `palarran-frontend` and `palarran-ml`. Packages exclude target decisions, secrets and runtime state. [Migration notes](docs/setup/palarran.md).
+
+<a id="agent-entry"></a>
+## Agent entry
+
+1. Read [AGENTS.md](AGENTS.md), target `.palarran/INDEX.md` (when present) and relevant accepted decisions. In older projects, also read `.ai-development/INDEX.md`; preserve its history.
+2. Read AGENTS for every affected module and the applicable [domain contracts](docs/skills/domain-contracts.md), then the mandatory profile guides.
+3. Keep the installed library and target project separate. Write rationale, plans, progress and findings in the target `.palarran/` before dependent changes.
+4. Treat memory as evidence to verify against current sources. Preserve conditions, baselines, metrics, uncertainty, negative results and limitations. [Global memory](docs/skills/global-memory.md) · [Research findings](docs/skills/research-memory.md).
+
+<a id="catalog"></a>
+## Explore the documentation
+
+| Area | Entry points |
+| --- | --- |
+| Product and first customers | [Product](docs/product/README.md), [pipeline](docs/product/pipeline.md) |
+| UX and UI | [UX](docs/ux/README.md), [UI](docs/ui/README.md) |
+| Engineering | [Frontend](docs/frontend/README.md), [backend plan](docs/backend/plan/README.md), [backend build](docs/backend/build/README.md) |
+| Infrastructure and delivery | [Infrastructure](docs/infra/plan/README.md), [CI/CD](docs/ci-cd/README.md) |
+| ML and data | [ML](docs/ml/README.md), [data](docs/ml/data/README.md), [diagnostics](docs/ml/debugging/README.md) |
+| Acceptance and agent quality | [App verification](docs/app/verify/README.md), [evals](docs/agent/eval/README.md), [improvement](docs/agent/improve/README.md) |
+| Tools and shared knowledge | [MCP](docs/mcp/build/README.md), [memory](docs/memory/README.md), [web retrieval](docs/skills/context-retrieval.md) |
+| Experiment reporting | [Science preprints](docs/science/README.md) |
 
 <a id="runtime"></a>
-## Runtime и состояние возможностей
+## Bounded runtime
 
-[Product Factory](docs/product-factory/README.md) — bounded Python orchestrator: durable SQLite state, owned Git worktrees, CLI workers, независимые verifiers, token/USD accounting и recovery. Основа: Python ≥3.9, POSIX и Git; optional providers/tokenizers/Graphify устанавливаются отдельно в соответствующем scope.
+[Product Factory](docs/product-factory/README.md) provides durable state, task dependencies, leases, CLI adapters, independent verifiers, token/cost accounting and recovery. Products live in separate target repositories; private runtime state stays outside their source trees.
 
 ```sh
 python3 -m orchestrator --help
 ```
 
-Создание run подготавливает state/worktree; `work` пересекает границу исполнения и может вызывать разрешённые CLI/providers. Продукты живут в отдельных target repositories, private state — вне target. Запуски/повторы сохраняют общий бюджет; unknown outcome требует reconciliation.
+The runtime includes engineering, product and ML workflows, local data gates, diagnostics, a Modal adapter, app verification and agent evaluation/improvement harnesses. Local fixtures do not prove production readiness, model quality, an operational SLA or market validation. Missing checks remain `NOT_RUN`; unknown spend or outcomes require reconciliation instead of replay or automatic budget increases. Existing runs retain their original source pins and budgets.
 
-| Возможность | Состояние и вход |
-| --- | --- |
-| Engineering execution | [Реализован](docs/product-factory/contract.md): bounded DAG, leases, independent final checks |
-| Product pipeline | [Реализован](docs/product/pipeline.md): research stages → MVP-план, без автоматического build/deploy |
-| ML pipeline | [Реализован](docs/ml/pipeline.md): planning → approval → fit/evaluate; local и bounded Modal adapter |
-| Text data gate | [Реализован локально](docs/ml/data/pipeline.md): tokenizer/collator, целые ответы, actual mixture и blocking gate; Modal text transport unsupported |
-| Контекст агента | [Реализован](docs/product-factory/runtime-context.md): scoped AGENTS, optional fresh graph и source fallback |
-| Cross-project memory | [memory-v001](docs/memory/README.md): native Neo4j FTS/graph, artifact store, API/MCP; проверять exact deployment evidence |
-| MCP tooling | [Local v001](docs/mcp/build/README.md): scaffold/validate/smoke и readonly stdio profile2025-11-25, no auto SDK/client activation |
-| Приёмка приложения | [Standalone v001](docs/app/verify/README.md): frozen scenarios, local browser/API/readonly SQLite, JSON/MD evidence; remote/other DB adapters не реализованы |
-| Оценка агентов | [Реализован harness](docs/agent/eval/README.md): frozen tasks/graders, учёт расходов; модельное качество требует отдельного измерения |
-| Диагностика обучения | [Runtime-v001](docs/ml/debugging/runtime.md): bounded metrics/rules, full generation snapshots, rolling/terminal reports, optional LaTeX export; [границы покрытия](docs/ml/debugging/integration-plan.md) |
-
-Подробнее: [model budgets](docs/product-factory/model-budgets.md), [usage accounting](docs/product-factory/usage-accounting.md), [ML accounting/approvals](docs/ml/pipeline-contract.md), [Modal cancellation/recovery](docs/ml/modal-adapter.md). Local/fake-provider tests не являются live integration или operational SLA.
+Cross-project memory uses self-hosted Neo4j graph/fulltext, without an LLM or embedding API dependency. Global preferences and private credentials belong under `~/.palarran/`; project preferences belong in `.palarran/config.json`. MCP and persistent SSH tunnel setup require explicit global scope. Optional Keenable search has a separate provider quota; native MCP usage is not yet wired into the orchestrator's cost ledger or hard budget gate. [Operations](docs/memory/operations.md).
 
 <a id="graphs"></a>
-## Правила графов
+## Graph navigation
 
-### Кодовый граф: Graphify
-
-Canonical правила: [graph-context](docs/skills/graph-context.md); автоматическая передача контекста: [runtime-context](docs/product-factory/runtime-context.md).
-
-- Граф — optional local **code-only** индекс связей. До запроса читаются применимые AGENTS/ADR; после него — исходные файлы. INFERRED edges проверяются в коде, отсутствие узла не доказывает отсутствие зависимости.
-- Проверить freshness, выполнить bounded query по symbols/task paths. Missing/stale cache → scoped search; не устанавливать или перестраивать graph автоматически ради выполнения задачи.
-- Не включать весь graph.json в prompt. Mandatory docs, API/UX/UI contracts и verification не сокращаются ради числа токенов.
-- `.graphify/` и `graphify-out/` — локальные ignored данные. Секреты, `.delivery`, `.ai-development`, dependencies, artifacts, symlinks и документы не входят в AST corpus; документы читаются напрямую.
-- Semantic/cloud/media extraction и project executables не запускаются этим workflow. Setup/index допустимы только в явно разрешённом scope; команды — в [полном guide](docs/skills/graph-context.md#использование).
-
-При наличии подготовленного индекса:
-
-```sh
-python3 scripts/graph_context.py status --root .
-python3 scripts/graph_context.py query --root . --question "ml_resource_attempts" --budget 1200
-```
-
-Dirty/untracked changes, moves и deletes учитываются freshness check. Новый код требует explicit refresh либо source fallback. [Одна зафиксированная paired-проверка](.ai-development/backend/2026-10-22-runtime-context/comparison.md) описывает конкретный кейс; универсальная экономия токенов из неё не следует.
-
-### Архитектурные и процессные схемы
-
-Mermaid diagrams в планах и документации описывают topology/flows/task DAG. Указывать revision, actors/trust boundaries, ingress/egress/data stores там, где применимо, и status: proposal либо observed с evidence. Актуализировать вместе с контрактом/планом. Diagram, live trace и code index — разные артефакты. Методики: [UX diagrams](docs/ux/diagrams.md), [infra plan](docs/infra/plan/plan-template.md), [SDD execution progress](docs/skills/execution-progress.md).
+[Graphify](https://github.com/Graphify-Labs/graphify), by Graphify Labs, provides the optional local graph navigation used by this integration. Thanks to its maintainers for the project. Palarran uses a pinned code-only profile: **check freshness → query a bounded subset → read original files, AGENTS and decisions**. Use scoped search when missing or stale. Never load the whole graph into the prompt or enable semantic/cloud extraction implicitly. A graph does not authorize an action. [Graph contract](docs/skills/graph-context.md).
 
 <a id="layout"></a>
-## Структура репозитория
+## Repository map
 
-| Путь | Ответственность |
-| --- | --- |
-| [skills](skills/README.md) | Переносимые SKILL.md и обязательные ссылки |
-| [docs](docs/README.md) | Canonical guides, источники и контракты |
-| [memory](memory/AGENTS.md) | Cross-project cards, Neo4j graph/fulltext, private artifacts/API/MCP |
-| [mcp](mcp/AGENTS.md) | Readonly stdio reference servers; generator/checks через scripts |
-| [orchestrator](orchestrator/AGENTS.md) | Runtime, leases, accounting, providers и verifiers |
-| [scripts](scripts/AGENTS.md) | Inventory, packaging, validators и local helpers |
-| [templates](templates/AGENTS.md) | Инертные примеры и формы target artifacts |
-| [examples](examples/AGENTS.md) | Disposable/offline workflows и provider examples |
-| [tests](tests/AGENTS.md) | Offline contracts, fake providers и fault injection |
-| [plugins](plugins/AGENTS.md) | Portable namespace manifests |
-| [.agents/skills](.agents/skills) / [.claude/commands](.claude/commands) | Host discovery и adapters |
-| [.ai-development](.ai-development/INDEX.md) | Решения, планы, evidence и handoffs ai-tools |
+```text
+skills/          prefixed skills and machine catalog
+plugins/         unified and optional domain plugin manifests
+commands/        distributable command adapters
+docs/            primary sources, guides and shared contracts
+scripts/         installers, packaging, validators and bounded helpers
+orchestrator/    workflows, verification and accounting
+memory/          self-hosted graph/fulltext service
+mcp/             reference tool profiles
+templates/       inert starting points
+examples/        examples with explicit execution boundaries
+tests/           offline fixtures and regression tests
+.palarran/       private local context; ignored by Git
+```
 
 <a id="checks"></a>
-## Проверки и сопровождение
+## Verification and contributions
 
 ```sh
 python3 scripts/validate_repo.py
@@ -164,10 +180,10 @@ python3 -m unittest discover -s tests -v
 python3 scripts/factory_acceptance.py
 ```
 
-[CI workflow](.github/workflows/validate.yml) проверяет contracts/links/packages, offline tests, runtime lab и Terraform schema без live apply. Для real tokenizer integration tests требуется уже подготовленная среда через `AI_TOOLS_TOKENIZER_PYTHON`; без неё соответствующие checks — SKIP/NOT RUN. Tests не устанавливают tools и не запускают paid providers.
+Tests do not launch paid models or GPUs. Optional browser/tokenizer checks use an already available environment; skips are reported separately. Python 3.9+, Git and POSIX are required for core tools. [Contributing](CONTRIBUTING.md).
 
-CI badge связан с `validate.yml`/`main` по [официальному GitHub format](https://docs.github.com/en/actions/how-tos/monitor-workflows/add-a-status-badge); прочие badges статические и описывают inventory/capabilities. Локальная проверка не утверждает текущий статус удалённого CI.
+A license has not been selected. Preparing this repository for a possible open-source release does not change its visibility or grant a license.
 
-При изменении библиотеки сначала читать [AGENTS](AGENTS.md) и [общие contracts](docs/skills/README.md), сохранять rationale до зависимых изменений. При новом skill/namespace/module обновлять соответствующий индекс, discovery/manifest/packager/validator и счётчик badges; implemented и planned возможности сохранять различимыми.
+### Cross-machine incident coordination
 
-Scientific reports: [`/science:preprint`](skills/science-preprint/SKILL.md), [документация](docs/science/README.md).
+`/palarran:infrastructure:incident {what happened}` assigns parallel investigation lanes and preserves an evidence timeline, mitigation scope and independent recovery checks. Optional [Core coordination](packages/core/coordination/docs/README.md) connects agents from different developer machines through a private VPS API and local MCP clients, with distinct identities, project-wide resource claims and durable receipts. Chat does not grant production permissions or fence external tools. See [operations](packages/core/coordination/docs/operations.md); live deployment is checked separately.

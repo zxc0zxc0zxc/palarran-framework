@@ -1,11 +1,11 @@
-# Датированные первичные источники
+# Dated primary sources
 
-Проверено 2026-10-23. Внешние рекомендации — основания метода; наши offline результаты приведены отдельно в task handoff.
+Checked 2026-10-23. External recommendations ground the method; our offline outcomes are separate in the task handoff.
 
-| Источник | Дата публикации / состояние | Что переносим | Предел |
+| Source | Publication date / state | What we transfer | Boundary |
 |---|---|---|---|
-| [Anthropic: Demystifying evals for AI agents](https://www.anthropic.com/research/demystifying-evals-for-ai-agents) | 2026-01-09 | task/trial/grader, повторные trials, проверяемый outcome, калибровка graders | Опыт автора, не доказательство качества нашего harness. Полные приватные reasoning traces не собираем |
-| [Anthropic: Quantifying infrastructure noise](https://www.anthropic.com/research/infrastructure-noise) | 2026-02-05 | одинаковая среда/лимиты, инфраструктурные ошибки отдельно от ошибок решения | Их численные результаты не прогноз нашей экономии |
-| [SWE-bench: Evaluation Guide](https://www.swebench.com/SWE-bench/guides/evaluation/) | rolling guide, проверен 2026-10-23 | применение результата и независимые repository tests, точный instance/patch | Наши небольшие fixtures не SWE-bench и не изолированные Docker environments |
+| [Anthropic: Demystifying evals for AI agents](https://www.anthropic.com/research/demystifying-evals-for-ai-agents) | 2026-01-09 | task/trial/grader, repeated trials, verifiable outcomes, grader calibration | Author experience, not proof of our harness quality. No complete private reasoning traces collected |
+| [Anthropic: Quantifying infrastructure noise](https://www.anthropic.com/research/infrastructure-noise) | 2026-02-05 | Comparable environment/limits, infrastructure failures distinguished from solution failures | Their numerical findings do not forecast our savings |
+| [SWE-bench: Evaluation Guide](https://www.swebench.com/SWE-bench/guides/evaluation/) | Rolling guide, checked 2026-10-23 | Applying results and independent repository tests, exact instance/patch | Our small fixtures are neither SWE-bench nor isolated Docker environments |
 
-Не копировать benchmark solutions в few-shot; удерживать holdout отдельно от обучающих карточек. Датасеты, версии контейнеров и зависимости требуют своих лицензий/проверок. v1 не устанавливает SWE-bench, не загружает наборы и не вызывает платных judges.
+Do not copy benchmark solutions into few-shot examples; holdout stays separate from training cards. Datasets, container versions and dependencies need their own licensing/checks. v1 neither installs SWE-bench nor downloads datasets nor calls paid judges.

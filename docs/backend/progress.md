@@ -1,16 +1,16 @@
 # Backend execution progress
 
-Canonical [общий protocol](../skills/execution-progress.md) используется frontend и backend: одна schema v1, states/evidence/commit binding, DAG validation, source revisions и derived table в самом плане. Полный scope сверяет coordinator; helper не доказывает tests/Git ancestry/SLA.
+The canonical [shared protocol](../skills/execution-progress.md) serves frontend and backend: one schema v1, states/evidence/commit binding, DAG validation, source revisions and a derived table in the plan itself. The coordinator checks full scope; the helper does not prove tests/Git ancestry/SLA.
 
-Backend profile `/backend:plan` инициализирует [ledger](../../templates/backend/progress.example.json) (TASK pending, checks NOT_RUN); `/backend:build` обновляет после actual dispatch/code/integration/checks/blockers. Plan section сохраняет markers `<!-- backend-progress:start -->` / `<!-- backend-progress:end -->`, source design/версии не переписываются под outcome.
+Backend profile `/palarran:backend:plan` initializes the [ledger](../../templates/backend/progress.example.json) (TASK pending, checks NOT_RUN); `/palarran:backend:build` updates it after actual dispatch/code/integration/checks/blockers. Plan sections retain markers `<!-- backend-progress:start -->` / `<!-- backend-progress:end -->`; do not rewrite source designs/versions to match outcomes.
 
-Backend required gates включают integrated suite/edge/invariant/reliability/recovery/DoD по source. Operational SLA window, если обязателен, остаётся pending без telemetry полного окна — lab acceptance не заменяет agreement evidence. Deferred scope не done, stale commit/revision PASS пересматривается. Реализованная revision/integration commit и remaining task/gates видны в plan.
+Backend required gates include integrated suites/edges/invariants/reliability/recovery/DoD from source. A required operational SLA window stays pending without telemetry covering the full window; lab acceptance does not replace agreement evidence. Deferred scope is not done; revisit stale commit/revision PASS results. The plan shows implemented revision/integration commit and remaining tasks/gates.
 
-[backend_progress.py](../../scripts/backend_progress.py) сохранён как совместимый entrypoint/API; [execution_progress.py](../../scripts/execution_progress.py) — shared core. Старые команды работают с backend markers/ledger:
+[backend_progress.py](../../scripts/backend_progress.py) remains a compatible entrypoint/API; [execution_progress.py](../../scripts/execution_progress.py) is the shared core. Old commands work with backend markers/ledgers:
 
 ```sh
-python3 /path/to/ai-tools/scripts/backend_progress.py progress.json --plan plan.md
-python3 /path/to/ai-tools/scripts/execution_progress.py progress.json --area backend --plan plan.md
+python3 /path/to/palarran/scripts/backend_progress.py progress.json --plan plan.md
+python3 /path/to/palarran/scripts/execution_progress.py progress.json --area backend --plan plan.md
 ```
 
-Safe sync и `exit 0` semantics прежние: только отмеченный section/structural validity, не actual completion. Оба scripts должны переноситься вместе при использовании compatibility entrypoint. На resume сверить source plan/ledger/ADR/actual code/evidence и обновить canonical ledger plus section после каждого события.
+Safe synchronization and `exit 0` retain their semantics: marked-section/structural validity only, not actual completion. Carry both scripts together when using the compatibility entrypoint. On resume reconcile source plan/ledger/ADRs/actual code/evidence and update canonical ledger plus plan section after each event.

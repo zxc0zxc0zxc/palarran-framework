@@ -2,7 +2,7 @@
 
 - Status: proposed | review-ready; target/baseline/source context:
 - Existing backend/stack: reuse or absent; inspected files/versions:
-- Facts vs assumptions: workload normal/peak/burst, data/рост, CPU/RAM/storage/network, team/ops/budget, critical unknowns:
+- Facts vs assumptions: normal/peak/burst workload, data/growth, CPU/RAM/storage/network, team/operations/budget, critical unknowns:
 - Scope/non-goals and external dependencies:
 
 ## Alternatives and selection

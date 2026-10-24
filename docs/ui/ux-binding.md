@@ -1,31 +1,31 @@
-# Source UX → UI: что сохраняем и что можно менять
+# Source UX → UI: what to preserve and what may change
 
-## Выбор source concept
+## Source concept selection
 
-Читать target `.ai-development/ux/INDEX.md`, accepted decisions, source concepts/revisions и user intent. Если source указан — использовать его; иначе выбрать однозначно актуальный подходящий concept, объяснив выбор. При конфликте нескольких approved/draft revisions уточнить, не брать самый новый filename автоматически.
+Read target `.palarran/ux/INDEX.md`, accepted decisions, source concepts/revisions and user intent. Use an explicitly supplied source; otherwise select an unambiguously current suitable concept and explain why. With conflicting approved/draft revisions, clarify instead of automatically taking the newest filename.
 
-Без UX можно исследовать visual preference/brand/references, но полноценный screen design остаётся draft. Предложить путь к концепту или UX этап; не запускать новый большой UX scope и не выдумывать screens за пользователя. Draft UX можно использовать с явным статусом и gap list, не называя его approved.
+Without UX, research visual preference/brand/references, but full screen design remains draft. Propose a concept path or UX stage; do not start substantial new UX scope or invent screens for the user. Draft UX may be used with explicit status/gap list without calling it approved.
 
 ## Mapping
 
-`ux-map.md`: UX concept/revision/commit → UI revision/direction → каждый Screen/State/Block ID → preview/spec → ADR и статус покрытия. По умолчанию UI охватывает все in-scope UX screens и обязательные states, включая mobile/desktop. Partial scope только явно запрошенный либо отмеченный incomplete draft; красивые 2 hero screens не подменяют всё приложение.
+`ux-map.md`: UX concept/revision/commit → UI revision/direction → every Screen/State/Block ID → preview/spec → ADR and coverage status. UI covers all in-scope UX screens and mandatory states by default, including mobile/desktop. Partial scope must be explicitly requested or labeled incomplete draft; two attractive hero screens do not replace an entire application.
 
-Сохранять:
+Preserve:
 
-- user goals/roles/permissions и navigation/back/recovery;
-- приоритет основных/вторичных действий, порядок данных и обязательную информацию;
-- короткую точную UI copy из UX, field labels и ошибки;
+- user goals/roles/permissions and navigation/back/recovery;
+- primary/secondary action priority, data ordering and mandatory information;
+- concise accurate UX copy, field labels and errors;
 - loading/empty/error/validation/pending/success/permission behavior;
-- responsive функциональные альтернативы и accessibility intent.
+- responsive functional alternatives and accessibility intent.
 
-UI добавляет typography/scale/weights, role-based colors, spacing/grid/density, borders/shapes, elevation/materials, imagery/icons, component visual states, motion и согласованный responsive styling. Это не разрешение менять outcome действия, data model или добавить onboarding/paywall/consent.
+UI adds typography/scale/weights, role-based colors, spacing/grid/density, borders/shapes, elevation/materials, imagery/icons, visual component states, motion and coherent responsive styling. This does not authorize changing action outcomes/data models or adding onboarding/paywalls/consent.
 
-## Если стиль конфликтует с UX
+## Style conflicts with UX
 
-Сначала адаптировать style под UX. Например, glass effect можно ослабить/заменить opaque surface, если он мешает читать форму; его наличие не оправдывает перенос главного CTA в непонятную floating область. Более плотная таблица не должна терять данные/действия на mobile.
+First adapt style to UX. For example, weaken/replace glass with an opaque surface if it harms form readability; glass does not justify moving the primary CTA to an unclear floating area. Denser tables must not lose data/actions on mobile.
 
-Если нужен новый screen/layout structure или смена flow — оформить `ux-deltas.md` с source ID, причиной, альтернативами, impact и proposed UX change. Не править approved UX незаметно и не выдавать UI preference за business approval. Независимые visual решения продолжать; зависящий экран обозначить pending. Технические preview controls не должны оказаться в самом app UI.
+When a new screen/layout structure or changed flow is needed, create `ux-deltas.md` with source ID, reasons, alternatives, impact and proposed UX change. Do not silently edit approved UX or present UI preference as business approval. Continue independent visual choices; mark dependent screens pending. Technical preview controls must not appear in application UI.
 
-## Обновление и handoff
+## Updates and handoff
 
-При новой UX revision проверить mapping, obsolete screen/state и effects на tokens/components; старую UI revision не перезаписывать. Reuse прежней UI системы возможен только с проверкой source UX/brand/style assumptions. В review отдельно показать UX-preserved vs UX-delta; новый разработчик должен найти исходный смысл экрана без восстановления всей переписки.
+With a new UX revision, check mapping, obsolete screens/states and effects on tokens/components; do not overwrite earlier UI revisions. Reuse previous UI systems only after checking source UX/brand/style assumptions. In review, distinguish UX-preserved from UX-delta; a new developer must find the original screen intent without reconstructing all correspondence.

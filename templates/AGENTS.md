@@ -1,9 +1,9 @@
-# Шаблоны
+# Templates
 
-Наследует root; профильные контракты — docs/skills/domain-contracts.md.
+Inherits root; domain contracts are in docs/skills/domain-contracts.md.
 
-- Примеры инертны до адаптации к target и разрешения конкретного действия. Не добавлять реальные endpoints, keys, state, credentials или customer data.
-- AGENTS templates заполнять только из фактических manifests/code/commands. Не генерировать несуществующие сервисы и не перезаписывать пользовательские инструкции; planning даёт только proposal/handoff.
-- ADR template сохраняет canonical ID/status/basis/rationale/evidence/alternatives/consequences. Plan/progress templates сохраняют pending state, source revision и DoD traceability.
-- Новые resources явно включать в нужный portable namespace; проверять package-contained links. Graph/venv/target memory не входят в шаблоны.
-- Проверка: scripts/validate_repo.py и packaging tests; никаких live apply/train/deploy.
+- Examples stay inert until target adaptation and authorization for concrete actions. No real endpoints, keys, state, credentials or customer data.
+- Fill AGENTS templates from actual manifests/code/commands only. Never invent services or overwrite user instructions; planning produces proposals/handoffs only.
+- ADR templates preserve canonical ID/status/basis/rationale/evidence/alternatives/consequences. Plan/progress templates preserve pending states, source revisions and DoD traceability.
+- Add resources explicitly to applicable portable namespaces; check package-contained links. Graphs/venvs/target memory are not template contents.
+- Checks: scripts/validate_repo.py and packaging tests; no live apply/train/deploy.

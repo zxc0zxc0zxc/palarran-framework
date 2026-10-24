@@ -153,7 +153,7 @@ def accounting(reports,cap):
     carries={};unknown=False;observed_tokens=observed_cost=reserved_tokens=reserved_cost=0
     sources={};all_model=bool(reports) and all(r['sample_kind']=='model' for r in reports)
     for r in reports:
-        u=r['usage'];key='agent-improve/'+r['run_id']
+        u=r['usage'];key='palarran-agent-improve/'+r['run_id']
         if r['sample_kind']!='model':continue
         sources[key]=dict(source=key,observed_tokens=u.get('total_tokens'),observed_cost_usd=u.get('cost_usd'),
             reserved_tokens=u['reserved_total_tokens']-sum(x['reserved_tokens'] for x in u.get('carry',[])),

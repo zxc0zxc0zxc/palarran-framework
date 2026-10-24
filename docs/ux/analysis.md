@@ -1,40 +1,40 @@
-# Как анализировать UX референсов
+# Analyze reference UX
 
-## Сравнивать одинаковые задачи
+## Compare equivalent tasks
 
-Для каждой приоритетной business journey составить task script: начальное состояние/роль → цель → минимальные входные данные → критерий успеха. Пройти/изучить этот сценарий на выбранных продуктах с учётом доступности; неподдерживаемую задачу отметить неприменимой. Нельзя сравнивать anonymous search в одном продукте с paid onboarding другого как одну метрику.
+For every priority business journey, define a task script: initial state/role → goal → minimum input → success criterion. Exercise/study the scenario in selected products according to access; mark unsupported tasks inapplicable. Do not compare anonymous search in one product with another's paid onboarding as a single metric.
 
 Comparison matrix:
 
-| Journey | Product / evidence ID | Entry и порядок действий | Что видно/понятно | Friction/recovery | Наш вывод и confidence |
+| Journey | Product / evidence ID | Entry and action order | What is visible/clear | Friction/recovery | Our conclusion and confidence |
 |---|---|---|---|---|---|
-| J1 | R1 / R1-O01 | Наблюдённый flow | Что помогает задаче | Где можно потерять контекст | reuse/adapt/reject + причина |
+| J1 | R1 / R1-O01 | Observed flow | What supports the task | Where context can be lost | reuse/adapt/reject + reason |
 
-Считать число шагов только для фактически пройденного/задокументированного scope. Time-on-task, conversion, error rate и «пользователи предпочитают» требуют измерений; screenshots этих метрик не дают. Экспертная оценка — качественная гипотеза, не фейковое user research.
+Count steps only within actually exercised/documented scope. Time-on-task, conversion, error rate and “users prefer” require measurement; screenshots do not provide these metrics. Expert evaluation is a qualitative hypothesis, not fabricated user research.
 
-## Разбор экрана
+## Screen analysis
 
-Смотреть не только наличие кнопок:
+Look beyond whether buttons exist:
 
-- Понятна ли цель, текущий контекст/статус и следующий основной шаг?
-- Рядом ли нужные входные данные, результат и действие? Какие поля/блоки отвлекают или появляются слишком рано?
-- Предсказуемы ли navigation, back/cancel/close и сохранение введённого? Есть ли явный выход из тупика?
-- Что происходит при загрузке/пустом результате/ошибке/отказе прав/успехе? Какие состояния реально наблюдались, а какие нужны нашему продукту независимо от референса?
-- Работают ли те же задачи на mobile/touch/keyboard? Screenshot-only keyboard behavior остаётся unknown.
-- Требуется ли регистрация до получения ценности и оправдана ли она нашим бизнесом? Чужой paywall/upsell не переносить автоматически.
+- Are the goal, current context/status and next main step clear?
+- Are necessary inputs, result and action close together? Which fields/blocks distract or appear too early?
+- Are navigation, back/cancel/close and preservation of entered data predictable? Is there an explicit escape from dead ends?
+- What happens during loading/empty results/errors/permission denial/success? Which states were actually observed, and which does our product need independently of the reference?
+- Are the same tasks available on mobile/touch/keyboard? Screenshot-only keyboard behavior remains unknown.
+- Is registration required before value is delivered, and does our business justify it? Do not automatically copy another product's paywall/upsell.
 
-Основа экспертных вопросов — [NN/G usability heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/): обратная связь, контроль пользователя, последовательность, предотвращение/восстановление ошибок, необходимая информация. Это диагностический lens, не blanket approval любого популярного паттерна.
+Expert questions draw on [NN/G usability heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/): feedback, user control, consistency, error prevention/recovery and necessary information. This is a diagnostic lens, not blanket approval of every popular pattern.
 
-## Из наблюдений — в наш концепт
+## From observations to our concept
 
-Каждый заимствуемый паттерн описать цепочкой: `business need → reference observation → почему применимо → адаптация → Screen/Block/State ID → ADR → способ проверки`. Если рекомендация следует из нашей логики, а не наблюдения, прямо назвать hypothesis/agent judgment. Не писать «так делает Google», если исследован лишь пересказ или старый screenshot.
+Describe each adopted pattern through `business need → reference observation → applicability → adaptation → Screen/Block/State ID → ADR → verification method`. If advice follows our reasoning rather than observation, explicitly label it hypothesis/agent judgment. Do not claim “Google does this” after studying only a retelling or old screenshot.
 
-Выбрать общий flow, но не слепую смесь четырёх интерфейсов. При конфликтующих паттернах объяснить выбор по нашей аудитории, частоте задачи, необходимой информации, ошибкам и ограничениям устройства. Не переносить dark patterns: скрытые расходы, незаметную подписку, предвыбранное согласие или усложнение отказа. Бизнес-цель и удобство описывать совместно, не считать рост кликов/времени на сайте успехом сам по себе.
+Choose a coherent flow instead of blindly mixing four interfaces. For conflicting patterns, explain the choice through our audience, task frequency, necessary information, errors and device constraints. Do not import dark patterns: hidden costs, concealed subscriptions, preselected consent or obstructed refusal. Describe business goals and usability together; more clicks/time on site is not success by itself.
 
-Для каждой Screen ID короткий rationale: какую задачу решает, почему блоки в таком порядке, что переиспользовано, какая evidence поддерживает решение и что проверить. Длинный analysis report не должен становиться длинной текстовкой на экране.
+For each Screen ID, provide concise rationale: task served, why blocks are ordered this way, reuse, supporting evidence and what to verify. A long analysis report must not turn into long screen copy.
 
-## Экспертная оценка и последующая проверка
+## Expert review and subsequent validation
 
-Prioritize problems по impact на ключевую задачу, частоте (если известна), восстановимости и уверенности evidence. Не назначать точные проценты ущерба без данных. Концепт может быть coherent и review-ready до user testing, но остаётся hypothesis.
+Prioritize problems by impact on the key task, frequency when known, recoverability and evidence confidence. Do not assign precise damage percentages without data. A concept can be coherent and review-ready before user testing while remaining a hypothesis.
 
-План usability validation: task success, ошибки, поиск действия, понимание label, возврат/восстановление на mobile и desktop; реальные участники/наблюдения отдельно. Не писать «validated» после одного просмотра диаграмм агентом. Сохранить вопросы на ревью и контекст выбора для следующей задачи.
+Usability-validation plan: task success, errors, finding actions, label comprehension, return/recovery on mobile and desktop; actual participants/observations are separate. Do not write “validated” after one agent review of diagrams. Preserve review questions and choice context for the next task.

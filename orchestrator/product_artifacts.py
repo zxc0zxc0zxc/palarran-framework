@@ -14,8 +14,19 @@ from urllib.parse import urlsplit
 STAGES = ('define', 'market', 'compare', 'revenue', 'acquisition', 'mvp')
 PROFILES = ('define', 'market', 'compare', 'revenue', 'acquisition', 'b2b', 'b2c')
 HEX = re.compile(r'^[0-9a-f]{64}$')
-HEADINGS = ('Контекст и основание', 'Выбор и объяснение', 'Альтернативы',
-            'Источники и evidence', 'Последствия и пересмотр', 'Применение и проверка')
+HEADINGS = ('Context and basis', 'Choice and rationale', 'Alternatives',
+            'Sources and evidence', 'Consequences and review', 'Application and verification')
+LEGACY_HEADINGS = ('Контекст и основание', 'Выбор и объяснение', 'Альтернативы',
+                   'Источники и evidence', 'Последствия и пересмотр', 'Применение и проверка')
+SERBIAN_HEADINGS = ('Kontekst i osnova', 'Izbor i obrazloženje', 'Alternative',
+                    'Izvori i dokazi', 'Posledice i preispitivanje', 'Primena i provera')
+
+
+def has_decision_sections(document):
+    # Stable semantic sections, with canonical English and supported target locales.
+    return all(any(re.search(r'^## ' + re.escape(heading) + r'[ \t]*$', document, re.M)
+                   for heading in alternatives)
+               for alternatives in zip(HEADINGS, LEGACY_HEADINGS, SERBIAN_HEADINGS))
 E_FIELDS = set('id claim classification source_url publisher published_at retrieved_at metric_as_of period geography entity_product unit method value_or_range limitations confidence confidence_reason input_ids formula'.split())
 S_FIELDS = set('schema_version pipeline_id stage revision status context_sha256 inputs report evidence decisions claims unknowns verdict requirements experiments'.split())
 
@@ -102,7 +113,7 @@ def load_json(root, relative):
 def source_digest(skills_root):
     root = Path(skills_root).absolute()
     mandatory = ['docs/skills/decision-memory.md']
-    mandatory += ['skills/product-%s/SKILL.md' % profile for profile in PROFILES]
+    mandatory += ['skills/palarran-product-%s/SKILL.md' % profile for profile in PROFILES]
     mandatory += ['docs/product/%s.md' % name for name in
                   ('README', 'define', 'market', 'compare', 'revenue', 'acquisition',
                    'workflow', 'evidence', 'sources', 'data-sources', 'pipeline', 'pipeline-contract',
@@ -128,7 +139,7 @@ def source_digest(skills_root):
 
 def pipeline_dir(root, pipeline_id):
     require(isinstance(pipeline_id, str) and bool(re.fullmatch(r'[0-9a-f]{32}', pipeline_id)))
-    return safe_path(root, '.ai-development/product/pipeline-' + pipeline_id)
+    return safe_path(root, '.palarran/product/pipeline-' + pipeline_id)
 
 
 def git(root, *args):
@@ -146,10 +157,10 @@ def scope_guard(root, pipeline_relative, baseline):
                  ('ls-files', '--others', '--exclude-standard', '-z'),
                  ('ls-files', '--others', '--ignored', '--exclude-standard', '-z')):
         changed.update(p.decode('utf-8') for p in git(root, *args).split(b'\0') if p)
-    allowed = (pipeline_relative + '/', '.ai-development/factory/')
+    allowed = (pipeline_relative + '/', '.palarran/factory/')
     for path in changed:
         safe_path(root, path)
-        require(path in ('.ai-development/INDEX.md', '.ai-development/product/INDEX.md') or path.startswith(allowed))
+        require(path in ('.palarran/INDEX.md', '.palarran/product/INDEX.md') or path.startswith(allowed))
 
 
 def refs(value, catalog, nonempty=False):
@@ -173,8 +184,8 @@ def validate_stage(root, pipeline_id, stage, expected_context_sha, skills_root):
     require(canonical_sha(context) == expected_context_sha)
     require(sha(context['source_digest']) == source_digest(skills_root))
     scope_guard(root, relative, context['baseline'])
-    main_index = read_text(root, '.ai-development/INDEX.md', 1048576)
-    product_index = read_text(root, '.ai-development/product/INDEX.md', 1048576)
+    main_index = read_text(root, '.palarran/INDEX.md', 1048576)
+    product_index = read_text(root, '.palarran/product/INDEX.md', 1048576)
     require(re.search(r'(?<![0-9a-f])' + pipeline_id + r'(?![0-9a-f])', product_index) is not None)
     manifests, evidence, decisions, claims, unknowns = {}, {}, {}, set(), {}
     decision_paths = set()
@@ -207,7 +218,7 @@ def validate_stage(root, pipeline_id, stage, expected_context_sha, skills_root):
             for key, value in (('id', ident), ('status', record['status'])):
                 metadata_values = re.findall(r'^' + key + r':[ \t]*(.*?)[ \t]*$', metadata, re.M)
                 require(metadata_values == [value])
-            require(all(re.search(r'^## ' + re.escape(heading) + r'\s*$', document, re.M) for heading in HEADINGS))
+            require(has_decision_sections(document))
             require(re.search(r'(?<![A-Za-z0-9_./-])' + re.escape(ident) + r'(?![A-Za-z0-9_./-])', main_index) is not None)
             decisions[ident] = record
             decision_paths.add(record['path'])

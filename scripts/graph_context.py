@@ -16,7 +16,7 @@ import time
 
 VERSION = '0.9.93'
 SUFFIXES = {'.py', '.go', '.ts', '.tsx', '.js', '.jsx', '.rs', '.php', '.java', '.rb', '.c', '.h', '.cpp', '.cs', '.swift'}
-EXCLUDED = {'.git', '.graphify', '.ai-development', '.delivery', '.factory-state', '.venv', 'venv', 'node_modules', 'vendor', 'dist', 'build', 'target', 'artifacts', 'plans', 'scratch', '__pycache__', 'graphify-out'}
+EXCLUDED = {'.git', '.graphify', '.palarran', '.ai-development', '.delivery', '.factory-state', '.venv', 'venv', 'node_modules', 'vendor', 'dist', 'build', 'target', 'artifacts', 'plans', 'scratch', '__pycache__', 'graphify-out'}
 MAX_FILE = 1024 * 1024
 MAX_CORPUS = 50 * 1024 * 1024
 MAX_GRAPH = 64 * 1024 * 1024

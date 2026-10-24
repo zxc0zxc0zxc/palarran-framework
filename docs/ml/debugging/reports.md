@@ -1,48 +1,48 @@
-# Training / validation отчёты и любой исход остановки
+# Training / validation reports for every terminal outcome
 
-## Три представления
+## Three views
 
-1. **Rolling report** — последний durable progress: identity, last observed metric/validation/snapshot/checkpoint, heuristic state и cost refs. Обновлять после committed diagnostic windows/evaluation/checkpoint и перед stop request; показывать freshness/gaps.
-2. **Validation report** — immutable receipt для конкретного subject/protocol/dev split: primary/guardrails/slices, sufficient statistics/denominators, coverage/errors, uncertainty, paired baseline и generations refs. Training telemetry не подменяет это измерение.
-3. **Terminal training report** — по attempt и cumulative logical run, при completed, early_stop, budget_stop, operator_cancel, data/integrity failure, NaN, OOM, provider termination/preemption, lease/deadline loss, worker/controller crash или blocked preflight. Причина и last observed state обязательны. Success не единственный исход, deserving report.
+1. **Rolling report:** latest durable progress: identity, last observed metric/validation/snapshot/checkpoint, heuristic state and cost refs. Update after committed diagnostic windows/evaluation/checkpoints and before stop requests; show freshness/gaps.
+2. **Validation report:** immutable receipt for a specific subject/protocol/dev split: primary/guardrails/slices, sufficient statistics/denominators, coverage/errors, uncertainty, paired baseline and generation refs. Training telemetry does not replace this measurement.
+3. **Terminal training report:** per attempt and cumulative logical run for completed, early_stop, budget_stop, operator_cancel, data/integrity failure, NaN, OOM, provider termination/preemption, lease/deadline loss, worker/controller crashes or blocked preflight. Reason and last observed state are mandatory. Success is not the only outcome deserving a report.
 
-## Состояния не смешивать
+## Keep states separate
 
-`training_outcome=not_started|completed|stopped|failed|unknown`, отдельный reason; `provider_state/terminal_proof`; `report_status=complete|partial|unavailable`; `verification_status=verified|unverified|stale|not_run`; `benchmark_verdict=accept|reject|inconclusive|not_run`. Даже complete report о cancelled run не делает модель accepted. При stop request без provider terminal proof outcome остаётся unknown/stop_requested и reserve удерживается. После recovery новый report revision обновляет facts, старый сохраняется.
+`training_outcome=not_started|completed|stopped|failed|unknown`, separate reason; `provider_state/terminal_proof`; `report_status=complete|partial|unavailable`; `verification_status=verified|unverified|stale|not_run`; `benchmark_verdict=accept|reject|inconclusive|not_run`. Even a complete report on a canceled run does not accept the model. A stop request without provider terminal proof stays unknown/stop_requested with reserve held. Recovery produces a new report revision updating facts while preserving the old one.
 
-Completed означает заранее установленный training exit criterion, а не любой process exit=0. Early stop завершает разрешённую training policy, но не подтверждает useful model. Сбой финальной validation → report partial и benchmark not_run/inconclusive по фактам; нельзя скрыть это общим success.
+Completed means the predefined training exit criterion, not any process exit=0. Early stopping completes authorized training policy but does not establish a useful model. Failed final validation means partial report and factual benchmark not_run/inconclusive; do not hide it behind overall success.
 
-## Минимальный terminal report
+## Minimum terminal report
 
-| Раздел | Обязательное содержание |
+| Section | Required contents |
 | --- | --- |
-| Outcome | Outcome/reason, start/end/last observed, stop requester/ack/provider evidence, report completeness и unknowns |
-| Subject | Plan/source/dependencies/model/tokenizer/template/data/preparation/config/protocol/probes hashes, attempts/segments и lineage |
-| Progress | Completed optimizer updates, unique vs physically reprocessed tokens/examples, skipped/restarted work, planned limits и achieved coverage |
-| Train | Objective components/normalizer, valid NLL/PPL при applicable basis, LR/grad/AMP/update/mix summaries и nonfinite/missing counts |
-| Validation | Последние и best **реально выполненные** dev measurements, primary/guardrails/slices/support/uncertainty, protocol/basis, expected/evaluable/errors |
-| Behavior | Fixed probe gallery/diffs, finish causes/length/completeness/repetition, snapshot hashes, missing samples и their reason |
-| Heuristics | Каждая applicable rule: calibrated threshold/window, last state/observation, triggers, action/ack и evidence; disabled/not_applicable reasons |
-| Checkpoints | Base, best-by-frozen-selection, last-good, last-written/unsafe и resume capability; hashes/file completeness; не alias разных ролей |
-| Compute / cost | Actual elapsed/train/dev/generation/checkpoint overhead, useful throughput/memory, existing receipt IDs; estimate/provider/invoice/unknown reserves отдельно |
-| Decision | Какой H-ID подтверждён/опровергнут/неопределён, evidence limitations, missing DoD, cheapest next test и условие разрешения следующего этапа |
+| Outcome | Outcome/reason, start/end/last observed, stop requester/ack/provider evidence, report completeness and unknowns |
+| Subject | Plan/source/dependencies/model/tokenizer/template/data/preparation/config/protocol/probes hashes, attempts/segments and lineage |
+| Progress | Completed optimizer updates, unique versus physically reprocessed tokens/examples, skipped/restarted work, planned limits and achieved coverage |
+| Train | Objective components/normalizer, valid NLL/PPL where applicable, LR/grad/AMP/update/mix summaries and nonfinite/missing counts |
+| Validation | Latest and best **actually performed** dev measurements, primary/guardrails/slices/support/uncertainty, protocol/basis, expected/evaluable/errors |
+| Behavior | Fixed-probe gallery/diffs, finish causes/length/completeness/repetition, snapshot hashes, missing samples and reasons |
+| Heuristics | Every applicable rule: calibrated threshold/window, last state/observation, triggers, action/ack and evidence; disabled/not_applicable reasons |
+| Checkpoints | Base, best-by-frozen-selection, last-good, last-written/unsafe and resume capability; hashes/file completeness; no aliasing of distinct roles |
+| Compute / cost | Actual elapsed/train/dev/generation/checkpoint overhead, useful throughput/memory, existing receipt IDs; estimate/provider/invoice/unknown reserves separately |
+| Decision | Supported/refuted/inconclusive H-IDs, evidence limits, missing DoD, cheapest next test and next-stage authorization conditions |
 
-Best checkpoint определяется заранее выбранной validation selection rule с tie-break/min_delta/guardrails. Last checkpoint не обязательно best, lower PPL не отменяет primary task regression. Final hidden test не используется для выбора best. Если weights missing/corrupt, report не ссылается на них как пригодный resume artifact. Configuration/subject drift инвалидирует прежнюю verification, не стирает измерения.
+Choose best checkpoints by a predefined validation-selection rule with tie-break/min_delta/guardrails. Last is not necessarily best; lower PPL does not cancel primary-task regressions. Never select best on the hidden final test. Missing/corrupt weights cannot appear as usable resume artifacts. Config/subject drift invalidates prior verification without erasing measurements.
 
-## Устойчивый finalizer
+## Durable finalizer
 
-**До dispatch** создать durable start stub с policy hashes, owner и private artifact/report refs. Training writer публикует только committed bounded chunks; coordinator поддерживает rolling metadata. Stop controller сначала прекращает compute по существующим leases/budget policy, затем использует bounded cleanup margin для разрешённого checkpoint/export; не пытается любой ценой сохранить невалидные weights.
+**Before dispatch** create a durable start stub with policy hashes, owner and private artifact/report refs. Training writers publish committed bounded chunks only; coordinators maintain rolling metadata. Stop controllers first terminate compute under existing lease/budget policy, then use bounded cleanup margins for authorized checkpoints/exports; never save invalid weights at any cost.
 
-Terminal finalizer работает на уже durable local/private artifacts, без импорта модели, запуска GPU, оплаты judge или blind remote replay. Формирует machine-readable JSON + Markdown + plots, проверяет refs/hashes, atomic report manifest; `latest` pointer только после записи. Идемпотентный key: `(logical_run, attempt, terminal_event_id, input_manifest_digest)`. Repeated callback создаёт тот же результат либо explicit new revision после новых reconciliation facts, не duplicate spend/events. Financial truth читает existing ledger, не доверяет строке cost внутри training log.
+Terminal finalizers use already durable local/private artifacts without model imports, GPU launches, paid judges or blind remote replay. Produce machine-readable JSON + Markdown + plots, verify refs/hashes and atomically publish report manifests; update `latest` only afterward. Idempotency key: `(logical_run, attempt, terminal_event_id, input_manifest_digest)`. Repeated callbacks yield the same result or explicit new revisions after reconciliation facts, never duplicate spend/events. Read financial truth from the existing ledger, not a cost line in a training log.
 
-Crash/SIGKILL/OOM может не исполнить finally. Поэтому coordinator recovery по истёкшему lease/observed terminal событию должен восстановить **минимальный partial report** из start stub и last committed chunks; missing metrics/output refs явно перечислить. При потере coordinator/storage сетью, report recovery запускается после восстановления доступа без training resume. Нельзя гарантировать запись в уничтоженное storage: доступный start stub/remote durable refs и recovery status — обязательная evidence, `unavailable` вместо fake report success. Report недоступен сейчас → явный operational diagnostic, next read-only recovery, не новый платный запуск.
+Crash/SIGKILL/OOM may bypass finally. Coordinator recovery after expired leases/observed terminal events must reconstruct a **minimum partial report** from start stubs and last committed chunks, explicitly listing missing metrics/output refs. After coordinator/storage network loss, recover reports when access returns without resuming training. Destroyed storage cannot be guaranteed writable: available start stubs/remote durable refs and recovery status are required evidence; use `unavailable`, never fake report success. Currently unavailable reports need explicit operational diagnostics and the next read-only recovery step, not a new paid run.
 
-Disk-full: stop writer/controller по policy, сохранить minimal safe status в доступном coordinator durable store; не удалять checkpoints/плохие samples для сокрытия сбоя. Corrupt trailing chunks не включать как valid observations. Recovery читает bounded approved artifacts, не raw provider logs/env dumps.
+Disk-full: stop writers/controllers by policy, preserve minimum safe status in available coordinator durable storage; do not delete checkpoints/bad samples to conceal failure. Corrupt trailing chunks are not valid observations. Recovery reads bounded approved artifacts, not raw provider logs/environment dumps.
 
-## Расход, stopping и выбор дальнейших действий
+## Spending, stopping and next actions
 
-Финальная генерация/validation имеют заранее зарезервированное время/стоимость; при exhausted budget они NOT RUN. Report всё равно формируется из уже сохранённой evidence. Provider cancellation неизвестна — report partial + reserve/unknown, не `stopped=true`. Поздняя invoice/reconciliation меняет report revision, но не reset бюджета/attempts.
+Final generation/validation needs predefined time/cost reserves; on exhausted budget they are NOT RUN. Still build reports from preserved evidence. Unknown provider cancellation means partial report + reserve/unknown, not `stopped=true`. Late invoices/reconciliation revise reports without resetting budget/attempts.
 
-Handoff в target `.ai-development/ml` — безопасное summary, implemented plan revision, checks/remaining и ссылки private refs без чувствительных prompts. Полная private галерея не переносится в публичный Git. Report должен существовать и для нулевого полезного progress: исключение/стоп — результат эксперимента, а не отсутствие записи.
+Target `.palarran/ml` handoff contains safe summaries, implemented plan revision, checks/remaining work and private refs without sensitive prompts. Full private galleries never enter public Git. Reports must exist even with zero useful progress: exceptions/stops are experiment outcomes, not absent records.
 
-Шаблоны: [terminal training report](examples/training-report.md), [validation receipt/report](examples/validation-report.md), [design policy](examples/diagnostics-policy.example.md). Все поля пока примеры для реализации, не runtime-accepted JSON schema.
+Templates: [terminal training report](examples/training-report.md), [validation receipt/report](examples/validation-report.md), [design policy](examples/diagnostics-policy.example.md). Fields are implementation examples, not runtime-accepted JSON schemas.

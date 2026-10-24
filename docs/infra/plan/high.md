@@ -1,10 +1,10 @@
-# High: большая инфраструктура
+# High: large infrastructure
 
-Размер определяется SLO, failure model, нагрузкой, изоляцией и командой эксплуатации. Одна очень мощная машина не даёт отказоустойчивую инфраструктуру. Если доступен только один target, описать его подготовку сейчас и отдельный целевой HA-план с недостающими узлами; не маскировать пробел.
+Size follows SLO, failure model, load, isolation and operations team. One very powerful host does not provide resilient infrastructure. If only one target is available, describe its preparation now and a separate target HA plan with missing nodes; do not disguise the gap.
 
-## Базовая архитектура
+## Baseline architecture
 
-Предпочесть managed Kubernetes, если регион/контроль/стоимость подходят: меньше собственного обслуживания control plane. Self-managed — минимум три control-plane/etcd узла в независимых отказных доменах, стабильный private API endpoint/LB, отдельные worker pools по workload, private subnets, управляемый ingress и исходящий путь. Для K3s учитывать [quorum](https://docs.k3s.io/datastore/ha-embedded); другие дистрибутивы требуют собственного validated design.
+Prefer managed Kubernetes when region/control/cost fit: it reduces control-plane maintenance. Self-managed requires at least three control-plane/etcd nodes in independent failure domains, stable private API endpoint/LB, separate worker pools by workload, private subnets, managed ingress and outbound path. For K3s, account for [quorum](https://docs.k3s.io/datastore/ha-embedded); other distributions require their own validated designs.
 
 ```mermaid
 flowchart TB
@@ -28,24 +28,24 @@ flowchart TB
   BK --> DR[Recovery environment in second region]
 ```
 
-Схема концептуальная: для трёх зон показать фактическое размещение quorum, ingress и workers в каждом домене в конкретном плане. Приложения минимум в двух доменах, запас после потери крупнейшего домена. Control plane quorum не обеспечивает HA database или доступность NAT/LB автоматически.
+This diagram is conceptual: for three zones, show actual quorum, ingress and worker placement in each domain in the concrete plan. Applications span at least two domains with spare capacity after losing the largest domain. Control-plane quorum does not automatically provide HA databases or NAT/LB availability.
 
-## Capacity и availability
+## Capacity and availability
 
-- Согласовать SLI (успешные запросы, latency, durability), измерение на пользовательской границе, SLO/error budget и freeze policy ([Google SLO](https://sre.google/workbook/implementing-slos/)). Значения вроде 99.9% — предложение для обсуждения, не следствие выбора Kubernetes.
-- Модель capacity: рабочая пиковая нагрузка + deploy surge + резерв на потерю зоны; проверить scheduling, requests/limits, HPA signals, cluster autoscaler limits, quotas и время запуска новых nodes. Autoscaling не устраняет мгновенный дефицит capacity.
-- Topology spread/anti-affinity, readiness/startup/liveness, graceful termination, PDB для voluntary disruption. PDB не предотвращает физическую потерю узла.
-- Retry budget, deadlines, backpressure, очереди и load shedding важнее бесконечных retries. Провести нагрузочное тестирование с наблюдаемыми пределами до заявления о пропускной способности.
+- Agree on SLIs (successful requests, latency, durability), measurement at the user boundary, SLO/error budget and freeze policy ([Google SLO](https://sre.google/workbook/implementing-slos/)). Values such as 99.9% are proposals for discussion, not consequences of choosing Kubernetes.
+- Capacity model: operational peak load + deployment surge + zone-loss reserve; check scheduling, requests/limits, HPA signals, cluster-autoscaler limits, quotas and new-node startup time. Autoscaling does not remove instantaneous capacity shortages.
+- Topology spread/anti-affinity, readiness/startup/liveness, graceful termination and PDB for voluntary disruption. PDB does not prevent physical node loss.
+- Retry budgets, deadlines, backpressure, queues and load shedding matter more than infinite retries. Run load tests with observable limits before claiming throughput.
 
-## Сеть, identities, blast radius
+## Network, identities and blast radius
 
-Раздельные prod/non-prod cloud projects/accounts и credentials, при необходимости отдельные clusters для сильной tenant изоляции. NetworkPolicy по namespaces и workload identity; service mTLS применять там, где threat model/требования оправдывают certificate lifecycle. [Meta](https://engineering.fb.com/2019/05/29/security/service-encryption/) показывает важность identity, rotation и поведения при сбоях; service mesh — наш возможный инструмент, не обязательное копирование их реализации.
+Separate prod/non-prod cloud projects/accounts and credentials; use separate clusters when strong tenant isolation requires it. NetworkPolicy by namespace and workload identity; use service mTLS where threat model/requirements justify certificate lifecycle management. [Meta](https://engineering.fb.com/2019/05/29/security/service-encryption/) demonstrates the importance of identity, rotation and failure behavior; service mesh is one possible tool we choose, not a requirement to copy their implementation.
 
-Для public ingress: DDoS/CDN/WAF по угрозам, origin ACL/TLS, trusted proxy headers, rate/body/time limits и корректный client IP. Обход origin по прямому IPv4/IPv6 должен быть закрыт. East-west encryption/authorization, private API, RBAC/SSO/MFA, time-bound admin, audit logs и break-glass с журналом проверяются отдельно.
+Public ingress: DDoS/CDN/WAF according to threats, origin ACL/TLS, trusted proxy headers, rate/body/time limits and correct client IP. Block direct IPv4/IPv6 origin bypass. Verify east-west encryption/authorization, private API, RBAC/SSO/MFA, time-bound administration, audit logs and recorded break-glass separately.
 
-Egress: отдельные per-zone gateways/NAT или отказоустойчивые proxies, фиксированные IP там, где нужны партнёрам, flow logs/alerts. Учитывать SNAT ports, conntrack, DNS, зависимость от IdP, registry, secret manager и certificate issuer. IP-based L3/L4 allowlist не эквивалентен hostname/identity policy; FQDN routing и TLS policy проектировать явно. Management, nodes и pods имеют отдельные allowlists.
+Egress: separate per-zone gateways/NAT or resilient proxies, fixed IPs where partners require them, flow logs/alerts. Account for SNAT ports, conntrack, DNS and dependencies on IdP, registry, secret manager and certificate issuer. An IP-based L3/L4 allowlist is not hostname/identity policy; explicitly design FQDN routing and TLS policy. Management, nodes and pods have separate allowlists.
 
-## Delivery и управление
+## Delivery and management
 
 ```mermaid
 flowchart LR
@@ -62,18 +62,18 @@ flowchart LR
   BOOT[Versioned bootstrap configuration] --> ARGO
 ```
 
-IaC, platform GitOps и app GitOps разделены по правам/ownership, но имеют прослеживаемые commit/digest. Terraform state защищён IAM/encryption/locking; CI использует короткие credentials при поддержке провайдера. GitOps repo не хранит plaintext secrets. Argo projects не дают tenant приложениям создавать cluster-wide RBAC и управлять namespace Argo.
+IaC, platform GitOps and application GitOps have separate permissions/ownership with traceable commits/digests. Protect Terraform state with IAM/encryption/locking; CI uses short-lived credentials where supported by the provider. GitOps repositories contain no plaintext secrets. Argo projects must not let tenant applications create cluster-wide RBAC or manage the Argo namespace.
 
-Релиз на subset, автоматическое прекращение при ухудшении SLIs и возможность отката опираются на [Google canary practice](https://sre.google/workbook/canarying-releases/); пороги/окна — наши настройки под сервис. Для bootstrap, CNI, CRD и storage upgrades нужны отдельные rollout/rollback runbooks; обычный app rollback их не заменяет.
+Subset release, automatic termination on worsening SLIs and rollback capability build on [Google canary practice](https://sre.google/workbook/canarying-releases/); thresholds/windows are our service-specific settings. Bootstrap, CNI, CRD and storage upgrades need separate rollout/rollback runbooks; normal application rollback does not replace them.
 
-## Data plane и DR
+## Data plane and DR
 
-Managed DB/PITR как стартовая опция; self-hosted operators — при наличии экспертизы и ресурсов. Для каждой DB/очереди/cache/storage class зафиксировать consistency, quorum, fencing/failover, durable acknowledgements, cross-zone latency, replication lag, RWO/RWX, encryption/key recovery и backup scope. Репликация переносит логическое удаление — требуется отдельное backup retention.
+Managed DB/PITR is an initial option; self-hosted operators require expertise and resources. For every DB/queue/cache/storage class, record consistency, quorum, fencing/failover, durable acknowledgements, cross-zone latency, replication lag, RWO/RWX, encryption/key recovery and backup scope. Replication propagates logical deletion; separate backup retention is necessary.
 
-Региональный HA и межрегиональный DR — разные решения. Начать с backup/restore или warm standby, если это покрывает цели; active-active требует разрешения конфликтов и подтверждённой модели данных. Измерить RTO от начала отказа до восстановленного сервиса с данными, DNS, secrets, identities и зависимостями. Копии в независимом account/регионе, immutable retention по возможностям storage, минимальные restore credentials. DR проводить на отдельном target без повреждения production.
+Regional HA and cross-region DR are different decisions. Start with backup/restore or warm standby if they meet objectives; active-active requires conflict resolution and a confirmed data model. Measure RTO from failure onset to recovered service including data, DNS, secrets, identities and dependencies. Keep copies in an independent account/region, immutable retention as storage supports, and minimal restore credentials. Run DR on a separate target without damaging production.
 
-## Приёмка и открытые решения
+## Acceptance and open decisions
 
-До deploy: threat model, стоимость/egress, on-call/владельцы, SLO/RPO/RTO, доступ к rescue и backup, capacity и rollback. После: loss-of-node/zone exercise в разрешённом окне, cert/secret rotation, отрицательные network/RBAC tests, canary abort, restore и measured RPO/RTO, alert delivery. Chaos testing начинать только после определения blast radius и abort conditions.
+Before deployment: threat model, cost/egress, on-call/owners, SLO/RPO/RTO, rescue/backup access, capacity and rollback. Afterward: node/zone-loss exercise within an authorized window, cert/secret rotation, negative network/RBAC tests, canary abort, restore/measured RPO/RTO and delivered alerts. Start chaos testing only after defining blast radius and abort conditions.
 
-Обсудить managed/self-managed, zones/regions, cluster-per-team/shared, mesh/no mesh, DB operator/managed, distributed storage/external data, GitOps controller blast radius. Не добавлять Kafka/Ceph/Vault/service mesh только из-за слова «high»; альтернативы и условия пересмотра фиксировать в [ADR](decisions.md).
+Discuss managed/self-managed, zones/regions, per-team/shared clusters, mesh/no mesh, DB operator/managed, distributed storage/external data and GitOps-controller blast radius. Do not add Kafka/Ceph/Vault/service mesh merely because the profile says “high”; record alternatives and reconsideration conditions in [ADRs](decisions.md).

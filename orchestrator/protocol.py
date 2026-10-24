@@ -8,7 +8,7 @@ import stat
 def handoff_path(workspace, run, task, attempt):
     root = Path(workspace).resolve(strict=True)
     parent = root
-    for component in ('.ai-development', 'factory', run, task, 'attempt-' + str(attempt)):
+    for component in ('.palarran', 'factory', run, task, 'attempt-' + str(attempt)):
         parent = parent / component
         if parent.is_symlink():
             raise ValueError('Symlink handoff directory forbidden')

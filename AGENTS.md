@@ -1,41 +1,45 @@
-# Инструкции ai-tools
+# Palarran instructions
 
-Библиотека skills/docs/adapters и bounded Python orchestrator. Public code/identifiers — English; project guides и skill instructions — русский. Существующие незакоммиченные изменения сохранять.
+Library of skills, documentation and adapters with a bounded Python orchestrator. Canonical public code, identifiers, guides and skill instructions use English. Preserve existing uncommitted work. Project locale preferences control interaction and newly generated artifacts; see .palarran/config.json and global ~/.palarran/config.json.
 
-## Навигация
+## Navigation
 
-- [README: карта входа](README.md#agent-entry), [индекс документации](docs/README.md), [каталог скиллов](skills/README.md), [общие contracts](docs/skills/README.md).
-- Graphify navigation: [freshness → bounded query → original source](docs/skills/graph-context.md); diagram/graph не даёт разрешения на действия.
+- [README agent entry](README.md#agent-entry), [documentation index](docs/README.md), [skill catalog](skills/README.md), [shared contracts](docs/skills/README.md).
+- Graphify navigation: [freshness → bounded query → original source](docs/skills/graph-context.md). A diagram or graph never authorizes execution.
 
-## Перед задачей
+## Before a task
 
-- Прочитать `.ai-development/INDEX.md`, связанные accepted ADR и сверить предпосылки с кодом. Решения до зависимых изменений записывать по [decision-memory](docs/skills/decision-memory.md); обновлять index/handoff, сохранять superseded history.
-- Прочитать AGENTS затронутых модулей из карты ниже, даже если сессия запущена из root. Root-to-CWD discovery не загружает автоматически все соседние модули.
-- Для любой профильной задачи/skill обязательно читать соответствующий раздел [domain-contracts](docs/skills/domain-contracts.md) и указанные там mandatory guides. Правило действует и при работе вне каталога docs/skills.
-- Новые AGENTS писать по [authoring guide](docs/skills/agents-authoring.md): реальные границы/команды, краткие проверяемые инварианты, без копирования root.
+- Read `.palarran/INDEX.md`, relevant accepted ADRs and current code to verify assumptions. Record decisions before dependent changes using [decision memory](docs/skills/decision-memory.md); update index/handoff and preserve superseded history. In older targets also inspect the legacy .ai-development index.
+- Read AGENTS for every affected module in the table below, even when starting from the repository root. Root-to-CWD discovery does not load sibling modules automatically.
+- For every domain task or skill, read the relevant [domain contract](docs/skills/domain-contracts.md) and its mandatory guides. This applies outside docs/skills too.
+- Write new AGENTS using the [authoring guide](docs/skills/agents-authoring.md): real boundaries/commands, concise testable invariants, no root duplication.
 
-## Общие инварианты
+## Core principles
 
-- Сначала документация и primary dated sources, затем реализация. Vendor claims, наблюдения, оценки и гипотезы различать.
-- Planning/read-only не разрешает application edits, installs, worktrees, cloud/SSH/DB/API execution, training или deploy; профильные исключения только по соответствующему контракту и фактическому scope пользователя.
-- Не хранить secrets, credentials, raw logs, customer data, state или checkpoints в Git. `.delivery/` — текущая конфигурация; target `.ai-development/` — rationale/результаты. Skill checkout и target — разные roots.
-- Нет implied разрешения на paid APIs/training, outreach, публикацию, ad spend или deploy. Сохранять общий бюджет через failures/restarts. Unknown outcome — reconciliation, не replay; budget не увеличивать автоматически. Estimate/provider usage/invoice различать.
-- Handoff/exit/build не равны verification. Independent checks и exact subject/evidence обязательны; missing checks = partial/NOT RUN, не PASS. Operational SLA и market validation не выводятся из local tests.
-- Graphify — optional local code-only navigation: [graph contract](docs/skills/graph-context.md). Использовать bounded fresh query, затем original files/AGENTS/ADR. При stale/missing — scoped search; не читать полный graph в prompt и не включать semantic/cloud extraction без отдельного scope/budget.
+Modularity, parallelism, autonomy and quality guide every task. Prefer concurrent execution for genuinely independent work. Before dispatch, record a bounded task DAG, file/resource ownership and acceptance gates; use owned Git worktrees for parallel implementation and keep shared plan/index/integration under one coordinator. Do not parallelize dependent mutations, approvals or overlapping files. Continue authorized work autonomously without repeated confirmation, preserving budget/scope and unknown-outcome reconciliation. Parallelism must improve elapsed time without weakening independent verification; do not invent worker results or quality evidence.
 
-## Модули и проверки
+## Shared invariants
 
-| Каталог | Контекст |
+- Documentation and dated primary sources precede implementation. Distinguish vendor claims, observations, estimates and hypotheses.
+- Planning/read-only does not authorize application edits, installs, worktrees, cloud/SSH/DB/API execution, training or deployment. Exceptions require the applicable domain contract and actual user scope.
+- Keep secrets, credentials, raw logs, customer data, state and checkpoints out of Git. `.delivery/` owns current configuration; target `.palarran/` owns rationale and results. The skill checkout and target are different roots.
+- No implied authorization for paid APIs/training, outreach, publication, ad spending or deployment. Preserve cumulative budgets across failures/restarts. Reconcile unknown outcomes before retrying; never increase a budget automatically. Separate estimates, provider usage and invoices.
+- Handoff, exit and build are not verification. Independent checks and exact subjects/evidence are mandatory. Missing checks mean partial/NOT_RUN, never PASS. Local tests do not establish an operational SLA or market validation.
+- Graphify is optional local code-only navigation under the [graph contract](docs/skills/graph-context.md). Query a bounded fresh subset, then original files/AGENTS/ADRs. Use scoped search when missing/stale; never load the whole graph or enable semantic/cloud extraction without separate scope and budget.
+
+## Modules and checks
+
+| Directory | Context |
 | --- | --- |
 | memory | [Cross-project graph memory](memory/AGENTS.md) |
-| mcp | [Readonly stdio reference profiles](mcp/AGENTS.md) |
-| orchestrator | [Runtime/leases/accounting/providers](orchestrator/AGENTS.md) |
-| scripts | [CLI, inventory, validators, packaging](scripts/AGENTS.md) |
-| tests | [Offline contracts и fixtures](tests/AGENTS.md) |
-| skills | [Skill authoring и mandatory guides](skills/AGENTS.md) |
-| docs | [Источники и профильные контракты](docs/AGENTS.md) |
-| templates | [Инертные примеры и target memory](templates/AGENTS.md) |
+| mcp | [Read-only stdio reference profiles](mcp/AGENTS.md) |
+| orchestrator | [Runtime, leases, accounting and providers](orchestrator/AGENTS.md) |
+| scripts | [CLI, inventory, validators and packaging](scripts/AGENTS.md) |
+| tests | [Offline contracts and fixtures](tests/AGENTS.md) |
+| skills | [Skill authoring and mandatory guides](skills/AGENTS.md) |
+| docs | [Sources and domain contracts](docs/AGENTS.md) |
+| templates | [Inert examples and target memory](templates/AGENTS.md) |
 | plugins | [Portable namespaces](plugins/AGENTS.md) |
-| examples | [Local/remote examples](examples/AGENTS.md) |
+| examples | [Local and remote examples](examples/AGENTS.md) |
 
-После code/skills/inventory изменений: `python3 scripts/validate_repo.py` и `python3 -m unittest discover -s tests -v`. После runtime изменений дополнительно `python3 scripts/factory_acceptance.py`. Никогда не проверять через live infrastructure apply или paid ML launch. Подробные профильные проверки сохраняются в domain-contracts.
+After code, skill or inventory changes run `python3 scripts/validate_repo.py` and `python3 -m unittest discover -s tests -v`. After runtime changes also run `python3 scripts/factory_acceptance.py`. Never test through live infrastructure apply or paid ML launches. Detailed domain checks remain in domain-contracts.

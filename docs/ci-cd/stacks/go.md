@@ -1,38 +1,38 @@
 # Go
 
-Применять для `go.mod`/`go.work`, проверив границы modules, toolchain, native/CGO зависимости, build tags и production GOOS/GOARCH. Google release/test principles и Meta affected-selection из [фактуры](../evidence.md) обосновывают процесс; конкретные Go-команды ниже берутся у Go project, не приписываются Netflix.
+Apply to `go.mod`/`go.work`, checking module boundaries, toolchain, native/CGO dependencies, build tags and production GOOS/GOARCH. Google release/test principles and Meta affected-selection in [evidence](../evidence.md) support the process; concrete Go commands below come from the Go project, not Netflix.
 
-## Рекомендуемый DAG
+## Recommended DAG
 
-| Ветка | Проверки | Оптимизация и обязательные границы |
+| Branch | Checks | Optimization and required boundaries |
 |---|---|---|
-| Fast feedback | Проверка `gofmt`, vet, выбранный pinned static analyzer | Независимо от integration; не запускать несколько дублирующих analyzer suite без причины |
-| Unit | `go test -mod=readonly ./...` в каждом module | Package parallelism по CPU/RAM, штатный build/test cache |
-| Integration | Tagged suite с DB/queue, migrations, API contracts | Отдельные ephemeral services и DB/schema на shard, readiness вместо sleep |
-| Race | `go test -race` для поддерживаемых platform и нужных suites | Отдельный required gate согласно policy, не дублировать race в каждой arch matrix |
-| Security | Pinned `govulncheck`, deps/license policy и итоговый image scan | Различать reachability findings, vulnerable OS packages и исключения |
-| Candidate | Production binary/container → startup/API smoke | Проверить exact packaged digest и архитектуру |
+| Fast feedback | `gofmt` check, vet, selected pinned static analyzer | Independent of integration; avoid duplicate analyzer suites without reason |
+| Unit | `go test -mod=readonly ./...` in each module | CPU/RAM-based package parallelism, native build/test cache |
+| Integration | Tagged suite with DB/queue, migrations, API contracts | Separate ephemeral services and DB/schema per shard, readiness instead of sleep |
+| Race | `go test -race` on supported platforms/required suites | Separate required gate under policy; avoid repeating race in each architecture matrix |
+| Security | Pinned `govulncheck`, dependency/license policy and final image scan | Distinguish reachability findings, vulnerable OS packages and exceptions |
+| Candidate | Production binary/container → startup/API smoke | Check exact packaged digest and architecture |
 
-Примеры предполагают реальную структуру module; `./...` в корне monorepo не охватывает автоматически все вложенные modules. Unit/integration должны иметь явное разделение: не запускать скрытые сетевые integration tests под видом hermetic cached unit tests.
+Examples assume actual module structure; `./...` at monorepo root does not automatically cover nested modules. Explicitly separate unit/integration: do not run hidden network integration tests as hermetic cached unit tests.
 
-## Cache и тестовый сигнал
+## Cache and test signal
 
-[Go command](https://pkg.go.dev/cmd/go) описывает package test cache, `GOCACHE`, `GOMODCACHE`, build/test flags. Download cache и compile cache различаются. Внешний cache scope: OS/arch/toolchain, module lock inputs и trust level; Go дополнительно проверяет свои build inputs. Не кешировать credentials в `go env`/netrc/git config. Для private modules настроить GOPRIVATE/proxy policy без токена в URL/log.
+[Go command](https://pkg.go.dev/cmd/go) documents package test cache, `GOCACHE`, `GOMODCACHE` and build/test flags. Download and compile caches differ. External cache scope: OS/architecture/toolchain, module-lock inputs and trust level; Go additionally validates its own build inputs. Do not cache credentials in `go env`/netrc/git config. Configure GOPRIVATE/proxy policy for private modules without tokens in URLs/logs.
 
-Integration, изменяющиеся external services и проверки, которые должны реально выполниться, запускать без переиспользования test result, например `go test -count=1 -tags=integration ./...` при существующем tag contract. Не отключать весь build cache ради fresh tests. Не заменять package dependency closure списком изменённых файлов; shared packages, go.mod/go.sum/go.work, generated code и build tag changes расширяют impact.
+Run integration, changing external-service checks and tests requiring actual execution without test-result reuse, for example `go test -count=1 -tags=integration ./...` under an existing tag contract. Do not disable all build caching for fresh tests. Do not replace package dependency closure with changed-file lists; shared packages, go.mod/go.sum/go.work, generated code and build-tag changes expand impact.
 
-[Race detector](https://go.dev/doc/articles/race_detector) требует ресурсов и обнаруживает гонки только в выполненных путях; успешный compile без запуска не достаточен. Не прятать нужный race gate в nightly ради скорости. [govulncheck](https://go.dev/doc/security/vuln/) дополняет unit/race, не заменяет их.
+[Race detector](https://go.dev/doc/articles/race_detector) consumes resources and detects races only on executed paths; successful compilation without execution is insufficient. Do not hide required race gates in nightly runs for speed. [govulncheck](https://go.dev/doc/security/vuln/) supplements unit/race tests without replacing them.
 
-## Сборка и deployment
+## Build and deployment
 
-Toolchain фиксируется по проекту, версии linters отдельно; base images по digest. Не ставить автоматически `CGO_ENABLED=0`: проверить sqlite/DNS/native dependencies и libc. Cross-compile не подтверждает запуск на target; для deploy arch нужен native/совместимый runner smoke. Для multiarch evidence привязана к каждой требуемой platform, не только manifest list.
+Pin project toolchain and linter versions separately; pin base images by digest. Do not automatically set `CGO_ENABLED=0`: check sqlite/DNS/native dependencies and libc. Cross-compilation does not prove target execution; deployment architecture needs native/compatible runner smoke. Multiarch evidence binds every required platform, not only the manifest list.
 
-Release binary собирается из exact protected commit с source identity, dependencies и production flags. Возможен `-trimpath` по требованиям reproducibility; ldflags/version metadata согласовать с приложением. Тестовый binary и release binary разные: внешний harness проверяет production artifact, внутри minimal runtime tools не обязательны.
+Build release binaries from exact protected commits with source identity, dependencies and production flags. `-trimpath` may meet reproducibility needs; align ldflags/version metadata with the application. Test/release binaries differ: an external harness checks production artifacts without requiring tools inside minimal runtimes.
 
-В deploy: graceful SIGTERM, readiness, connection draining, миграции отдельной serialized job с runtime identity; HTTP endpoint не должен проходить readiness до готовности зависимостей по контракту. Один digest между dev/test/prod, конфигурация runtime внешняя. Rollback только при schema compatibility; возврат image не отменяет DB mutation. Backend — [GitOps/API/pull-controller](../architecture.md), без SSH.
+Deployment: graceful SIGTERM, readiness, connection draining, migrations as separate serialized jobs with runtime identity; HTTP readiness must wait for dependency readiness under contract. One digest across dev/test/prod, external runtime configuration. Rollback only with schema compatibility; image rollback does not reverse DB mutations. Backend: [GitOps/API/pull-controller](../architecture.md), no SSH.
 
-## Provider mapping и приёмка
+## Provider mapping and acceptance
 
-GitHub: setup/cache jobs и `needs` + отдельные race/integration checks. GitLab: pinned Go image, `needs`, cache paths внутри workspace если требуется executor, явные test artifacts. В обоих log outputs/test fixtures без credentials; `go test -json` и stderr тестов тоже проверяются на утечки.
+GitHub: setup/cache jobs and `needs` + separate race/integration checks. GitLab: pinned Go image, `needs`, workspace cache paths if executor requires, explicit test artifacts. Both require credential-free logs/test fixtures; check `go test -json` and test stderr for leaks too.
 
-Критерии: cold/warm timings, scope каждого module, green aggregate при реальном выполнении required suites, race target подтверждён, пакет запускается на target arch/libc, запрещён непроверенный digest, rollback и shutdown smoke проверены. Coverage/fuzz/performance suites добавляются по риску; длительные fuzz/bench runs scheduled дополнительно, короткий regression test найденного бага остаётся required.
+Criteria: cold/warm timings, every module's scope, green aggregate after actual required-suite execution, confirmed race target, package runs on target architecture/libc, unverified digests blocked, rollback/shutdown smoke tested. Add coverage/fuzz/performance suites by risk; schedule long fuzz/benchmark runs additionally while keeping short regressions for discovered bugs required.

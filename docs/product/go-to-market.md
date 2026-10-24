@@ -1,49 +1,49 @@
-# Кому и как продавать — до реализации
+# Who to sell to and how — before implementation
 
-Планирование первых клиентов начинается до инженерной реализации. После polish повторить проверку по фактическим возможностям и revision продукта: не обещать отсутствующий функционал. Это два checkpoint одного плана, а не перенос discovery на конец.
+Plan the first customers before engineering implementation. After polish, repeat the check against actual capabilities and the product revision: never promise missing functionality. These are two checkpoints in one plan, not discovery postponed until the end.
 
-## Выбрать путь
+## Choose a path
 
-B2B: покупает организация — [небольшие первые клиенты](b2b.md). B2C: покупает человек — [аудитория и недорогой трафик](b2c.md). Для marketplace/B2B2C отдельно описать плательщика, пользователя и каждую сторону; нельзя считать supply автоматически найденным спросом. При неясной модели задать один вопрос, сохранив независимые результаты. Не заменять заданный бизнес более удобным.
+B2B: an organization buys — [small first customers](b2b.md). B2C: an individual buys — [audience and inexpensive traffic](b2c.md). For marketplaces/B2B2C, separately describe the payer, user and each side; available supply is not automatically established demand. If the model is unclear, ask one question while preserving independent findings. Do not substitute a more convenient business.
 
 ```mermaid
 flowchart TD
-    A[Идея и контекст] --> B{Кто платит?}
-    B -->|Компания| C[Малые клиенты и sales plan]
-    B -->|Человек| D[Узкая аудитория и growth tests]
-    B -->|Обе стороны| E[Два связанных плана]
-    C --> F[Цена, доступ к аудитории, риски]
+    A[Idea and context] --> B{Who pays?}
+    B -->|Company| C[Small customers and sales plan]
+    B -->|Individual| D[Narrow audience and growth tests]
+    B -->|Both sides| E[Two linked plans]
+    C --> F[Price, audience access, risks]
     D --> F
     E --> F
-    F --> G{Есть обоснованный дешёвый тест?}
-    G -->|Нет| H[Уточнить или проверить гипотезу]
-    G -->|Да| I[MVP planning handoff]
-    I --> J[После polish: сверить обещание с продуктом]
+    F --> G{A justified inexpensive test exists?}
+    G -->|No| H[Clarify or test the hypothesis]
+    G -->|Yes| I[MVP planning handoff]
+    I --> J[After polish: compare promise with product]
     J --> F
 ```
 
-## Бюджет и разрешения
+## Budget and permissions
 
-Сначала выяснить валюту, географию, общий cash cap, cap одного теста, доступное время и стоимость производства. Если бюджет не указан — **cash cap = 0**, платные варианты остаются conditional, не попадают в исполнимый shortlist. Модельный бюджет исследования и будущий бюджет продаж/медиа — разные лимиты. Приоритет: существующий доступ к аудитории, founder-led работа, партнёрство, собственный контент; затем только подтверждённые доступные платные тесты. Не усложнять исследование платными API, когда достаточно публичных источников.
+First establish currency, geography, total cash cap, per-test cap, available time and production costs. Without a stated budget, **cash cap = 0**; paid options remain conditional and stay out of the executable shortlist. Model research budget and future sales/media budget are different limits. Prioritize existing audience access, founder-led work, partnerships and owned content; only then consider confirmed affordable paid tests. Do not complicate research with paid APIs when public sources suffice.
 
-Отсекать дорогие варианты до подробного плана: минимальный исполнимый тест + производство + комиссии + обязательные расходы должны помещаться в оба cap. Неизвестная обязательная часть цены → needs_quote, не нулевая стоимость. Учитывать время основателя, бартерный товар/доставку и поддержку. Оценки времени помечать scenario. Правила quote register — [pricing](pricing.md).
+Reject expensive options before detailed planning: minimum feasible test + production + commissions + mandatory costs must fit both caps. An unknown mandatory price component means needs_quote, not zero cost. Include founder time, barter goods/delivery and support. Label time estimates scenarios. Quote-register rules: [pricing](pricing.md).
 
-Числа 3 000 ₽/тест и 10 000 ₽/14 дней допустимы только как явно синтетический пример расчёта, если нужны примеры; это не тарифы рынка, не глобальные defaults и не разрешение тратить. Конкретный план использует фактически согласованные ограничения. Без данных о марже/удержании CAC ceiling — гипотеза с sensitivity, не рыночный benchmark.
+Figures of RUB 3,000/test and RUB 10,000/14 days are permitted only as explicitly synthetic calculation examples if examples are needed; they are not market prices, global defaults or spending authorization. A concrete plan uses actual agreed constraints. Without margin/retention data, the CAC ceiling is a hypothesis with sensitivity, not a market benchmark.
 
-## Evidence и решения
+## Evidence and decisions
 
-До выбора сегмента/канала/оффера сохранить rationale, источники, альтернативы, последствия и условие пересмотра по [workflow](workflow.md). Прочитать target README, INDEX, accepted ADR, текущие product/UX/UI планы; записывать в target `.ai-development/product/<task>/`, не в установленный пакет. Точные product/report revisions, E-IDs и ADR переходят в handoff. Сохранять отклонённые варианты и причины: дорого, enterprise, неподходящая география, нет доступного канала, unknown price.
+Before selecting a segment/channel/offer, preserve rationale, sources, alternatives, consequences and review trigger under the [workflow](workflow.md). Read target README, INDEX, accepted ADRs and current product/UX/UI plans; write to target `.palarran/product/<task>/`, not the installed package. Exact product/report revisions, E-IDs and ADRs enter the handoff. Preserve rejected options and reasons: expensive, enterprise, unsuitable geography, no accessible channel, unknown price.
 
-Успешный кейс — основание гипотезы, не обещание результата: [B2B](cases/b2b-first-customers.md), [B2C](cases/b2c-frugal-growth.md). Claim компании, собственная оценка и наблюдение разделяются. Similarweb/каталоги/ads libraries не доказывают боль, бюджет покупателя или продажи.
+A successful case grounds a hypothesis, not a promised result: [B2B](cases/b2b-first-customers.md), [B2C](cases/b2c-frugal-growth.md). Separate company claims, our estimates and observations. Similarweb/directories/ad libraries do not prove pain, buyer budget or sales.
 
 ## Review checkpoint
 
-Перед рекомендацией engineering planning нужны: buyer/user/geo/job, конкретный оффер и доступные способы дойти до аудитории; B2B — квалифицированные малые кандидаты с проверяемыми источниками; B2C — конкретные площадки/сегменты, а не «все пользователи TikTok»; cash/time ограничения, хотя бы один обоснованный доступный тест, attribution, критерии остановки и проверка обещания продукта. Если этого нет — conditional/needs_input и ближайшая проверка вместо утверждения build-ready. План теста не равен спросу, продажам или PMF.
+Before recommending engineering planning, require buyer/user/geography/job, a concrete offer and accessible audience paths; B2B requires qualified small prospects with verifiable sources; B2C requires specific platforms/segments rather than “all TikTok users”; cash/time limits, at least one justified accessible test, attribution, stop criteria and product-promise checks. Otherwise report conditional/needs_input and the next validation rather than build-ready. A test plan is not demand, sales or PMF.
 
-После polish сверить product revision, готовность landing/onboarding/payment, допустимость claims, текущие цены/размещения и eligibility канала. Просроченные quotes обновить; неизвестное оставить blocker. Добавить delta к предыдущей revision, не стирать причины прежнего выбора. Операционная готовность к рекламе/продажам проверяется отдельно при явном execution scope.
+After polish verify product revision, landing/onboarding/payment readiness, permissible claims, current prices/placements and channel eligibility. Refresh expired quotes; unknowns remain blockers. Add a delta to the previous revision without erasing earlier rationale. Operational advertising/sales readiness is checked separately under explicit execution scope.
 
-Исследование не отправляет outreach, не покупает рекламу, не регистрирует accounts, не публикует посты и не подключает tracking. Подготовить черновики и план — разрешено. Текущие правила площадок, доступность страны, условия рекламы/маркировки/сборов проверять перед исполнимым платным планом; недоступная проверка = conditional, без обхода ограничений.
+Research sends no outreach, purchases no ads, registers no accounts, publishes no posts and connects no tracking. Drafts and plans are allowed. Before an executable paid plan, check current platform rules, country availability and advertising/disclosure/fee terms; unavailable checks mean conditional, without bypassing restrictions.
 
-## Выход и DoD
+## Output and DoD
 
-Report: draft / research_complete / needs_input / blocked. Отдельно execution readiness: ready_to_test / conditional / needs_input; все будущие тесты **not_run**. Ready_to_test означает полноту предложенного теста в рамках ограничений, не разрешение запускать его. Каждый accepted choice имеет ADR; handoff содержит exact refs, unknowns, владельцев и следующий дешёвый тест. Схема runtime проверяет целостность артефактов, но не истинность customer research и не содержательную достаточность sales plan: последнее требует review.
+Report: draft / research_complete / needs_input / blocked. Separately, execution readiness: ready_to_test / conditional / needs_input; all future tests are **not_run**. Ready_to_test means a complete proposed test within constraints, not permission to launch. Every accepted choice has an ADR; the handoff includes exact references, unknowns, owners and the next inexpensive test. Runtime schema checks artifact integrity, not customer-research truth or substantive sales-plan sufficiency: those require review.

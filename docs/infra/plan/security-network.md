@@ -1,41 +1,41 @@
-# Безопасность и сетевые потоки
+# Security and network flows
 
-## Host и доступ
+## Host and access
 
-Поддерживаемая OS с определённым update/reboot window, минимальные пакеты и открытые сервисы, time sync, отдельный admin account, SSH key/agent и ограниченные management CIDR. Отключать password/root login только после проверки новой SSH-сессии и rescue console. Fail2ban может снижать шум, но не заменяет ключи, firewall и обновления. Нельзя бездумно перезаписывать firewall на машине с неизвестными сервисами.
+Supported OS with defined update/reboot windows, minimal packages/exposed services, time synchronization, separate admin account, SSH key/agent and restricted management CIDRs. Disable password/root login only after testing a new SSH session and rescue console. Fail2ban may reduce noise but does not replace keys, firewall and updates. Do not blindly overwrite firewalls on hosts with unknown services.
 
-Контейнерный runtime обновляется в том же lifecycle, что OS. App-контейнеры без privileged/hostPID/hostNetwork/docker socket; non-root, capability drop, seccomp, AppArmor/SELinux если поддерживается. Kubernetes app namespaces — [Pod Security Standards restricted](https://kubernetes.io/docs/concepts/security/pod-security-standards/), исключения для platform components с владельцем. RBAC минимальный, service-account токены только нуждающимся workloads, namespaces не считать полной изоляцией враждебных tenants.
+Update container runtime in the OS lifecycle. Application containers have no privileged/hostPID/hostNetwork/Docker socket; use non-root, capability drop, seccomp and AppArmor/SELinux where supported. Kubernetes application namespaces use [Pod Security Standards restricted](https://kubernetes.io/docs/concepts/security/pod-security-standards/), with owned exceptions for platform components. Minimal RBAC, service-account tokens only for workloads needing them; namespaces are not complete isolation for hostile tenants.
 
-## Обязательная flow matrix
+## Mandatory flow matrix
 
-План заполняет **для каждого** потока конкретные source/destination CIDR или identity, protocol/port, control plane enforcement, IPv4/IPv6, owner, причину и тест. Примеры категорий:
+For **every** flow, the plan specifies concrete source/destination CIDRs or identities, protocol/port, control-plane enforcement, IPv4/IPv6, owner, reason and test. Example categories:
 
-| Источник → назначение | Типичный протокол | Что зафиксировать |
+| Source → destination | Typical protocol | Record |
 |---|---|---|
-| Internet → edge | TCP 443; TCP 80 при необходимости | TLS termination, redirect/ACME, WAF/rate limits, HTTP/3 UDP 443 только если включён |
-| CDN/LB → origin | TCP выбранный backend port | Origin allowlist/authentication, healthcheck ranges, forwarded headers |
+| Internet → edge | TCP 443; TCP 80 when needed | TLS termination, redirect/ACME, WAF/rate limits, HTTP/3 UDP 443 only if enabled |
+| CDN/LB → origin | TCP selected backend port | Origin allowlist/authentication, healthcheck ranges, forwarded headers |
 | Admin/VPN → SSH/API/Argo | TCP SSH port/6443/443 | Private path, host key/SSO/MFA/RBAC, break-glass |
-| Ingress → app | TCP app port | Namespace/pod selectors, Service routing и source IP после NAT |
-| App → DB/cache/queue | Конкретные ports | Private endpoint, DB credentials/TLS, least privilege |
-| Pods → DNS | UDP и TCP 53 к resolver | Cluster DNS или NodeLocalDNS topology |
-| Nodes/hosts → DNS/NTP/registry/repos | DNS, NTP, TLS | Host egress отдельно от pod egress |
-| Argo → Git/cluster API | HTTPS/SSH, API TLS | Repo credentials, private CA, destination RBAC |
-| App → external API | Обычно TCP 443 | FQDN/identity policy, proxy, redirects и зависимости |
-| Backup/telemetry → storage/collector | Выбранные TLS ports | Endpoint scope, credentials, rate/retention |
-| Nodes → nodes/control plane | По дистрибутиву/CNI | etcd, kubelet, overlay, LB healthchecks только внутри trusted ranges |
+| Ingress → application | TCP application port | Namespace/pod selectors, Service routing and source IP after NAT |
+| Application → DB/cache/queue | Specific ports | Private endpoint, DB credentials/TLS, least privilege |
+| Pods → DNS | UDP and TCP 53 to resolver | Cluster DNS or NodeLocalDNS topology |
+| Nodes/hosts → DNS/NTP/registry/repos | DNS, NTP, TLS | Host egress separate from pod egress |
+| Argo → Git/cluster API | HTTPS/SSH, API TLS | Repository credentials, private CA, destination RBAC |
+| Application → external API | Usually TCP 443 | FQDN/identity policy, proxy, redirects and dependencies |
+| Backup/telemetry → storage/collector | Selected TLS ports | Endpoint scope, credentials, rate/retention |
+| Nodes → nodes/control plane | Distribution/CNI-specific | etcd, kubelet, overlay, LB healthchecks only within trusted ranges |
 
-Примеры протоколов — не готовые firewall rules. В частности, открытый HTTPS на любой IP оставляет канал exfiltration. Если адреса меняются, нужен egress proxy или поддерживаемая FQDN policy. Core [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) — L3/L4; учитывать NAT/CNI и не приписывать ей защиту host traffic. Проверять как разрешённый, так и запрещённый путь.
+Protocol examples are not ready-made firewall rules. In particular, HTTPS to any IP leaves an exfiltration channel. Changing addresses require an egress proxy or supported FQDN policy. Core [NetworkPolicy](https://kubernetes.io/docs/concepts/services-networking/network-policies/) operates at L3/L4; account for NAT/CNI and do not attribute host-traffic protection to it. Test both allowed and denied paths.
 
-Docker host INPUT policy не покрывает автоматически FORWARD/published ports; согласовать cloud firewall и runtime backend ([Docker firewall](https://docs.docker.com/engine/network/packet-filtering-firewalls/)). Включённый IPv6 проверять на каждом слое либо отключать согласованно в плане, не игнорировать AAAA.
+Docker host INPUT policy does not automatically cover FORWARD/published ports; align cloud firewall and runtime backend ([Docker firewall](https://docs.docker.com/engine/network/packet-filtering-firewalls/)). Verify enabled IPv6 at every layer or disable it as agreed in the plan; do not ignore AAAA.
 
-## Secrets и supply chain
+## Secrets and supply chain
 
-Секреты не попадaют в Git, IaC outputs, планы, workflow logs или inventory. Разделить bootstrap, runtime и backup credentials; rotation/revocation и recovery описать. Для low — защищённые файлы вне repo с минимальными правами и backup ключа восстановления; для Kubernetes — внешний secret manager или SOPS с ключом вне Git и раздельным доступом. Base64 в Secret не шифрование; включить datastore encryption и ограничить RBAC. Для high — workload identity/короткие credentials и audit доступа.
+Secrets stay out of Git, IaC outputs, plans, workflow logs and inventory. Separate bootstrap, runtime and backup credentials; document rotation/revocation and recovery. For low, use protected files outside the repository with minimal permissions and recovery-key backup; for Kubernetes, external secret manager or SOPS with keys outside Git and separated access. Secret base64 is not encryption; enable datastore encryption and restrict RBAC. For high, workload identity/short-lived credentials and access audits.
 
-CI не запускает недоверенный PR-код с production secrets. Pin actions по проверенному full commit SHA, минимальные `GITHUB_TOKEN` permissions, отдельные build/deploy trust boundaries, images по digest, SBOM/scanning и политика исключений ([GitHub secure use](https://docs.github.com/en/actions/reference/security/secure-use)). Проверить происхождение image, не только отсутствие известных CVE. Публичные PR не должны исполняться на runner с доступом к production/private сети.
+CI does not run untrusted PR code with production secrets. Pin actions to verified full commit SHAs, minimal `GITHUB_TOKEN` permissions, separate build/deploy trust boundaries, images by digest, SBOM/scanning and exception policy ([GitHub secure use](https://docs.github.com/en/actions/reference/security/secure-use)). Verify image provenance, not only absence of known CVEs. Public PRs must not run on runners with production/private-network access.
 
-## Threat model и проверка
+## Threat model and verification
 
-Назвать активы и угрозы: компрометация app/runner/operator/key, supply chain, exfiltration, DDoS, потеря node/backup account, ошибочное удаление. Для каждой — контроль, остаточный риск, owner и evidence. Не обещать compliance по установке инструмента.
+Name assets and threats: compromised application/runner/operator/key, supply chain, exfiltration, DDoS, node/backup-account loss, accidental deletion. For each: control, residual risk, owner and evidence. Do not promise compliance from tool installation.
 
-Приёмка: независимая сессия admin; наружный тест public/закрытых ports в согласованной области; forbidden pod→pod и pod→Internet; host egress; auth/RBAC denial; cert renew/secret rotation; защищённость и доступность audit. Негативные тесты запускать только в согласованном окружении, не превращать обследование в пентест.
+Acceptance: independent admin session; external checks of public/closed ports within agreed scope; denied pod→pod and pod→Internet; host egress; auth/RBAC denial; certificate renewal/secret rotation; audit protection/availability. Run negative tests only in an agreed environment; do not turn discovery into penetration testing.

@@ -1,43 +1,43 @@
-# Review и критерии готовности
+# Review and readiness criteria
 
-## Coverage и traceability
+## Coverage and traceability
 
-| Область | Проверка | Если не выполнено |
+| Area | Check | If missing |
 |---|---|---|
-| Business | Brief из описания или target README/docs, роли/задачи/результаты понятны | Назвать неизвестный процесс и задать конкретный вопрос |
-| Референсы | Default 4, minimum 3 независимых продукта, relevance и scope объяснены | Research incomplete; не выдавать draft за завершённое сравнение |
-| Account UX | Кабинеты реально исследованы либо screenshots найдены/просмотрены; provenance и gaps видны | Не делать уверенных выводов о скрытом UX |
-| Evidence | Observation IDs, source/access/publication dates, platform/role и facts vs inference | Исключить неподтверждённое утверждение или обозначить гипотезой |
-| Reuse | Existing screens/states/blocks учтены, каждое new/change имеет причину | Проверить duplication и незаметное расширение scope |
-| Screen coverage | Каждый in-scope Screen ID имеет card+desktop/mobile layouts+пояснение | Это FAIL концепта, а не отложенный visual design |
-| Flow/state | Все targets/actions/guards понятны, pending/error/empty/permission и back/recovery разобраны по применимости | Независимые части можно завершить, зависящий flow остаётся draft |
-| Adaptive | Tablet/content transitions, keyboard/touch, long content/reflow, focus/scroll | Не обещать адаптивный UX только по desktop flow |
-| Copy | Короткие UI строки, нет инструкций/документации внутри кнопок и лишних consent clauses | Сначала упростить задачу/текст, не прятать важный смысл |
-| UX boundary | Нет навязанных colors/fonts/radii/brand/production CSS | Убрать visual scope или вынести отдельным запросом |
-| Memory | Concepts/revisions/catalog, canonical ADR, INDEX и handoff сохранены в target project | Следующая задача не должна восстанавливать всё из чата |
+| Business | Brief from description or target README/docs, clear roles/tasks/outcomes | Name the unknown process and ask a specific question |
+| References | Default 4, minimum 3 independent products with relevance and scope explained | Research incomplete; do not present draft as completed comparison |
+| Account UX | Account interfaces actually researched or screenshots found/viewed; visible provenance and gaps | Do not make confident claims about hidden UX |
+| Evidence | Observation IDs, source/access/publication dates, platform/role and facts versus inference | Remove unsupported claims or label hypotheses |
+| Reuse | Existing screens/states/blocks accounted for; each new/change has a reason | Check duplication and unnoticed scope expansion |
+| Screen coverage | Every in-scope Screen ID has a card+desktop/mobile layouts+explanation | Concept FAIL, not deferred visual design |
+| Flow/state | All targets/actions/guards clear; pending/error/empty/permission and back/recovery covered as applicable | Finish independent work; dependent flow remains draft |
+| Responsive | Tablet/content transitions, keyboard/touch, long content/reflow, focus/scroll | Do not promise responsive UX from a desktop flow alone |
+| Copy | Concise UI strings, no instructions/documentation in buttons or extra consent clauses | Simplify task/text first without hiding essential meaning |
+| UX boundary | No imposed colors/fonts/radii/brand/production CSS | Remove visual scope or separate it into another request |
+| Memory | Concepts/revisions/catalog, canonical ADR, INDEX and handoff saved in target project | The next task must not reconstruct everything from chat |
 
-Исключения/narrow scope фиксируются явно. Если проект содержит много экранов, делить на journeys/review sections, но не пропускать in-scope screens молча. Референсами покрывать ключевые journeys с честными gaps, не требовать всех конкурентов на каждом редком edge-case и не считать такую строку доказанной автоматически.
+Record exceptions/narrow scope explicitly. For many screens, split by journeys/review sections without silently omitting in-scope screens. Cover key journeys through references with honest gaps; do not require every competitor for each rare edge case or automatically treat such a row as proven.
 
-## Виды проверки
+## Verification types
 
-- **Syntax/local links:** Mermaid parser и file link checks. Проход parser не доказывает читаемый render.
-- **Visual read of diagrams:** если renderer доступен — посмотреть preview, проверить labels/edges/масштаб графа. Сам auto-generated SVG без просмотра не считается проверенным.
-- **Expert walkthrough:** пройти концепт по task scripts, back/error/no-data/no-permission, short copy, role boundary и сохранению контекста. Это review, не действия реального пользователя.
-- **Prototype/implementation validation:** keyboard, touch, reflow, screen reader, real errors и user task testing — только если прототип/приложение существует и проверялось. Иначе NOT RUN.
+- **Syntax/local links:** Mermaid parser and file-link checks. Parser success does not prove a readable render.
+- **Visual reading of diagrams:** with a renderer, view previews and inspect labels/edges/graph scale. An automatically generated but unviewed SVG is unverified.
+- **Expert walkthrough:** exercise concepts using task scripts, back/error/no-data/no-permission, concise copy, role boundaries and context preservation. This is review, not real user behavior.
+- **Prototype/implementation validation:** keyboard, touch, reflow, screen reader, real errors and user task testing only if a prototype/application exists and was tested. Otherwise NOT RUN.
 
-Для статусов: PASS/FAIL/NOT RUN + evidence. Concept `review-ready` — выполнен контракт для ревью, **не** «удобство доказано» и не WCAG compliance. `approved` требует реального решения владельца. Ссылки на исследовательские источники не заменяют фактический тест нашей аудитории.
+Statuses: PASS/FAIL/NOT RUN + evidence. Concept `review-ready` means the review contract is fulfilled, **not** “usability proven” or WCAG compliance. `approved` needs an actual owner decision. Research-source links do not replace actual testing with our audience.
 
-## Сценарии проверки поведения скилла
+## Skill behavior evaluation scenarios
 
-При последующем sandbox evaluation проверить:
+In subsequent sandbox evaluation, check:
 
-1. Без описания и с business README — извлекает бизнес, не задаёт повторный общий вопрос и не анализирует checkout tools как приложение.
-2. Нет ясного процесса — спрашивает «Что делает данный бизнес-процесс?», сохраняет unknowns и продолжает независимое.
-3. Четыре продукта, кабинет закрыт — ищет official/screenshots, не придумывает вход/переходы; image snippet без просмотра не evidence.
-4. Есть старый accepted S02 — проверяет reuse, сохраняет revision, не создаёт дубль из-за нового названия.
-5. Long CTA/extra consent — оставляет короткое точное действие и необходимые независимые выборы, не склеивает аналитику/возраст/условия.
-6. Только desktop — не объявляет завершение; добавляет mobile layouts и tablet/reflow/keyboard contract.
-7. Меньше трёх исследуемых продуктов или браузер недоступен — сохраняет полезный draft с gaps и реальными источниками; не фабрикует research.
-8. Следующая задача — читает target UX/decision indexes, объясняет выбор сохранёнными IDs и не удаляет историю.
+1. Without a description but with a business README, extracts the business without repeating a generic question or analyzing the tools checkout as the application.
+2. An unclear process prompts “What does this business process do?”, preserves unknowns and continues independent work.
+3. Four products with closed account access: seeks official materials/screenshots without inventing entry/transitions; an image snippet without viewing is not evidence.
+4. Existing accepted S02: checks reuse, preserves revision and avoids duplication caused by a new name.
+5. Long CTA/extra consent: keeps concise accurate action and necessary independent choices without combining analytics/age/terms.
+6. Desktop only: does not declare completion; adds mobile layouts and tablet/reflow/keyboard contract.
+7. Fewer than three researchable products or unavailable browser: preserves useful draft with gaps and real sources without fabricating research.
+8. Next task: reads target UX/decision indexes, explains choices using stored IDs and preserves history.
 
-Эти сценарии — план evaluation, не заявление, что LLM behavioral eval был выполнен при authoring. Не запускать third-party account mutations или оплачиваемые исследования без соответствующего scope.
+These scenarios are an evaluation plan, not a claim that LLM behavioral evaluation ran during authoring. Do not run third-party account mutations or paid research without corresponding scope.

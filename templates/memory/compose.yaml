@@ -1,5 +1,5 @@
 # Inert single-instance example. Run only after target review and immutable image pin.
-name: ai-tools-memory
+name: palarran-memory
 services:
   graph:
     image: ${NEO4J_IMAGE:?Set a verified Neo4j Community image digest}

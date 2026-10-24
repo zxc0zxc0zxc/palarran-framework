@@ -1,6 +1,6 @@
 # Experiment spec
 
-Шаблон: заполнить placeholders, это не разрешение запуска.
+Template: fill placeholders; this does not authorize launch.
 
 - Experiment ID / revision / content hash:
 - Target / source commit / dirty patch hash:
@@ -22,17 +22,17 @@
 - External-action authorization scope / remaining required approval:
 - Risks / open questions / not-run checks:
 
-## Task DAG и DoD
+## Task DAG and DoD
 
 | Task ID | Inputs/revision | Dependencies/owner | Output | Acceptance/evidence | Reserve | State |
 | --- | --- | --- | --- | --- | --- | --- |
 | T-001 | context | none | baseline protocol | exact command or planning check | unknown | pending |
 
-Вставить Mermaid data→train→eval graph с trust/data boundaries и failure paths. Диаграмма — схема, не observed run.
+Insert a Mermaid data→train→eval graph with trust/data boundaries and failure paths. The diagram is a schematic, not an observed run.
 
 ## Execution progress
 
-Canonical source: target `progress.json`. Table синхронизируется из ledger; не менять статусы независимо.
+Canonical source: target `progress.json`. Synchronize the table from the ledger; do not change statuses independently.
 
 | Task / gate | Source revision | Implemented subject | State | Evidence | Remaining |
 | --- | --- | --- | --- | --- | --- |
@@ -40,15 +40,15 @@ Canonical source: target `progress.json`. Table синхронизируется
 
 ## Decision / handoff
 
-Accepted/rejected/inconclusive/not_run; причины с ADR/E-ID; experiment costs/unknowns; ссылки на checkpoint/benchmark; следующий cheapest test. Deployment/publication отдельно.
+Accepted/rejected/inconclusive/not_run; reasons with ADR/E-ID; experiment costs/unknowns; checkpoint/benchmark refs; cheapest next test. Deployment/publication are separate.
 
 ## Training diagnostics / terminal report contract
 
-До launch заполнить [design](../../docs/ml/debugging/README.md) и [policy template](../../docs/ml/debugging/examples/diagnostics-policy.example.md):
+Before launch complete the [design](../../docs/ml/debugging/README.md) and [policy template](../../docs/ml/debugging/examples/diagnostics-policy.example.md):
 
-- Task/objective profile; NLL/scored-token basis/PPL applicability + primary task metric и required slices.
-- Active/disabled heuristic registry с calibration/windows/min_support/action/owner.
-- Frozen dev probes, model/decoding identity, baseline/intermediate/terminal generation policy и full private outputs.
-- Scalar/validation/generation/checkpoint cadence, overhead measurement и reserve из общего бюджета.
+- Task/objective profile; NLL/scored-token basis/PPL applicability + primary task metric and required slices.
+- Active/disabled heuristic registry with calibration/windows/min_support/action/owner.
+- Frozen dev probes, model/decoding identity, baseline/intermediate/terminal generation policy and full private outputs.
+- Scalar/validation/generation/checkpoint cadence, overhead measurement and reserve from the shared budget.
 - Durable start stub, rolling/validation/[terminal report](../../docs/ml/debugging/examples/training-report.md), recovery on crash/unknown stop.
-- Actual implementation status: pending/not_run до evidence collectors/finalizer; DoD не считать выполненным по одному заполненному шаблону.
+- Actual implementation status: pending/not_run until collector/finalizer evidence; a completed template alone does not satisfy DoD.

@@ -1,19 +1,19 @@
-# Первый кейс: чему именно учим
+# First case: what exactly is being taught
 
-Основание — пользовательское замечание 2026-10-24: skill проверял masks/loss/техническую механику, но сначала требовалось зафиксировать desired learned behavior и проверить, что actual selected targets обучают ему. Это user_report, не восстановленный historical trace. Числа старого эксперимента, cause-of-degradation и usage здесь не подтверждены. Не запускать training ради воспроизведения ошибки процесса.
+Basis: user feedback on 2026-10-24 that the skill checked masks/loss/technical mechanics before freezing desired learned behavior and verifying that actual selected targets teach it. This is user_report, not a recovered historical trace. Prior experiment figures, degradation causes and usage are unconfirmed here. Do not run training to reproduce a process error.
 
-Existing candidate на момент authoring workspace: docs/ml/learning-contract.md и seven ML skill changes уже присутствуют в workspace. Не переписывать/публиковать параллельный SFT controller. Candidate proposal: цель learn/preserve/evaluate/non-goals до recipe, content+actual target exposure audit до launch-ready. Технический mask PASS остаётся полезным, но не заменяет audit. Scope learning-contract и его ML mandatory guides читать при фактической правке; эта страница не разрешает новые paid ML runs.
+Existing authoring-workspace candidate: docs/ml/learning-contract.md and seven ML skill changes were already present. Do not rewrite/publish a parallel SFT controller. Candidate proposal: learn/preserve/evaluate/non-goals before recipe, content + actual target-exposure audit before launch-ready. Technical mask PASS remains useful but cannot replace the audit. Read learning-contract scope and mandatory ML guides before actual edits; this page authorizes no new paid ML runs.
 
-Regression oracle проверяет структурированное решение planner о readiness и traceability, не наличие слова «goal» в SKILL.md. Минимальные development cases:
+The regression oracle checks structured planner readiness/traceability decisions, not the word “goal” in SKILL.md. Minimum development cases:
 
 | Case | Input | Required observable outcome |
 | --- | --- | --- |
-| long_input_short_target | Нужны полные решения, длинные inputs, только короткие реакции в scored targets | blocked, mismatch reason + goal ID; не launch-ready на основании input length |
-| goal_missing | «Обучи как надо», data технически корректны, desired behavior не задано | needs_clarification, не выдумать цель/recipe |
-| short_confirmation | Цель коротких подтверждений, корректные short targets | ready в пределах evidence; не требовать длинных ответов/hidden reasoning |
-| no_data_access | Цель задана, содержимое/actual exposure недоступны | not_run/blocked audit; можно conditional planning, нельзя launch-ready |
-| preserved_ability | Меняем style, reasoning нужно сохранить, demonstrations не добавляют new reasoning | preservation tests нужны; отсутствие hidden CoT само не blocker |
+| long_input_short_target | Full solutions required, long inputs, only short reactions in scored targets | blocked, mismatch reason + goal ID; input length cannot establish launch-ready |
+| goal_missing | “Train it properly,” technically correct data, desired behavior unspecified | needs_clarification; never invent goal/recipe |
+| short_confirmation | Goal is short confirmations, correct short targets | ready within evidence; do not demand long answers/hidden reasoning |
+| no_data_access | Goal specified, content/actual exposure unavailable | not_run/blocked audit; conditional planning allowed, launch-ready forbidden |
+| preserved_ability | Changing style, preserving reasoning; demonstrations add no new reasoning | Preservation tests needed; absent hidden CoT is not itself a blocker |
 
-В tests есть независимый `ml_goal_grader`: отклоняет технически зелёный, но не покрывающий goal план; принимает correct blocked и valid ready controls; проверяет минимальные goal/evidence links. Это calibration на synthetic fixtures, **не полноценный semantic grader и не измерение, что текущая модель следует новому skill**. Review обязателен для смысла цели, actual content/sample sufficiency, temporal/domain slices. Исторический reproduction, model A/B и tokens/cost savings NOT_RUN до разрешённого парного запуска. Existing candidate diff можно получить из точной предыдущей revision и checked current bytes; не включать raw data/чужие SFT изменения.
+Tests contain independent `ml_goal_grader`: rejects technically green plans that do not cover the goal, accepts correct blocked/valid ready controls and checks minimum goal/evidence links. This calibrates synthetic fixtures, **not a full semantic grader or a measurement that the current model follows the new skill**. Review is mandatory for goal meaning, actual content/sample sufficiency and temporal/domain slices. Historical reproduction, model A/B and tokens/cost savings stay NOT_RUN until an authorized paired run. Obtain existing candidate diff from the exact prior revision and checked current bytes; exclude raw data/others' SFT changes.
 
-Standalone proposal и его apply/validator/package evidence сохранены в task handoff ai-tools. В clean checkout само наличие этого кейса не означает, что ML proposal уже применён: перед приёмкой сверить actual files/revision; не применять diff повторно поверх существующего candidate.
+The standalone proposal and its apply/validator/package evidence are in the Palarran task handoff. In a clean checkout, this case's existence does not mean the ML proposal was applied: check actual files/revision before acceptance; do not reapply the diff over an existing candidate.

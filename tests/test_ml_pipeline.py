@@ -37,7 +37,7 @@ def write_stage(root, policy, stage):
     from orchestrator.product_artifacts import HEADINGS
     decision.write_text('---\nid: ' + canonical + '\nstatus: accepted\ndecision_basis: agent-judgment\n---\n\n' + ident + '\n\n' +
                         '\n\n'.join('## ' + heading + '\n\nSynthetic fixture rationale, alternatives and bounded consequences.' for heading in HEADINGS))
-    with (root / '.ai-development/INDEX.md').open('a') as stream:
+    with (root / '.palarran/INDEX.md').open('a') as stream:
         stream.write(ident + '\n')
         stream.write(canonical + '\n')
     lineage = dict(previous['lineage'])
@@ -257,7 +257,7 @@ class MLPipelineTest(unittest.TestCase):
             'manifest=write_stage(Path.cwd().resolve(),marker,marker["stage"])\n'
             'if marker["stage"]=="hypotheses":\n'
             ' manifest["unknowns"]=[{"id":"U-data-rights","critical":True,"disposition":"unresolved","evidence_ids":[]}]\n'
-            ' p=Path.cwd()/".ai-development/ml"/("pipeline-"+marker["pipeline_id"])/"stages/hypotheses/stage.json"\n'
+            ' p=Path.cwd()/".palarran/ml"/("pipeline-"+marker["pipeline_id"])/"stages/hypotheses/stage.json"\n'
             ' p.write_text(json.dumps(manifest))'
         )
         self.agent.write_text(self.agent.read_text().replace(needle, replacement))

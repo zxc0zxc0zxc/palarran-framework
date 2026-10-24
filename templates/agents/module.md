@@ -1,11 +1,11 @@
-# Инструкции модуля
+# Module instructions
 
-Шаблон: заполнить после исследования существующего модуля, без выдуманных paths/команд.
+Template: fill after inspecting the existing module, without invented paths/commands.
 
-- Scope: <existing path и назначение>; наследует root.
-- Контракты: <inputs/outputs, consumers и compatibility invariants>.
-- Изменения: <что обновляется вместе, ownership shared files>.
-- Ошибки/данные: <edge cases и non-obvious safety boundary>.
-- Документы/ADR: <релевантные источники истины>.
-- Проверка: <verified commands, test data, что считается NOT RUN>.
-- Handoff: <remaining work, evidence и обновление progress>.
+- Scope: <existing path and purpose>; inherits root.
+- Contracts: <inputs/outputs, consumers and compatibility invariants>.
+- Changes: <what updates together, shared-file ownership>.
+- Errors/data: <edge cases and non-obvious safety boundaries>.
+- Docs/ADRs: <relevant sources of truth>.
+- Verification: <verified commands, test data, what counts as NOT RUN>.
+- Handoff: <remaining work, evidence and progress updates>.

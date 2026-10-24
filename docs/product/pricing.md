@@ -1,25 +1,25 @@
-# Цены: проверить, посчитать, отсеять дорогое
+# Prices: verify, calculate, reject expensive options
 
-Сначала реальный cash cap/валюта/период и время владельца. Без бюджета cash cap=0. Не подменять анализ цен «средним по рынку» из памяти. [Источники и даты](go-to-market-sources.md).
+Start with the actual cash cap/currency/period and owner's time. Without a budget, cash cap=0. Do not substitute a remembered “market average” for price analysis. [Sources and dates](go-to-market-sources.md).
 
 ## Price register
 
-Для каждой позиции сохранить: Q-ID, площадка/author/формат/география, URL и retrieval timestamp, publication/as-of или unknown, currency, unit (пост/видео/1000 impressions/период), list price vs binding quote vs platform floor vs scenario vs unknown, доступность/срок действия, минимальный заказ и длительность, VAT/налоги/fees, production/доставка/права, условия снятия/замены и measurement. Неизвестное явно перечислить; не считать VAT/fees включёнными без источника. FX — отдельный dated source либо оставить исходную валюту и conditional conversion.
+For each item preserve Q-ID, platform/creator/format/geography, URL and retrieval timestamp, publication/as-of or unknown, currency, unit (post/video/1,000 impressions/period), list price versus binding quote versus platform floor versus scenario versus unknown, availability/expiry, minimum order/duration, VAT/taxes/fees, production/delivery/rights, removal/replacement terms and measurement. List unknowns explicitly; never assume VAT/fees included without a source. FX requires a separate dated source, or retain original currency and conditional conversion.
 
-Full test cash = inventory/media + production + обязательные fees/taxes/fulfilment. При несовместимых единицах или unknown обязательных расходах результат unknown/диапазон, а не уверенная сумма. Отдельно time budget и бартерная себестоимость. Minimum budget не ожидаемый spend/CAC; не складывать вложенные campaign/ad group limits как независимые расходы.
+Full test cash = inventory/media + production + mandatory fees/taxes/fulfilment. Incompatible units or unknown mandatory costs produce unknown/a range, not a confident sum. Keep time budget and barter cost separate. Minimum budget is not expected spend/CAC; do not sum nested campaign/ad-group limits as independent expenses.
 
-Статус: eligible / rejected_over_cap / conditional_quote / conditional_eligibility / unavailable. В исполнимый shortlist проходят только известные доступные варианты под cap; отсутствие бесплатного способа фиксируется gap. Публичные 0 ₽, stock=0 или закрытая аналитика могут быть placeholder — **не доказательство бесплатного размещения**.
+Status: eligible / rejected_over_cap / conditional_quote / conditional_eligibility / unavailable. Only known accessible options under cap enter an executable shortlist; no free path is a recorded gap. Public RUB 0, stock=0 or private analytics may be placeholders — **not evidence of free placement**.
 
-## Наблюдения 2026-10-19 — примеры отсева, не предложение покупки
+## Observations on 2026-10-19 — rejection examples, not purchase recommendations
 
-| Источник | Что удалось прочитать | Значение для маленького бюджета | Ограничение |
+| Source | What was readable | Implication for a small budget | Limitation |
 |---|---|---|---|
-| [TikTok official daily budgets](https://ads.tiktok.com/resources/help/article/about-daily-budgets) | Campaign budget должен превышать $50, ad group daily — $20; lifetime ad group зависит от дней | Paid Ads Manager часто не подходит нулевому/малому cap; сравнить minimum feasible test с cap | Документ updated February 2025; вложенные уровни не суммировать механически; проверить актуальный UI/account |
-| [Telegram Ads](https://ads.telegram.org/getting-started) | Minimum CPM 0.1 TON | Это floor за 1000 показов, не цена Telegram-поста и не полный test budget | Auction/формат/условия/TON FX меняются; нет гарантии фактического CPM |
-| [Telega.in TikTok catalog](https://telega.in/catalog_tiktok), @connoralik | List price 461 538 ₽ | При cash cap=0 или синтетическом примере cap=3 000 ₽ — rejected_over_cap без дальнейшей закупочной проработки | Публичная карточка, не персональный binding quote; fees/права/availability неизвестны |
-| [Telega.in Telegram catalog](https://telega.in/catalog) | В просмотренных карточках 0 ₽ / stock=0 / недоступные метрики | unavailable или conditional_quote, **не free inventory** | Рендер/placeholder не подтверждает ставку; не регистрируемся ради заполнения отчёта |
-| Собственный контент | Cash может быть 0 при уже доступных ресурсах | Кандидат, если действительно есть доступ и время | Производство/модерация/охваты неизвестны, время не бесплатно |
+| [TikTok official daily budgets](https://ads.tiktok.com/resources/help/article/about-daily-budgets) | Campaign budget must exceed $50, ad-group daily budget $20; lifetime ad-group budget depends on days | Paid Ads Manager often does not fit zero/small caps; compare the minimum feasible test with the cap | Document updated February 2025; do not mechanically sum nested levels; verify current UI/account |
+| [Telegram Ads](https://ads.telegram.org/getting-started) | Minimum CPM 0.1 TON | A floor per 1,000 impressions, not a Telegram-post price or full test budget | Auction/format/terms/TON FX change; no actual-CPM guarantee |
+| [Telega.in TikTok catalog](https://telega.in/catalog_tiktok), @connoralik | List price RUB 461,538 | With cash cap=0 or synthetic cap=RUB 3,000, rejected_over_cap without further purchase planning | Public card, not a personal binding quote; fees/rights/availability unknown |
+| [Telega.in Telegram catalog](https://telega.in/catalog) | Inspected cards showed RUB 0 / stock=0 / unavailable metrics | unavailable or conditional_quote, **not free inventory** | Rendering/placeholders do not establish a rate; do not register merely to complete the report |
+| Owned content | Cash may be 0 with already available resources | A candidate only with actual access and time | Production/moderation/reach unknown; time is not free |
 
-Дешёвый действующий прайс Telegram-поста/микроблогера в этом исследовании **не подтверждён**. Скилл должен искать свежие релевантные публичные условия в контексте конкретного продукта; иначе needs_quote. Историческая статья BuduFood не тариф 2026 года. Прайсы освежать при подготовке целевого плана и после polish; source timestamp не срок действия предложения.
+This research **did not confirm** a current inexpensive Telegram-post/microcreator rate. The skill must seek fresh relevant public terms for the specific product; otherwise needs_quote. The historical BuduFood article is not a 2026 rate. Refresh prices for a target plan and after polish; a source timestamp is not an offer's validity period.
 
-Синтетический пример cap=3 000 ₽/тест и 10 000 ₽/14 дней можно использовать только для демонстрации отсева, обозначив scenario. Эти числа не market benchmark, не default бюджета и не разрешение тратить. При отсутствии маржи/retention любой target CAC остаётся проверяемым предположением.
+A synthetic cap of RUB 3,000/test and RUB 10,000/14 days may demonstrate rejection only when labeled scenario. These figures are not market benchmarks, budget defaults or spending permission. Without margin/retention, any target CAC remains a testable assumption.

@@ -1,47 +1,47 @@
-# Workflow и сохранение контекста
+# Workflow and durable context
 
-## 1. Контекст и source UX
+## 1. Context and source UX
 
-Разделить installed skill root и target project. Прочитать [decision-memory](../skills/decision-memory.md), target общий индекс, UX/UI catalogs, актуальные concepts/accepted ADR. Найти source UX revision по запросу/индексу, проверить статус и scope; при нескольких несовместимых версиях уточнить выбор. README объясняет бизнес, но не заменяет отсутствующий UX concept.
+Separate installed skill root from target project. Read [decision memory](../skills/decision-memory.md), target shared index, UX/UI catalogs and current concepts/accepted ADRs. Locate source UX revision through request/index, check status and scope; clarify selection between incompatible versions. README explains the business without replacing a missing UX concept.
 
-Если UX отсутствует, запросить путь/концепт или предложить сначала `/ux:design`; до ответа возможны research/style exploration, но полный UI не объявлять готовым. Не выдумывать новые экраны. Зафиксировать задачу, ограничения, source UX IDs/revision и прежние решения в `context.md`.
+Without UX, request a path/concept or propose `/palarran:ux:design` first; research/style exploration may proceed while awaiting an answer, but do not declare full UI ready. Do not invent screens. Record task, constraints, source UX IDs/revision and earlier decisions in `context.md`.
 
-## 2. Направление и фактура
+## 2. Direction and source material
 
-Указанные пользователем/accepted UI decisions использовать как исходные. Иначе предложить все 10 вариантов из [каталога](catalog.json) и **«Свои референсы»**, краткий shortlist с аргументацией; спросить выбор через доступный selection UI или нумерованный текст. Default/preselection и молчание не согласие. Пока выбор pending, продолжать независимый inventory/research. Не требовать новый выбор на каждом запуске.
+Start from user-specified/accepted UI decisions. Otherwise offer all ten options from the [catalog](catalog.json) and **“Custom references”**, plus a justified shortlist; ask for a choice through available selection UI or numbered text. Default/preselection and silence are not consent. While selection is pending, continue independent inventory/research. Do not require a fresh choice on every run.
 
-Custom input: ссылки, картинки, локальные assets или Figma; уточнить что нравится/что запрещено, если это неясно. Свои refs могут заменить систему либо дополнить её. По [методике](references.md) изучить canonical source выбранной системы и минимум 2 дополнительных visual refs. Для custom вместо canonical source — явная основная пользовательская reference, также минимум 2 дополнительных источника/продукта; если материала меньше, указать gap и оставить draft, не выдумывать evidence.
+Custom input: links, images, local assets or Figma; clarify likes/prohibitions when unclear. Custom references may replace a system or supplement it. Under the [methodology](references.md), study the selected system's canonical source and at least 2 additional visual references. In custom mode, use an explicit main user reference instead of the canonical source, also with at least 2 additional sources/products; with less material, state the gap and retain draft status without inventing evidence.
 
-## 3. Объяснённые решения и результат
+## 3. Explained decisions and output
 
-Сделать coverage/reuse map до layout. Любой принятый выбор — direction, дополнительные refs, tokens, density, responsive adaptation, компоненты, exceptions — объяснить в canonical ADR до зависимого изменения. Можно объединить связанные choices в один ADR, если каждое объяснено. Agent recommendation не выдавать за user approval; `decision_basis` показывает источник полномочия. При конфликте с UX оформить proposal в `ux-deltas.md` и не менять молча flow/roles/copy/actions.
+Create coverage/reuse mapping before layout. Explain every accepted choice—direction, additional references, tokens, density, responsive adaptation, components, exceptions—in canonical ADRs before dependent changes. Related choices may share an ADR if each is explained. Do not present agent recommendations as user approval; `decision_basis` identifies authority. For UX conflicts, propose `ux-deltas.md` instead of silently changing flows/roles/copy/actions.
 
-Нужные дизайну изображения обязательно сгенерировать и включить в preview с asset record по visual-output; отсутствие tool отметить как draft/gap. Создать [foundations](foundations.md), [адаптивные layouts](responsive.md) и [visual output](visual-output.md), сохраняя старые revisions. Все in-scope screens/states обязательны; сокращение scope требует основания из запроса, иначе это явно partial draft. Статусы: draft → review-ready после обязательных проверок; approved только по реальному user decision, superseded со ссылкой на преемника.
+Generate required design images and include them in the preview with asset records under visual-output; missing tools mean draft/gap. Create [foundations](foundations.md), [responsive layouts](responsive.md) and [visual output](visual-output.md), preserving old revisions. All in-scope screens/states are mandatory; scope reduction needs a request basis, otherwise the result is explicitly partial draft. Statuses: draft → review-ready after required checks; approved only after actual user decision, superseded with a successor link.
 
-## 4. Папки и handoff
+## 4. Directories and handoff
 
 ```text
-.ai-development/
+.palarran/
   INDEX.md
-  ux/INDEX.md                         # source, не перезаписывать из UI
+  ux/INDEX.md                         # source; do not overwrite from UI
   ui/
     INDEX.md                         # task/concept, status, UX revision, direction
     <task>/
       context.md
-      research/                      # reference cards, permitted image evidence
+      research/                      # reference cards, authorized image evidence
       decisions/0001-<choice>.md      # canonical explanations
       concepts/v001/
         overview.md                  # brief, style guide, sources, ADR links
         ux-map.md                    # screen/state/block → spec/preview
-        ux-deltas.md                 # pending proposals, если есть
+        ux-deltas.md                 # pending proposals, if any
         tokens.json
         tokens.css
         components.md
         screens/<screen-id>.md
-        preview/index.html           # плюс local assets/CSS/JS
+        preview/index.html           # plus local assets/CSS/JS
         assets/                      # generated images + asset records
         review.md                    # PASS/FAIL/NOT RUN + evidence
       handoff.md
 ```
 
-Пути — contract результата, не готовая структура приложения. В target индексах связать решения/concepts/source UX и предыдущие версии. Handoff: как открыть preview, covered screens/states, выбранный стиль и причины, responsive/fallback checks, ограничения и нерешённые вопросы. Следующая задача читает эти файлы прежде чем менять визуальный язык; source UX update требует проверки mapping и новой UI revision, не стирания истории. Scratch временный, accepted решения и concepts сохраняются.
+Paths define the output contract, not a finished application structure. Link decisions/concepts/source UX and earlier versions in target indexes. Handoff: opening the preview, covered screens/states, selected style and rationale, responsive/fallback checks, limitations and unresolved questions. The next task reads these files before changing visual language; source UX updates require mapping checks and a new UI revision, not erased history. Scratch is temporary; accepted decisions and concepts persist.

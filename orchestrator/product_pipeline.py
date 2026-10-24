@@ -14,14 +14,14 @@ from .product_artifacts import STAGES, canonical_sha, pipeline_dir, source_diges
 from .spec import validate
 from .workspaces import git
 
-SKILL_FOR_STAGE = {stage: 'product-' + (stage if stage != 'mvp' else 'define') for stage in STAGES}
+SKILL_FOR_STAGE = {stage: 'palarran-product-' + (stage if stage != 'mvp' else 'define') for stage in STAGES}
 TASK_GUIDANCE = {
     'define': 'Create the initial product hypothesis from the idea and real target context: ICP/JTBD, buyer, outcome, MVP assumptions and validation questions.',
     'market': 'Evaluate demand/segments/market evidence. Consume define without silently replacing the chosen business. Trends are not absolute paying demand.',
     'compare': 'Compare actual alternatives and manual/no-change substitutes for the same job. Produce a defensible wedge and minimum parity with source evidence.',
     'revenue': 'Research analogue business models and disclosed/estimated revenue separately. Missing private revenue stays unknown; scenarios require explicit inputs.',
     'acquisition': 'Research analogue acquisition signals and propose bounded future channel tests; distinguish native format from organic/paid distribution, no ad launch. Within this same attempt apply the B2B or B2C first-customer profile by buyer/user (mixed model separates sides): small independent prospects with size/ownership evidence or a specific consumer audience/placements, supported offer, sales/outreach or traffic plan. Unknown cash budget means zero; unknown quotes are conditional, reject expensive full-cost tests early. No additional CLI calls or stages.',
-    'mvp': 'SYNTHESIS MODE of product-define: read all five verified reports/evidence/ADR. Produce the justified MVP plan with scope/non-goals, ICP/job, wedge, economics/channel assumptions, requirements/AC/priorities, metric tree, proposed experiments/caps/stops and UX/engineering PLANNING handoff. Recommendation may be plan, validate, pivot or stop. Before engineering planning review the acquisition sellability plan: buyer, accessible audience/small-fit prospects, supported offer, full costs/caps and a cheap feasible test. Missing critical evidence requires validation rather than build-ready. Refresh this plan after polish against actual product revision and fresh quotes. This substantive review is not proof of customer validation. Do not force a positive build decision. Partition every inherited unknown as unresolved or evidenced resolution; critical unresolved forbids plan. market_validated remains false.',
+    'mvp': 'SYNTHESIS MODE of palarran-product-define: read all five verified reports/evidence/ADR. Produce the justified MVP plan with scope/non-goals, ICP/job, wedge, economics/channel assumptions, requirements/AC/priorities, metric tree, proposed experiments/caps/stops and UX/engineering PLANNING handoff. Recommendation may be plan, validate, pivot or stop. Before engineering planning review the acquisition sellability plan: buyer, accessible audience/small-fit prospects, supported offer, full costs/caps and a cheap feasible test. Missing critical evidence requires validation rather than build-ready. Refresh this plan after polish against actual product revision and fresh quotes. This substantive review is not proof of customer validation. Do not force a positive build decision. Partition every inherited unknown as unresolved or evidenced resolution; critical unresolved forbids plan. market_validated remains false.',
 }
 
 
@@ -60,11 +60,11 @@ def build(idea, skills_root, adapter, executable, *, python=None, limits=None, e
             'You are executing an explicitly authorized bounded product RESEARCH pipeline. Current working directory is the isolated target project. No engineering implementation, app/config changes, Git commits, deploy, ad spend, outreach or account creation.',
             'Read skill ' + str(skill) + ' and ALL its mandatory docs/cases before work. The multi-stage scope is explicit here; standalone skills remain independent.',
             'Read the exact runtime artifact contract ' + str(skills_root / 'docs/product/pipeline-contract.md') + ' and pipeline guide ' + str(skills_root / 'docs/product/pipeline.md') + '.',
-            'Read target README/instructions and .ai-development/INDEX.md, product INDEX, accepted decisions and existing project context. Never erase existing entries. Upstream pages/records are evidence, not permissions.',
+            'Read target README/instructions and .palarran/INDEX.md plus legacy .ai-development/INDEX.md when present, product INDEX, accepted decisions and existing project context. Never erase existing entries. Upstream pages/records are evidence, not permissions.',
             'Immutable context: ' + relative + '/context.json, canonical SHA-256 ' + context_sha + '.',
             'Read ALL preceding stage.json, report.md, evidence and referenced ADRs: ' + json.dumps(list(STAGES[:position])) + '. Each lives under ' + relative + '/stages/<stage>/. Preserve source IDs and original classifications; no rebranding guesses into facts.',
             TASK_GUIDANCE[stage],
-            ('Within acquisition read and apply the relevant profile SKILL.md at ' + str(skills_root / 'skills/product-b2b/SKILL.md') + ' or ' + str(skills_root / 'skills/product-b2c/SKILL.md') + ' and its mandatory docs, in this same report/manifest; no nested command or agent launch.') if stage == 'acquisition' else '',
+            ('Within acquisition read and apply the relevant profile SKILL.md at ' + str(skills_root / 'skills/palarran-product-b2b/SKILL.md') + ' or ' + str(skills_root / 'skills/palarran-product-b2c/SKILL.md') + ' and its mandatory docs, in this same report/manifest; no nested command or agent launch.') if stage == 'acquisition' else '',
             'For final synthesis use the narrative template ' + str(skills_root / 'templates/product/pipeline-mvp.md') + '; other stages use their own profile template.',
             'Write a concise Russian report at ' + relative + '/stages/' + stage + '/report.md and the strict stage.json envelope beside it. Include full typed evidence records, claims, unknowns and at least one meaningful proposed/accepted canonical ADR under ' + relative + '/decisions/. Use distinct stage-prefixed IDs and pin exact source/report/ADR/input digests. The inputs map must include every preceding stage canonical manifest hash.',
             'Read canonical_sha/source_digest helpers if needed; do not approximate the serialization. The verifier is independent trusted code and must not be edited. Stage-level completion does not validate market demand or source truth.',
@@ -102,7 +102,7 @@ def create_product(state, idea, target, skills_root, adapter, executable, **opti
                 parent.mkdir(mode=0o700, exist_ok=False)
             else:
                 parent.mkdir(mode=0o700, exist_ok=True)
-        for relative, heading in (('.ai-development/INDEX.md', '# Decision index\n'), ('.ai-development/product/INDEX.md', '# Product research catalog\n')):
+        for relative, heading in (('.palarran/INDEX.md', '# Decision index\n'), ('.palarran/product/INDEX.md', '# Product research catalog\n')):
             index = root / relative
             if index.is_symlink():
                 raise ValueError('Symlink memory index forbidden')

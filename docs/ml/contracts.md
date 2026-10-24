@@ -1,39 +1,39 @@
-# Контракты экспериментов и артефактов
+# Experiment and artifact contracts
 
-Ниже — поля переносимого skill workflow. JSON/Markdown шаблоны помогают заполнению; общий standalone progress template не становится автоматически runtime schema. Для явного ML pipeline уже реализованы отдельные [typed manifests, approvals и accounting gates](pipeline-contract.md); их требования строже свободного standalone отчёта.
+These are portable skill-workflow fields. JSON/Markdown templates aid completion; a general standalone progress template does not automatically become a runtime schema. The explicit ML pipeline implements separate [typed manifests, approvals and accounting gates](pipeline-contract.md), stricter than an unconstrained standalone report.
 
-| Артефакт | Обязательное содержание |
+| Artifact | Required contents |
 | --- | --- |
-| `context.md` | target, вопрос, modalities, constraints, inspected code, reused decisions, unknowns |
+| `context.md` | target, question, modalities, constraints, inspected code, reused decisions, unknowns |
 | `revisions/vNNN/experiment.md` | experiment_id/revision/hash, H-IDs, baseline, dataset/model refs, protocol, budgets, stop, tasks/DoD |
-| `hypotheses.md` | H-ID, ожидаемый механизм, falsification, evidence refs, ablation, cost cap, disposition |
+| `hypotheses.md` | H-ID, expected mechanism, falsification, evidence refs, ablation, cost cap, disposition |
 | `model.md` | owner/model/revision/license, tokenizer/config hashes, method, alternatives, VRAM assumptions, serving constraints |
 | `data-card.md` | source revisions/licenses/permissions, provenance, schema/label unit, PII handling, split policy/hashes, quality/leakage evidence |
-| `cost.json` и `cost.md` | source/as-of/currency/unit, billed-resource scenarios, attempts/phase allocation, extras/unknowns, reserve, confidence |
+| `cost.json` and `cost.md` | source/as-of/currency/unit, billed-resource scenarios, attempts/phase allocation, extras/unknowns, reserve, confidence |
 | `runs/<run-id>/attempts.jsonl` | append-only safe lifecycle events, provider IDs, parent/retry cause, authorization scope ref, timestamps, receipts |
 | `runs/<run-id>/manifest.json` | exact plan/source/image/dependencies/hardware/data/model/tokenizer/config/seeds, checkpoint lineage, status |
-| `runs/<run-id>/usage.jsonl` | estimated/accrued/provider_reported/invoiced **раздельно**, currency/period/as-of, lower/upper/reserve, unknown disposition |
+| `runs/<run-id>/usage.jsonl` | estimated/accrued/provider_reported/invoiced **separately**, currency/period/as-of, lower/upper/reserve, unknown disposition |
 | `benchmark.md` | frozen protocol + dataset hash, checkpoint hash, baseline, hardware/config, metrics/CI/slices, failures, independent command evidence, verdict |
-| `progress.json`, plan table, `handoff.md` | source revision, task/gate/subject/evidence, remaining work и причины |
+| `progress.json`, plan table, `handoff.md` | source revision, task/gate/subject/evidence, remaining work and reasons |
 
-Ссылки на inputs имеют artifact ID, revision, relative path либо разрешённый private URI, SHA-256. Model/tokenizer — repo revision и content digest конкретных файлов; dataset fingerprint библиотеки сам по себе не доказывает неизменность всех внешних файлов. Сохраняй file-list hashes и transform commit/parameters. Код с dirty tree требует patch digest/сохранённый безопасный patch; один HEAD не описывает выполненный код.
+Input references have an artifact ID, revision, relative path or authorized private URI, SHA-256. Model/tokenizer references include repository revision and content digests of exact files; a library dataset fingerprint alone does not prove immutability of every external file. Preserve file-list hashes and transform commit/parameters. Dirty-tree code requires a patch digest/saved safe patch; HEAD alone does not describe executed code.
 
-E-ID задаёт URL/publisher/title, publication/update (unknown если нет), retrieved/as-of, scope, claim, тип `observed/author_report/vendor_claim/hypothesis/scenario/unknown`, limitation. H-ID ссылается на E-ID/ADR; source article не доказательство результата на нашем dataset. Cumulative IDs не перенумеровывать между этапами. Смена upstream отмечает downstream requiring_review.
+An E-ID records URL/publisher/title, publication/update (unknown if absent), retrieved/as-of, scope, claim, type `observed/author_report/vendor_claim/hypothesis/scenario/unknown`, and limitations. H-IDs reference E-IDs/ADRs; a source article is not evidence of results on our dataset. Do not renumber cumulative IDs between stages. Upstream changes mark downstream requiring_review.
 
-## Run identity и checkpoint
+## Run identity and checkpoint
 
-У каждого attempt собственный ID; logical experiment ID переживает retries. Checkpoint manifest содержит weights/adapter/base revision, optimizer/scheduler/scaler, RNG всех использованных источников, sampler/dataloader position где поддержано, step/epoch, config/data/tokenizer refs. Весов достаточно для inference, но недостаточно для точного training resume. Укажи, если восстановление только приближённое. Каждый rank пишет в собственный путь; общий финальный manifest публикуется после проверки полной записи и durability.
+Each attempt has its own ID; the logical experiment ID survives retries. A checkpoint manifest includes weights/adapter/base revision, optimizer/scheduler/scaler, RNG for every used source, sampler/dataloader position where supported, step/epoch, config/data/tokenizer references. Weights suffice for inference but not exact training resume. State when recovery is approximate. Each rank writes its own path; publish the shared final manifest only after complete-write and durability checks.
 
-## Evidence и вердикт
+## Evidence and verdict
 
-Independent check исполняет зафиксированную evaluation command на **финальном** checkpoint, проверяет dataset/protocol digest и формирует exit status + aggregate report. Training worker «всё готово» не этот check. Изменение checkpoint после проверки инвалидирует результат. Если evaluation не был независимым, нет bootstrap/обязательной slice, недоступны данные или часть примеров упала — явно partial/unverified. Числовые нули отличаются от null/unknown; отсутствие метрики не нулевой error rate.
+An independent check runs the frozen evaluation command on the **final** checkpoint, checks dataset/protocol digests and produces exit status + aggregate report. A training worker saying “done” is not this check. Changing a checkpoint after verification invalidates the result. Non-independent evaluation, missing bootstrap/mandatory slices, unavailable data or failed examples must be explicit partial/unverified outcomes. Numerical zero differs from null/unknown; a missing metric is not zero error rate.
 
-Benchmark verdict `accept/reject/inconclusive/not_run` сопровождается gate-by-gate результатами. Один синтетический пример шаблона не accepted run. Publication/production rollout — отдельная задача.
+A benchmark verdict `accept/reject/inconclusive/not_run` includes gate-by-gate results. One synthetic template example is not an accepted run. Publication/production rollout is a separate task.
 
-## Приватность и хранение
+## Privacy and storage
 
-В Git/ADR только безопасные metadata, агрегаты и разрешённые примеры. Не сохранять raw prompts/customer datasets, PII, auth URIs, env dumps, полные provider logs, приватные цепочки рассуждений. Объектные пути/хеши тоже могут раскрывать сведения: выбери private storage и access policy при необходимости. Tracker artifacts и retention/delete policy определяются до upload. Сохраняй краткие решения и observable step summaries для будущего контекста, включая неуспешные эксперименты.
+Only safe metadata, aggregates and authorized examples belong in Git/ADRs. Never save raw prompts/customer datasets, PII, authenticated URIs, environment dumps, full provider logs or private reasoning traces. Object paths/hashes may also disclose information: choose private storage and access policy when needed. Define tracker artifacts and retention/deletion policy before upload. Preserve concise decisions and observable step summaries for future context, including unsuccessful experiments.
 
-## Design extension: диагностика обучения
+## Design extension: training diagnostics
 
-[Artifact/event envelope](debugging/artifacts.md), [validation metrics](debugging/task-metrics.md), [rule states](debugging/heuristics.md), [generation snapshots](debugging/generations.md) и [terminal reports](debugging/reports.md) задают design-v001. На каждый attempt и logical run: start stub/rolling/terminal report, full permitted outputs и private refs, source/subject/decoding hashes, missing/unknown evidence. Полные samples остаются private. Новые schemas и finalizer ещё не runtime implementation; wire migration и DoD — в [плане](debugging/integration-plan.md).
+The [artifact/event envelope](debugging/artifacts.md), [validation metrics](debugging/task-metrics.md), [rule states](debugging/heuristics.md), [generation snapshots](debugging/generations.md) and [terminal reports](debugging/reports.md) define design-v001. Each attempt and logical run needs start-stub/rolling/terminal reports, full permitted outputs and private refs, source/subject/decoding hashes and missing/unknown evidence. Full samples stay private. New schemas and the finalizer are not yet runtime implementation; wiring migration and DoD are in the [plan](debugging/integration-plan.md).

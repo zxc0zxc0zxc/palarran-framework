@@ -1,25 +1,25 @@
-# Backend build: реализация SDD-плана
+# Backend build: implement an SDD plan
 
-`/backend:build {путь/ID плана}` реализует конкретный [backend plan](../plan/README.md) в target repo. Source spec/contracts/architecture/SLA/SLO/test matrix/DoD задают scope; build не переизобретает feature или стек. Пользовательский build запрос разрешает in-scope local implementation, isolated test runtime и parallel agent worktrees; production activation отдельно по реальным полномочиям.
+`/palarran:backend:build {plan path/ID}` implements a specific [backend plan](../plan/README.md) in the target repository. Source spec/contracts/architecture/SLA/SLO/test matrix/DoD define scope; build does not reinvent the feature or stack. A user build request authorizes in-scope local implementation, isolated test runtimes and parallel agent worktrees; production activation needs actual separate authority.
 
-Обязательно:
+Mandatory:
 
-- Прочитать [память решений](../../skills/decision-memory.md), target backend index/accepted ADR и обе актуальные source plan/spec revisions. Missing/conflicting/blocking plan — уточнить/доработать план, не кодить по догадке.
-- Держать [прогресс прямо в плане](../progress.md): что pending/implemented/integrated/verified/blocked, какой plan revision и commits реализованы. Нет статуса done по одному сообщению агента.
-- Независимые ready tasks выполнять parallel agents в отдельных worktrees с изолированными runtime resources, затем последовательно интегрировать и проверять общий результат.
-- Реализовать context-fit code/contracts/schema/data/cache/performance и linked edge/invariant/security tests по source, без speculative framework migration.
-- Проверить actual API/DB outcomes, concurrency/fault/migration/load/recovery по применимости и scope; checks/logs/evidence sanitized. Source SLA/SLO проверять по declared boundary/load/window; lab test не доказывает operational SLA за месяц.
-- Исправлять свои failures и повторять затронутые проверки. Missing runtime/agent/telemetry/access — конкретный blocker/NOT_RUN и честный partial, без выдуманного PASS.
-- Любой принятый implementation choice с объяснением/альтернативами/evidence/последствиями сохранять до зависимого изменения; history/index/handoff следующему агенту.
+- Read [decision memory](../../skills/decision-memory.md), target backend index/accepted ADRs and both current source plan/spec revisions. Clarify or improve missing/conflicting/blocking plans rather than guessing implementation.
+- Keep [progress in the plan itself](../progress.md): pending/implemented/integrated/verified/blocked, implemented plan revision and commits. An agent message alone does not establish done.
+- Run independent ready tasks through parallel agents in separate worktrees with isolated runtime resources, then integrate sequentially and verify the combined result.
+- Implement context-appropriate code/contracts/schema/data/cache/performance and linked edge/invariant/security tests from source, without speculative framework migration.
+- Verify actual API/DB outcomes, concurrency/fault/migration/load/recovery as applicable and authorized; sanitize checks/logs/evidence. Check source SLA/SLO under declared boundaries/load/windows; lab tests do not establish a month's operational SLA.
+- Fix introduced failures and rerun affected checks. Missing runtimes/agents/telemetry/access require specific blockers/NOT_RUN and honest partial results, never fabricated PASS.
+- Preserve every accepted implementation choice with explanation/alternatives/evidence/consequences before dependent changes; retain history/index/handoff for the next agent.
 
-| Документ | Назначение |
+| Document | Purpose |
 |---|---|
-| [source-progress.md](source-progress.md) | Baseline, resume, учёт scope/revisions и [общий progress contract](../progress.md) |
+| [source-progress.md](source-progress.md) | Baseline, resume, scope/revision tracking and [shared progress contract](../progress.md) |
 | [worktrees.md](worktrees.md) | Actual parallel agents/checkout ownership, runtime isolation, integration |
-| [implementation.md](implementation.md) | Код/data/API/миграции и sandbox boundaries |
-| [verification.md](verification.md) | Edge/integration/end-to-end evidence и DoD |
-| [reliability.md](reliability.md) | Проверка SLI/SLO/SLA/capacity/recovery без ложных обещаний |
-| [workflow.md](workflow.md) | Исполнение, обновления плана и handoff |
-| [sources.md](sources.md) | Первичные источники и ограничения claims |
+| [implementation.md](implementation.md) | Code/data/API/migrations and sandbox boundaries |
+| [verification.md](verification.md) | Edge/integration/end-to-end evidence and DoD |
+| [reliability.md](reliability.md) | Verify SLI/SLO/SLA/capacity/recovery without false promises |
+| [workflow.md](workflow.md) | Execution, plan updates and handoff |
+| [sources.md](sources.md) | Primary sources and claim limitations |
 
-Templates: [progress JSON](../../../templates/backend/progress.example.json), [execution agent](../../../templates/backend/execution-agent.md), [verification](../../../templates/backend/build-verification.md), [handoff](../../../templates/backend/build-handoff.md). Здесь authoring capability; ai-tools не получает backend приложения только ради создания скилла.
+Templates: [progress JSON](../../../templates/backend/progress.example.json), [execution agent](../../../templates/backend/execution-agent.md), [verification](../../../templates/backend/build-verification.md), [handoff](../../../templates/backend/build-handoff.md). This defines an authoring capability; creating the skill does not add an application backend to Palarran.

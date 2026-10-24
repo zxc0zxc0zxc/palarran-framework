@@ -1,41 +1,41 @@
-# Проектирование инфраструктуры
+# Infrastructure planning
 
-База знаний для `/infra-plan:low`, `/infra-plan:med`, `/infra-plan:high`. Скилл **обязан** прочитать общие документы и выбранный профиль до архитектурных рекомендаций; в готовом плане указать использованные пути, commit документации и первоисточники. Локальная документация задаёт процесс и критерии; актуальные версии продуктов сверяются с официальными release notes при подготовке конкретного deploy.
+Knowledge base for `/palarran:infra:plan low`, `/palarran:infra:plan med`, `/palarran:infra:plan high`. The skill **must** read shared documents and the selected profile before making architectural recommendations; the finished plan identifies paths used, documentation commit and primary sources. Local documentation defines process and criteria; check current product versions against official release notes when preparing a concrete deployment.
 
-Для всех профилей обязательно [общее правило памяти решений](../../skills/decision-memory.md): каждое принятое решение объясняется в target `.ai-development/`, а связанные accepted записи читаются перед следующей задачей.
+All profiles require the [shared decision-memory rule](../../skills/decision-memory.md): explain every accepted decision in target `.palarran/` and read related accepted records before the next task.
 
-## Навигация
+## Navigation
 
-| Документ | Для чего читать |
+| Document | Why to read |
 |---|---|
-| [workflow.md](workflow.md) | Режимы, вопросы, обследование, согласование и применение |
-| [low.md](low.md) | Маленькая машина и честные ограничения одного узла |
-| [med.md](med.md) | K3s, GitOps, граница между single-node и HA |
-| [high.md](high.md) | Отказные домены, HA, масштабирование и DR |
-| [security-network.md](security-network.md) | Host/container security, таблицы сетевых потоков |
+| [workflow.md](workflow.md) | Modes, questions, discovery, agreement and application |
+| [low.md](low.md) | Small host and honest single-node limitations |
+| [med.md](med.md) | K3s, GitOps, single-node/HA boundary |
+| [high.md](high.md) | Failure domains, HA, scaling and DR |
+| [security-network.md](security-network.md) | Host/container security, network flow tables |
 | [delivery-iac.md](delivery-iac.md) | CI/CD, Terraform/OpenTofu, Ansible, bootstrap |
-| [storage-operations.md](storage-operations.md) | Хранилища, резервирование, наблюдаемость, runbooks |
-| [decisions.md](decisions.md) | Открытые кейсы и аргументы выбора |
-| [plan-template.md](plan-template.md) | Обязательная структура результата |
-| [sources.md](sources.md) | Проверенные первоисточники и область применимости |
+| [storage-operations.md](storage-operations.md) | Storage, backups, observability, runbooks |
+| [decisions.md](decisions.md) | Open cases and choice rationale |
+| [plan-template.md](plan-template.md) | Required output structure |
+| [sources.md](sources.md) | Verified primary sources and applicability |
 
-## Выбор масштаба
+## Scale selection
 
-VPS и VDS — неоднозначные названия услуг у провайдеров, а не разные архитектурные гарантии. Ниже — **наши начальные ориентиры**, не требования Google/Meta и не performance-гарантии.
+VPS and VDS are ambiguous provider service names, not distinct architectural guarantees. Below are **our initial guidelines**, not Google/Meta requirements or performance guarantees.
 
-| Профиль | Стартовый ориентир | Когда подходит | Чего не обещает |
+| Profile | Starting guideline | Suitable when | What it does not promise |
 |---|---|---|---|
-| low | 1–2 vCPU, 1–4 GiB RAM, SSD | Несколько небольших сервисов, простой deploy, допустим простой при отказе хоста |
-| med | 4–8 vCPU, 8–32 GiB RAM на стартовом узле | Несколько приложений, декларативные деплои, нужен Kubernetes API |
-| high | Несколько независимых узлов/зон, размер по нагрузке | Доступность при потере узла/зоны, несколько команд, строгие SLO и DR |
+| low | 1–2 vCPU, 1–4 GiB RAM, SSD | Several small services, simple deployment, host-failure downtime acceptable |
+| med | 4–8 vCPU, 8–32 GiB RAM on the initial node | Several applications, declarative deployments, Kubernetes API needed |
+| high | Several independent nodes/zones, sized by load | Availability through node/zone loss, multiple teams, strict SLO and DR |
 
-RPS без профиля запросов не определяет размер. Сначала спросить CPU/RAM, пиковую нагрузку, размер и прирост данных, latency, бюджет, операционную команду, RPO/RTO и отказные сценарии. На 8 GiB может быть разумнее Compose; на 32 GiB single-node K3s всё равно остаётся одной точкой отказа. Переход между профилями — решение с аргументами, не автоматическое повышение сложности.
+RPS without a request profile does not determine size. First ask about CPU/RAM, peak load, data size/growth, latency, budget, operations team, RPO/RTO and failure scenarios. Compose may be more sensible on 8 GiB; on 32 GiB, single-node K3s still remains a single point of failure. Moving between profiles is a reasoned decision, not an automatic increase in complexity.
 
-## Принципы
+## Principles
 
-1. Из [Google SRE: Simplicity](https://sre.google/sre-book/simplicity/) берём простоту изменений и эксплуатации. Конкретный выбор Compose/K3s — наша адаптация.
-2. Из [Google SRE: SLO](https://sre.google/workbook/implementing-slos/) — согласованные измеримые цели и error budget вместо абстрактного «надёжно».
-3. Из [Netflix Full Cycle](https://netflixtechblog.com/full-cycle-developers-at-netflix-a08c31f83249) — ответственность за сервис после релиза. Назначаем владельца deploy, alerts и restore.
-4. Из [Meta service encryption](https://engineering.fb.com/2019/05/29/security/service-encryption/) — идентичность сервисов и управляемый жизненный цикл сертификатов. Не копируем их внутреннюю платформу на маленький VPS.
+1. From [Google SRE: Simplicity](https://sre.google/sre-book/simplicity/), use simplicity of changes and operations. The concrete Compose/K3s choice is our adaptation.
+2. From [Google SRE: SLO](https://sre.google/workbook/implementing-slos/), use agreed measurable objectives and an error budget instead of abstract “reliability.”
+3. From [Netflix Full Cycle](https://netflixtechblog.com/full-cycle-developers-at-netflix-a08c31f83249), use service ownership after release. Assign deployment, alert and restore owners.
+4. From [Meta service encryption](https://engineering.fb.com/2019/05/29/security/service-encryption/), use service identity and managed certificate lifecycle. Do not copy their internal platform onto a small VPS.
 
-У каждой архитектуры есть схема data plane, отдельный management/delivery plane, таблица ingress/egress и доказуемые критерии приёмки. Сам факт установки Kubernetes, firewall или backup-агента не считается выполнением критерия.
+Every architecture has a data-plane diagram, a separate management/delivery plane, an ingress/egress table and demonstrable acceptance criteria. Merely installing Kubernetes, a firewall or a backup agent does not fulfill a criterion.

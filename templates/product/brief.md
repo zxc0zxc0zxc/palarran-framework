@@ -1,24 +1,24 @@
 # Product brief — <product> / <revision>
 
-Status: draft. Target/source refs/as-of: заполнить по actual context.
+Status: draft. Target/source refs/as-of: fill from actual context.
 
-## Customer и проблема
+## Customer and problem
 
-ICP, user/buyer/approver, job/trigger, current workaround, problem frequency/severity, supporting/contradicting E-IDs. Открытые вопросы и ограничения.
+ICP, user/buyer/approver, job/trigger, current workaround, problem frequency/severity, supporting/contradicting E-IDs. Open questions and constraints.
 
-## Предложение
+## Offer
 
-Value proposition; candidate wedge и switching costs; business model/paid unit/price hypothesis; MVP end-to-end outcome; scope/non-goals и AC IDs. Applied case → применимость → что не переносим.
+Value proposition; candidate wedge and switching costs; business model/paid unit/price hypothesis; MVP end-to-end outcome; scope/non-goals and AC IDs. Applied case → applicability → what does not transfer.
 
-## Metrics и validation
+## Metrics and validation
 
 | H-ID | Claim / E-IDs | Metric / unit / cohort / window | Proposed success / stop | Cheapest test / owner / cap | Actual status |
 |---|---|---|---|---|---|
-| H-01 | заполнить | заполнить | обосновать | plan only | not_run |
+| H-01 | fill | fill | justify | plan only | not_run |
 
 ## Business flow
 
-Заменить diagram по actual business; unknown transitions отметить.
+Replace the diagram with actual business behavior; mark unknown transitions.
 
 ```mermaid
 flowchart LR
@@ -28,6 +28,6 @@ flowchart LR
     B --> E[Failure / refusal]
 ```
 
-## Decision и handoff
+## Decision and handoff
 
-Build/test/stop recommendation с E/H/ADR refs, owner и unresolved blockers; product/market/compare/revenue/acquisition revisions. UX/SDD next scope и permissions, без automatic execution.
+Build/test/stop recommendations with E/H/ADR refs, owner and unresolved blockers; product/market/compare/revenue/acquisition revisions. Next UX/SDD scope and permissions, no automatic execution.

@@ -1,20 +1,20 @@
-# Первичные источники
+# Primary sources
 
-Проверено **2026-10-18**. Методика содержит наши implementation/acceptance рекомендации; они не являются обещанием, что владельцы источников используют весь этот workflow. Конкретный runtime/framework API перепроверять по installed version целевого проекта.
+Checked **2026-10-18**. This methodology contains our implementation/acceptance recommendations; it does not claim source owners use this entire workflow. Recheck concrete runtime/framework APIs against the target project's installed version.
 
-| Источник | Что взято | Граница |
+| Source | What we use | Boundary |
 |---|---|---|
-| [React: Thinking in React](https://react.dev/learn/thinking-in-react) | Разбиение на компоненты и минимальный state | Для React проектов, не основание миграции чужого stack |
-| [Next.js: Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components) | Server/client boundary и интерактивные части | App Router; проверить installed version и project routing |
-| [Google: Responsive web design basics](https://web.dev/articles/responsive-web-design-basics) | Viewport, fluid layout, content-driven adaptation | Наши 320/390/768/1440 probes не стандарт Google |
-| [Google: Web Vitals](https://web.dev/articles/vitals) | LCP/INP/CLS и различие lab/field | Локальный замер не field гарантия |
-| [Microsoft Playwright: Best practices](https://playwright.dev/docs/best-practices) | User-visible behavior, isolation, resilient locators, web-first assertions | Browser tool проекта может быть другим; не навязывать runner |
-| [Playwright: Visual comparisons](https://playwright.dev/docs/test-snapshots) | Screenshot comparisons и зависимость от окружения | Сгенерированный baseline не автоматическое одобрение UI |
-| [W3C: Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) | 320 CSS px и применимые исключения | Targeted checks не полная WCAG conformance |
-| [OWASP: XSS Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) | Context-sensitive encoding и dangerous HTML sinks | Не полный security audit приложения |
+| [React: Thinking in React](https://react.dev/learn/thinking-in-react) | Component decomposition and minimal state | For React projects, not grounds to migrate another stack |
+| [Next.js: Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components) | Server/client boundary and interactive parts | App Router; check installed version and project routing |
+| [Google: Responsive web design basics](https://web.dev/articles/responsive-web-design-basics) | Viewport, fluid layout, content-driven adaptation | Our 320/390/768/1440 probes are not a Google standard |
+| [Google: Web Vitals](https://web.dev/articles/vitals) | LCP/INP/CLS and lab/field distinction | A local measurement is not a field guarantee |
+| [Microsoft Playwright: Best practices](https://playwright.dev/docs/best-practices) | User-visible behavior, isolation, resilient locators, web-first assertions | The project may use another browser tool; do not impose a runner |
+| [Playwright: Visual comparisons](https://playwright.dev/docs/test-snapshots) | Screenshot comparisons and environment dependence | A generated baseline is not automatic UI approval |
+| [W3C: Reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) | 320 CSS px and applicable exceptions | Targeted checks do not establish full WCAG conformance |
+| [OWASP: XSS Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html) | Context-sensitive encoding and dangerous HTML sinks | Not a full application security audit |
 
-Контракты этого репозитория: [UX](../ux/README.md), [UI](../ui/README.md), [UI responsive/accessibility](../ui/responsive.md), [image generation](../ui/visual-output.md), [decision memory](../skills/decision-memory.md). Их source links/версии проверяются при применении. Для Vue/Svelte/Angular/plain web использовать official docs выбранного target stack, не притворяться, что React guidance охватывает их APIs.
+Repository contracts: [UX](../ux/README.md), [UI](../ui/README.md), [UI responsive/accessibility](../ui/responsive.md), [image generation](../ui/visual-output.md), [decision memory](../skills/decision-memory.md). Check their source links/versions when applying them. For Vue/Svelte/Angular/plain web, use official documentation for the selected target stack; do not pretend React guidance covers their APIs.
 
 ## SDD execution update (2026-10-18)
 
-[Git worktree](https://git-scm.com/docs/git-worktree) — source checkout lifecycle, не runtime/DB/browser isolation. [Playwright parallelism](https://playwright.dev/docs/test-parallel) и [browser contexts](https://playwright.dev/docs/browser-contexts) — первичные источники для test workers/context isolation. Наш вывод для agents: separate worktrees/cwd/resources и final integrated browser checks; contexts не изолируют автоматически shared server/account/data. Exact source plan→task→test→DoD/progress protocol — наша методика, не утверждение о внутреннем процессе Microsoft/GitHub.
+[Git worktree](https://git-scm.com/docs/git-worktree) covers source checkout lifecycle, not runtime/DB/browser isolation. [Playwright parallelism](https://playwright.dev/docs/test-parallel) and [browser contexts](https://playwright.dev/docs/browser-contexts) are primary sources for test workers/context isolation. Our inference for agents: separate worktrees/cwd/resources and final integrated browser checks; contexts do not automatically isolate shared servers/accounts/data. The exact source plan→task→test→DoD/progress protocol is our methodology, not a claim about Microsoft's/GitHub's internal process.

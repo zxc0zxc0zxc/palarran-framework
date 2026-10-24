@@ -1,37 +1,37 @@
-# Данные, наблюдаемость и эксплуатация
+# Data, observability and operations
 
 ## Storage matrix
 
-| Данные | Low | Med | High |
+| Data | Low | Med | High |
 |---|---|---|---|
-| DB | Local volume при принятом SPOF либо managed DB | External/managed DB или local с явным restore | Managed HA/PITR либо operator с quorum и fencing |
-| Файлы пользователя | Off-host object storage предпочтительно; local с backup | Object storage / CSI volume по access mode | Разделённые policies, lifecycle, replication по целям |
-| Cache | Восстановимый local cache | Не путать с durable queue | HA только если его отказ требует SLO |
-| Cluster state | Не применяется к Compose | SQLite или etcd в зависимости от topology | Managed control plane backup responsibility или self-managed snapshots |
-| IaC state/secrets | Защищённое отдельное хранилище | То же + access boundaries | Разделение accounts/roles и recovery keys |
+| DB | Local volume with accepted SPOF or managed DB | External/managed DB or local with explicit restore | Managed HA/PITR or operator with quorum/fencing |
+| User files | Prefer off-host object storage; local with backup | Object storage / CSI volume by access mode | Separate policies, lifecycle, replication by objectives |
+| Cache | Rebuildable local cache | Do not confuse with durable queue | HA only when cache failure affects SLO requirements |
+| Cluster state | Not applicable to Compose | SQLite or etcd according to topology | Managed control-plane backup responsibility or self-managed snapshots |
+| IaC state/secrets | Protected separate storage | Same + access boundaries | Separate accounts/roles and recovery keys |
 
-Для каждого store указать объём/прирост, IOPS/latency, filesystem, encryption/key ownership, access mode, reclaim policy, retention, backup/restore owner, RPO/RTO. Не форматировать/переразмечать существующие диски на основании предположения, что они пустые. Диски, snapshots и replicas могут иметь общий отказный домен.
+For each store, record volume/growth, IOPS/latency, filesystem, encryption/key ownership, access mode, reclaim policy, retention, backup/restore owner and RPO/RTO. Do not format/repartition existing disks on an assumption that they are empty. Disks, snapshots and replicas may share a failure domain.
 
-Локальный PVC, DB replica, provider snapshot и backup — разные гарантии. [PostgreSQL](https://www.postgresql.org/docs/current/backup.html) описывает SQL dump, filesystem backup и continuous archiving; выбрать согласованный способ под объём и recovery target. Копирование живого DB directory обычным файловым backup без consistency protocol не объявлять валидным DB backup.
+Local PVC, DB replicas, provider snapshots and backups provide different guarantees. [PostgreSQL](https://www.postgresql.org/docs/current/backup.html) describes SQL dumps, filesystem backups and continuous archiving; choose a consistent method for volume and recovery target. Do not call ordinary file-backup copying of a live DB directory without a consistency protocol a valid DB backup.
 
-## Backup и restore
+## Backup and restore
 
-1. Определить допустимую потерю данных RPO и время восстановления RTO, retention и частоту с учётом размера, WAL/transaction logs и канала.
-2. Использовать DB-consistent backup/PITR, отдельную off-host/off-account копию, encryption с ключом вне backup account. Immutable/object-lock retention выбирать с учётом стоимости и требований удаления.
-3. Разделить writer/reader/prune credentials. Компрометация production writer не должна автоматически давать возможность удалить все исторические копии.
-4. Для Restic учитывать, что retention (`forget`) и удаление неиспользуемых данных (`prune`) — разные операции; запускать с понятным retention и dry-run при изменении политики ([Restic](https://restic.readthedocs.io/en/stable/060_forget.html)).
-5. Восстановить на изолированном target: schema/data consistency, роли, secrets, приложение и пользовательский запрос. Измерить lag восстановленных данных и время полного восстановления, сохранить evidence и дату повторного drill.
+1. Define acceptable data loss RPO and recovery time RTO, retention and frequency based on size, WAL/transaction logs and bandwidth.
+2. Use DB-consistent backup/PITR, a separate off-host/off-account copy and encryption with its key outside the backup account. Choose immutable/object-lock retention considering cost and data-deletion requirements.
+3. Separate writer/reader/prune credentials. Compromising the production writer must not automatically permit deleting all historical copies.
+4. With Restic, distinguish retention (`forget`) from removing unused data (`prune`); use clear retention and dry-run when changing policy ([Restic](https://restic.readthedocs.io/en/stable/060_forget.html)).
+5. Restore on an isolated target: schema/data consistency, roles, secrets, application and user request. Measure recovered-data lag and full recovery time; preserve evidence and the next drill date.
 
-K3s datastore backup не заменяет PVC backup; server token нужен при восстановлении datastore и должен храниться безопасно отдельно ([K3s](https://docs.k3s.io/backup-restore)). Managed DB backup тоже нужно проверить через фактический restore и доступность ключей/credentials при аварии основного account.
+K3s datastore backup does not replace PVC backup; the server token is required to restore datastore and must be stored separately and securely ([K3s](https://docs.k3s.io/backup-restore)). Managed DB backups also require actual restore checks and key/credential availability if the primary account fails.
 
-## Наблюдаемость
+## Observability
 
-SLI на пользовательской границе: availability, latency, ошибки; ресурсы CPU/RAM/IO, disk/inodes, saturation/queue depth, restarts/OOM, DNS/TLS, backup age и replication lag. Согласовать численные thresholds/окна и получателя. Цели доступны для анализа, а не выводятся из выбора Prometheus ([Google SLO](https://sre.google/workbook/implementing-slos/)).
+SLIs at the user boundary: availability, latency, errors; CPU/RAM/I/O resources, disk/inodes, saturation/queue depth, restarts/OOM, DNS/TLS, backup age and replication lag. Agree numerical thresholds/windows and recipients. Objectives are available for analysis, not inferred from choosing Prometheus ([Google SLO](https://sre.google/workbook/implementing-slos/)).
 
-Low: lightweight agent и внешние uptime/alerts, ограниченная local retention. Med: Prometheus-compatible metrics/alerts плюс logs, trace при необходимости. High: HA collection/alerting, storage/retention budget, tenant/cardinality limits, контроль sampling и PII redaction. Не размещать единственный probe и канал оповещения только на отслеживаемом host/cluster.
+Low: lightweight agent and external uptime/alerts, bounded local retention. Med: Prometheus-compatible metrics/alerts plus logs, traces if needed. High: HA collection/alerting, storage/retention budget, tenant/cardinality limits, sampling control and PII redaction. Do not put the only probe and alerting channel exclusively on the monitored host/cluster.
 
-## Runbooks и ownership
+## Runbooks and ownership
 
-Для каждого сервиса назначить owner и канал инцидентов. Нужны короткие процедуры: host/zone lost, disk full, bad release, DB restore, cert/secret expiry, GitOps недоступен, восстановление IaC state/keys, OS/Kubernetes upgrade. Процедура содержит сигнал, диагностику без утечки секретов, исправление, rollback, проверку и escalation. Ответственность за эксплуатацию следует принципу [Netflix Full Cycle](https://netflixtechblog.com/full-cycle-developers-at-netflix-a08c31f83249); размер команды и дежурства выбираем сами.
+Assign an owner and incident channel for each service. Short procedures are needed for host/zone loss, disk full, bad releases, DB restore, certificate/secret expiry, unavailable GitOps, IaC state/key recovery and OS/Kubernetes upgrades. Each includes signal, diagnosis without secret leakage, repair, rollback, verification and escalation. Operational responsibility follows [Netflix Full Cycle](https://netflixtechblog.com/full-cycle-developers-at-netflix-a08c31f83249); we choose team size and on-call arrangements ourselves.
 
-Бюджет считать полностью: compute, disks/IOPS, LB/IP/NAT, registry, backup retention, cross-zone/region traffic, outbound, telemetry и время людей. Источник цен/валюту/дату указать; неизвестные цифры — оценки. Приёмка включает доставленный alert, успешный restore, проверенный app rollback и документированное обновление платформы.
+Budget fully: compute, disks/IOPS, LB/IP/NAT, registry, backup retention, cross-zone/region traffic, outbound, telemetry and people's time. Identify price source/currency/date; unknown figures are estimates. Acceptance includes delivered alerts, successful restore, tested application rollback and documented platform upgrades.

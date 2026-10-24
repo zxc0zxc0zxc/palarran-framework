@@ -1,0 +1,12 @@
+# Inert user systemd unit; replace approved SSH alias after verifying its host fingerprint.
+[Unit]
+Description=Palarran coordination SSH tunnel
+After=network-online.target
+
+[Service]
+ExecStart=/usr/bin/ssh -NT -o BatchMode=yes -o StrictHostKeyChecking=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o ForwardAgent=no -L 127.0.0.1:18792:127.0.0.1:18792 APPROVED_SSH_ALIAS
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

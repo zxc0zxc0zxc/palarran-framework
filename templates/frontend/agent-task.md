@@ -13,6 +13,6 @@ Run linked tests and available lane browser checks, report actual command/enviro
 
 Return scoped commits/touch set/report/DoD coverage/blockers. Coordinator reviews/integrates sequentially, reruns combined checks, updates canonical ledger and original plan. No protected-main merge/production activation/force dirty cleanup outside scope.
 
-Dispatch status when produced by /frontend:plan: planned/not dispatched. Worktree setup, implementation and commands are future execution tasks, not authorization from this planning artifact alone.
+Dispatch status when produced by /palarran:frontend:plan: planned/not dispatched. Worktree setup, implementation and commands are future execution tasks, not authorization from this planning artifact alone.
 
-Runtime dispatch metadata: context.paths — подтверждённые owned target-relative paths; context.query — ключевые component/API symbols; mode graph. Это planned metadata, не разрешение dispatch/reindex/install. Runtime добавляет применимые AGENTS и fresh graph/snippets либо scoped source fallback, сохраняя прежние model/token/USD caps.
+Runtime dispatch metadata: context.paths are verified owned target-relative paths; context.query contains key component/API symbols; mode graph. This is planned metadata, not dispatch/reindex/install permission. Runtime includes applicable AGENTS and fresh graph/snippets or scoped source fallback, preserving existing model/token/USD caps.

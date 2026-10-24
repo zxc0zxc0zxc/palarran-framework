@@ -1,28 +1,28 @@
-# VPS, secrets, backup и приёмка
+# VPS, secrets, backup and acceptance
 
-## Перед размещением
+## Before deployment
 
-Проверить trusted SSH host key, OS/CPU/RAM/free disk/порты и существующие workloads по [infra workflow](../infra/plan/workflow.md). `--plan` не подключается. Не менять root/password login, firewall, Docker daemon или чужие сервисы без конкретного плана. Текущий target/ключи находятся только в private `.env`/SSH config; не коммитить адреса и credentials в библиотеку.
+Verify trusted SSH host key, OS/CPU/RAM/free disk/ports and existing workloads under the [infra workflow](../infra/plan/workflow.md). `--plan` never connects. Do not change root/password login, firewall, Docker daemon or others' services without a concrete plan. Current targets/keys stay in private `.env`/SSH config; never commit addresses/credentials to the library.
 
-Compose example поднимает только Neo4j на127.0.0.1:17474; Bolt/browser наружу не публикуются. Service слушает127.0.0.1:18791. Агент использует `ssh -N -L 127.0.0.1:18791:127.0.0.1:18791` со strict host key/ExitOnForwardFailure/no agent forwarding. Existing app CI/CD остаётся GitOps без SSH; этот skill — отдельное управление host/memory service.
+The Compose example exposes only Neo4j on127.0.0.1:17474; Bolt/browser are not public. Service listens on127.0.0.1:18791. Agents use `ssh -N -L 127.0.0.1:18791:127.0.0.1:18791` with strict host keys/ExitOnForwardFailure/no agent forwarding. Existing app CI/CD remains GitOps without SSH; this skill separately manages host/memory service.
 
-До deploy выбрать поддерживаемую версию Neo4j CE, проверить image digest/signature, подставить immutable digest в env; example tag — только ориентир, не проверенный pin. Проверить Query API/fulltext compatibility на том же image. Не использовать enterprise image/APOC plugins/model downloads. RAM/CPU limits — начальные предложения, не measured SLO.
+Before deployment choose a supported Neo4j CE version, verify image digest/signature and set an immutable env digest; example tags are orientation, not verified pins. Check Query API/fulltext compatibility on the same image. No enterprise image/APOC plugins/model downloads. RAM/CPU limits are initial proposals, not measured SLOs.
 
-`.env.example` содержит только names/placeholders. `.env` создаётся локально0600, не overwrite; реальные SSH passwords не храним — key/agent или скрытый prompt оператора. DB/bearer random tokens различны. Никогда `set -x`, `env`, raw `docker inspect`, `compose config` с раскрытием переменных, credentials в arguments/history/reports. Env на сервере —0600, service owner; systemd/Compose запускаются в trusted operator scope. Env isolation не шифрует файлы на диске.
+`.env.example` holds names/placeholders only. Create local `.env`0600 without overwrite; never store actual SSH passwords—use key/agent or a hidden operator prompt. DB/bearer random tokens must differ. Never use `set -x`, `env`, raw `docker inspect`, variable-revealing `compose config`, or credentials in arguments/history/reports. Server env0600 owned by the service; systemd/Compose run in trusted operator scope. Environment isolation does not encrypt disk files.
 
-## Запуск и контроль
+## Startup and control
 
-Порядок: reviewed plan → backup existing config → отдельный deployment dir → verified image → DB health → explicit schema init → service startup → unauthorized denial → synthetic candidate/write/read/graph/fulltext → restart persistence → private tunnel/MCP check. Сохранить commit/image digest/config fingerprint и sanitized results. Старые процессы/сервисы не останавливать ради теста.
+Order: reviewed plan → existing-config backup → separate deployment directory → verified image → DB health → explicit schema init → service startup → unauthorized denial → synthetic candidate/write/read/graph/fulltext → restart persistence → private tunnel/MCP check. Preserve commit/image digest/config fingerprint and sanitized results. Do not stop old processes/services for tests.
 
-SLO предложение для personal service: p95 search<500ms на frozen realistic corpus и до4 concurrentagents, availability99%/30дней; RPO24h/RTO2h требуют off-host backup и drill. Пока это цели. Измерять latency/error/disk/store size/backup age; body/query/tokens не логировать. Suggested disk warning<10GiB, critical<5GiB на shared volume; не приравнивать startup19GiB к нехватке. Quota артефактов4GiB ограничивает новые записи, не удаляет старые. Не считать quota ограничением всей Neo4j DB: отдельно monitor graph/index/txlog/docker logs.
+Proposed personal-service SLO: p95 search<500ms on a frozen realistic corpus with up to4 concurrent agents, availability99%/30days; RPO24h/RTO2h require off-host backup and drills. These remain targets. Measure latency/errors/disk/store size/backup age; never log bodies/queries/tokens. Suggested disk warning<10GiB, critical<5GiB on shared volume; startup19GiB is not automatically insufficient. Artifact quota4GiB limits new writes without deleting old data. This does not bound the entire Neo4j DB: separately monitor graph/index/txlog/docker logs.
 
 ## Backup/restore
 
-CE offline dump: остановить только memory writer, затем только memory DB; dump default+system по выбранной версии с private destination, snapshot artifact directory в то же окно, hash manifest, зашифрованная off-host копия. Credentials/конфиг восстанавливаются из отдельного secret backup. Не cp live graph directory. Restart и health после dump; prune только после успешной независимой копии и retention review.
+CE offline dump: stop only memory writer, then memory DB; dump default+system for the chosen version to a private destination, snapshot artifact directory in the same window, hash manifest and encrypt an off-host copy. Restore credentials/config from separate secret backups. Never cp a live graph directory. Restart/health after dump; prune only after successful independent copy/retention review.
 
-Restore в отдельный volume/ports, тот же image или подтверждённый migration path. Проверить card IDs/artifact hashes/relations/status/FTS/feedback и negative auth, измерить RPO/RTO. Один backup на том же VPS не защищает от потери VPS. До реального drill — restore NOT_RUN.
+Restore to separate volumes/ports with the same image or confirmed migration path. Check card IDs/artifact hashes/relations/status/FTS/feedback and negative auth; measure RPO/RTO. One same-VPS backup cannot protect against VPS loss. Until an actual drill, restore is NOT_RUN.
 
-## Локальные команды
+## Local commands
 
 ```sh
 python3 scripts/memory_ops.py env-init --env /ABSOLUTE/private/.env
@@ -31,17 +31,17 @@ python3 scripts/vps_ops.py tunnel --env /ABSOLUTE/private/.env
 python3 scripts/memory_ops.py request --env /ABSOLUTE/private/.env --action search --input /ABSOLUTE/private/query.json
 ```
 
-Для MCP loader выбирает только MEMORY_URL и MEMORY_AGENT_TOKEN; reviewer/DB credentials не передаются gateway. Отдельный agent-only env допустим как дополнительное ограничение. Общий global env не является OS sandbox между процессами одного владельца. client.example.json — inert launch stub, адаптировать формат к host. Не запускать tunnel из skill --plan.
+For MCP, loader selects only MEMORY_URL and MEMORY_AGENT_TOKEN; no reviewer/DB credentials reach the gateway. Separate agent-only env is an optional additional restriction. Shared global env is not an OS sandbox between same-owner processes. client.example.json is an inert launch stub; adapt format to host. Never start a tunnel under skill --plan.
 
-`memory_acceptance.py --env PRIVATE_ENV --receipt PRIVATE_RECEIPT --retain-fixture` явно создаёт synthetic namespace на разрешённом target; это не default unittest. Intent durable до записи, incomplete receipt требует reconciliation вручную, не replay. Повтор с completed receipt проверяет существующие IDs; без --retain-fixture удаляет только свои graph fixtures, orphan artifact остаётся для reviewed GC. Для restart proof сначала retain, restart только memory service/DB в разрешённом окне, затем recheck/cleanup. Отсутствие receipt из legacy/прерванного запуска — сначала operator query по synthetic namespace; не auto-regenerate.
+`memory_acceptance.py --env PRIVATE_ENV --receipt PRIVATE_RECEIPT --retain-fixture` explicitly creates a synthetic namespace on an authorized target; not default unittest. Intent is durable before writes; incomplete receipts require manual reconciliation, not replay. Repeating with completed receipt checks existing IDs; without --retain-fixture, delete only owned graph fixtures, leaving orphan artifacts for reviewed GC. For restart proof retain first, restart only memory service/DB in an authorized window, then recheck/cleanup. Missing legacy/interrupted receipt requires operator queries for the synthetic namespace first, never automatic regeneration.
 
 ## Global/project env scopes
 
-По умолчанию: explicit `--env PATH` → Git project-root `.env` → `~/.zxc0zxc0zxc/.env`. `--global` принудительно выбирает global file, mutually exclusive с --env. Из module CWD ищется ближайший Git root; без Git берётся только CWD/.env, без чтения произвольных родительских файлов. Explicit missing file/unsafe file — ошибка, без fallback.
+Default selection: explicit `--env PATH` → Git project-root `.env` → `~/.palarran/.env`. `--global` forces global file and conflicts with --env. From module CWD find nearest Git root; without Git use CWD/.env only, never arbitrary parent files. Explicit missing/unsafe files error without fallback.
 
-Профиль выбирается целиком: MCP — MEMORY_URL/AGENT_TOKEN; VPS — VPS_HOST/USER/PORT/IDENTITY_FILE; operator — documented memory settings. Если project .env содержит только посторонние настройки приложения, global profile используется автоматически. Если в project есть хотя бы один параметр выбранного профиля, missing required fields не подмешиваются из global: это предотвращает соединение нового host с чужими credentials. Не shell source, неизвестные валидные app keys игнорируются, bare profile values без интерполяции.
+Select whole profiles: MCP—MEMORY_URL/AGENT_TOKEN; VPS—VPS_HOST/USER/PORT/IDENTITY_FILE; operator—documented memory settings. If project .env has unrelated app settings only, use global profile automatically. If any selected-profile parameter exists in project, never fill missing required fields from global: this prevents combining a new host with unrelated credentials. No shell sourcing; ignore unknown valid app keys; bare profile values have no interpolation.
 
-Global directory0700, env0600/owner-only/no symlinks. `env-init --global` создаёт только отсутствующий файл; `env-init --env PATH` — явный project file. No-overwrite сохраняется. Обычный read/request не создаёт .env, иначе каждый новый проект затенял бы global.
+Global directory0700, env0600/owner-only/no symlinks. `env-init --global` creates absent files only; `env-init --env PATH` selects an explicit project file. Preserve no-overwrite. Ordinary reads/requests create no .env, otherwise each new project would shadow global settings.
 
 ```sh
 python3 scripts/memory_ops.py env-init --global
@@ -50,8 +50,8 @@ python3 scripts/vps_ops.py tunnel
 python3 scripts/memory_ops.py mcp
 ```
 
-Пример выше не требует повторять credentials в каждом проекте. Global config заполняется только данными пользователя/разрешёнными сгенерированными service secrets; SSH key reference/agent вместо plaintext SSH password. Env scope не равен memory knowledge scope: global bank и project-visible candidates фильтруются API независимо от расположения env.
+The example above avoids repeating credentials per project. Populate global config only with user data/authorized generated service secrets; use SSH key references/agent rather than plaintext SSH passwords. Env scope differs from memory knowledge scope: API filters global-bank/project-visible candidates independently of env location.
 
-## Подключение клиентов и автозапуск
+## Client connection and autostart
 
-Workflow `docs/setup/README.md` и scripts/project_setup.py: явный install в проект, затем doctor без модели и записи памяти. `scripts/memory_global_setup.py install` по отдельному явному разрешению оператора подключает global Codex MCP и macOS user LaunchAgent; --plan без изменений/подключений. Stable snapshot не зависит от dirty checkout. Stdout/stderr туннеля не сохраняются; launchctl показывает state/last exit, ручная диагностика не раскрывает env. Project-only install не даёт разрешения на global изменения.
+Workflow `docs/setup/README.md` and scripts/project_setup.py: explicit project install, then doctor without model/memory writes. `scripts/memory_global_setup.py install`, under separate explicit operator authorization, configures global Codex MCP/macOS user LaunchAgent; --plan performs no changes/connections. Stable snapshot is independent of dirty checkout. Tunnel stdout/stderr is not saved; launchctl shows state/last exit; manual diagnosis never reveals env. Project-only install grants no global-change authority.

@@ -35,8 +35,8 @@ def make_target(directory, skills_root=SKILLS_ROOT, pipeline_id='1' * 32):
                    source_digest=source_digest(skills_root), plan_revision='product-v001',
                    baseline=git('rev-parse', 'HEAD'))
     write_json(pipeline_dir(root, pipeline_id) / 'context.json', context)
-    (root / '.ai-development/INDEX.md').write_text('# Decision index\n', encoding='utf-8')
-    (root / '.ai-development/product/INDEX.md').write_text(pipeline_id + '\n', encoding='utf-8')
+    (root / '.palarran/INDEX.md').write_text('# Decision index\n', encoding='utf-8')
+    (root / '.palarran/product/INDEX.md').write_text(pipeline_id + '\n', encoding='utf-8')
     return root, context
 
 
@@ -52,7 +52,7 @@ def write_stage(root, context, stage, *, unknown=False, critical=False, recommen
     decision.parent.mkdir(parents=True, exist_ok=True)
     decision.write_text('---\nid: ' + decision_id + '\nstatus: accepted\n---\n' +
                         '\n'.join('## ' + heading + '\nFixture rationale.\n' for heading in HEADINGS), encoding='utf-8')
-    with (root / '.ai-development/INDEX.md').open('a', encoding='utf-8') as stream:
+    with (root / '.palarran/INDEX.md').open('a', encoding='utf-8') as stream:
         stream.write(decision_id + '\n')
     inputs = {}
     unknown_ids = []
@@ -245,7 +245,7 @@ class ArtifactTests(unittest.TestCase):
 
     def test_index_and_metadata_required(self):
         write_stage(self.root, self.context, 'define')
-        (self.root / '.ai-development/INDEX.md').write_text('No decision', encoding='utf-8')
+        (self.root / '.palarran/INDEX.md').write_text('No decision', encoding='utf-8')
         self.fail()
 
     def test_adr_path_traversal_and_duplicate_evidence(self):
@@ -277,10 +277,10 @@ class ArtifactTests(unittest.TestCase):
             for relative in ('docs/product', 'docs/skills', 'templates/product', 'skills'):
                 shutil.copytree(SKILLS_ROOT / relative, bundle / relative)
             original = source_digest(bundle)
-            profile = bundle / 'skills/product-b2b/SKILL.md'
+            profile = bundle / 'skills/palarran-product-b2b/SKILL.md'
             profile.write_text(profile.read_text() + '\nChanged sales policy\n')
             self.assertNotEqual(original, source_digest(bundle))
-            required = [bundle / 'skills/product-b2c/SKILL.md',
+            required = [bundle / 'skills/palarran-product-b2c/SKILL.md',
                         bundle / 'docs/product/pricing.md',
                         bundle / 'templates/product/b2b-sales.md']
             for path in required:

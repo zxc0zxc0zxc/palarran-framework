@@ -1,29 +1,29 @@
-# Кеширование: решение, а не обязательная зависимость
+# Caching: a decision, not a mandatory dependency
 
-Начать с вопроса: можно ли достичь latency/load цели bounded queries, индексами и меньшим fan-out без кеша? Для small single-host проекта **«кеш не нужен»** — полноценное решение с trigger пересмотра. Cache снижает часть работы, но добавляет freshness/invalidations/failure modes и потребление RAM.
+First ask whether bounded queries, indexes and reduced fan-out can meet latency/load goals without caches. For small single-host projects **no cache needed** is a complete decision with a reconsideration trigger. Caching removes some work but adds freshness/invalidation/failure modes and RAM consumption.
 
-В [Scaling Memcache at Facebook](https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf) Meta/Facebook описывает look-aside cache вне authoritative DB, invalidation и проблемы stale data/нагрузки при масштабировании. Прикладной вывод: отдельно проектировать correctness и cache failure, не копировать fleet topology компании. Это case study 2013 года, не текущая спецификация Meta.
+In [Scaling Memcache at Facebook](https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf), Meta/Facebook describes look-aside caching outside authoritative databases, invalidation and stale-data/load issues at scale. Our practical takeaway: design correctness/cache failures separately rather than copying fleet topology. This is a 2013 case study, not Meta's current specification.
 
-## Сравнить варианты
+## Compare options
 
-| Вариант | Когда полезен | Что обязательно зафиксировать |
+| Option | Useful when | Required decisions |
 |---|---|---|
-| Без cache | Невысокая нагрузка/дорогая свежесть, DB укладывается в budget | Query/index plan, baseline assumption и threshold пересмотра |
-| In-process bounded cache | Малый hot immutable/reference набор, допустимы раздельные copies | Per-process cap/TTL, restart/cold misses, multi-replica staleness |
-| Shared cache-aside | Повторяющиеся дорогие reads, допустимый bounded stale | Key/version/tenant, populate/invalidate race, TTL/max stale, fallback/DB protection |
-| Materialized/read projection | Дорогой агрегат, predictable refresh/lag | Source events, rebuild/replay, lag/error ownership |
-| HTTP/CDN cache | Публичные/явно cacheable responses | Cache keys/Vary/auth/tenant boundaries, invalidation и private data policy |
+| No cache | Low load/expensive freshness, DB within budget | Query/index plan, baseline assumptions and review thresholds |
+| Bounded in-process cache | Small hot immutable/reference sets, separate copies acceptable | Per-process cap/TTL, restart/cold misses, multi-replica staleness |
+| Shared cache-aside | Repeated expensive reads, bounded staleness acceptable | Key/version/tenant, populate/invalidate races, TTL/max stale, fallback/DB protection |
+| Materialized/read projection | Expensive aggregates, predictable refresh/lag | Source events, rebuild/replay, lag/error ownership |
+| HTTP/CDN cache | Public/explicitly cacheable responses | Cache keys/Vary/auth/tenant boundaries, invalidation and private-data policy |
 
-Для выбранного варианта указать owner/source of truth, key namespace/version/tenant/authorization context, размер/количество entries, TTL и **максимально допустимую устарелость**, write/invalidation sequence, negative-cache policy и hit/miss/eviction/latency metrics. Не кешировать отказ в авторизации/остаток/цену без согласованных freshness и security semantics.
+For the chosen option record owner/source of truth, key namespace/version/tenant/authorization context, entry size/count, TTL and **maximum tolerated staleness**, write/invalidation sequence, negative-cache policy and hit/miss/eviction/latency metrics. Do not cache authorization denials/balances/prices without agreed freshness/security semantics.
 
-[Redis eviction docs](https://redis.io/docs/latest/develop/reference/eviction/) объясняют memory limits и eviction policies; cache storage может удалять entries. Выбор policy и RAM headroom зависит от роли/версии/deployment. Критичные idempotency/coordination records нельзя считать эквивалентом теряемого cache; если Redis используется не как cache, durability/retention анализируется отдельно.
+[Redis eviction docs](https://redis.io/docs/latest/develop/reference/eviction/) explains memory limits/eviction policies: cached entries may be evicted. Policy/RAM headroom depends on role/version/deployment. Critical idempotency/coordination records are not disposable cache equivalents; analyze durability/retention separately when Redis is more than a cache.
 
 ## Edge/failure design
 
-- Stampede/hot key/mass expiry: bounded single-flight/coalescing, jittered expiry или controlled refresh, если подходят; concurrency caps и queueing budget, а не бесконечный lock wait.
-- Invalidation race: stale read может наполнить cache после delete; определить versioning/fencing/validation либо допустимый bounded stale. Один `DELETE after COMMIT` сам по себе не доказывает strong consistency.
-- Cache unavailable/cold/evicted: fallback не должен обрушить DB; admission/rate limits, bounded concurrency, возможно graceful degradation. Fail-open/closed выбирать по business/security consequences.
-- Multi-tenant leak: ключ и доступ не разделяются только URL/id без tenant/permission context; тестировать isolation.
-- Stale/negative entries после create/delete/permission change: конкретный recovery и максимальная длительность, не обещание «TTL всё исправит».
+- Stampede/hot keys/mass expiry: bounded single-flight/coalescing, jittered expiry or controlled refresh where suitable; concurrency caps/queueing budgets rather than infinite lock waits.
+- Invalidation races: stale reads can repopulate caches after deletion; define versioning/fencing/validation or acceptable bounded staleness. `DELETE after COMMIT` alone does not prove strong consistency.
+- Unavailable/cold/evicted caches: fallbacks must not overload databases; admission/rate limits, bounded concurrency and possibly graceful degradation. Select fail-open/closed by business/security consequences.
+- Multi-tenant leaks: keys/access cannot rely only on URL/ID without tenant/permission context; test isolation.
+- Stale/negative entries after create/delete/permission changes: specify recovery and maximum duration, not “TTL fixes everything.”
 
-Сделать таблицу read/write/failure sequences и tests для выбранных рисков. Кеш hit ratio — диагностический показатель, не самостоятельная гарантия user latency/correctness.
+Create read/write/failure-sequence tables and tests for selected risks. Cache hit ratio is diagnostic, not a standalone user-latency/correctness guarantee.

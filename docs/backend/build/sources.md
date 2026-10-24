@@ -1,13 +1,13 @@
-# Источники build workflow
+# Build-workflow sources
 
-Проверено **2026-10-18**. Новые operational/agent правила — наша адаптация source plan и user requirements, не обещание, что компании используют этот exact workflow.
+Checked **2026-10-18**. New operational/agent rules adapt source plans and user requirements; they do not claim companies follow this exact workflow.
 
-| Источник | Что используем | Границы |
+| Source | What we use | Limits |
 |---|---|---|
-| [Git worktree](https://git-scm.com/docs/git-worktree) | Отдельные working trees общей repo и их lifecycle | Runtime/DB/ports/secrets не изолируются Git автоматически |
-| [Git cherry-pick](https://git-scm.com/docs/git-cherry-pick) | Один из способов переносить scoped commits при интеграции | Merge policy целевого проекта имеет приоритет; конфликты требуют review/retest |
-| [Google SRE: Service Level Objectives](https://sre.google/sre-book/service-level-objectives/) | SLI/SLO/SLA и measurement window | Lab test не evidence operational agreement за полное окно |
-| [Google: Testing Overview](https://abseil.io/resources/swe-book/html/ch11.html) | Назначение/границы тестов разных уровней | Наши per-feature risk gates, без универсального процента pyramid |
-| [Grafana k6: Thresholds](https://grafana.com/docs/k6/latest/using-k6/thresholds/) | Machine-readable acceptance для load метрик | Existing runner equivalent допустим; version/environment проверяются в target |
+| [Git worktree](https://git-scm.com/docs/git-worktree) | Separate working trees of a shared repository and their lifecycle | Git does not automatically isolate runtimes/DBs/ports/secrets |
+| [Git cherry-pick](https://git-scm.com/docs/git-cherry-pick) | One way to transfer scoped commits during integration | Target merge policy takes precedence; conflicts need review/retesting |
+| [Google SRE: Service Level Objectives](https://sre.google/sre-book/service-level-objectives/) | SLI/SLO/SLA and measurement windows | Lab tests do not establish full-window operational agreements |
+| [Google: Testing Overview](https://abseil.io/resources/swe-book/html/ch11.html) | Purposes/limits of testing levels | Our per-feature risk gates, no universal pyramid percentage |
+| [Grafana k6: Thresholds](https://grafana.com/docs/k6/latest/using-k6/thresholds/) | Machine-readable acceptance for load metrics | Existing equivalent runners allowed; verify target version/environment |
 
-База architecture/data/cache/reliability/SDD: [backend planning sources](../plan/sources.md). Применять по actual target stack/versions. Host API/subagent availability исследовать на месте; не обещать headless agent/worktree feature, которой у host нет. Progress helper проверяет структуру журнала, не факты test execution/Git ancestry и не реальный SLA.
+Architecture/data/cache/reliability/SDD basis: [backend planning sources](../plan/sources.md). Apply to actual target stack/versions. Inspect host API/subagent availability locally; do not promise unavailable headless-agent/worktree features. Progress helpers check journal structure, not actual test execution/Git ancestry or operational SLA.
