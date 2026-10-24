@@ -125,7 +125,7 @@ class CrossRepositoryDispatcherRegressions(unittest.TestCase):
 
 
 def feature_fixture(root):
-    value = manifest(root, count=8)
+    value = manifest(root, count=9)
     value['budget'].update(tokens=10000, cost_micros=10000,
         integration_tokens=1000, verification_tokens=1000, handoff_tokens=100)
     value['repositories'] = [dict(repository_id=repo, default_branch='main',
@@ -143,6 +143,7 @@ def feature_fixture(root):
         if index >= 2:
             task.update(dispatch_mode='external', budget_phase='verification' if index < 6 else 'integration',
                         depends_on=['task-0', 'task-1'])
+    value['tasks'][8].update(required_for_completion=False, files=[])
     initial = {'auth': 'a' * 40, 'ledger': 'b' * 40}
     intermediate = {'auth': 'c' * 40, 'ledger': 'b' * 40}
     final = {'auth': 'c' * 40, 'ledger': 'd' * 40}
@@ -228,7 +229,7 @@ class CrossRepositoryFeatureRegressions(unittest.TestCase):
         revised = copy.deepcopy(self.passport)
         revised['plan_revision'] = 2
         revised['business_invariants'][0]['resolved'] = False
-        self.authority.update_passport(revised, approvals=['coordinator'])
+        self.authority.update_passport(revised, approvals=self.passport['owners'])
         adapter = FakeAdapter()
         self.dispatcher.run_local(self.value['run_id'], adapter, verify)
         self.assertEqual(adapter.calls, [])
@@ -348,7 +349,7 @@ class CrossRepositoryFeatureRegressions(unittest.TestCase):
                     observed_state_sha256=self.passport['release_plan']['initial_state_sha256'])
         self.assertEqual(self.authority.report()['status'], 'release_ready')
 
-    def complete_release(self, composition):
+    def complete_release(self, composition, *, late_spare=False):
         operation = self.release(composition)
         observed = self.passport['release_plan']['initial_versions']
         observed_state = self.passport['release_plan']['initial_state_sha256']
@@ -357,6 +358,9 @@ class CrossRepositoryFeatureRegressions(unittest.TestCase):
                 authorization=self.authorization(composition, step['owner']), observed_versions=observed,
                 observed_state_sha256=observed_state)
             task = admitted['task']
+            if late_spare and step['step_id'] == 'ledger-deploy':
+                self._spare_task = self.dispatcher.claim_task(self.value['run_id'], 'task-8')
+                self.assertIsNotNone(self._spare_task)
             self.dispatcher.finish_task(self.value['run_id'], step['task_id'], task['attempt_id'],
                 dict(status='submitted', subject=composition['composition_id'], tokens=1,
                      cost_micros=1, usage_known=True, stopped=True), verify)
@@ -472,3 +476,89 @@ class CrossRepositoryFeatureRegressions(unittest.TestCase):
                 with self.subTest(metrics=metrics), self.assertRaises(ValueError):
                     self.authority.observe(operation['operation_id'], {}, verifier=lambda *_: invalid)
         self.assertEqual(self.authority.report()['status'], 'observing')
+
+    def test_repaired_check_cannot_hide_a_failed_mandatory_root_operation(self):
+        from packages.core.parallelism.feature import FeatureAuthority
+        root = self.root / 'mandatory-failure'
+        root.mkdir()
+        value, passport = feature_fixture(root)
+        repair = copy.deepcopy(value['tasks'][2])
+        repair.update(task_id='local-repair', required_for_completion=False)
+        value['tasks'].append(repair)
+        passport['task_graph'].append('local-repair')
+        passport['acceptance_protocol']['checks'][0]['repair_task_ids'] = ['local-repair']
+        dispatcher = Dispatcher(root / 'private/root.sqlite3')
+        dispatcher.create_run(value)
+        authority = FeatureAuthority(dispatcher, value['run_id'])
+        authority.create(passport)
+        dispatcher.run_local(value['run_id'], FakeAdapter(), verify)
+        composition = authority.compose({'auth': {'commit': 'c' * 40}, 'ledger': {'commit': 'd' * 40}},
+            test_suite_sha256='7' * 64, environment_sha256='8' * 64)
+        failed = dispatcher.claim_task(value['run_id'], 'task-2')
+        dispatcher.finish_task(value['run_id'], 'task-2', failed['attempt_id'],
+            dict(status='failed', tokens=1, cost_micros=1, usage_known=True, stopped=True), verify)
+        for check in passport['acceptance_protocol']['checks']:
+            slot = 'local-repair' if check['check_id'] == 'local' else check['task_id']
+            admitted = dispatcher.claim_task(value['run_id'], slot)
+            self.assertIsNotNone(admitted)
+            dispatcher.finish_task(value['run_id'], slot, admitted['attempt_id'],
+                dict(status='submitted', subject=composition['composition_id'], tokens=1,
+                     cost_micros=1, usage_known=True, stopped=True), verify)
+            proof = dict(independent=True, subject=composition['composition_id'], verdict='PASS',
+                criteria_sha256=check['criteria_sha256'], verifier_id='independent-reviewer', evidence_sha256='9' * 64)
+            authority.record_check(composition['composition_id'], check['check_id'], {'task_id': slot},
+                                   verifier=lambda *_: proof)
+        root_report = dispatcher.get_run(value['run_id'])
+        self.assertEqual(next(t for t in root_report['tasks'] if t['task_id'] == 'task-2')['state'], 'failed')
+        self.assertNotEqual(authority.report()['status'], 'release_ready')
+
+    def fail_spare(self):
+        task = getattr(self, '_spare_task', None) or self.dispatcher.claim_task(self.value['run_id'], 'task-8')
+        self.assertIsNotNone(task)
+        self.dispatcher.finish_task(self.value['run_id'], 'task-8', task['attempt_id'],
+            dict(status='failed', tokens=1, cost_micros=1, usage_known=True, stopped=True), verify)
+
+    def test_failed_root_operation_blocks_new_release_step_intent(self):
+        composition = self.ready()
+        operation = self.release(composition)
+        self.fail_spare()
+        with self.assertRaises(ValueError):
+            self.authority.begin_step(operation['operation_id'], 'auth-deploy',
+                authorization=self.authorization(composition, 'owner-auth'),
+                observed_versions=self.passport['release_plan']['initial_versions'],
+                observed_state_sha256=self.passport['release_plan']['initial_state_sha256'])
+        self.assertEqual(next(t for t in self.authority.report()['tasks'] if t['task_id'] == 'task-6')['attempt_id'], 0)
+
+    def test_failed_root_operation_after_claim_cannot_authorize_controller_launch(self):
+        from unittest.mock import patch
+        composition = self.ready()
+        operation = self.release(composition)
+        original_claim = self.dispatcher.claim_task
+        def race(run_id, task_id):
+            task = original_claim(run_id, task_id)
+            if task_id == 'task-6':
+                with patch.object(self.dispatcher, 'claim_task', original_claim):
+                    self.fail_spare()
+            return task
+        with patch.object(self.dispatcher, 'claim_task', race):
+            result = self.authority.begin_step(operation['operation_id'], 'auth-deploy',
+                authorization=self.authorization(composition, 'owner-auth'),
+                observed_versions=self.passport['release_plan']['initial_versions'],
+                observed_state_sha256=self.passport['release_plan']['initial_state_sha256'])
+        self.assertFalse(result['launch_allowed'])
+        self.assertGreater(self.authority.report()['usage']['reserved_tokens'], 0)
+
+    def test_observation_cannot_persist_acceptance_after_failed_root_operation(self):
+        import time
+        from unittest.mock import patch
+        composition = self.ready()
+        operation = self.complete_release(composition, late_spare=True)
+        def proof(plan, receipt):
+            self.fail_spare()
+            return dict(independent=True, subject=composition['composition_id'], verdict='PASS',
+                versions=plan['steps'][-1]['versions'], state_sha256=plan['steps'][-1]['state_sha256'],
+                observed_seconds=2, metrics={'error-rate': 0}, evidence_sha256='9' * 64)
+        with patch('packages.core.parallelism.feature.time.time', return_value=time.time() + 2):
+            with self.assertRaises(ValueError):
+                self.authority.observe(operation['operation_id'], {}, verifier=proof)
+        self.assertNotEqual(self.authority.report()['release']['state'], 'accepted')

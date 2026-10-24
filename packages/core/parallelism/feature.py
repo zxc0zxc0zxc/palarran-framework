@@ -386,6 +386,8 @@ class FeatureAuthority:
             if step is None: raise ValueError('Unknown release step')
             self._authorization(p,op['composition_id'],op['environment'],authorization,step['owner'])
             if step_id in op['steps']: return dict(op['steps'][step_id],launch_allowed=False)
+            if self.report_from(db, state)['blockers']:
+                raise ValueError('Root authority blocks release step')
             index=steps.index(step)
             if op['state']!='releasing' or observed_state_sha256!=op['state_sha256'] or observed_versions!=op['versions'] or any(op['steps'].get(s['step_id'],{}).get('state')!='completed' for s in steps[:index]):
                 raise ValueError('Release ordering/version drift')
@@ -399,7 +401,11 @@ class FeatureAuthority:
             # Cancellation/authority may change between intent and root claim.
             run, _ = self.dispatcher._run(db, self.run_id)
             row = db.execute('SELECT state,attempt FROM tasks WHERE run=? AND id=?',(self.run_id,step['task_id'])).fetchone()
-            if run['cancel'] or row['state'] != 'running' or row['attempt'] != task['attempt_id']:
+            report = self.report_from(db, state)
+            unsafe = set(report['blockers']) - {'root_work_active'}
+            other_active = any(t['task_id'] != step['task_id'] and t['state'] in {'running', 'submitted'}
+                               for t in report['tasks'])
+            if unsafe or other_active or run['cancel'] or row['state'] != 'running' or row['attempt'] != task['attempt_id']:
                 entry.update(state='unknown',attempt_id=task['attempt_id']); state['releases'][operation_id]['state']='unknown'
                 self._save(db,state); return dict(entry,launch_allowed=False)
             entry.update(state='running',attempt_id=task['attempt_id']); self._save(db,state)
@@ -486,7 +492,7 @@ class FeatureAuthority:
         with self.dispatcher._transaction() as db:
             state=self._load(db); op=state['releases'][operation_id]; self._composition(state,op['composition_id'])
             report = self.report_from(db, state)
-            if any(b in report['blockers'] for b in ('root_outcome_unknown','root_cancelled')):
+            if report['blockers']:
                 raise ValueError('Root authority blocks observation acceptance')
             observation={'evidence_sha256':proof['evidence_sha256'],'metrics':metrics,'observed_seconds':seconds,'state_sha256':proof['state_sha256']}
             if 'observation' in op:
