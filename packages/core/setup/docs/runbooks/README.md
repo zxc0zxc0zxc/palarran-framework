@@ -4,16 +4,16 @@ Runbook family: `palarran.framework-setup`; schema version: `1`; reviewed: **202
 
 | Operation | Stable ID | Version | Entry |
 | --- | --- | --- | --- |
-| Fresh project installation | `palarran.framework.install` | `1.0.0` | [Framework install](framework-install.md) |
-| Existing project update and guarded recovery | `palarran.framework.update` | `1.0.0` | [Framework update](framework-update.md) |
+| Fresh project installation | `palarran.framework.install` | `1.1.0` | [Framework install](framework-install.md) |
+| Existing project update and guarded recovery | `palarran.framework.update` | `1.1.0` | [Framework update](framework-update.md) |
 
 ## Implementation and applicability
 
-The behavior baseline is source revision `61b439af99fab5b39aff0e9a446adec5201a84df`, inspected 2026-10-24: [project setup](../../scripts/project_setup.py), [guarded update](../../scripts/project_update.py), and [preferences](../../scripts/palarran_config.py). Read the actual selected revision before execution; stop if its CLI, ownership model, paths or statuses differ. These runbooks live under the intended Core package boundary while executable helpers and mandatory guides still use their legacy root paths. Their presence does not prove that packaging/export has migrated.
+The behavior baseline is source revision `61b439af99fab5b39aff0e9a446adec5201a84df`, inspected 2026-10-24: [project setup](../../scripts/project_setup.py), [guarded update](../../scripts/project_update.py), and [preferences](../../scripts/palarran_config.py). Read the actual selected revision before execution; stop if its CLI, ownership model, paths or statuses differ. Version 1.1.0 adds the separate common parallelism instruction block and guarded rollback, extending this baseline. Canonical helpers live in Core capabilities; root script paths remain compatibility entrypoints. Verify the exact selected release and its package catalog before apply.
 
 Supported scope: a trusted complete local Git checkout or verified pristine public snapshot, an existing local project directory, Python 3 with the helper's standard-library requirements, and Codex, Claude or explicitly both. The guarded updater imports `fcntl` and uses POSIX locking, modes and symlinks; these instructions do not claim native Windows support. Do not replace Python, install dependencies or change the platform to make the runbook apply.
 
-Current package selection uses **15** IDs from the legacy packaging inventory: `setup`, `memory`, `vps`, `mcp`, `app`, `science`, `agent`, `ml`, `product`, `backend`, `frontend`, `ui`, `ci-cd`, `infra`, `ux`. `all` must be the only value when selected. The setup skill is always retained. A planned ten-package registry/layout is not yet this installer's selection contract; do not pass proposed names or claim the migration is complete. Installed skill counts depend on the selected committed catalog and package overlap.
+Current registry selection uses **11** package IDs: `core`, `memory`, `product`, `design`, `code`, `machine-learning`, `docs`, `science`, `validation`, `infrastructure`, `security`. Read the selected source's `packages/catalog.json` for exact dependency closure; do not infer package IDs from titles or legacy command names. `all` must be the only value when explicitly selected. Core and setup dependencies remain installed. Legacy receipts preserve their recorded scope rather than silently adding newer packages. Installed skill counts depend on the pinned catalog and selection.
 
 Locales are `en`, `ru`, `sr-Latn`, independently for skill interaction, new code comments and new documentation. English source guides/skills remain English. Explicit options override project `.palarran/config.json`, then global `~/.palarran/config.json`; per-language fields merge. Do not print either private configuration wholesale. Existing project conventions and accepted decisions still apply. Read [configuration](../configuration.md), [setup guide](../README.md), [setup entrypoint](../skill.md), [compatibility](../palarran.md), [domain contract](../../../agents/docs/domain-contracts.md), [decision memory](../../../agents/docs/decision-memory.md) and [global memory](../../../agents/docs/global-memory.md).
 
@@ -34,7 +34,7 @@ PALARRAN_SOURCE='/ABSOLUTE/trusted-palarran-checkout'
 PALARRAN_TARGET='/ABSOLUTE/existing-project'
 PALARRAN_CLIENT='codex'
 git -C "$PALARRAN_SOURCE" rev-parse --verify HEAD
-git -C "$PALARRAN_SOURCE" status --porcelain --untracked-files=normal -- scripts
+git -C "$PALARRAN_SOURCE" status --porcelain --untracked-files=normal -- scripts packages/core/setup packages/core/parallelism
 ```
 
 For a Git source, require the selected exact commit and no modified/untracked helper files. Verify source origin against the known trusted repository privately; redact credential-bearing URLs. Do not reset, stash, pull or clean another checkout. A pristine exported snapshot instead needs a verified `.ai-tools-library.json` pin and hashes; do not run Git-only checks against it. The helper exports tracked public HEAD bytes, not dirty/untracked content, but the invoked helper/imports are working-tree code and must also be trusted. A customized installed library is not a distribution source.

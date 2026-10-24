@@ -229,6 +229,23 @@ def _legacy_package(namespace, output, root=ROOT):
                       for guide in ("README.md", "runbook.md", "sources.md")]
     if source_path(root, hosting_guides[0]).is_file():
         resources += hosting_guides
+    # Core parallelism is an installed cross-domain contract. Export its explicit
+    # source closure, never task journals, logs or arbitrary package-local files.
+    parallel_guides = ["packages/core/parallelism/README.md"] + [
+        "packages/core/parallelism/docs/" + name + ".md" for name in
+        ("contract", "sources", "authority", "managed-entry", "temporal", "temporal-sources", "integration", "integration-sources", "dashboard")]
+    resources += [name for name in parallel_guides if source_path(root, name).is_file()]
+    temporal_runbook = "packages/infrastructure/hosting/docs/temporal-runbook.md"
+    if source_path(root, temporal_runbook).is_file():
+        resources.append(temporal_runbook)
+    if namespace == "skills":
+        helpers = ["packages/core/parallelism/" + name for name in
+                   ("dispatcher.py", "authority.py", "entry.py", "harness.py", "native.py", "temporal.py", "temporal_worker.py", "requirements-temporal.txt", "integration.py", "root_budget.py", "dashboard.py")]
+        helpers += ["packages/core/parallelism/assets/" + name for name in ("dashboard.html", "dashboard.css", "dashboard.js")]
+        helpers += ["packages/core/setup/temporal_config.py"]
+        helpers += ["packages/core/orchestration/runtime/" + name + ".py" for name in
+                    ("__init__", "runner", "usage", "diagnostics", "accounting", "budgets", "workspaces")]
+        resources += [name for name in helpers if source_path(root, name).is_file()]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():
         paths.append(root / command["source"].removeprefix("./"))
@@ -424,6 +441,13 @@ def _public_package(output, root, resolved, name):
                 source = source_path(root, reference, required=True)
                 destination = bundle / reference; destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(portable_bytes(source.read_bytes(), source.relative_to(root).as_posix(), reference, moves))
+        if "infrastructure" in resolved["packages"]:
+            reference = "packages/infrastructure/hosting/temporal.compose.yaml"
+            source = source_path(root, reference)
+            if source.is_file():
+                destination = bundle / reference
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(source.read_bytes())
         if "security" in resolved["packages"]:
             # Explicit reviewed resource set; never sweep ignored audit evidence,
             # customer logs, credentials or arbitrary package-local artifacts.

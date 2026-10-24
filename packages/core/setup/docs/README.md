@@ -79,3 +79,5 @@ Rollback refuses to overwrite new user changes. Keep the backup and review the d
 ## Versioned installation procedures
 
 [Core runbooks](runbooks/README.md) bind install/update commands, preconditions, expected statuses, partial-state recovery and source revisions. Agents choose a supported procedure before applying changes. Missing support produces a concrete runbook extension, not an invented installation sequence.
+
+Optional engine setup and actual native/managed integration levels: [Temporal and harness compatibility](temporal.md). A new install asks whether to enable Temporal; updates inherit the checked answer. Project setup never implicitly changes a user's global env or starts a Worker. Common parallelism instructions apply to ordinary requests and every skill. Managed adapters use the common dispatcher; AGENTS/CLAUDE instructions alone are instruction-based.

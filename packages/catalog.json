@@ -15,7 +15,7 @@
         {
           "id": "parallelism",
           "status": "implemented",
-          "description": "Bounded task ownership and independent worker coordination."
+          "description": "Durable shared admission, owned workers and independent acceptance; optional Temporal."
         },
         {
           "id": "security",

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palarran · Execution</title>
+<link rel="stylesheet" href="/dashboard.css">
+<script src="/dashboard.js" defer>
+</script>
+</head>
+<body>
+<div class="shell">
+<header>
+<div class="brand">
+<svg aria-hidden="true" viewBox="0 0 60 60">
+<path d="M29 3 3 39h26zm5 14v22h18zM3 44h54l-9 11H12z" fill="currentColor"/>
+</svg>
+<div>PALARRAN<span>EXECUTION</span>
+</div>
+</div>
+<div class="connection">
+<span id="freshness">Connecting</span>
+<button id="pause" type="button">Pause updates</button>
+</div>
+</header>
+<main>
+<div class="heading">
+<div>
+<p class="eyebrow">ONE AUTHORITY · LIVE EXECUTION</p>
+<h1 id="run">Waiting for authority</h1>
+<p id="meta">Read-only observation. No execution controls.</p>
+</div>
+<p id="status" class="state">Unknown</p>
+</div>
+<div id="warning" role="status" hidden>
+</div>
+<section class="metrics" aria-label="Run accounting">
+<article>
+<h2>Reported tokens</h2>
+<strong id="tokens">Unknown</strong>
+<p id="token-reserve">Reserved: unknown</p>
+<meter id="token-meter" min="0" max="1" value="0" aria-label="Reported token fraction" hidden>
+</meter>
+</article>
+<article>
+<h2>Reported spend · USD</h2>
+<strong id="cost">Unknown</strong>
+<p id="cost-reserve">Reserved: unknown</p>
+<meter id="cost-meter" min="0" max="1" value="0" aria-label="Reported spend fraction" hidden>
+</meter>
+</article>
+<article>
+<h2>Independent results</h2>
+<strong id="verified">Unknown</strong>
+<p>Verified against exact subjects</p>
+</article>
+<article>
+<h2>Needs attention</h2>
+<strong id="attention">Unknown</strong>
+<p id="attention-copy">Blockers and unknown outcomes</p>
+</article>
+</section>
+<section class="work">
+<div class="section-title">
+<h2>Work in progress</h2>
+<span id="observed">No snapshot</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Task / assignment</th>
+<th>Owner / machine</th>
+<th>State</th>
+<th>Blocker / next action</th>
+<th>Verified subject</th>
+<th>Reported / reserved tokens</th>
+</tr>
+</thead>
+<tbody id="tasks">
+</tbody>
+</table>
+</div>
+<p id="empty">No task report available.</p>
+</section>
+<section id="integration">
+<div class="section-title">
+<h2>Integration</h2>
+<span id="integration-state">Not connected</span>
+</div>
+<p id="integration-copy">No integration report is connected. Publication readiness is unknown.</p>
+<div id="integration-items">
+</div>
+</section>
+<details>
+<summary>Source identity</summary>
+<dl id="identity">
+</dl>
+</details>
+</main>
+<footer>
+<span>Read only · polls every 3 seconds · usage is reported accounting, not an invoice</span>
+<a href="/report.md">Compact harness report</a>
+</footer>
+</div>
+</body>
+</html>

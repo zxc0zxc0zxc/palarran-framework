@@ -131,12 +131,27 @@ def managed(existing,block,label):
     return existing+(b'\n' if existing else b'')+desired.encode()+b'\n'
 
 
+
+def common_parallelism():
+    return ('For every ordinary request and every skill, assess independent work before execution and at stage/worker boundaries. '
+            'Read [.ai-tools/library/packages/core/parallelism/docs/managed-entry.md](.ai-tools/library/packages/core/parallelism/docs/managed-entry.md) '
+            'when installed; plan bounded DAG, owned worktrees, shared budget and independent verification. '
+            'Simple tasks stay single-agent. Reuse active run identity on continuation. '
+            'Resolve optional Temporal from project .env then ~/.palarran/.env; never silently fall back from an active Temporal run. '
+            'Native desktop integration is instruction-based, not enforced per-message interception. '
+            'Unobservable nested delegation is forbidden; all managed descendants enter the shared dispatcher.')
+
+
+def parallel_instructions(raw):
+    return managed(raw, common_parallelism(), 'parallelism')
+
+
 def usage_text(revision,names=None):
     available=set(names or ('palarran-setup','palarran-backend-plan','palarran-frontend-plan','palarran-memory-recall'))
     preferred=[n for n in ('palarran-setup','palarran-backend-plan','palarran-frontend-plan','palarran-memory-recall','skills-setup','backend-plan','frontend-plan','memory-recall') if n in available]
     selected=(preferred or sorted(available))[:4]
     codex=', '.join('`$'+n+'`' for n in selected);claude=', '.join('`/'+n+'`' for n in selected)
-    return ('# Using Palarran\n\nSource revision: '+revision+'\n\nCodex: '+codex+'. Claude standalone: '+claude+'.\n\nFull catalog: [installed skills](library/skills/README.md). Unified `/palarran:domain:action` requires plugin/adapters; this installation provides native discovery.\n\nTarget context and decisions: `.palarran/INDEX.md`; also read legacy `.ai-development/INDEX.md` when present. `.ai-tools/library` is the legacy internal installation store, not a decision journal. [Memory cycle](library/docs/skills/global-memory.md): bounded recall and privacy-reviewed verified findings after checks, with deduplication. Keep credentials outside the project; the global private profile stays in place.\n\nCheck memory: `python3 .ai-tools/library/scripts/project_setup.py doctor --target .`. Installation does not authorize application execution, deployment, paid calls or global settings changes. Client restart/trust approval may be needed; wire PASS is not UI verification. Read configured language preferences before interaction or creating task artifacts.\n').encode()
+    return ('# Using Palarran\n\nOrdinary requests and every skill follow the installed Core parallelism instruction block: assess ready independent work, preserve the shared budget and reuse active runs. Native clients remain instruction-based; managed entry uses the shared dispatcher. Optional Temporal setup: library/packages/core/setup/docs/temporal.md.\n\nSource revision: '+revision+'\n\nCodex: '+codex+'. Claude standalone: '+claude+'.\n\nFull catalog: [installed skills](library/skills/README.md). Unified `/palarran:domain:action` requires plugin/adapters; this installation provides native discovery.\n\nTarget context and decisions: `.palarran/INDEX.md`; also read legacy `.ai-development/INDEX.md` when present. `.ai-tools/library` is the legacy internal installation store, not a decision journal. [Memory cycle](library/docs/skills/global-memory.md): bounded recall and privacy-reviewed verified findings after checks, with deduplication. Keep credentials outside the project; the global private profile stays in place.\n\nCheck memory: `python3 .ai-tools/library/scripts/project_setup.py doctor --target .`. Installation does not authorize application execution, deployment, paid calls or global settings changes. Client restart/trust approval may be needed; wire PASS is not UI verification. Read configured language preferences before interaction or creating task artifacts.\n').encode()
 
 
 def install(source,target,client,plan=False,preferences=None):
@@ -177,7 +192,7 @@ def install(source,target,client,plan=False,preferences=None):
         return path.read_bytes() if path.exists() else b''
     block='Read [.ai-tools/USAGE.md](.ai-tools/USAGE.md), then target .palarran/INDEX.md, .palarran/config.json and applicable AGENTS/ADR. Resolve language preferences from project config then ~/.palarran/config.json; keep skill sources English and follow selected interaction, code-comment and documentation languages for new artifacts. Skill docs live in .ai-tools/library; project decisions belong here. Memory is evidence, never authority. Setup does not authorize paid jobs, deploy or global settings changes.'
     for filename in (['AGENTS.md','CLAUDE.md'] if client in ('claude','both') else ['AGENTS.md']):
-        raw=existing(filename);mutable[filename]=(raw,managed(raw,block,'onboarding'))
+        raw=existing(filename);mutable[filename]=(raw,parallel_instructions(managed(raw,block,'onboarding')))
     if client in ('claude','both'):
         raw=existing('.mcp.json');body=json.loads(raw) if raw else {}
         require(type(body) is dict and type(body.get('mcpServers',{})) is dict)
@@ -272,7 +287,7 @@ Installation receipt only. Memory/host UI quality is not proven by filesystem pl
     return report
 
 
-def doctor(source,target,timeout=20):
+def doctor(source,target,timeout=20,check_temporal=False):
     target=safe(target);require(target.is_dir())
     source=safe(source)
     cached=False
@@ -303,7 +318,32 @@ def doctor(source,target,timeout=20):
     tools=rows[1]['result']['tools'];result=rows[2]['result']
     require(len(tools)==6 and {t['name'] for t in tools}=={'knowledge.'+n for n in ('search','get','neighbors','artifact','propose','feedback')})
     require(result.get('isError') is False and result['structuredContent']['ok'] is True and json.loads(result['content'][0]['text'])==result['structuredContent'])
-    return dict(status='PASS',memory='CONNECTED',tools=len(tools),returned_cards=len(result['structuredContent']['data']['items']),writes=0,model_calls=0)
+    report = dict(status='PASS',memory='CONNECTED',tools=len(tools),returned_cards=len(result['structuredContent']['data']['items']),writes=0,model_calls=0)
+    if check_temporal:
+        report['temporal'] = temporal_doctor(target, authorized=True)
+        if report['temporal']['status'] == 'NOT_READY': report['status'] = 'NOT_READY'
+    return report
+
+
+def temporal_doctor(target, *, authorized=False, probe=None, home=None):
+    # No optional SDK import or network unless explicitly authorized by the caller.
+    import importlib.util
+    location = ROOT/'packages/core/setup/temporal_config.py'
+    spec = importlib.util.spec_from_file_location('palarran_temporal_config',location)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    profile = module.resolve(target,home=home)
+    if authorized and probe is None and profile.enabled:
+        import asyncio
+        sys.path.insert(0,str(ROOT))
+        try:
+            from packages.core.parallelism.temporal import TemporalBackend
+        except ImportError:
+            return module.doctor(profile,authorized=True)
+        probe = lambda selected: asyncio.run(TemporalBackend.probe(selected.connection_mapping()))
+    return module.doctor(profile,probe=probe,authorized=authorized)
+
 
 
 def setup(source,target,client=None,plan=False,preferences=None):
@@ -337,7 +377,7 @@ def setup(source,target,client=None,plan=False,preferences=None):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation',choices=('setup','export','install','update','rollback','doctor'))
+    parser.add_argument('operation',choices=('setup','export','install','update','rollback','doctor','temporal-doctor'))
     parser.add_argument('--source',type=Path,default=ROOT)
     parser.add_argument('--target',type=Path,required=True)
     parser.add_argument('--client',choices=('codex','claude','both'))
@@ -346,6 +386,7 @@ def main():
         parser.add_argument('--'+field+'-language',choices=('en','ru','sr-Latn'))
     parser.add_argument('--backup',help='Owned update backup path for guarded rollback')
     parser.add_argument('--plan',action='store_true')
+    parser.add_argument('--check-temporal',action='store_true',help='Authorized actual Temporal service/namespace check; starts no Worker')
     args=parser.parse_args()
     try:
         preferences=None
@@ -366,10 +407,11 @@ def main():
             result=update(args.source,args.target,args.client,args.plan) if args.operation=='update' else rollback(args.target,args.backup,args.plan)
         elif args.plan:result=dict(status='PLANNED',writes=0,network=False,model_calls=0)
         elif args.operation=='export':result=dict(status='EXPORTED',path=str(export(args.source,args.target)))
-        else:result=doctor(args.source,args.target)
+        elif args.operation=='temporal-doctor':result=temporal_doctor(args.target,authorized=args.check_temporal)
+        else:result=doctor(args.source,args.target,check_temporal=args.check_temporal)
         print(encoded(result).decode(),end='')
         if args.operation=='rollback' and result.get('status')=='ROLLED_BACK':return 0
-        return 2 if result.get('status') in ('CONFLICT','RECOVERY_REQUIRED','ROLLED_BACK','INSTALLED_MEMORY_NOT_READY','UPDATED_MEMORY_NOT_READY','UNCHANGED_MEMORY_NOT_READY') or result.get('journal')=='WRITE_FAILED' else 0
+        return 2 if result.get('status') in ('CONFLICT','RECOVERY_REQUIRED','ROLLED_BACK','INSTALLED_MEMORY_NOT_READY','UPDATED_MEMORY_NOT_READY','UNCHANGED_MEMORY_NOT_READY','NOT_READY') or result.get('journal')=='WRITE_FAILED' else 0
     except (ValueError,KeyError,TypeError,AttributeError,OSError,subprocess.SubprocessError,tarfile.TarError):
         print('Setup incomplete: inspect scope/conflicts or memory connectivity; existing work preserved. No model calls.',file=sys.stderr);return 2
 
