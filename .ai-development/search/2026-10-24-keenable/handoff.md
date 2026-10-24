@@ -8,4 +8,4 @@ Frozen staged source tree `17d516de10d15c560e86897578c5cea5035a2e5c` before fina
 
 Actual authenticated initialize/initialized/list PASS, two tools observed; no authenticated content calls or account-balance claim. Public unauthenticated search PASS returned docs.python.org with max_results1; documented unbilled route, no usage metadata. Search quality/host UI NOT_VERIFIED. Native remote MCP is not linked to orchestrator ledger/hard budget gates; paid requests/purchases/top-up not authorized.
 
-Global client configuration pending committed public runtime pin; no false claim that the already-open session has new tools.
+Global Codex MCP CONFIGURED using committed public runtime4ddc8b32ce5eaa0e1152d564b2d59f0435c6d634. Private original-config backup saved; all pre-existing config bytes preserved, key absent from TOML. Actual pinned helper internal header output validated without printing; metadata handshake PASS. Current host session requires reload for discovery; tool availability here NOT_VERIFIED. Private global-config.json contains sanitized exact evidence.
