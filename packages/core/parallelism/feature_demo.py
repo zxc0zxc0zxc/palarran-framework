@@ -16,7 +16,7 @@ from .feature_gates import FeatureGateRunner, digest
 
 KINDS = ('local', 'contract', 'business', 'transition')
 CASES = {
-    'local': {'auth_local_health', 'cards_local_health', 'ledger_local_health', 'binding_immutable'},
+    'local': {'auth_local_health', 'cards_local_health', 'ledger_local_health', 'binding_immutable', 'cards_local_eligibility', 'ledger_local_idempotence'},
     'contract': {'producer_actual_schema', 'consumer_actual_accepts', 'malformed_rejected'},
     'business': {'binding', 'successful_credit', 'ineligible_no_credit', 'duplicate_delivery', 'concurrent_once',
                  'consumer_unavailable', 'partial_recovery', 'late_event', 'compensation_once', 'tenant_isolation'},

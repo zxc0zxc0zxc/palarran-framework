@@ -75,6 +75,13 @@ try:
                 check(role + '_local_health', json.loads(response.read()) == {'role': role, 'healthy': True})
         check('binding_immutable', post('auth', '/bind', dict(tenant, user='bob', referrer='alice'))[0] == 200
               and post('auth', '/bind', dict(tenant, user='bob', referrer='carol'))[0] == 409)
+        eligible = event('local-ledger')
+        check('cards_local_eligibility', eligible['eligible'] is True and event('local-ineligible', action='card_created')['eligible'] is False)
+        posted = post('ledger', '/credit', eligible)
+        before = balance()
+        repeated = post('ledger', '/credit', eligible)
+        check('ledger_local_idempotence', posted[0] == 200 and posted[1]['credited_minor'] > 0 and repeated[1]['duplicate'] and balance() == before)
+
     elif kind == 'contract':
         value = event('schema')
         check('producer_actual_schema', type(value['amount_minor']) is int and value['currency'] == 'USD' and value['version'] == 2)

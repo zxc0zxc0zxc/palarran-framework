@@ -54,8 +54,10 @@ class FeatureGateTests(unittest.TestCase):
 
     def test_slot_replay_and_unregistered_slot_rejected(self):
         runner = self.runner(); runner.run(self.composition, 'unit')
+        count = len(list((self.root / 'evidence').iterdir()))
         with self.assertRaisesRegex(ValueError, 'never replay'):
             runner.run(self.composition, 'unit')
+        self.assertEqual(len(list((self.root / 'evidence').iterdir())), count)
         with self.assertRaisesRegex(ValueError, 'Unregistered'):
             runner.run(self.composition, 'unit', task_id='final')
 
@@ -71,6 +73,29 @@ class FeatureGateTests(unittest.TestCase):
             runner.run(self.composition, 'unit')
         self.assertEqual(self.dispatcher.get_run('gates')['tasks'][0]['attempt_id'], 0)
 
+    def test_changed_grader_capture_and_wrong_run_or_suite_fail_before_claim(self):
+        runner = self.runner()
+        runner.registry['unit']['verify'].__defaults__ = ('changed',)
+        with self.assertRaisesRegex(ValueError, 'verifier changed'):
+            runner.run(self.composition, 'unit')
+        runner = self.runner()
+        for field, value in (('run_id', 'other-run'), ('test_suite_sha256', 'b' * 64)):
+            original = dict(self.composition)
+            self.composition[field] = value
+            self.composition['composition_id'] = digest({k: v for k, v in self.composition.items() if k != 'composition_id'})
+            with self.assertRaisesRegex(ValueError, 'Composition'):
+                runner.run(self.composition, 'unit')
+            self.composition = original
+        self.assertEqual(self.dispatcher.get_run('gates')['tasks'][0]['attempt_id'], 0)
+
+    def test_storage_cap_rejects_before_claim(self):
+        runner = self.runner()
+        for index in range(100):
+            (self.root / 'evidence' / str(index)).mkdir()
+        with self.assertRaisesRegex(ValueError, 'storage bound'):
+            runner.run(self.composition, 'unit')
+        self.assertEqual(self.dispatcher.get_run('gates')['tasks'][0]['attempt_id'], 0)
+
     def test_wrong_composition_or_criteria_does_not_pass(self):
         self.script.write_text(self.script.read_text().replace("r['composition']['composition_id']", "'b'*64"))
         result = self.runner().run(self.composition, 'unit')
@@ -81,6 +106,13 @@ class FeatureGateTests(unittest.TestCase):
         self.assertFalse(runner.verifier({'check_id': 'unit', 'criteria_sha256': digest('criteria'), 'owner': 'independent-verifier'}, record['receipt']))
         receipt = dict(record['receipt'], verdict='PASS')
         self.assertFalse(runner.verifier({'check_id': 'unit', 'criteria_sha256': digest('criteria'), 'owner': 'implementation-owner'}, receipt))
+
+    def test_corrupt_private_evidence_is_not_accepted(self):
+        runner = self.runner(); record = runner.run(self.composition, 'unit')
+        path = next((self.root / 'evidence').glob('*/receipt.json'))
+        saved = json.loads(path.read_text()); saved['evidence']['reason'] = 'corrupted'
+        path.write_text(json.dumps(saved))
+        self.assertFalse(runner.verifier({'check_id': 'unit', 'criteria_sha256': digest('criteria'), 'owner': 'implementation-owner'}, record['receipt']))
 
     def test_supervisor_exception_preserves_unknown_reservation(self):
         runner = self.runner()
