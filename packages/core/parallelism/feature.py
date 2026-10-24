@@ -65,6 +65,22 @@ def admission_allowed(db, run_id, task):
     return True
 
 
+def check_binding_allowed(db, run_id, task_id, binding):
+    """Validate a gate against current authority inside the budget reservation tx."""
+    if type(binding) is not dict or set(binding) != {'composition_id','check_id','criteria_sha256'}:
+        return False
+    row = db.execute('SELECT state FROM features WHERE run=?',(run_id,)).fetchone()
+    if row is None: return False
+    state = json.loads(row['state']); key = state['current_composition']
+    if binding['composition_id'] != key: return False
+    composition = state['compositions'].get(key)
+    if composition is None or composition['passport_sha256'] != state['passport_sha256']: return False
+    check = next((c for c in state['passport']['acceptance_protocol']['checks']
+                  if c['check_id'] == binding['check_id']),None)
+    return (check is not None and check['criteria_sha256'] == binding['criteria_sha256']
+            and task_id in [check['task_id'], *check.get('repair_task_ids',[])])
+
+
 class FeatureAuthority:
     """One feature per existing root run, with durable immutable compositions."""
     def __init__(self, dispatcher, run_id):
@@ -313,6 +329,26 @@ class FeatureAuthority:
             self._save(db,state)
             return dict(composition,composition_id=key)
 
+    def link_pr(self, repository_id, platform, number, commit, state='unknown', evidence_sha256=None):
+        """Keep historical platform observations; never fetch, publish or approve."""
+        _identifier(repository_id); _integer(number, 'pull request number', 1); _pin(commit, True)
+        if platform not in {'github','gitlab'} or state not in {'unknown','open','closed','merged'}:
+            raise ValueError('Invalid pull request reference')
+        if evidence_sha256 is not None: _pin(evidence_sha256)
+        if state != 'unknown' and evidence_sha256 is None:
+            raise ValueError('Known platform observation requires pinned evidence')
+        item = dict(repository_id=repository_id,platform=platform,number=number,commit=commit,
+                    state=state,evidence_sha256=evidence_sha256)
+        with self.dispatcher._transaction() as db:
+            snapshot = self._load(db)
+            if repository_id not in {r['repository_id'] for r in snapshot['passport']['repositories']}:
+                raise ValueError('Unknown feature repository')
+            history = snapshot.setdefault('pull_requests', [])
+            if item not in history:
+                if len(history) >= 128: raise ValueError('Pull request history bound reached')
+                history.append(item); self._save(db,snapshot)
+            return self.report_from(db,snapshot)
+
     def _composition(self,state,key):
         _pin(key)
         composition=state['compositions'].get(key)
@@ -338,7 +374,7 @@ class FeatureAuthority:
             slot = receipt.get('task_id', check['task_id'])
             if slot not in [check['task_id'], *check.get('repair_task_ids', [])]: raise ValueError('Check slot not frozen')
             self._root_slot(db,slot,composition_id)
-        proof=verifier(dict(check),dict(receipt))
+        proof=_bounded(verifier(_bounded(check),_bounded(receipt)))
         if type(proof) is not dict or proof.get('independent') is not True or proof.get('subject')!=composition_id or proof.get('verdict') not in _VERDICTS or proof.get('criteria_sha256')!=check['criteria_sha256']:
             raise ValueError('Independent frozen-check verdict required')
         _identifier(proof.get('verifier_id')); _pin(proof.get('evidence_sha256'))
@@ -419,7 +455,7 @@ class FeatureAuthority:
             entry=op['steps'][step_id]
             if entry['state']=='completed': return dict(entry)
             step=next(s for s in state['passport']['release_plan']['steps'] if s['step_id']==step_id)
-        proof=verifier(dict(step),dict(receipt))
+        proof=_bounded(verifier(_bounded(step),_bounded(receipt)))
         if type(proof) is not dict or proof.get('independent') is not True or proof.get('subject')!=op['composition_id']:
             raise ValueError('Independent release outcome required')
         _pin(proof.get('evidence_sha256'))
@@ -454,7 +490,7 @@ class FeatureAuthority:
             if op is None or step_id not in op['steps']: raise ValueError('Unknown release intent')
             entry=op['steps'][step_id]
             step=next(s for s in state['passport']['release_plan']['steps'] if s['step_id']==step_id)
-        proof=verifier(dict(step),dict(receipt))
+        proof=_bounded(verifier(_bounded(step),_bounded(receipt)))
         if type(proof) is not dict or proof.get('independent') is not True or proof.get('subject')!=op['composition_id'] or proof.get('stopped') is not True:
             raise ValueError('Independent stopped reconciliation proof required')
         _pin(proof.get('evidence_sha256'))
@@ -477,7 +513,7 @@ class FeatureAuthority:
             state=self._load(db); op=state['releases'].get(operation_id)
             if op is None or op['state'] not in {'observing','accepted'}: raise ValueError('Release not observing')
             self._composition(state,op['composition_id']); plan=state['passport']['release_plan']
-        proof=verifier(dict(plan),dict(receipt))
+        proof=_bounded(verifier(_bounded(plan),_bounded(receipt)))
         if type(proof) is not dict or proof.get('independent') is not True or proof.get('subject')!=op['composition_id'] or proof.get('versions')!=op['versions'] or proof.get('state_sha256')!=op['state_sha256']:
             raise ValueError('Independent observation proof required')
         _pin(proof.get('evidence_sha256'))
@@ -541,6 +577,12 @@ class FeatureAuthority:
         if 'root_outcome_unknown' in blockers: status='unknown'
         if 'root_cancelled' in blockers:
             status='cancel_requested' if any(r['state'] in {'running','unknown','cancel_requested'} for r in rows) else 'cancelled'
+        repo_commits = {}
+        if composition:
+            for service in p['services']:
+                repo_commits.setdefault(service['repository_id'], set()).add(composition['components'][service['service_id']]['commit'])
+        pull_requests = [dict(item,current=item['commit'] in repo_commits.get(item['repository_id'], set()))
+                         for item in state.get('pull_requests', [])]
         return {'feature_id':p['feature_id'],'run_id':self.run_id,'backend':run['backend'],'status':status,
                 'spec_revision':p['spec_revision'],'plan_revision':p['plan_revision'],'passport_sha256':state['passport_sha256'],
                 'passport':p,'composition_id':key,'composition':dict(composition,composition_id=key) if composition else None,'checks':checks,'blockers':blockers,
@@ -549,7 +591,7 @@ class FeatureAuthority:
                 'steps':[dict(s,status=(current[-1]['steps'].get(s['step_id'],{}).get('state','pending') if current else 'pending')) for s in p['release_plan']['steps']],
                 'releases':releases,'revisions':state['revisions'],
                 'usage':{'tokens':sum(r['tokens'] for r in rows),'cost_micros':sum(r['cost'] for r in rows),'reserved_tokens':sum(r['reserve_tokens'] for r in rows),'reserved_cost_micros':sum(r['reserve_cost'] for r in rows),'known':all(r['usage_known'] for r in rows)},
-                'tasks':[self.dispatcher._task_report(r) for r in rows]}
+                'pull_requests':pull_requests,'tasks':[self.dispatcher._task_report(r) for r in rows]}
 
     def report(self):
         with self.dispatcher._transaction() as db:
