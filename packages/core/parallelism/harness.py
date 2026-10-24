@@ -9,6 +9,7 @@ import math
 import os
 from pathlib import Path
 import selectors
+import re
 import signal
 import subprocess
 import threading
@@ -94,14 +95,29 @@ class HeadlessHarness:
         return {'stopped': self._stop(process), 'status': 'cancel_requested'}
 
     @staticmethod
+    def _group_absent(group_id):
+        try:
+            result = subprocess.run(['/bin/ps','-axo','pgid='],stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,timeout=2,check=True,text=True,env={'PATH':'/usr/bin:/bin'})
+            rows = result.stdout.splitlines()
+            return (bool(rows) and len(result.stdout)<=1048576
+                    and all(row.strip().isdigit() for row in rows)
+                    and group_id not in {int(row.strip()) for row in rows})
+        except (OSError,ValueError,subprocess.SubprocessError):
+            return False
+
+    @staticmethod
     def _stop(process):
         try:
             os.killpg(process.pid, signal.SIGKILL)
         except ProcessLookupError:
             pass
+        except PermissionError:
+            if process.poll() is None:
+                return False
         try:
             process.wait(timeout=2)
-            return True
+            return HeadlessHarness._group_absent(process.pid)
         except subprocess.TimeoutExpired:
             return False
 
@@ -115,7 +131,9 @@ class HeadlessHarness:
         packet = json.dumps({'protocol': PROTOCOL, 'task': task, 'nested_delegation': False}, separators=(',', ':')).encode()+b'\n'
         if len(packet) > 65536:
             raise ValueError('Headless input exceeds bound')
-        session = task['session_id']
+        session = task.get('session_id')
+        if not isinstance(session,str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,95}',session):
+            raise ValueError('Headless launch requires an explicit registered session identity')
         with self._lock:
             if session in self._processes:
                 raise ValueError('Session already launched; reconcile before retry')
@@ -148,6 +166,7 @@ class HeadlessHarness:
                 final = _receipt(value)
                 if any(final[key] < observed[key] for key in observed):
                     raise ValueError('Final usage cannot decrease')
+                observed.update({key:final[key] for key in observed})
         total_output = 0
         output = bytearray(); pending = memoryview(packet); start = time.monotonic()
         os.set_blocking(process.stdin.fileno(), False)
@@ -183,13 +202,17 @@ class HeadlessHarness:
                     cancel.set()
             process.wait(timeout=max(0.01, seconds-(time.monotonic()-start)))
             if process.returncode != 0:
-                return uncertain(stopped=True)
+                return uncertain(stopped=self._stop(process))
             try:
                 if output.strip():
                     frame(output)
+                if not self._group_absent(process.pid):
+                    return uncertain(stopped=self._stop(process))
+                if final is not None:
+                    final['stopped'] = True
                 return final if final is not None else uncertain(stopped=True)
             except (ValueError, TypeError, AttributeError):
-                return uncertain(stopped=True)
+                return uncertain(stopped=self._stop(process))
         except (ValueError, TypeError, AttributeError, subprocess.TimeoutExpired):
             return uncertain(stopped=self._stop(process))
         except BaseException:

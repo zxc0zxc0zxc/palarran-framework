@@ -337,7 +337,10 @@ def temporal_doctor(target, *, authorized=False, probe=None, home=None):
     if authorized and probe is None and profile.enabled:
         import asyncio
         sys.path.insert(0,str(ROOT))
-        from packages.core.parallelism.temporal import TemporalBackend
+        try:
+            from packages.core.parallelism.temporal import TemporalBackend
+        except ImportError:
+            return module.doctor(profile,authorized=True)
         probe = lambda selected: asyncio.run(TemporalBackend.probe(selected.connection_mapping()))
     return module.doctor(profile,probe=probe,authorized=authorized)
 
