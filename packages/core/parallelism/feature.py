@@ -895,7 +895,9 @@ class FeatureAuthority:
 
     def report_from(self, db, state):
         run, manifest = self.ledger.read_run(db, self.run_id)
-        rows = self.ledger.read_tasks(db, self.run_id)
+        # Legacy feature SELECTs used the (run, id) primary-key order. The root
+        # dispatcher's rowid admission order is a separate contract.
+        rows = sorted(self.ledger.read_tasks(db, self.run_id), key=lambda row: row['id'])
         passport = state['passport']
         key = state['current_composition']
         composition = state['compositions'].get(key)

@@ -1,6 +1,5 @@
 """Behavior-preserving feature validation and public ledger boundary checks."""
 import copy
-import hashlib
 import inspect
 import json
 from pathlib import Path
@@ -11,7 +10,6 @@ from unittest.mock import patch
 
 from packages.core.parallelism.feature import FeatureAuthority
 from packages.core.parallelism.feature_validation import digest, validate_passport
-from packages.core.parallelism.primitives import canonical
 from test_feature_authority import fixture
 
 
@@ -146,6 +144,11 @@ class FeatureRefactorTests(unittest.TestCase):
         authority.dispatcher = self.dispatcher
         authority.run_id = 'feature-run'
         self.assertEqual(self.feature.report(), authority.report())
+
+    def test_report_keeps_legacy_primary_key_task_order(self):
+        report = self.feature.report()
+        self.assertEqual(sorted(self.tasks), [task['task_id'] for task in report['tasks']])
+        self.assertNotEqual(list(self.tasks), sorted(self.tasks))
 
     def test_feature_consumers_depend_on_public_ledger_only(self):
         source = inspect.getsource(FeatureAuthority)
