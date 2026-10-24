@@ -1,31 +1,32 @@
 <p align="center">
-  <img src="assets/palarran-banner.png" alt="Palarran — agent engineering framework" width="100%" />
+  <img src="assets/palarran-banner.png" alt="Palarran — distributed parallel agent engineering" width="100%" />
 </p>
-<p align="center"><strong>Modular skills. Parallel agents. Durable shared experience.</strong></p>
-<p align="center">
+
+# Just be parallel. Brutal.
+
+<!-- ENGINE ROOM / PALARRAN
+One ship. Many minds. Nobody gets to declare land from the crow's nest alone.
+If you found this in source: welcome aboard, fellow context-window sailor.
+Ship lore only; the acceptance gates still have the last word.
+-->
+
+<p>
   <a href="https://github.com/zxc0zxc0zxc/palarran-framework/actions/workflows/validate.yml"><img src="https://github.com/zxc0zxc0zxc/palarran-framework/actions/workflows/validate.yml/badge.svg?branch=main" alt="Validate Palarran" /></a>
+  <a href="https://docs.temporal.io/"><img src="https://img.shields.io/badge/Temporal-durable_workflows-222222?logo=temporal" alt="Temporal durable workflows" /></a>
+  <a href="https://neo4j.com/docs/"><img src="https://img.shields.io/badge/Neo4j-graph_%2B_full--text-222222?logo=neo4j" alt="Neo4j graph and full-text" /></a>
+  <a href="https://www.sqlite.org/docs.html"><img src="https://img.shields.io/badge/SQLite-authoritative_ledger-222222?logo=sqlite" alt="SQLite authoritative ledger" /></a>
   <a href="packages/README.md"><img src="https://img.shields.io/badge/packages-11-555555" alt="11 packages" /></a>
-  <a href="skills/README.md"><img src="https://img.shields.io/badge/skills-catalog-555555" alt="Skill catalog" /></a>
-  <a href="packages/core/agents/docs/graph-context.md"><img src="https://img.shields.io/badge/Graphify-optional-555555" alt="Graphify optional" /></a>
 </p>
 
-Palarran helps Codex and Claude take an idea through research, design, implementation and independent checks. Agents work in parallel, keep the reasons behind their decisions, and reuse verified findings across projects. Choose the packages your project needs; keep its code and private context in your own repository.
+**Palarran is a distributed parallel agent engineering framework for Codex and Claude.** Coordinate independent work across repositories and developer machines, preserve one task and budget authority, and accept the combined product against explicit contracts.
 
-**Research → specification → authorized implementation → verification → reusable experience.**
+- **Parallel execution:** dependency DAGs, isolated Git worktrees, owned resources and adaptive admission of ready tasks.
+- **Distributed coordination:** optional Temporal workflows, authenticated worker access and a durable repository-scoped message bus.
+- **Shared experience:** project-local decisions and compact handoffs, optional Graphify code navigation, and cross-project Neo4j graph/full-text recall.
+- **Visible control:** read-only execution dashboards, cumulative usage and reservations, explicit blockers and exact verified commits.
+- **Acceptance beyond CI:** API, migration and business checks on the final composition, with repair work routed to its owner.
 
-| Module | What it helps you do |
-| --- | --- |
-| [Core](packages/core/README.md) | Shared agent foundations, runtime, setup and safe package discovery. |
-| [Memory](packages/memory/README.md) | Local notes, session context and optional reviewed cross-project knowledge. |
-| [Product](packages/product/README.md) | Evidence-backed product definition, market and customer planning. |
-| [Design](packages/design/README.md) | Adaptive UX concepts and visual UI design. |
-| [Security](packages/security/README.md) | Readonly security audits with explicit evidence and fresh advisory checks. |
-| [Code](packages/code/README.md) | Specification-driven frontend and backend planning and implementation. |
-| [Machine Learning](packages/machine-learning/README.md) | Bounded experiment design, data, training and independent benchmarks. |
-| [Docs](packages/docs/README.md) | Human-readable documentation and portable review artifacts. |
-| [Science](packages/science/README.md) | Evidence-grounded scientific reporting from existing experiments. |
-| [Validation](packages/validation/README.md) | Independent application acceptance and measured agent evaluation. |
-| [Infrastructure](packages/infrastructure/README.md) | Infrastructure design, delivery, VPS operations and scoped incidents. |
+The bounded Python runtime coordinates approved adapters; agents and their credentials stay on developer machines. Native chat instructions guide behavior, while managed entrypoints control registered task lifecycles. More workers share the same budget rather than creating new limits.
 
 <a id="skills-usage"></a>
 ## Install for your project
@@ -50,11 +51,11 @@ Select English, Russian or Serbian Latin independently for agent interaction, co
 
 ## Self-host on your server
 
-Your VPS can host private cross-project memory and the optional agent message bus. Skills and agents stay on developer machines. Service ports stay private; workstations connect through SSH tunnels. Keenable is an optional external source service, not a dependency of self-hosted memory.
+Your server can host private cross-project memory, the agent message bus and an optional Temporal deployment. Skills and agents stay on developer machines. Service ports stay private; workstations connect through SSH tunnels. Keenable is an optional external source service, not a dependency of self-hosted memory.
 
 Tell your agent:
 
-> Deploy the Palarran services I select to my VPS using SSH alias SERVER. Follow the versioned installation runbooks, inspect existing workloads, prepare the exact configuration and rollback, keep ports private, configure my local connection, and verify it. Do not install agent skills on the server or reveal credentials.
+> Deploy the Palarran services I select to my server using SSH alias SERVER. Follow the versioned installation runbooks, inspect existing workloads, prepare the exact configuration and rollback, keep ports private, configure my local connection, and verify it. Do not install agent skills on the server or reveal credentials.
 
 [Container deployment runbook](packages/infrastructure/hosting/docs/runbook.md) · [Self-hosting](packages/core/setup/docs/self-host.md) · [Service runbooks](packages/core/setup/docs/runbooks/services.md) · [Memory operations](packages/memory/knowledge/docs/operations.md) · [Message bus operations](packages/core/coordination/docs/operations.md).
 
@@ -62,125 +63,100 @@ A runbook defines supported inputs and exact checks. An unsupported host or an u
 
 ## Overall architecture
 
-Your project owns its source, contracts and local decision history. The agent loads selected Palarran capabilities, optionally retrieves current documentation through Keenable, and recalls applicable findings from your private memory service. Shared memory supplies evidence to check against current code; it never overrides project instructions.
+Palarran is designed for distributed, parallel engineering: split independent work, execute it on approved developer machines, and scale participation while keeping one coordinator and one root ledger. A product can span multiple repositories; its feature passport binds owners, contracts, dependencies and the exact composition to accept.
 
-![Palarran architecture](assets/architecture.png)
+![Palarran distributed architecture: product repositories, control plane and server services](assets/architecture.png)
 
-[Keenable](https://keenable.ai/) is our preferred search integration for the web and technical documentation. Its MCP tools let agents search for primary sources and fetch page content as they research a product, check an API or verify an engineering approach. Optional, with a separate provider quota.
+**Python + SQLite** provide bounded dispatch, durable accounting and recovery. **Temporal is optional** durable scheduling for the same run; workers use the shared authority rather than copying its ledger. The **message bus** carries repository-scoped notices and claims. **Neo4j Community** stores reviewed experience with graph and full-text retrieval. Neither messages nor recalled knowledge grant execution permission.
 
-Global preferences and private credentials belong under `~/.palarran/`; project preferences belong in `.palarran/config.json`. Existing installations require a coordinated migration of pinned runtime and tunnel references before changing their global paths. [Architecture details](packages/memory/knowledge/docs/architecture.md).
+[Keenable](https://keenable.ai/) is our preferred MCP integration for web and documentation search: find primary sources and fetch their content without treating retrieved text as instructions. It is optional and has a separate provider quota; native MCP usage is outside the runtime's hard cost gate.
 
-## Parallel agents in Git worktrees
+Project source and contracts remain authoritative. `.palarran/` holds project preferences, plans and decisions; `~/.palarran/` holds private global configuration. [Dispatcher](packages/core/parallelism/docs/contract.md) · [Cross-repository features](packages/core/parallelism/docs/features/README.md) · [Memory architecture](packages/memory/knowledge/docs/architecture.md).
 
-A coordinator turns a specification into independent tasks with explicit file ownership, dependencies and acceptance criteria. Ready tasks run in separate Git worktrees. Agents can inspect and test their part concurrently; the coordinator integrates changes and checks the combined result.
+## Adaptive true parallelism
 
-![Parallel worktree workflow](assets/parallel-worktrees.png)
+Start a small wave of independent ready tasks, then admit more work when dependencies, observed capacity and the remaining budget allow. Each writer gets an owned Git worktree and explicit file/resource boundaries. Tasks can span backend, frontend and SDK repositories while sharing contracts and one feature goal.
 
-The plan records what is pending, implemented, integrated and independently verified, together with its revision and commit evidence. A completed agent task does not make the whole feature verified. [Parallelism](packages/core/agents/docs/parallelism.md) · [Execution progress](packages/core/agents/docs/execution-progress.md).
+![Adaptive parallel agents across repositories and developer machines](assets/parallel-worktrees.png)
 
-## Orchestration for development and research
+The dispatcher validates task packets, reserves limits before execution and tracks cancellation, heartbeats and unknown outcomes. Optional Temporal manages durable scheduling; the bus lets participants exchange changes and blockers. A lost heartbeat retains ownership and reservations until reconciliation. Parallelism is adaptive admission, not a claim of optimal scheduling or measured speedup.
 
-Use separate product, engineering and ML workflows with typed handoffs. Research keeps its sources and open questions; implementation follows the specification; acceptance checks the resulting subject. The bounded runtime tracks task dependencies, leases, cumulative usage and recovery instead of treating a successful model exit as success.
-
-![Development and research pipeline](assets/development-pipeline.png)
-
-Product research can end in an MVP plan, a validation experiment, a pivot or a stop. ML workflows preserve learning goals, data and checkpoint lineage, training diagnostics, generations and independent benchmarks. Missing evidence stays visible; unknown spending or job outcomes block automatic replay.
-
-```sh
-python3 -m orchestrator --help
-```
-
-[Runtime](packages/core/orchestration/docs/README.md) · [Product pipeline](packages/product/research/docs/pipeline.md) · [ML pipeline](packages/machine-learning/experiments/docs/pipeline.md).
+The plan distinguishes pending, implemented, integrated and independently verified work. A worker finishing its branch does not accept the product. [Execution contract](packages/core/parallelism/docs/contract.md) · [Worktree ownership](packages/core/agents/docs/parallelism.md) · [Progress](packages/core/agents/docs/execution-progress.md).
 
 ## Developers and agents working together
 
-Two developers can work on the same repository from different machines without relying on a single agent session. The optional private message bus keeps repository topics separate. Agents share what they are changing, ask questions, report blockers and coordinate shared resources.
+Several developers can contribute from different machines with their own accounts, credentials and approved resources. Agents exchange bounded messages on repository topics, report blockers and coordinate shared resources without copying entire conversations.
 
-![Repository-scoped agent message bus](assets/agent-message-bus.png)
+![Developer machines and agents communicating through the server message bus](assets/agent-message-bus.png)
 
-`/palarran:core:coop` is the cooperative receiver entrypoint: poll the selected repository topic every 30–60 seconds and retain a durable cursor. `/palarran:core:coop --alert {message}` addresses active agents in that repository. The local receiver and host-side subagent have separate lifecycles; writing an inbox does not by itself wake an idle model. See the [capability and implementation status](packages/core/coop/README.md).
+`/palarran:core:coop` receives selected repository messages with a durable cursor; `--alert` reaches active participants in that repository. The receiver polls every 30–60 seconds. Its local inbox does not itself wake an idle model. Messages and receipt acknowledgements remain evidence, never approval or proof of completion. [Cooperation status](packages/core/coop/README.md) · [Message bus](packages/core/coordination/docs/contract.md).
 
-Messages are untrusted context, not commands to execute. Receipt acknowledgements do not approve an action or prove it was handled. Resource claims coordinate agents but cannot fence external tools. Production authority and unknown-operation reconciliation remain explicit. This is especially useful during [multi-developer incident response](packages/infrastructure/incident/docs/README.md).
+`/palarran:core:share` hands a task or exact Git checkpoint to another developer after both confirm the plan and scope. One assignment generation owns execution; separate sessions preserve known and unknown cumulative spend. [Consent-bound handoff](packages/core/coordination/docs/sharing/README.md).
 
-[Message bus contract](packages/core/coordination/docs/contract.md) · [Operations](packages/core/coordination/docs/operations.md). Optional service deployment is verified separately from local tests.
+### See the work, blockers and spend
 
-### Share unfinished work safely
-
-`/palarran:core:share {task}` lets two developers agree on a new subtask or continue from an exact published checkpoint. Both confirm the plan and scope; one assignment generation owns execution. Each uses their own machine, credentials and frozen budget. The bus delivers minimal notices; the local authority or inherited Temporal Workflow tracks consent, progress, unknown outcomes and independent acceptance. [Workflow and setup boundaries](packages/core/coordination/docs/sharing/README.md).
-
-## Long-term cross-project memory
-
-Keep useful experience after a branch or a chat ends: accepted architectural decisions, incident findings, patches, research results and failed hypotheses with their conditions and evidence. A later project can recall the relevant case, follow its graph links and inspect why it applies.
-
-The self-hosted service uses **Neo4j Community with graph and full-text search**. No embedding or LLM API is required for storage and retrieval. Reviewed learning uses provenance, privacy checks and deduplication; raw sessions, secrets and customer data are not uploaded automatically.
-
-Use `/palarran:memorize short|long`, `/palarran:remember`, session handoffs and reviewed `/palarran:memory:learn` / `recall`. The [Memory package](packages/memory/README.md) explains local versus VPS context and retention. Selecting the package does not deploy its server.
-
-## Spend less context on finding the right code
-
-Optional [Graphify](https://github.com/Graphify-Labs/graphify), by Graphify Labs, helps agents locate relevant code relationships without loading the entire repository. Palarran checks freshness, queries a bounded part of the graph, then reads the original files, module instructions and decisions. Missing or stale graphs fall back to scoped search.
-
-Short-term notes, compact task packets and durable handoffs reduce repeated context. Runtime budgets track tokens and estimated model cost by stage, with cumulative spending across failures and restarts. Planning and simple execution can use different model roles within the approved budget.
-
-These controls do not establish a universal token-saving percentage. Provider estimates, reported usage and invoices remain separate; native Keenable MCP usage is not yet wired into the runtime's hard cost gate. [Graph contract](packages/core/agents/docs/graph-context.md) · [Model budgets](packages/core/orchestration/docs/model-budgets.md).
-
-<a id="layout"></a>
-## A modular repository
-
-Each capability owns the resources needed to use and maintain it:
-
-```text
-packages/
-  core/
-    agents/          skills, contracts and tool profiles
-    parallelism/     execution progress
-    orchestration/   durable runtime
-    coordination/    private message service
-    coop/            repository-scoped cooperative receiver
-    setup/           installation and update runbooks
-  memory/
-    memorize/        quick and long-lived context workflows
-    remember/        recall and graph navigation
-    sessions/        structured handoffs
-    knowledge/       graph service and reviewed findings
-  <package>/
-    <capability>/
-      skills/  docs/  runtime/  scripts/  templates/  commands/  plugins/
-```
-
-Directories exist when the capability has real resources. The [eleven-package catalog](packages/catalog.json) declares ownership and dependencies. Root `docs/` and `skills/` are navigation indexes; root CLI and import entrypoints preserve compatibility. Implementation and guides live inside their owning capabilities; `scripts/palarran_paths.py` is the deliberate root bootstrap exception. [Package map](packages/README.md) · [Source-path migration](packages/core/packages/docs/layout.md).
-
-## Skills for the development lifecycle
-
-Start with a specific task or move between compatible stages. Skills cover product definition, market and customer research, adaptive UX/UI, frontend/backend planning and implementation, infrastructure and CI/CD, ML experiments and diagnostics, independent acceptance, agent evaluation, scientific reports and review artifacts.
-
-| Work | Commands |
-| --- | --- |
-| Product | `/palarran:product:define`, `market`, `compare`, `revenue`, `acquisition`, `b2b`, `b2c` |
-| Design | `/palarran:ux:design`, `/palarran:ui:design` |
-| Security | `/palarran:security:infrastructure`, `ingress`, `log`, `egress`, `code`, `cve` |
-| Code | `/palarran:frontend:plan`, `frontend:build`, `backend:plan`, `backend:build`, `git:commit`, `git:history`, `git:conflicts`, `git:mr` |
-| Infrastructure | `/palarran:infra:plan low|med|high`, `/palarran:ci-cd github|gitlab`, `/palarran:infrastructure:incident` |
-| ML | `/palarran:ml:plan`, `hypotheses`, `model`, `data`, `cost`, `train`, `benchmark` |
-| Acceptance | `/palarran:app:verify`, `/palarran:agent:eval`, `/palarran:agent:improve` |
-| Reports | `/palarran:science:preprint`, `/palarran:docs:artifact` |
-| Cooperation | `/palarran:core:coop`, `/palarran:core:coop --alert {message}` |
-
-See [all native names and arguments](skills/README.md). Codex uses names such as `$palarran-backend-plan`; unified Claude commands require the portable plugin. Standalone discovery and namespaced plugin commands are different interfaces.
-
-Build a self-contained plugin from reviewed public resources:
+The read-only execution panel shows assignments, dependency blockers, exact independently verified subjects, reported usage, outstanding reservations and where review is needed. A small Python server renders the dashboard; a compact Markdown report fits Codex or Claude conversations. Multiple machines read the same authority, not copied databases.
 
 ```sh
-python3 scripts/package_plugin.py palarran --output /NEW/palarran-plugin
-claude --plugin-dir /NEW/palarran-plugin
+# Disposable fixture; no models or remote services.
+python3 -m packages.core.parallelism.dashboard demo
 ```
 
-Individual plugin selectors follow package IDs, such as `palarran-code` or `palarran-machine-learning`. Packages exclude private journals, runtime state and credentials.
+Open the printed loopback address. Real runs use an existing private ledger or authenticated authority connection. Stale and unknown states stay visible. Native custom UI embedding is not assumed. [Dashboard and protected access](packages/core/parallelism/docs/dashboard.md).
+
+## Memory across tasks, sessions and projects
+
+Keep fast context small, retain the reasons behind decisions, and recall verified experience where it applies.
+
+| Layer | Technology and purpose |
+| --- | --- |
+| Working context | Bounded task packets, module `AGENTS.md`, relevant contracts and source files. |
+| Project memory | Private `.palarran/` notes, plans, accepted ADRs, progress and evidence references. |
+| Code navigation | Optional local **Graphify** graph: check freshness, query a bounded subset, then read original source. |
+| Session handoff | Validated compact JSON files for another agent or developer; optional long-term storage. |
+| Cross-project memory | **Neo4j Community graph + full-text** recall of reviewed ADRs, incidents, patches and R&D findings. |
+
+Compaction preserves constraints, decisions, pending work and evidence instead of replaying a full session. Session files support portable handoff; they do not transfer credentials or execution authority. Long-term publication includes provenance, privacy review and deduplication. Raw sessions, customer data and secrets are not uploaded automatically. Storage and recall require no embedding or LLM API.
+
+[Memory package](packages/memory/README.md) · [Session handoffs](packages/memory/sessions/README.md) · [Graphify by Graphify Labs](https://github.com/Graphify-Labs/graphify) · [Bounded graph context](packages/core/agents/docs/graph-context.md).
+
+Model roles and per-stage budgets reduce repeated expensive work. Tokens, estimated cost, reported provider usage and invoices stay distinct; failures and restarts retain cumulative spend. No universal token-saving percentage is claimed. [Model budgets](packages/core/orchestration/docs/model-budgets.md).
+
+<a id="layout"></a>
+## Accept the product, not just the branches
+
+A green service CI run cannot prove that its consumer expects the same API or that a migration works during rollout. Palarran binds independent acceptance to exact commits, contracts, configuration and test evidence for the combined feature.
+
+The integration queue applies verified changes in an owned branch, reruns affected API, migration and business gates, and returns concrete mismatches to the responsible owner. Final acceptance checks the complete composition. A changed component invalidates readiness; unknown or missing checks remain visible.
+
+Cross-repository features also define intermediate old/new service combinations, migration order, flags, stop thresholds and recovery. Project-specific independent verifiers check business invariants; matching schemas alone do not prove correct behavior. Release readiness, authorized deployment and observed acceptance remain separate states.
+
+[Integration queue](packages/core/parallelism/docs/integration.md) · [Feature passport and workflow](packages/core/parallelism/docs/features/workflow.md) · [Acceptance and release](packages/core/parallelism/docs/features/acceptance.md) · [Independent application verification](packages/validation/application/docs/README.md).
+
+## Skills ready for parallelism
+
+Select the modules you need. Their workflows use shared ownership, decision memory and verification contracts; planning stages remain planning, and useful independent implementation can be dispatched to agents.
+
+| Module | Engineering responsibility |
+| --- | --- |
+| [Core](packages/core/README.md) | Dispatch, orchestration, coordination, setup and package contracts. |
+| [Memory](packages/memory/README.md) | Context tiers, compact sessions and reviewed cross-project knowledge. |
+| [Product](packages/product/README.md) | Evidence-backed hypotheses, markets, economics and customer plans. |
+| [Design](packages/design/README.md) | Responsive UX flows and reusable UI concepts. |
+| [Code](packages/code/README.md) | Specification-driven frontend/backend work and Git delivery. |
+| [Machine Learning](packages/machine-learning/README.md) | Bounded experiments, data, training diagnostics and benchmarks. |
+| [Docs](packages/docs/README.md) | Navigable technical documentation and interactive review artifacts. |
+| [Science](packages/science/README.md) | Evidence-grounded research reports from existing experiments. |
+| [Validation](packages/validation/README.md) | Independent acceptance, agent evals and regression-driven improvements. |
+| [Infrastructure](packages/infrastructure/README.md) | Infrastructure planning, delivery, VPS operations and incidents. |
+| [Security](packages/security/README.md) | Evidence-backed infrastructure, code, ingress/egress, logging and CVE audits. |
+
+[Using skills and pipelines](packages/core/agents/docs/usage-and-pipelines.md) · [Complete command catalog](skills/README.md) · [Package structure and extension](packages/README.md).
 
 <a id="agent-entry"></a>
-## Agent entry and verification
+## For agents
 
-Read [AGENTS.md](AGENTS.md), the target `.palarran/INDEX.md`, relevant accepted decisions and the affected package instructions. Use the applicable [domain contract](packages/core/agents/docs/domain-contracts.md) and mandatory guides. Planning does not authorize application execution, paid calls, deployment or publication.
+Read [AGENTS.md](AGENTS.md), the target `.palarran/INDEX.md`, relevant accepted decisions and the affected package instructions. Use the applicable [domain contract](packages/core/agents/docs/domain-contracts.md) and mandatory guides. Evaluate independent ready work at task boundaries, preserve the active run and budget, and keep integration under one coordinator.
 
 ```sh
 python3 scripts/validate_repo.py
@@ -188,23 +164,6 @@ python3 -m unittest discover -s tests -v
 python3 scripts/factory_acceptance.py
 ```
 
-Tests do not launch paid models or GPUs. Fixture success is distinct from model quality, production readiness, operational SLA and market validation. [Contributing](CONTRIBUTING.md) · [Documentation index](docs/README.md) · [Editable diagram sources](assets/README.md).
+Tests do not launch paid models or GPUs. Local fixtures do not establish production readiness, live multi-machine acceptance, operational SLA or market validation. [Contributing](CONTRIBUTING.md) · [Documentation index](docs/README.md) · [Editable diagrams and attribution](assets/README.md).
 
-A license has not been selected. Preparing the repository for an open-source release does not change its visibility or grant a license.
-
-### Automatic parallel execution
-
-Ordinary engineering requests and skills share a [bounded dispatcher](packages/core/parallelism/docs/contract.md): independent task ownership, durable root budgets, explicit cancellation/unknown outcomes and independent acceptance. Optional Temporal coordinates approved developer-machine workers. Native chat behavior is instruction-based; managed entrypoints expose their actual control level. Configuration alone starts neither models nor server deployments.
-
-### Integration queue and execution panel
-
-The [integration queue](packages/core/parallelism/docs/integration.md) combines verified feature commits in an owned branch, reruns declared API/migration/business gates and accepts only the final combined subject. Failed checks create bounded owner repair packets. Its root budget reserves and final acceptance stay shared; PR readiness never publishes a pull request.
-
-The [live execution panel](packages/core/parallelism/docs/dashboard.md) uses a small Python server: assignments across approved workers, blockers, verified subjects, reported usage and reservations, plus integration readiness. It has read-only access and explicit stale/unknown states. A compact Markdown report fits Codex/Claude conversations; native custom UI embedding is not assumed.
-
-```sh
-# Disposable demo data; no models, credentials or remote calls.
-python3 -m packages.core.parallelism.dashboard demo
-```
-
-Open the printed loopback address. For real runs, use an existing private `--state` ledger or the scoped `--authority` connection, with optional `--integration-state`; see the guide for protected remote access.
+A license has not been selected. Preparing an open-source release does not change repository visibility or grant a license.

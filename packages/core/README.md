@@ -7,7 +7,7 @@ Shared agent foundations, runtime, setup and safe package discovery.
 ## Capabilities
 
 - **agents** (implemented): Agent tooling and MCP construction. [docs](agents/docs/README.md) · [skills](agents/skills/) · [runtime](agents/runtime/) · [scripts](agents/scripts/) · [templates](agents/templates/) · [commands](agents/commands/) · [plugins](agents/plugins/)
-- **parallelism** (implemented): Bounded task ownership and independent worker coordination. [scripts](parallelism/scripts/)
+- **parallelism** (implemented): Bounded task ownership, independent worker coordination and [cross-repository feature delivery](parallelism/docs/features/README.md). [scripts](parallelism/scripts/)
 - **security** (implemented): Permission, privacy and unknown-outcome boundaries. [docs](security/docs/README.md) · [runtime](security/runtime/) 
 - **orchestration** (implemented): Durable bounded engineering execution. [docs](orchestration/docs/README.md) · [runtime](orchestration/runtime/) · [scripts](orchestration/scripts/) · [examples](orchestration/examples/)
 - **pipelines** (implemented): Shared workflow admission and domain pipeline routing. [docs](pipelines/docs/README.md) · [runtime](pipelines/runtime/) 

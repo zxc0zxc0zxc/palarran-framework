@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import sqlite3
 import threading
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
@@ -53,7 +54,7 @@ def _object(raw):
     return value
 
 
-def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port=0):
+def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port=0, feature_verifiers=None):
     """principals maps sha256(token) to explicit run/task scopes and control bit."""
     if not ipaddress.ip_address(host).is_loopback:
         raise ValueError('Authority must bind loopback')
@@ -82,7 +83,7 @@ def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port
                 if not 0 < length <= _LIMIT:
                     raise ValueError('Invalid size')
                 value = _object(self.rfile.read(length))
-                if set(value) - {'operation', 'run_id', 'task_id', 'attempt_id', 'receipt', 'usage'}:
+                if set(value) - {'operation', 'run_id', 'task_id', 'attempt_id', 'receipt', 'usage', 'feature_data'}:
                     raise ValueError('Unknown fields')
                 operation, run = value['operation'], value['run_id']
                 if run not in principal.get('runs', []):
@@ -92,6 +93,40 @@ def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port
                     return self.reply(403, {'error': 'scope'})
                 if operation == 'get':
                     result = dispatcher.get_run(run)
+                elif operation == 'feature_get':
+                    from .feature import FeatureAuthority
+                    feature = FeatureAuthority.__new__(FeatureAuthority)
+                    feature.dispatcher, feature.run_id = dispatcher, run
+                    result = feature.report()
+                elif operation == 'feature_event' and principal.get('control') is True:
+                    from .feature import FeatureAuthority
+                    feature = FeatureAuthority(dispatcher, run)
+                    payload = value.get('feature_data')
+                    if type(payload) is not dict or set(payload) != {'method', 'arguments', 'passport_sha256'}:
+                        raise ValueError('Invalid feature operation')
+                    # An operator cannot act on a stale passport. Methods recheck
+                    # exact composition pins inside their durable transitions.
+                    if feature.report()['passport_sha256'] != payload['passport_sha256']:
+                        raise ValueError('Feature revision drift')
+                    method, arguments = payload['method'], payload['arguments']
+                    if method not in {'update_passport','compose','record_check','begin_release','begin_step','finish_step','reconcile_step','observe','link_pr'} or type(arguments) is not dict:
+                        raise ValueError('Unsupported feature operation')
+                    arguments = dict(arguments)
+                    actors = principal.get('feature_owners', [])
+                    if type(actors) is not list or not actors:
+                        return self.reply(403, {'error':'feature_owner_scope'})
+                    if method == 'update_passport' and not set(arguments.get('approvals', [])) <= set(actors):
+                        return self.reply(403, {'error':'feature_owner_scope'})
+                    if method in {'begin_release','begin_step'} and arguments.get('authorization', {}).get('actor') not in actors:
+                        return self.reply(403, {'error':'feature_owner_scope'})
+                    if method in {'compose','update_passport','link_pr'} and feature.report()['passport']['coordinator'] not in actors:
+                        return self.reply(403, {'error':'feature_owner_scope'})
+                    if method in {'record_check','finish_step','reconcile_step','observe','link_pr'}:
+                        trusted = (feature_verifiers or {}).get(method)
+                        if not callable(trusted): raise ValueError('Trusted feature verifier unavailable')
+                        if 'verifier' in arguments: raise ValueError('Caller verifier forbidden')
+                        arguments['verifier'] = trusted
+                    result = getattr(feature, method)(**arguments)
                 elif operation == 'tick':
                     result = dispatcher.tick(run)
                     allowed = set(principal.get('tasks', []))
@@ -110,7 +145,7 @@ def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port
                 else:
                     return self.reply(403, {'error': 'operation'})
                 self.reply(200, result)
-            except (ValueError, TypeError, KeyError, OSError, OverflowError):
+            except (ValueError, TypeError, KeyError, OSError, OverflowError, sqlite3.Error):
                 self.reply(400, {'error': 'invalid_request'})
     server = ThreadingHTTPServer((host, port), Handler)
     server.daemon_threads = True
@@ -146,6 +181,13 @@ class RemoteDispatcher:
 
     def get_run(self, run_id):
         return self._call('get', run_id)
+
+    def get_feature(self, run_id):
+        return self._call('feature_get', run_id)
+
+    def feature_event(self, run_id, method, arguments, *, passport_sha256):
+        return self._call('feature_event', run_id, feature_data={
+            'method': method, 'arguments': arguments, 'passport_sha256': passport_sha256})
 
     def tick(self, run_id):
         return self._call('tick', run_id)

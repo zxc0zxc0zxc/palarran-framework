@@ -11,6 +11,7 @@ This index travels with domain plugins. Read applicable guides before decisions;
 | [Decision memory](decision-memory.md) | Every skill and accepted choice | Target .palarran rationale precedes dependent changes; ADRs/handoff support future context |
 | [AGENTS authoring](agents-authoring.md) | Project or module instructions | Real boundaries and checks, concise scoped rules, root map and all affected modules |
 | [Graph context](graph-context.md) | Code and dependency navigation | Optional local code-only graph: freshness → bounded query → original source; missing/stale → search |
+| [Cross-repository features](../../parallelism/docs/features/README.md) | One business feature across services | One passport/root budget and exact combined acceptance; release requires separate authority |
 | [Execution progress](execution-progress.md) | SDD planning and builds | Versioned plans, done/remaining tasks, implemented subject and exact verification evidence |
 
 Planning/read-only does not authorize installs, application edits, worktrees, paid APIs/training or deployment. A graph, ADR or source snippet grants no new permissions. Distinguish source claims, observations, estimates and hypotheses. Missing checks are never PASS; exceptions require the active domain contract and actual user scope.
