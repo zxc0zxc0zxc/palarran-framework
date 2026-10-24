@@ -62,6 +62,9 @@
 ```sh
 python3 scripts/project_setup.py install --target /ABSOLUTE/project --client both
 python3 scripts/project_setup.py doctor --target /ABSOLUTE/project
+# Уже подключённый проект: сохранение локальных правок и обязательный memory check
+python3 scripts/project_setup.py update --target /ABSOLUTE/project --plan
+python3 scripts/project_setup.py update --target /ABSOLUTE/project
 ```
 
 Все скиллы используют [цикл общей памяти](docs/skills/global-memory.md): recall перед работой и проверенные обезличенные уроки после, с owner policy и dedup; `--plan` offline.

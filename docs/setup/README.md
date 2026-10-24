@@ -39,3 +39,31 @@ macOS LaunchAgent `io.zxc0zxc0zxc.memory-tunnel` запускается при �
 ## Автоматическое использование опыта
 
 Все новые skill bundles содержат mandatory global-memory guide и scripts/memory_cycle.py. После отдельного owner authorization `python3 scripts/memory_cycle.py enable` включает bounded recall и verified publication для всех проектов владельца; сам project install этого не делает. При выключенной/отсутствующей policy — local draft/deferred. [Контракт цикла](../skills/global-memory.md). Existing pinned project bundles не обновляются молча: для них нужен reviewed upgrade; глобальный MCP уже работает с этим существующим API и не требует расширения прав или нового server deploy.
+
+## Безопасное обновление
+
+Проверены2026-10-24: [Git merge](https://git-scm.com/docs/git-merge) — three-way/pre-merge concepts; [Python os.replace](https://docs.python.org/3/library/os.html#os.replace) — atomic rename одного объекта. Наш multi-file update не ACID transaction: private intent, backups и guarded recovery нужны отдельно. Installer не вызывает git merge/hooks/merge drivers и не меняет Git index проекта.
+
+Из нового доверенного checkout с committed HEAD:
+
+```sh
+python3 scripts/project_setup.py update --target /ABSOLUTE/project --plan
+python3 scripts/project_setup.py update --target /ABSOLUTE/project
+```
+
+Client наследуется из installation receipt; update не добавляет второй client и не меняет credentials/user MCP/SSH/owner policy. AGENTS.md, CLAUDE.md, .mcp.json, .env и app code остаются byte-for-byte. Custom USAGE сохраняется; актуальный pin — installation.json. Неизменённая USAGE получает новую revision. Внутри library сравниваются old upstream hashes, local и new upstream: independent local edit/delete сохраняется, одинаковое local/new принимается, пересечение изменений или new-path collision => CONFLICT до записи. Unowned файлы сохраняются, symlink/special files внутри bundle не переносятся автоматически. Удалённый upstream skill с local edits требует review. --plan без записи/network; повтор того же update не заменяет файлы, но повторяет readonly health check.
+
+Остановить активных агентов/клиентов на время смены каталога. Сначала полный preflight, затем private backup/intent, target ADR, swap library, owned discovery links и receipt. User-owned links не заменяются. Backup в .ai-tools/backups/ ignored/private; содержит исходный bundle с локальными данными, не публиковать. Pristine public release в .ai-tools/releases/ используется для doctor: carried scripts/проектные hooks не исполняются. Custom working bundle не становится public source для export/install. Global wire PASS не доказывает работоспособность изменённого project MCP launcher или client UI: customized integration явно NOT_VERIFIED.
+
+После update обязательны initialize/list/search глобальной памяти с --global из target CWD. Health NOT_READY даёт UPDATED_MEMORY_NOT_READY и exit2; обновление файлов при этом завершено. Не повторять apply ради сети: повторить doctor. Application execution/paid calls отсутствуют.
+
+При обычной I/O ошибке попытка rollback только по совпадающим expected hashes/links. Crash/изменение файлов другим процессом => RECOVERY_REQUIRED, новый update блокируется. Guarded explicit recovery:
+
+```sh
+python3 scripts/project_setup.py rollback --target /ABSOLUTE/project --plan
+python3 scripts/project_setup.py rollback --target /ABSOLUTE/project
+# Для завершённой версии указать backup из update receipt:
+python3 scripts/project_setup.py rollback --target /ABSOLUTE/project --backup .ai-tools/backups/update-TRANSACTION_ID
+```
+
+Rollback отказывается перезаписывать новые пользовательские изменения; сохранить backup и разобрать diff. Нет force/reset/clean и автоматического replay. Cache/backups/attempt ADR сохраняются для review; старые глобальные runtime/tunnel этим не обновляются.

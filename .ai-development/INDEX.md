@@ -112,3 +112,5 @@
 | setup/2026-10-24-global-onboarding/0001 | accepted | Explicit global Codex MCP + login SSH tunnel and repeatable project onboarding | [record](setup/2026-10-24-global-onboarding/decisions/0001-user-scoped-setup.md), [handoff](setup/2026-10-24-global-onboarding/handoff.md) |
 
 | memory/2026-10-24-automatic-cycle/0001 | accepted | Automatic bounded recall and verified sanitized global learning with owner policy, dedup and unknown-write reconciliation | [record](memory/2026-10-24-automatic-cycle/decisions/0001-verified-cycle.md), [handoff](memory/2026-10-24-automatic-cycle/handoff.md) |
+
+| setup/2026-10-24-safe-update/0001 | accepted | Three-way owned skill updates, guarded rollback, preserved project settings and trusted global memory check | [record](setup/2026-10-24-safe-update/decisions/0001-three-way-update.md), [handoff](setup/2026-10-24-safe-update/handoff.md) |

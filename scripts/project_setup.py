@@ -13,6 +13,9 @@ import tarfile
 import tempfile
 from datetime import datetime
 
+# Invoking an installed updater must not modify its own managed bundle.
+sys.dont_write_bytecode=True
+
 ROOT=Path(__file__).resolve().parents[1]
 PUBLIC={'docs','skills','templates','scripts','mcp','memory','orchestrator','examples','plugins','.claude','.claude-plugin'}
 ROOT_FILES={'README.md','AGENTS.md','.gitignore','LICENSE'}
@@ -47,6 +50,7 @@ def library(source):
     marker=source/'.ai-tools-library.json'
     if marker.exists():
         manifest=json.loads(safe(marker).read_text())
+        require(not manifest.get('customized',False))
         require(manifest['version']==1 and re.fullmatch('[0-9a-f]{40,64}',manifest['revision']) is not None)
         require(type(manifest['files']) is dict and all(public(name) or name=='.ai-development/INDEX.md' for name in manifest['files']))
         files={name:safe(source/name).read_bytes() for name in manifest['files']}
@@ -221,7 +225,20 @@ Installation receipt only. Memory/host UI quality is not proven by filesystem pl
 def doctor(source,target,timeout=20):
     target=safe(target);require(target.is_dir())
     source=safe(source)
-    if (source/'.ai-tools-library.json').exists():library(source)
+    cached=False
+    if (source/'.ai-tools-library.json').exists():
+        marker=json.loads(safe(source/'.ai-tools-library.json').read_text())
+        if marker.get('update_version')==2:
+            require(re.fullmatch('[0-9a-f]{40,64}',marker['revision']) is not None)
+            source=safe(source.parent/'releases'/marker['revision']);cached=True
+        revision,files=library(source)
+        if cached or (source.parent.name=='releases' and source.parent.parent.name=='.ai-tools'):
+            actual=set();count=0
+            for path in source.rglob('*'):
+                count+=1;require(count<=20000 and not path.is_symlink())
+                if path.is_file():actual.add(str(path.relative_to(source)))
+                else:require(path.is_dir())
+            require(actual==set(files)|{'.ai-tools-library.json'})
     messages=[dict(jsonrpc='2.0',id=1,method='initialize',params=dict(protocolVersion='2025-11-25',capabilities={},clientInfo=dict(name='ai-tools-doctor',version='1'))),dict(jsonrpc='2.0',method='notifications/initialized'),dict(jsonrpc='2.0',id=2,method='tools/list'),dict(jsonrpc='2.0',id=3,method='tools/call',params=dict(name='knowledge.search',arguments=dict(project='setup-connectivity',query='engineering',limit=3)))]
     # Fixed trusted helper, bounded stdio and timeout. No model, DB mutation or transcript persistence.
     with tempfile.TemporaryFile() as output:
@@ -241,19 +258,23 @@ def doctor(source,target,timeout=20):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation',choices=('export','install','doctor'))
+    parser.add_argument('operation',choices=('export','install','update','rollback','doctor'))
     parser.add_argument('--source',type=Path,default=ROOT)
     parser.add_argument('--target',type=Path,required=True)
-    parser.add_argument('--client',choices=('codex','claude','both'),default='both')
+    parser.add_argument('--client',choices=('codex','claude','both'))
+    parser.add_argument('--backup',help='Owned update backup path for guarded rollback')
     parser.add_argument('--plan',action='store_true')
     args=parser.parse_args()
     try:
-        if args.operation=='install':result=install(args.source,args.target,args.client,args.plan)
+        if args.operation=='install':result=install(args.source,args.target,args.client or 'both',args.plan)
+        elif args.operation in ('update','rollback'):
+            from project_update import update,rollback
+            result=update(args.source,args.target,args.client,args.plan) if args.operation=='update' else rollback(args.target,args.backup,args.plan)
         elif args.plan:result=dict(status='PLANNED',writes=0,network=False,model_calls=0)
         elif args.operation=='export':result=dict(status='EXPORTED',path=str(export(args.source,args.target)))
         else:result=doctor(args.source,args.target)
-        print(encoded(result).decode(),end='');return 0
-    except (ValueError,KeyError,OSError,subprocess.SubprocessError,tarfile.TarError):
+        print(encoded(result).decode(),end='');return 2 if result.get('status') in ('CONFLICT','RECOVERY_REQUIRED','ROLLED_BACK','UPDATED_MEMORY_NOT_READY','UNCHANGED_MEMORY_NOT_READY') or result.get('journal')=='WRITE_FAILED' else 0
+    except (ValueError,KeyError,TypeError,AttributeError,OSError,subprocess.SubprocessError,tarfile.TarError):
         print('Setup incomplete: inspect scope/conflicts or memory connectivity; existing work preserved. No model calls.',file=sys.stderr);return 2
 
 
