@@ -6,6 +6,7 @@
 
 | Задача | Читать |
 | --- | --- |
+| Подключить/обновить скиллы | [Skills setup](setup/skill.md), [ownership/update contract](setup/README.md) |
 | Новый агент/изменение библиотеки | [Shared contracts index](skills/README.md), module AGENTS из root map |
 | Понять решения/сохранить rationale | [Decision memory](skills/decision-memory.md), [accepted ADR index](../.ai-development/INDEX.md) |
 | Создать/изменить AGENTS.md | [Authoring guide](skills/agents-authoring.md) |

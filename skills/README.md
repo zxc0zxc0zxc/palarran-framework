@@ -2,10 +2,11 @@
 
 Полный checkout: [root README](../README.md) · [документация](../docs/README.md) · [AGENTS](../AGENTS.md) · [общие contracts](../docs/skills/README.md).
 
-**34 уникальных скиллов.** Slash-команды — project/plugin adapters; переносимый вызов в Codex использует `$skill-name`. Точный workflow, defaults/flags и mandatory docs определяет linked SKILL.md. Этот каталог не запускает действия и не заменяет профильные инструкции.
+**35 уникальных скиллов.** Slash-команды — project/plugin adapters; переносимый вызов в Codex использует `$skill-name`. Точный workflow, defaults/flags и mandatory docs определяет linked SKILL.md. Этот каталог не запускает действия и не заменяет профильные инструкции.
 
 | Slash-команда | Переносимый skill / SKILL.md | Назначение |
 | --- | --- | --- |
+| `/skills:setup` | [`$skills-setup`](skills-setup/SKILL.md) | Автовыбор install/update, сохранение правок, global memory и usage |
 | `/infra-plan:low` | [`$infra-plan-low`](infra-plan-low/SKILL.md) | Небольшой VPS, Compose и read-only inventory; --plan offline |
 | `/infra-plan:med` | [`$infra-plan-med`](infra-plan-med/SKILL.md) | VDS/K3s/GitOps; --plan offline |
 | `/infra-plan:high` | [`$infra-plan-high`](infra-plan-high/SKILL.md) | HA Kubernetes/DR; --plan offline |

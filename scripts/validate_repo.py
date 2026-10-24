@@ -7,6 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = {
+    "skills-setup": ("skills", "setup"),
     "memory-recall": ("memory", "recall"), "memory-learn": ("memory", "learn"),
     "vps-inspect": ("vps", "inspect"), "vps-manage": ("vps", "manage"),
     "mcp-build": ("mcp", "build"),
@@ -95,7 +96,9 @@ def validate(root=ROOT):
             errors.append(f"{name}: missing automatic global-memory cycle")
         if "../../docs/skills/decision-memory.md" not in body:
             errors.append(f"{name}: missing shared decision-memory contract")
-        if namespace in {"memory", "vps"}:
+        if namespace == "skills":
+            base, guides = "setup", ["README.md", "skill.md"]
+        elif namespace in {"memory", "vps"}:
             base, guides = "memory", ["README.md", "sources.md", "architecture.md", "contract.md", "operations.md", "workflow.md"]
         elif namespace == "mcp":
             base, guides = "mcp/build", ["README.md", "sources.md", "tool-design.md", "context-efficiency.md", "protocol-security.md", "evaluation.md", "workflow.md"]
@@ -151,7 +154,7 @@ def validate(root=ROOT):
         profile = (root / "docs/infra/plan" / f"{level}.md").read_text()
         if profile.count("```mermaid") < 2:
             errors.append(f"Profile {level} needs data and delivery diagrams")
-    for namespace, relative in [("memory", "plugins/memory/plugin.json"), ("vps", "plugins/vps/plugin.json"), ("mcp", "plugins/mcp/plugin.json"), ("app", "plugins/app/plugin.json"), ("science", "plugins/science/plugin.json"), ("agent", "plugins/agent/plugin.json"), ("ml", "plugins/ml/plugin.json"), ("product", "plugins/product/plugin.json"), ("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json"), ("frontend", "plugins/frontend/plugin.json"), ("backend", "plugins/backend/plugin.json")]:
+    for namespace, relative in [("skills", "plugins/skills/plugin.json"), ("memory", "plugins/memory/plugin.json"), ("vps", "plugins/vps/plugin.json"), ("mcp", "plugins/mcp/plugin.json"), ("app", "plugins/app/plugin.json"), ("science", "plugins/science/plugin.json"), ("agent", "plugins/agent/plugin.json"), ("ml", "plugins/ml/plugin.json"), ("product", "plugins/product/plugin.json"), ("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json"), ("frontend", "plugins/frontend/plugin.json"), ("backend", "plugins/backend/plugin.json")]:
         manifest = json.loads((root / relative).read_text())
         expected = {command for ns, command in SKILLS.values() if ns == namespace}
         if manifest.get("name") != namespace or set(manifest.get("commands", {})) != expected:

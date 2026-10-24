@@ -7,5 +7,6 @@
 - execution_progress совместим с frontend/backend legacy markers, сохраняет revision/commits/evidence и remaining tasks; один coordinator обновляет общий progress/index.
 - graph_context использует pinned optional graphifyy в target-local venv, code-only staging, scrubbed env, bounded output и dirty/untracked freshness. Не вызывать graphify install, cloud, semantic/media pass или project executables.
 - CLI side effects должны быть явными. Не перезаписывать чужие файлы или генерировать target AGENTS в planning scope.
+- project_setup setup выбирает install/update по receipt; partial/corrupt state не усыновлять. Fresh setup тоже проверяет память; MEMORY_NOT_READY не означает отмену записи.
 - project_setup update: old/local/new ownership, configs untouched, --plan offline; pending transaction blocks replay. Rollback checks exact current state before restore; memory doctor uses pristine public release, not carried project code.
 - Проверка: scripts/validate_repo.py и offline unit suite; изменение runtime-facing behavior — также scripts/factory_acceptance.py. Платных/live проверок не делать.

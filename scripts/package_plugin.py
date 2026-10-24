@@ -9,6 +9,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
+    "skills": {"manifest": "plugins/skills/plugin.json", "skills": ["skills-setup"], "docs": ["docs/skills", "docs/setup", "docs/memory", "docs/infra"]},
     "memory": {"manifest": "plugins/memory/plugin.json", "skills": ["memory-recall", "memory-learn"], "docs": ["docs/skills", "docs/memory", "docs/infra"]},
     "vps": {"manifest": "plugins/vps/plugin.json", "skills": ["vps-inspect", "vps-manage"], "docs": ["docs/skills", "docs/memory", "docs/infra"]},
     "mcp": {"manifest": "plugins/mcp/plugin.json", "skills": ["mcp-build"], "docs": ["docs/skills", "docs/mcp"]},
@@ -151,6 +152,8 @@ def build_package(namespace, output, root=ROOT):
         resources = ["templates/ai-development/decision.md", "templates/science/main.tex", "templates/science/claim-evidence.md", "scripts/science_preprint.py", "scripts/ml_data.py"]
     if namespace == "agent":
         resources = ["templates/ai-development/decision.md", "templates/agent-eval/protocol.md", "templates/agent-improve/review.md", "templates/agent-improve/incident.example.json"]
+    if namespace == "skills":
+        resources += ["scripts/project_setup.py", "scripts/project_update.py"]
     resources += ["templates/agents/root.md", "templates/agents/module.md",
                   "scripts/memory_cycle.py", "scripts/memory_ops.py", "templates/memory/lesson.example.json",
                   "memory/__init__.py", "memory/service.py"]

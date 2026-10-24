@@ -2,12 +2,12 @@
 
 [![Validate AI tools](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](docs/product-factory/README.md)
-[![Skills: 34](https://img.shields.io/badge/skills-34-2563EB)](skills/README.md)
+[![Skills: 35](https://img.shields.io/badge/skills-35-2563EB)](skills/README.md)
 [![Graphify: optional](https://img.shields.io/badge/Graphify-optional-6F42C1)](docs/skills/graph-context.md)
 
 Библиотека инженерных скиллов, документации и ограниченного Python-runtime для AI-агентов. Покрывает продуктовые исследования, UX/UI, frontend/backend, CI/CD, инфраструктуру, ML и оценку агентов. Подход: **источники → план/контракты → разрешённая реализация → независимая проверка → сохранённые решения**.
 
-В репозитории **34 скилла и 14 plugin namespaces**. Скиллы переносимы между проектами; runtime связывает их с версиями артефактов, бюджетами и проверками. MCP: реализованы task-oriented build skill, scaffold/validate/smoke и readonly catalog stdio reference; SDK/remote auth и model tool-use quality проверяются отдельно.
+В репозитории **35 скиллов и 15 plugin namespaces**. Скиллы переносимы между проектами; runtime связывает их с версиями артефактов, бюджетами и проверками. MCP: реализованы task-oriented build skill, scaffold/validate/smoke и readonly catalog stdio reference; SDK/remote auth и model tool-use quality проверяются отдельно.
 
 **Индексы:** [документация](docs/README.md) · [все скиллы и команды](skills/README.md) · [общие правила](docs/skills/README.md) · [инструкции агентам](AGENTS.md) · [решения проекта](.ai-development/INDEX.md).
 
@@ -57,11 +57,12 @@
 <a id="skills-usage"></a>
 ## Подключение скиллов
 
+**Единая команда:** `/skills:setup` (Codex: `$skills-setup`) — установка или безопасное обновление, проверка памяти и памятка. [Workflow](docs/setup/skill.md).
+
 **Автоматически в проект:** попросите агента: «Подключи ai-tools из https://github.com/zxc0zxc0zxc/ai-tools к этому проекту для Codex/Claude, проверь глобальную память и объясни команды». Workflow и ограничения — [project setup](docs/setup/README.md). Из доверенного checkout:
 
 ```sh
-python3 scripts/project_setup.py install --target /ABSOLUTE/project --client both
-python3 scripts/project_setup.py doctor --target /ABSOLUTE/project
+python3 scripts/project_setup.py setup --target /ABSOLUTE/project --client both
 # Уже подключённый проект: сохранение локальных правок и обязательный memory check
 python3 scripts/project_setup.py update --target /ABSOLUTE/project --plan
 python3 scripts/project_setup.py update --target /ABSOLUTE/project

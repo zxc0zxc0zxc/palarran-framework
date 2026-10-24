@@ -107,7 +107,7 @@ def install(source,target,client,plan=False):
 
 Source revision: '''+revision+'''
 
-Codex: `$backend-plan`, `$frontend-plan`, `$frontend-build`, `$memory-recall`, `$memory-learn` и другие имена из [.ai-tools skill index](library/skills/README.md). Claude: `/backend-plan`, `/frontend-plan`, `/memory-recall`; namespace aliases из каталога требуют plugin/adapters и не объявляются автоматически установленными здесь.
+Codex: `$skills-setup`, `$backend-plan`, `$frontend-plan`, `$frontend-build`, `$memory-recall`, `$memory-learn` и другие имена из [.ai-tools skill index](library/skills/README.md). Claude: `/skills-setup`, `/backend-plan`, `/frontend-plan`, `/memory-recall`; namespace aliases из каталога требуют plugin/adapters и не объявляются автоматически установленными здесь.
 
 Все скиллы используют [общий цикл памяти](library/docs/skills/global-memory.md): recall до работы, verified sanitized learn после проверок. Owner policy настраивается отдельно; --plan offline.
 
@@ -256,9 +256,35 @@ def doctor(source,target,timeout=20):
     return dict(status='PASS',memory='CONNECTED',tools=len(tools),returned_cards=len(result['structuredContent']['data']['items']),writes=0,model_calls=0)
 
 
+def setup(source,target,client=None,plan=False):
+    """Select one ownership-aware route; never adopt a partial installation."""
+    target=safe(target);require(target.is_dir())
+    receipt=safe(target/'.ai-tools/installation.json')
+    active=safe(target/'.ai-tools/backups/active-update.json')
+    if active.exists() or receipt.exists():
+        from project_update import update
+        result=update(source,target,client,plan)
+        return dict(result,action='update',usage=str(target/'.ai-tools/USAGE.md'))
+    require(not (target/'.ai-tools/library').exists() and not (target/'.ai-tools/library').is_symlink())
+    result=install(source,target,client or 'both',plan)
+    result.update(action='install',network=False)
+    if plan:
+        result['writes']=0
+        return result
+    result['network']=True
+    try:
+        # Only pinned public bytes: no carried code or project hooks are executed.
+        with tempfile.TemporaryDirectory(prefix='ai-tools-setup-check-') as directory:
+            clean=export(target/'.ai-tools/library',Path(directory).resolve()/'public')
+            result['memory']=doctor(clean,target)
+    except (ValueError,KeyError,TypeError,AttributeError,OSError,subprocess.SubprocessError):
+        result.update(status='INSTALLED_MEMORY_NOT_READY',memory=dict(status='NOT_READY'))
+    return result
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('operation',choices=('export','install','update','rollback','doctor'))
+    parser.add_argument('operation',choices=('setup','export','install','update','rollback','doctor'))
     parser.add_argument('--source',type=Path,default=ROOT)
     parser.add_argument('--target',type=Path,required=True)
     parser.add_argument('--client',choices=('codex','claude','both'))
@@ -266,7 +292,8 @@ def main():
     parser.add_argument('--plan',action='store_true')
     args=parser.parse_args()
     try:
-        if args.operation=='install':result=install(args.source,args.target,args.client or 'both',args.plan)
+        if args.operation=='setup':result=setup(args.source,args.target,args.client,args.plan)
+        elif args.operation=='install':result=install(args.source,args.target,args.client or 'both',args.plan)
         elif args.operation in ('update','rollback'):
             from project_update import update,rollback
             result=update(args.source,args.target,args.client,args.plan) if args.operation=='update' else rollback(args.target,args.backup,args.plan)
@@ -275,7 +302,7 @@ def main():
         else:result=doctor(args.source,args.target)
         print(encoded(result).decode(),end='')
         if args.operation=='rollback' and result.get('status')=='ROLLED_BACK':return 0
-        return 2 if result.get('status') in ('CONFLICT','RECOVERY_REQUIRED','ROLLED_BACK','UPDATED_MEMORY_NOT_READY','UNCHANGED_MEMORY_NOT_READY') or result.get('journal')=='WRITE_FAILED' else 0
+        return 2 if result.get('status') in ('CONFLICT','RECOVERY_REQUIRED','ROLLED_BACK','INSTALLED_MEMORY_NOT_READY','UPDATED_MEMORY_NOT_READY','UNCHANGED_MEMORY_NOT_READY') or result.get('journal')=='WRITE_FAILED' else 0
     except (ValueError,KeyError,TypeError,AttributeError,OSError,subprocess.SubprocessError,tarfile.TarError):
         print('Setup incomplete: inspect scope/conflicts or memory connectivity; existing work preserved. No model calls.',file=sys.stderr);return 2
 

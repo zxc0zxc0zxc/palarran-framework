@@ -105,3 +105,7 @@
 ## Automatic skill memory
 
 - Every skill/adapter requires docs/skills/global-memory.md. Bounded sanitized global recall before work, verified portable learning after actual checks under explicit owner policy; --plan offline. Existing candidate/reviewer separation stays: only trusted coordinator uses reviewer after evidence/privacy/dedup gates, no new reviewer MCP tools. Unknown write outcome requires readonly reconciliation. No hidden raw ingestion, paid calls, invented verification or claims that instruction text guarantees host execution.
+
+## Skills setup
+
+- `/skills:setup` requires docs/setup/skill.md and README.md, decision-memory and global-memory. Auto dispatch absent receipt to install, existing receipt to guarded update; corrupt/partial/pending states never authorize reinstall. Preserve client scope/config/local changes via ownership contract; health uses pinned pristine bytes and --global, never carried scripts. --plan no writes/network/clone. Bootstrap plugin requires trusted full source; no implicit global settings, credentials, paid/model/app execution. Explain action/revision/health/gaps and actual native commands, not assumed namespace discovery.

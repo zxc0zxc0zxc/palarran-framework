@@ -2,6 +2,8 @@
 
 Сценарий: пользователь говорит Codex или Claude «подключи ai-tools к этому проекту, проверь память и объясни команды». Агент читает этот guide и target AGENTS/INDEX, устанавливает библиотеку, выполняет doctor и сообщает проверенный результат. Сам install не запускает разработку, обучение или deploy.
 
+Единый вход: [`/skills:setup`](skill.md), CLI `project_setup.py setup`. Он выбирает install/update по receipt, проверяет память и объясняет native команды; явные install/update остаются доступны.
+
 ## Первичные источники
 
 Проверены 2026-10-24, rolling docs: [OpenAI MCP](https://developers.openai.com/codex/mcp/) — user config и stdio; [OpenAI skills](https://developers.openai.com/codex/skills/) — repo `.agents/skills`; [Claude skills](https://code.claude.com/docs/en/skills) — `.claude/skills`; [Claude MCP](https://code.claude.com/docs/en/mcp) — project `.mcp.json`, approvals и scope. macOS local `man launchd.plist`: RunAtLoad, KeepAlive, ThrottleInterval; это login LaunchAgent, не daemon до входа пользователя.
