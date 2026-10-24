@@ -1,10 +1,10 @@
 # Core internals for contributors
 
-Core separates pure input validation, durable local storage and execution policy. A refactor must preserve the same JSON values, canonical hashes, SQLite rows, single root budget and admission/unknown-outcome fences. Read [the execution contract](contract.md), [feature contract](features/contract.md) and [ledger interface](ledger-contract.md) before changing behavior.
+Core separates input validation, durable local storage and execution policy. Structural helpers are pure; manifest worktree validation also checks local path type and symlinks without changing files. A refactor must preserve the same JSON values, canonical hashes, SQLite rows, single root budget and admission/unknown-outcome fences. Read [the execution contract](contract.md), [feature contract](features/contract.md) and [ledger interface](ledger-contract.md) before changing behavior.
 
 ```mermaid
 flowchart LR
-  Input[Reviewed manifest or passport] --> Validation[Pure validators and shared primitives]
+  Input[Reviewed manifest or passport] --> Validation[Validation and shared primitives]
   Validation --> Dispatch[Dispatcher: admission and execution policy]
   Dispatch --> Ledger[Local ledger: atomic transactions]
   Feature[Feature coordination] --> Ledger
@@ -19,7 +19,7 @@ flowchart LR
 | Concern | Module | Invariant |
 | --- | --- | --- |
 | Bounds, identifiers and canonical JSON | `primitives.py` | No I/O or lifecycle imports; preserve exact canonical bytes |
-| Manifest and DAG validation | `manifest_validation.py` | Pure bounded validation; dependencies and permission inheritance remain explicit |
+| Manifest and DAG validation | `manifest_validation.py` | Bounded structural validation and read-only worktree checks; dependencies and permission inheritance remain explicit |
 | Feature passport validation | `feature_validation.py` | Pure ownership, contracts, invariants, acceptance and release checks |
 | Named lifecycle values | `states.py` | String-valued enums keep stored/serialized values compatible |
 | Local transactions and root reads | `ledger.py` | One SQLite authority; read-only mode never initializes or migrates state |

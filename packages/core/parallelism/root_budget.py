@@ -12,7 +12,7 @@ class DispatcherBudgetBinding:
         if not callable(verifier) or type(slots) is not dict:
             raise ValueError('Reviewed slot mapping and independent verifier required')
         self.dispatcher, self.slots, self.verifier = dispatcher, dict(slots), verifier
-        with dispatcher._transaction() as db:
+        with dispatcher.ledger.transaction() as db:
             db.execute('''CREATE TABLE IF NOT EXISTS parallel_budget_tickets(
                 ticket TEXT PRIMARY KEY, run TEXT NOT NULL, task TEXT NOT NULL,
                 attempt INTEGER NOT NULL, state TEXT NOT NULL)''')
@@ -31,12 +31,12 @@ class DispatcherBudgetBinding:
         if packet is None:
             return None
         ticket = uuid.uuid4().hex
-        with self.dispatcher._transaction() as db:
+        with self.dispatcher.ledger.transaction() as db:
             db.execute('INSERT INTO parallel_budget_tickets VALUES(?,?,?,?,?)', (ticket, run_id, task_id, packet['attempt_id'], 'open'))
         return ticket
 
     def heartbeat(self, ticket):
-        with self.dispatcher._transaction() as db:
+        with self.dispatcher.ledger.transaction() as db:
             row = db.execute('SELECT * FROM parallel_budget_tickets WHERE ticket=?', (ticket,)).fetchone()
             if row is None or row['state'] != 'open':
                 return False
@@ -50,7 +50,7 @@ class DispatcherBudgetBinding:
             value = outcome.get(field, 0)
             if type(value) is not int or value < 0:
                 raise ValueError('Invalid stage usage')
-        with self.dispatcher._transaction() as db:
+        with self.dispatcher.ledger.transaction() as db:
             row = db.execute('SELECT * FROM parallel_budget_tickets WHERE ticket=?', (ticket,)).fetchone()
             if row is None:
                 raise ValueError('Unknown root reservation')
@@ -68,6 +68,6 @@ class DispatcherBudgetBinding:
         if isinstance(subject, str) and subject:
             receipt['subject'] = subject
         result = self.dispatcher.finish_task(run, task, attempt, receipt, self.verifier)
-        with self.dispatcher._transaction() as db:
+        with self.dispatcher.ledger.transaction() as db:
             db.execute("UPDATE parallel_budget_tickets SET state=? WHERE ticket=?", ('settled' if known else 'unknown', ticket))
         return result

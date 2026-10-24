@@ -95,8 +95,7 @@ def authority_server(dispatcher, verifier, principals, *, host='127.0.0.1', port
                     result = dispatcher.get_run(run)
                 elif operation == 'feature_get':
                     from .feature import FeatureAuthority
-                    feature = FeatureAuthority.__new__(FeatureAuthority)
-                    feature.dispatcher, feature.run_id = dispatcher, run
+                    feature = FeatureAuthority.read_only(dispatcher, run)
                     result = feature.report()
                 elif operation == 'feature_event' and principal.get('control') is True:
                     from .feature import FeatureAuthority
