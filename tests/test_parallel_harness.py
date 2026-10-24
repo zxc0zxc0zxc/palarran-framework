@@ -174,12 +174,27 @@ class NativeHarnessTests(unittest.TestCase):
         self.NativeHarness=NativeHarness
         self.temp=tempfile.TemporaryDirectory();self.root=Path(self.temp.name).resolve()
         self.task=manifest(self.root,1)['tasks'][0]
+        self.repo=self.root/'repository'
+        self.git('init','-q',str(self.repo))
+        (self.repo/'source.txt').write_text('approved source\n')
+        self.git('-C',str(self.repo),'add','source.txt')
+        self.git('-C',str(self.repo),'-c','user.name=Fixture','-c','user.email=fixture@example.invalid',
+            '-c','commit.gpgsign=false','commit','-qm','source')
+        self.head=self.git('-C',str(self.repo),'rev-parse','HEAD')
+        worktree=self.root/'native-worker'
+        self.git('-C',str(self.repo),'worktree','add','--detach',str(worktree),self.head)
+        self.task.update(worktree=str(worktree),base_commit=self.head,files=['source.txt'])
         self.events={
             'codex':[dict(type='turn.started'),dict(type='turn.completed',usage=dict(input_tokens=2,cached_input_tokens=0,output_tokens=1))],
             'claude':[dict(type='result',subtype='success',is_error=False,total_cost_usd=.000003,
                 modelUsage={'fixture':dict(inputTokens=2,cacheReadInputTokens=0,cacheCreationInputTokens=0,outputTokens=1)})]}
 
     def tearDown(self):self.temp.cleanup()
+
+    def git(self,*args):
+        return subprocess.check_output(['/usr/bin/git','-c','core.hooksPath=/dev/null','-c','core.fsmonitor=false',*args],
+            env={'PATH':'/usr/bin:/bin','GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null'},
+            stderr=subprocess.DEVNULL,text=True).strip()
 
     def native(self,adapter,events=None):
         executable=self.root/(adapter+'-fake')
@@ -188,7 +203,7 @@ class NativeHarnessTests(unittest.TestCase):
         executable.write_text(body);executable.chmod(0o700)
         card=dict(input='1',cached_input='1',cache_creation='1',output='1',source_url='https://example.invalid/reviewed-fixture',as_of='2026-10-24')
         binding=dict(adapter=adapter,executable=str(executable),profile=dict(model='fixture',effort='low'),pricing=card,
-            prompt='An explicit fixture task',environment={'PATH':'/usr/bin:/bin'},subject=lambda task:'a'*40,authorization='offline fake fixture only')
+            prompt='An explicit fixture task',environment={'PATH':'/usr/bin:/bin'},subject=lambda task:self.head,authorization='offline fake fixture only')
         return self.NativeHarness({'task0':binding},authorized=True)
 
     def test_native_provider_jsonl_is_normalized_without_model_calls(self):
@@ -214,3 +229,32 @@ class NativeHarnessTests(unittest.TestCase):
         with self.assertRaises(ValueError):self.NativeHarness({})
         native=self.native('codex')
         with self.assertRaises(ValueError):native.execute(dict(self.task,task_id='other'),heartbeat=lambda:True,cancel=threading.Event())
+
+    def test_native_rejects_ordinary_primary_nested_symlink_and_base_drift_before_launch(self):
+        native=self.native('codex')
+        current=Path(self.task['worktree'])
+        nested=current/'nested';nested.mkdir()
+        alias=self.root/'linked-alias';alias.symlink_to(current,target_is_directory=True)
+        for location in (self.root,self.repo,nested,alias):
+            with self.subTest(path=location),self.assertRaises(ValueError):
+                native.execute(dict(self.task,worktree=str(location)),heartbeat=lambda:True,cancel=threading.Event())
+        with self.assertRaises(ValueError):
+            native.execute(dict(self.task,base_commit='b'*40),heartbeat=lambda:True,cancel=threading.Event())
+        self.assertEqual(native._sessions,set())
+        result=native.execute(self.task,heartbeat=lambda **usage:True,cancel=threading.Event())
+        self.assertEqual(result['status'],'submitted')
+
+    def test_native_git_registration_and_distinct_task_ownership(self):
+        native=self.native('codex')
+        from packages.core.parallelism.native import verify_worktree
+        admin=Path(self.git('-C',self.task['worktree'],'rev-parse','--absolute-git-dir'))
+        backlink=admin/'gitdir';before=backlink.read_bytes()
+        backlink.write_text(str(self.root/'wrong-location/.git'))
+        with self.assertRaises(ValueError):verify_worktree(self.task)
+        backlink.write_bytes(before)
+        self.assertEqual(verify_worktree(self.task),self.task['worktree'])
+        native.bindings['task1']=native.bindings['task0']
+        result=native.execute(self.task,heartbeat=lambda **usage:True,cancel=threading.Event())
+        self.assertEqual(result['status'],'submitted')
+        with self.assertRaises(ValueError):
+            native.execute(dict(self.task,task_id='task1',session_id='session-other'),heartbeat=lambda **usage:True,cancel=threading.Event())
