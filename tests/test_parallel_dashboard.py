@@ -97,6 +97,30 @@ class PanelTests(unittest.TestCase):
             reader = Reader()
             reader.report = raw
             self.assertEqual('missing', Snapshot(reader, 'demo').get()['freshness'])
+    def test_unused_external_reserves_do_not_count_as_completion(self):
+        raw = demo_report()
+        raw['tasks'] = [dict(task_id='accepted', state='verified', verified_subject='a'*40,
+                             required_for_completion=True, dispatch_mode='auto', attempt_id=1),
+                        dict(task_id='spare', state='pending', required_for_completion=False,
+                             dispatch_mode='external', attempt_id=0)]
+        report = project_report(raw)
+        self.assertEqual(2, len(report['tasks']))
+        self.assertEqual(1, report['task_summary']['completion_tasks'])
+        self.assertEqual(1, report['task_summary']['verified'])
+        self.assertTrue(report['tasks'][1]['unused_reserve'])
+        raw['tasks'][1].update(attempt_id=1, state='unknown')
+        report = project_report(raw)
+        self.assertEqual(2, report['task_summary']['completion_tasks'])
+        self.assertEqual(1, report['task_summary']['attention'])
+        self.assertEqual(1, report['task_summary']['unknown'])
+        self.assertFalse(report['tasks'][1]['unused_reserve'])
+        raw['tasks'][1].update(state='blocked')
+        report = project_report(raw)
+        self.assertEqual(1, report['task_summary']['blocked'])
+        self.assertEqual(0, report['task_summary']['human_handoffs'])
+        raw['tasks'][1].update(state='handoff_pending')
+        self.assertEqual(1, project_report(raw)['task_summary']['human_handoffs'])
+
     def test_unknown_accounting_preserved(self):
         self.reader.report['usage']['known'] = False
         self.reader.report['usage']['tokens'] = 0
