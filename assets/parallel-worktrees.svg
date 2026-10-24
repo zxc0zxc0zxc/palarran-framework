@@ -1,1 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1060" viewBox="0 0 1800 1060" role="img" aria-label="Parallel work. One coherent result."><defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#a4a4a5" stroke-width="1.3"/></marker></defs><rect width="1800" height="1060" rx="32" fill="#0b0b0c"/><g font-family="Arial, Helvetica, sans-serif"><text x="72" y="81" fill="#efeee9" font-size="22" letter-spacing="5">PALARRAN</text><text x="72" y="147" fill="#efeee9" font-size="44" font-weight="600">Parallel work. One coherent result.</text><text x="72" y="190" fill="#a4a4a5" font-size="21">Independent tasks run concurrently; shared state and integration have one owner.</text><rect x="520" y="250" width="760" height="180" rx="18" fill="#111113" stroke="#343437"/><text x="548" y="294" fill="#efeee9" font-size="26" font-weight="600">Coordinator / one specification</text><text x="548" y="336" fill="#a4a4a5" font-size="20">Freeze contracts, task ownership and acceptance gates.</text><text x="548" y="368" fill="#a4a4a5" font-size="20">Dispatch ready work; keep one shared progress record.</text><rect x="70" y="530" width="480" height="190" rx="18" fill="#111113" stroke="#343437"/><text x="98" y="574" fill="#efeee9" font-size="26" font-weight="600">Agent A / API</text><text x="98" y="616" fill="#a4a4a5" font-size="20">Owned worktree + branch</text><text x="98" y="648" fill="#a4a4a5" font-size="20">Contract and edge-case tests</text><rect x="660" y="530" width="480" height="190" rx="18" fill="#111113" stroke="#343437"/><text x="688" y="574" fill="#efeee9" font-size="26" font-weight="600">Agent B / interface</text><text x="688" y="616" fill="#a4a4a5" font-size="20">Owned worktree + branch</text><text x="688" y="648" fill="#a4a4a5" font-size="20">Responsive and browser checks</text><rect x="1250" y="530" width="480" height="190" rx="18" fill="#111113" stroke="#343437"/><text x="1278" y="574" fill="#efeee9" font-size="26" font-weight="600">Agent C / verification</text><text x="1278" y="616" fill="#a4a4a5" font-size="20">Independent frozen criteria</text><text x="1278" y="648" fill="#a4a4a5" font-size="20">Review integrated behavior</text><path d="M900 430 L900 480 L310 480 L310 530" fill="none" stroke="#a4a4a5" stroke-width="2" marker-end="url(#arrow)"/><path d="M900 430 L900 530" fill="none" stroke="#a4a4a5" stroke-width="2" marker-end="url(#arrow)"/><path d="M900 480 L1490 480 L1490 530" fill="none" stroke="#a4a4a5" stroke-width="2" marker-end="url(#arrow)"/><rect x="350" y="840" width="1100" height="150" rx="18" fill="#111113" stroke="#343437"/><text x="378" y="884" fill="#efeee9" font-size="26" font-weight="600">Sequential integration → independent acceptance</text><text x="378" y="926" fill="#a4a4a5" font-size="20">Record source commits, evidence, remaining gaps and the implemented plan revision.</text><path d="M310 720 L310 780 L600 780 L600 840" fill="none" stroke="#a4a4a5" stroke-width="2" marker-end="url(#arrow)"/><path d="M900 720 L900 840" fill="none" stroke="#a4a4a5" stroke-width="2" marker-end="url(#arrow)"/><path d="M1490 720 L1490 780 L1200 780 L1200 840" fill="none" stroke="#a4a4a5" stroke-width="2" marker-end="url(#arrow)"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1060" viewBox="0 0 1800 1060" role="img" aria-label="Adaptive true parallelism. Across repos. Across machines."><defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M1 1 L7 4 L1 7" fill="none" stroke="#a4a4a5" stroke-width="1.3"/></marker></defs><rect width="1800" height="1060" rx="32" fill="#0b0b0c"/><g font-family="Arial, Helvetica, sans-serif">
+<text x="70" y="75" fill="#a4a4a5" font-size="20" font-weight="400" letter-spacing="5">PALARRAN</text>
+<text x="70" y="140" fill="#efeee9" font-size="40" font-weight="600">Adaptive true parallelism. Across repos. Across machines.</text>
+<text x="70" y="184" fill="#a4a4a5" font-size="21" font-weight="400">Admit useful independent work, reserve its limits, and verify the exact combined product.</text>
+<rect x="70" y="240" width="460" height="120" rx="16" fill="#111113" stroke="#343437"/>
+<text x="94" y="278" fill="#efeee9" font-size="25" font-weight="600">Feature passport</text>
+<text x="94" y="315" fill="#a4a4a5" font-size="19" font-weight="400">Goal · API/event contracts · task DAG</text>
+<rect x="610" y="240" width="590" height="120" rx="16" fill="#111113" stroke="#343437"/>
+<text x="634" y="278" fill="#efeee9" font-size="25" font-weight="600">Palarran dispatcher + root ledger</text>
+<text x="634" y="315" fill="#a4a4a5" font-size="19" font-weight="400">Ownership · budget · independent result receipts</text>
+<rect x="1280" y="240" width="450" height="120" rx="16" fill="#111113" stroke="#343437"/>
+<text x="1304" y="278" fill="#efeee9" font-size="25" font-weight="600">Temporal · optional</text>
+<text x="1304" y="315" fill="#a4a4a5" font-size="19" font-weight="400">Durable scheduling · one authority</text>
+<path d="M530 300 H610" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)"/>
+<path d="M1280 300 H1200" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)" marker-start="url(#a)"/>
+<path d="M70 410 H1730" fill="none" stroke="#59595f" stroke-width="1.5"/>
+<text x="80" y="402" fill="#a4a4a5" font-size="16" font-weight="400">MESSAGE BUS  /  repository-scoped coordination</text>
+<rect x="70" y="460" width="500" height="400" rx="16" fill="#111113" stroke="#343437"/>
+<text x="94" y="498" fill="#efeee9" font-size="25" font-weight="600">Developer machine A</text>
+<rect x="94" y="525" width="452" height="85" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="118" y="563" fill="#efeee9" font-size="25" font-weight="600">Agent 01 · owned worktree</text>
+<text x="118" y="600" fill="#a4a4a5" font-size="19" font-weight="400">Pinned contract · bounded task packet</text>
+<rect x="94" y="630" width="452" height="85" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="118" y="668" fill="#efeee9" font-size="25" font-weight="600">Agent 02 · owned worktree</text>
+<text x="118" y="705" fill="#a4a4a5" font-size="19" font-weight="400">Separate files / resources · same budget</text>
+<rect x="94" y="755" width="452" height="80" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="118" y="793" fill="#efeee9" font-size="25" font-weight="600">Backend repository</text>
+<text x="118" y="819" fill="#a4a4a5" font-size="18" font-weight="400">Exact commit + independent receipt</text>
+<path d="M320 410 V460" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)" marker-start="url(#a)"/>
+<path d="M320 715 V755" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="650" y="460" width="500" height="400" rx="16" fill="#111113" stroke="#343437"/>
+<text x="674" y="498" fill="#efeee9" font-size="25" font-weight="600">Developer machine B</text>
+<rect x="674" y="525" width="452" height="85" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="698" y="563" fill="#efeee9" font-size="25" font-weight="600">Agent 01 · owned worktree</text>
+<text x="698" y="600" fill="#a4a4a5" font-size="19" font-weight="400">Pinned contract · bounded task packet</text>
+<rect x="674" y="630" width="452" height="85" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="698" y="668" fill="#efeee9" font-size="25" font-weight="600">Agent 02 · owned worktree</text>
+<text x="698" y="705" fill="#a4a4a5" font-size="19" font-weight="400">Separate files / resources · same budget</text>
+<rect x="674" y="755" width="452" height="80" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="698" y="793" fill="#efeee9" font-size="25" font-weight="600">Frontend repository</text>
+<text x="698" y="819" fill="#a4a4a5" font-size="18" font-weight="400">Exact commit + independent receipt</text>
+<path d="M900 410 V460" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)" marker-start="url(#a)"/>
+<path d="M900 715 V755" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)"/>
+<rect x="1230" y="460" width="500" height="400" rx="16" fill="#111113" stroke="#343437"/>
+<text x="1254" y="498" fill="#efeee9" font-size="25" font-weight="600">Developer machine C</text>
+<rect x="1254" y="525" width="452" height="85" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="1278" y="563" fill="#efeee9" font-size="25" font-weight="600">Agent 01 · owned worktree</text>
+<text x="1278" y="600" fill="#a4a4a5" font-size="19" font-weight="400">Pinned contract · bounded task packet</text>
+<rect x="1254" y="630" width="452" height="85" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="1278" y="668" fill="#efeee9" font-size="25" font-weight="600">Agent 02 · owned worktree</text>
+<text x="1278" y="705" fill="#a4a4a5" font-size="19" font-weight="400">Separate files / resources · same budget</text>
+<rect x="1254" y="755" width="452" height="80" rx="16" fill="#0b0b0c" stroke="#343437"/>
+<text x="1278" y="793" fill="#efeee9" font-size="25" font-weight="600">SDK / shared repository</text>
+<text x="1278" y="819" fill="#a4a4a5" font-size="18" font-weight="400">Exact commit + independent receipt</text>
+<path d="M1480 410 V460" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)" marker-start="url(#a)"/>
+<path d="M1480 715 V755" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)"/>
+<path d="M905 360 V410" fill="none" stroke="#8e8e92" stroke-width="1.8" marker-end="url(#a)"/>
+<text x="70" y="960" fill="#efeee9" font-size="22" font-weight="400">Ready work → owned worktrees → checked commits → final composition acceptance.</text>
+<text x="70" y="1004" fill="#a4a4a5" font-size="19" font-weight="400">Scale the ready wave within observed capacity and the frozen root budget; unknown outcomes require reconciliation.</text>
+</g></svg>
