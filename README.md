@@ -187,3 +187,20 @@ python3 scripts/factory_acceptance.py
 Tests do not launch paid models or GPUs. Fixture success is distinct from model quality, production readiness, operational SLA and market validation. [Contributing](CONTRIBUTING.md) · [Documentation index](docs/README.md) · [Editable diagram sources](assets/README.md).
 
 A license has not been selected. Preparing the repository for an open-source release does not change its visibility or grant a license.
+
+### Automatic parallel execution
+
+Ordinary engineering requests and skills share a [bounded dispatcher](packages/core/parallelism/docs/contract.md): independent task ownership, durable root budgets, explicit cancellation/unknown outcomes and independent acceptance. Optional Temporal coordinates approved developer-machine workers. Native chat behavior is instruction-based; managed entrypoints expose their actual control level. Configuration alone starts neither models nor server deployments.
+
+### Integration queue and execution panel
+
+The [integration queue](packages/core/parallelism/docs/integration.md) combines verified feature commits in an owned branch, reruns declared API/migration/business gates and accepts only the final combined subject. Failed checks create bounded owner repair packets. Its root budget reserves and final acceptance stay shared; PR readiness never publishes a pull request.
+
+The [live execution panel](packages/core/parallelism/docs/dashboard.md) uses a small Python server: assignments across approved workers, blockers, verified subjects, reported usage and reservations, plus integration readiness. It has read-only access and explicit stale/unknown states. A compact Markdown report fits Codex/Claude conversations; native custom UI embedding is not assumed.
+
+```sh
+# Disposable demo data; no models, credentials or remote calls.
+python3 -m packages.core.parallelism.dashboard demo
+```
+
+Open the printed loopback address. For real runs, use an existing private `--state` ledger or the scoped `--authority` connection, with optional `--integration-state`; see the guide for protected remote access.

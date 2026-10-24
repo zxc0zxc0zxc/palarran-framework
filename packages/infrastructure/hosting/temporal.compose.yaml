@@ -1,0 +1,211 @@
+{
+  "services": {
+    "temporal-postgres": {
+      "profiles": [
+        "temporal"
+      ],
+      "restart": "unless-stopped",
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 256,
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "5m",
+          "max-file": "3"
+        }
+      },
+      "stop_grace_period": "60s",
+      "networks": [
+        "temporal-private"
+      ],
+      "image": "${PALARRAN_TEMPORAL_POSTGRES_IMAGE:?Set approved postgres 16 digest}",
+      "user": "${PALARRAN_TEMPORAL_POSTGRES_UID:?Set verified postgres UID:GID}",
+      "mem_limit": "2g",
+      "cpus": 1,
+      "tmpfs": [
+        "/tmp:rw,nosuid,nodev,size=64m,mode=1777"
+      ],
+      "environment": {
+        "POSTGRES_DB": "temporal",
+        "POSTGRES_USER": "temporal_bootstrap",
+        "POSTGRES_PASSWORD_FILE": "/run/secrets/postgres-password"
+      },
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "${PALARRAN_TEMPORAL_ROOT:?Set private Temporal root}/secrets/postgres-password",
+          "target": "/run/secrets/postgres-password",
+          "read_only": true,
+          "bind": {
+            "create_host_path": false
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${PALARRAN_TEMPORAL_ROOT:?Set private Temporal root}/state/postgres",
+          "target": "/var/lib/postgresql/data",
+          "read_only": false,
+          "bind": {
+            "create_host_path": false
+          }
+        }
+      ],
+      "healthcheck": {
+        "test": [
+          "CMD-SHELL",
+          "pg_isready -U temporal_bootstrap -d temporal"
+        ],
+        "interval": "10s",
+        "timeout": "5s",
+        "retries": 6
+      }
+    },
+    "temporal": {
+      "profiles": [
+        "temporal"
+      ],
+      "restart": "unless-stopped",
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 256,
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "5m",
+          "max-file": "3"
+        }
+      },
+      "stop_grace_period": "60s",
+      "networks": [
+        "temporal-private"
+      ],
+      "image": "${PALARRAN_TEMPORAL_IMAGE:?Set approved temporalio/server 1.32.1 digest}",
+      "user": "${PALARRAN_TEMPORAL_SERVER_UID:?Set verified server UID:GID}",
+      "mem_limit": "2g",
+      "cpus": 2,
+      "tmpfs": [
+        "/tmp:rw,nosuid,nodev,size=64m,mode=1777"
+      ],
+      "entrypoint": [
+        "temporal-server"
+      ],
+      "command": [
+        "--config-file",
+        "/etc/palarran/server.yaml",
+        "start"
+      ],
+      "read_only": true,
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "${PALARRAN_TEMPORAL_ROOT:?Set private Temporal root}/config/server.yaml",
+          "target": "/etc/palarran/server.yaml",
+          "read_only": true,
+          "bind": {
+            "create_host_path": false
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${PALARRAN_TEMPORAL_ROOT:?Set private Temporal root}/secrets",
+          "target": "/run/palarran-secrets",
+          "read_only": true,
+          "bind": {
+            "create_host_path": false
+          }
+        }
+      ],
+      "ports": [
+        "127.0.0.1:7233:7233"
+      ],
+      "depends_on": {
+        "temporal-postgres": {
+          "condition": "service_healthy"
+        }
+      }
+    },
+    "temporal-ui": {
+      "profiles": [
+        "temporal"
+      ],
+      "restart": "unless-stopped",
+      "cap_drop": [
+        "ALL"
+      ],
+      "security_opt": [
+        "no-new-privileges:true"
+      ],
+      "pids_limit": 256,
+      "logging": {
+        "driver": "json-file",
+        "options": {
+          "max-size": "5m",
+          "max-file": "3"
+        }
+      },
+      "stop_grace_period": "60s",
+      "networks": [
+        "temporal-private"
+      ],
+      "image": "${PALARRAN_TEMPORAL_UI_IMAGE:?Set approved temporalio/ui 2.57.0 digest}",
+      "user": "${PALARRAN_TEMPORAL_UI_UID:?Set verified UI UID:GID}",
+      "mem_limit": "256m",
+      "cpus": 0.5,
+      "tmpfs": [
+        "/tmp:rw,nosuid,nodev,size=64m,mode=1777"
+      ],
+      "read_only": true,
+      "volumes": [
+        {
+          "type": "bind",
+          "source": "${PALARRAN_TEMPORAL_ROOT:?Set private Temporal root}/config/ui.yaml",
+          "target": "/etc/temporal/production.yaml",
+          "read_only": true,
+          "bind": {
+            "create_host_path": false
+          }
+        },
+        {
+          "type": "bind",
+          "source": "${PALARRAN_TEMPORAL_ROOT:?Set private Temporal root}/secrets",
+          "target": "/run/palarran-secrets",
+          "read_only": true,
+          "bind": {
+            "create_host_path": false
+          }
+        }
+      ],
+      "ports": [
+        "127.0.0.1:18080:8080"
+      ],
+      "depends_on": [
+        "temporal"
+      ],
+      "entrypoint": [
+        "./ui-server"
+      ],
+      "command": [
+        "--config",
+        "/etc/temporal",
+        "--env",
+        "production",
+        "start"
+      ]
+    }
+  },
+  "networks": {
+    "temporal-private": {
+      "driver": "bridge",
+      "internal": false
+    }
+  }
+}
