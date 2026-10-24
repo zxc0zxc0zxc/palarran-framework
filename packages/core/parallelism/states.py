@@ -22,14 +22,20 @@ class TaskState(WireState):
 
 
 class FeatureState(WireState):
-    PLANNING = 'planning'
+    DRAFT = 'draft'
+    CONTRACTS_READY = 'contracts_ready'
     IMPLEMENTING = 'implementing'
+    INTEGRATING = 'integrating'
     VERIFYING = 'verifying'
     RELEASE_READY = 'release_ready'
     RELEASING = 'releasing'
-    RELEASED = 'released'
+    OBSERVING = 'observing'
+    ACCEPTED = 'accepted'
     BLOCKED = 'blocked'
+    FAILED = 'failed'
     UNKNOWN = 'unknown'
+    CANCEL_REQUESTED = 'cancel_requested'
+    CANCELLED = 'cancelled'
 
 
 class CheckVerdict(WireState):
