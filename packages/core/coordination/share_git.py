@@ -124,7 +124,12 @@ class GitShare:
         paths = [_path(p) for p in paths]
         if not isinstance(message, str) or not message.strip() or len(message) > 4000 or "\x00" in message:
             raise GitShareError("invalid_message")
-        destination = Path(worktree).absolute()
+        candidate = Path(worktree).absolute()
+        if candidate.is_symlink():
+            raise GitShareError("worktree_exists")
+        destination = candidate.resolve()
+        if destination == self.repository or self.repository in destination.parents:
+            raise GitShareError("nested_worktree_forbidden")
         if destination.exists() or destination.is_symlink():
             raise GitShareError("worktree_exists")
         content = {}
@@ -185,9 +190,13 @@ class GitShare:
         intent = candidate.parent.resolve(strict=True) / candidate.name
         expected = {"sha": sha, "remote": remote, "branch": branch}
         if intent.exists():
-            if intent.is_symlink() or intent.stat().st_mode & 0o077:
+            if not intent.is_file() or intent.is_symlink() or intent.stat().st_mode & 0o077 or intent.stat().st_uid != os.getuid() or intent.stat().st_size > 1024:
                 raise GitShareError("unsafe_intent")
-            if json.loads(intent.read_text()) != expected:
+            try:
+                recorded = json.loads(intent.read_text())
+            except (ValueError, UnicodeError):
+                raise GitShareError("invalid_intent") from None
+            if recorded != expected:
                 raise GitShareError("intent_conflict")
             if self._remote_sha(remote, branch) == sha:
                 return {**expected, "published": True, "reconciled": True}
@@ -218,7 +227,12 @@ class GitShare:
         self._remote(remote)
         self._branch(branch)
         self._branch(local_branch)
-        destination = Path(worktree).absolute()
+        candidate = Path(worktree).absolute()
+        if candidate.is_symlink():
+            raise GitShareError("worktree_exists")
+        destination = candidate.resolve()
+        if destination == self.repository or self.repository in destination.parents:
+            raise GitShareError("nested_worktree_forbidden")
         if destination.exists() or destination.is_symlink():
             raise GitShareError("worktree_exists")
         self._git("fetch", "--no-tags", "--", remote, "refs/heads/" + branch)
