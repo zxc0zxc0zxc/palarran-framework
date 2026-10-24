@@ -3,6 +3,7 @@
 Golden digests and rejection messages were captured from 0be35f510ebd before
 implementation. Local SQLite and synthetic callbacks only; no model/provider use.
 """
+import copy
 import hashlib
 import json
 from pathlib import Path
@@ -13,7 +14,7 @@ import unittest
 from packages.core.parallelism.dashboard import LocalReport
 from packages.core.parallelism.dispatcher import Dispatcher, validate
 from packages.core.parallelism.feature import FeatureAuthority
-from test_feature_authority import fixture
+from test_feature_authority import fixture, finish
 import test_feature_gates
 from packages.core.parallelism.root_budget import DispatcherBudgetBinding
 from packages.core.coordination.share_runtime import propose
@@ -212,6 +213,22 @@ class CorePolishGoldenTests(unittest.TestCase):
         result = runner.run(helper.composition, 'unit')
         self.assertEqual('FAIL', result['receipt']['verdict'])
         self.assertEqual('verified', result['accounting']['status'])
+
+    def test_partial_task_pin_revision_rolls_back_feature_and_root_packets(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            dispatcher, feature, passport, _ = fixture(Path(temporary))
+            finish(dispatcher, 'build-cards')
+            before = database_dump(dispatcher.path)
+            revised = copy.deepcopy(passport)
+            revised['plan_revision'] = 2
+            pins = {'referral': dict(revision=2, schema_sha256='d' * 64,
+                                     semantics_sha256='e' * 64)}
+            with self.assertRaisesRegex(ValueError, 'unattempted pending task pins'):
+                feature.update_passport(
+                    revised, approvals=passport['owners'],
+                    task_contracts={'build-auth': pins, 'build-cards': pins})
+            self.assertEqual(before, database_dump(dispatcher.path))
+            self.assertEqual(canonical_digest(passport), feature.report()['passport_sha256'])
 
     def test_readonly_factory_keeps_writer_port_and_database_unchanged(self):
         with tempfile.TemporaryDirectory() as temporary:
