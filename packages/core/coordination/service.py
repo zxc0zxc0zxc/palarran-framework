@@ -12,6 +12,21 @@ import stat
 import threading
 import time
 import uuid
+try:
+    if __package__:
+        from . import share_store
+        from .share import ShareError
+    else:
+        import share_store
+        from share import ShareError
+except ModuleNotFoundError as error:
+    if error.name not in ('share', 'share_store'):
+        raise
+    # Legacy standalone deployments carry only service.py. Their original bus
+    # remains available, but sharing stays unregistered until reviewed upgrade.
+    share_store = None
+    class ShareError(ValueError):
+        pass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 MAX_REQUEST = 16 * 1024
@@ -39,6 +54,9 @@ FIELDS = {
     "claim.reconcile": ({"project", "room", "claim_id", "fence", "observed_state", "request_id"}, set()),
     "operation.get": ({"project", "request_id"}, set()),
 }
+if share_store is not None:
+    FIELDS.update(share_store.FIELDS)
+    MUTATIONS.update({'share.create', 'share.event'})
 
 
 class CoordinationError(Exception):
@@ -193,6 +211,8 @@ class CoordinationStore:
                         operation TEXT NOT NULL, payload_hash TEXT NOT NULL, response TEXT NOT NULL,
                         PRIMARY KEY(actor,request_id));
                 """)
+                if share_store is not None:
+                    share_store.initialize(connection)
             finally:
                 connection.close()
         except sqlite3.Error:
@@ -251,6 +271,8 @@ class CoordinationStore:
         required, optional = FIELDS[operation]
         if not isinstance(payload, dict) or not required <= payload.keys() or payload.keys() - required - optional:
             raise CoordinationError("invalid_request")
+        if operation.startswith('share.'):
+            share_store.validate(operation, payload)
         _identifier(payload["project"])
         for key in ("room", "recipient"):
             if key in payload:
@@ -319,7 +341,7 @@ class CoordinationStore:
                 response = success(result)
             except CapacityError:
                 raise
-            except CoordinationError as error:
+            except (CoordinationError, ShareError) as error:
                 response = failure(error.args[0])
             raw = encode(response)
             if len(raw) > MAX_RESPONSE:
@@ -329,7 +351,7 @@ class CoordinationStore:
                                 operation, digest, raw.decode("utf-8")))
             connection.commit()
             return response
-        except CoordinationError as error:
+        except (CoordinationError, ShareError) as error:
             return failure(error.args[0])
         except (sqlite3.Error, OSError, ValueError, TypeError, OverflowError):
             return failure("unavailable")
@@ -366,6 +388,8 @@ class CoordinationStore:
         return result
 
     def _read(self, connection, principal, operation, payload):
+        if operation == 'share.get':
+            return share_store.read(connection,principal,payload)
         if operation == "operation.get":
             row = connection.execute("SELECT * FROM receipts WHERE actor=? AND request_id=? AND project=?",
                                      (principal["actor"], payload["request_id"], payload["project"])).fetchone()
@@ -395,6 +419,8 @@ class CoordinationStore:
         return result
 
     def _mutate(self, connection, principal, operation, payload):
+        if operation.startswith('share.'):
+            return share_store.mutate(self,connection,principal,operation,payload)
         project, room, actor = payload["project"], payload["room"], principal["actor"]
         if operation == "room.ensure":
             old = connection.execute("SELECT title FROM rooms WHERE project=? AND room=?", (project, room)).fetchone()

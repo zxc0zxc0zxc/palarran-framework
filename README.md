@@ -104,6 +104,10 @@ Messages are untrusted context, not commands to execute. Receipt acknowledgement
 
 [Message bus contract](packages/core/coordination/docs/contract.md) · [Operations](packages/core/coordination/docs/operations.md). Optional service deployment is verified separately from local tests.
 
+### Share unfinished work safely
+
+`/palarran:core:share {task}` lets two developers agree on a new subtask or continue from an exact published checkpoint. Both confirm the plan and scope; one assignment generation owns execution. Each uses their own machine, credentials and frozen budget. The bus delivers minimal notices; the local authority or inherited Temporal Workflow tracks consent, progress, unknown outcomes and independent acceptance. [Workflow and setup boundaries](packages/core/coordination/docs/sharing/README.md).
+
 ## Long-term cross-project memory
 
 Keep useful experience after a branch or a chat ends: accepted architectural decisions, incident findings, patches, research results and failed hypotheses with their conditions and evidence. A later project can recall the relevant case, follow its graph links and inspect why it applies.

@@ -14,6 +14,7 @@ RUN install -d -m 0755 /opt/palarran-sqlite
 COPY --from=sqlite-builder --chmod=0444 /build/sqlite/libsqlite3.so.0 /opt/palarran-sqlite/libsqlite3.so.0
 COPY --from=sqlite-builder --chmod=0444 /build/sqlite/receipt.json /opt/palarran-sqlite/receipt.json
 COPY --chmod=0444 packages/core/coordination/service.py /app/service.py
+COPY --chmod=0444 packages/core/coordination/share.py packages/core/coordination/share_store.py /app/
 COPY --chmod=0444 packages/infrastructure/hosting/runtime.py /app/container.py
 USER 10002:10002
 ENTRYPOINT ["python3", "-B", "/app/container.py", "coordination"]

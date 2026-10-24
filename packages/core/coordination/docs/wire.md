@@ -1,5 +1,7 @@
 # Coordination-v001 wire fields
 
+Task-sharing extension: [protocol](sharing/contract.md), [workflow](sharing/README.md). `share.create`, `share.event` and `share.get` use the same authenticated project and durable receipt transaction. Local service rejects Temporal lifecycle writes. Standalone legacy deployments containing only service.py retain original bus operations but do not register sharing; the reviewed container/source export must include share.py and share_store.py. This source change does not upgrade an already-running VPS.
+
 Implementation binding for the [contract](contract.md), Feature PAL-20261024-A7F2C1. Trusted local SQLite, not external-action enforcement or distributed consensus. No deployment evidence is implied.
 
 Python API: `CoordinationStore(db_path, credentials)` accepts a new/existing private local database path and a trusted token→`{actor,projects,role}` mapping. `store.dispatch(token, operation, payload)` returns the exact JSON envelope below; HTTP uses the same method. `create_server(store, host="127.0.0.1", port=0)` returns a bounded-thread HTTP server; call `serve_forever()` and `shutdown()/server_close()` explicitly. Other listen hosts are rejected. CLI: `python3 -m packages.core.coordination.service --db PRIVATE_PATH --credentials PRIVATE_JSON --port 18792`. Private credentials JSON is a regular owner-only0600 file without symlink ancestors; tokens never appear in argv. The store creates no outbound connections.

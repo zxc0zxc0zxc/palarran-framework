@@ -12,9 +12,9 @@ from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_ope
 
 MAX_REQUEST = 16384
 MAX_RESPONSE = 32768
-READ = {'messages.list', 'claims.list', 'operation.get'}
+READ = {'messages.list', 'claims.list', 'operation.get', 'share.get'}
 OPERATIONS = READ | {'room.ensure', 'message.post', 'ack', 'claim.acquire',
-                     'claim.renew', 'claim.release', 'claim.reconcile'}
+                     'claim.renew', 'claim.release', 'claim.reconcile', 'share.create', 'share.event'}
 
 
 def encode(value):

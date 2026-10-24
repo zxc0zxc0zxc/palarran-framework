@@ -215,6 +215,7 @@
     "templates/product": "packages/product/research/templates",
     "templates/science": "packages/science/preprint/templates",
     "templates/ui": "packages/design/ui/templates",
-    "templates/ux": "packages/design/ux/templates"
+    "templates/ux": "packages/design/ux/templates",
+    "skills/palarran-core-share": "packages/core/coordination/skills/palarran-core-share"
   }
 }

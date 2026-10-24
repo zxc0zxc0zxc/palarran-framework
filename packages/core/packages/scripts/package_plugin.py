@@ -238,7 +238,7 @@ def _legacy_package(namespace, output, root=ROOT):
     temporal_runbook = "packages/infrastructure/hosting/docs/temporal-runbook.md"
     if source_path(root, temporal_runbook).is_file():
         resources.append(temporal_runbook)
-    if namespace == "skills":
+    if namespace in {"skills", "core"}:
         helpers = ["packages/core/parallelism/" + name for name in
                    ("dispatcher.py", "authority.py", "entry.py", "harness.py", "native.py", "temporal.py", "temporal_worker.py", "requirements-temporal.txt", "integration.py", "root_budget.py", "dashboard.py")]
         helpers += ["packages/core/parallelism/assets/" + name for name in ("dashboard.html", "dashboard.css", "dashboard.js")]
@@ -246,6 +246,12 @@ def _legacy_package(namespace, output, root=ROOT):
         helpers += ["packages/core/orchestration/runtime/" + name + ".py" for name in
                     ("__init__", "runner", "usage", "diagnostics", "accounting", "budgets", "workspaces")]
         resources += [name for name in helpers if source_path(root, name).is_file()]
+    # Sharing uses the existing bus; its explicit closure excludes private journals.
+    resources += ["packages/core/coordination/docs/sharing/" + guide + ".md" for guide in
+                  ("README", "contract", "git", "temporal")]
+    if namespace in {"skills", "core", "vps"}:
+        resources += ["packages/core/coordination/" + name + ".py" for name in
+                      ("share", "share_store", "share_git", "share_runtime", "share_temporal", "share_temporal_worker")]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():
         paths.append(root / command["source"].removeprefix("./"))
@@ -436,7 +442,7 @@ def _public_package(output, root, resolved, name):
                 destination = bundle / reference; destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(portable_bytes(source.read_bytes(), source.relative_to(root).as_posix(), reference, moves))
         if "infrastructure" in resolved["packages"]:
-            references = ['packages/infrastructure/hosting/compose.yaml', 'packages/infrastructure/hosting/runtime.py', 'packages/infrastructure/hosting/prepare.py', 'packages/infrastructure/hosting/docs/README.md', 'packages/infrastructure/hosting/docs/runbook.md', 'packages/infrastructure/hosting/docs/sources.md', 'packages/memory/knowledge/Dockerfile', 'packages/memory/knowledge/Dockerfile.dockerignore', 'packages/memory/knowledge/runtime/service.py', 'packages/core/coordination/Dockerfile', 'packages/core/coordination/Dockerfile.dockerignore', 'packages/core/coordination/service.py', 'packages/core/coordination/build_sqlite.py']
+            references = ['packages/infrastructure/hosting/compose.yaml', 'packages/infrastructure/hosting/runtime.py', 'packages/infrastructure/hosting/prepare.py', 'packages/infrastructure/hosting/docs/README.md', 'packages/infrastructure/hosting/docs/runbook.md', 'packages/infrastructure/hosting/docs/sources.md', 'packages/memory/knowledge/Dockerfile', 'packages/memory/knowledge/Dockerfile.dockerignore', 'packages/memory/knowledge/runtime/service.py', 'packages/core/coordination/Dockerfile', 'packages/core/coordination/Dockerfile.dockerignore', 'packages/core/coordination/service.py', 'packages/core/coordination/share.py', 'packages/core/coordination/share_store.py', 'packages/core/coordination/build_sqlite.py']
             for reference in references:
                 source = source_path(root, reference, required=True)
                 destination = bundle / reference; destination.parent.mkdir(parents=True, exist_ok=True)
