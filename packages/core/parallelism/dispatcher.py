@@ -1,258 +1,71 @@
 """Durable admission for cooperating adapters; not an OS sandbox or billing cap."""
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
-from contextlib import contextmanager
 import hashlib
 import json
-import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 import re
-import sqlite3
 import threading
 import time
 
-_ID = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,95}$')
-_TERMINAL = {'verified', 'failed', 'cancelled', 'blocked', 'handoff_pending'}
-_HELD = {'running', 'submitted', 'unknown', 'cancel_requested'}
+from packages.core.parallelism.primitives import (
+    _canonical, _identifier, _integer, _overlap, _path, _strings, _text, allocations,
+)
+from packages.core.parallelism.manifest_validation import validate
+from packages.core.parallelism.ledger import SQLiteLedger
+from packages.core.parallelism.states import TaskState
+
+_TERMINAL = {TaskState.VERIFIED, TaskState.FAILED, TaskState.CANCELLED, TaskState.BLOCKED, TaskState.HANDOFF_PENDING}
+_HELD = {TaskState.RUNNING, TaskState.SUBMITTED, TaskState.UNKNOWN, TaskState.CANCEL_REQUESTED}
 
 
-def _integer(value, name, minimum=0):
-    if type(value) is not int or value < minimum or value > 10**15:
-        raise ValueError('Invalid ' + name)
-    return value
 
 
-def _text(value, name, limit=4096):
-    if not isinstance(value, str) or not value or len(value.encode()) > limit or any(ord(c) < 32 for c in value):
-        raise ValueError('Invalid ' + name)
-    return value
 
 
-def _identifier(value):
-    if not isinstance(value, str) or not _ID.fullmatch(value):
-        raise ValueError('Invalid identifier')
-    return value
 
 
-def _path(value):
-    _text(value, 'owned path', 512)
-    if '\\' in value or ':' in value or any(c in value for c in '*?[') or value.startswith('/') or any(p in ('', '.', '..') for p in value.split('/')):
-        raise ValueError('Expected a literal relative file path')
-    return value
 
 
-def _strings(values, name, limit=128):
-    if type(values) is not list or len(values) > limit or any(type(v) is not str for v in values) or len(set(values)) != len(values):
-        raise ValueError('Invalid ' + name)
-    for value in values:
-        _text(value, name, 512)
-    return values
 
 
-def _overlap(left, right):
-    return left == right or left.startswith(right + '/') or right.startswith(left + '/')
 
 
-def _canonical(value):
-    return json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False)
 
 
-def allocations(budget):
-    """Protect named pools; absent cash pools use the frozen token proportions."""
-    phases = ('integration', 'verification', 'handoff')
-    costs = {phase: budget.get(phase + '_cost_micros', budget['cost_micros'] * budget.get(phase + '_tokens', 0) // budget['tokens']) for phase in phases}
-    for value in costs.values():
-        _integer(value, 'phase cost reserve')
-    if sum(costs.values()) >= budget['cost_micros']:
-        raise ValueError('No execution cost allocation remains')
-    costs['execution'] = budget['cost_micros'] - sum(costs.values())
-    return costs
 
 
-def validate(manifest):
-    value = json.loads(_canonical(manifest))
-    if len(_canonical(value).encode()) > 1024 * 1024:
-        raise ValueError('Manifest exceeds byte budget')
-    _identifier(value['run_id'])
-    _text(value['plan_version'], 'plan version', 128)
-    if not re.fullmatch(r'[a-f0-9]{40}|[a-f0-9]{64}', value['base_commit']):
-        raise ValueError('Exact base commit required')
-    if set(value) - {'run_id', 'plan_version', 'base_commit', 'budget', 'max_workers', 'tasks', 'heartbeat_seconds', 'repositories'}:
-        raise ValueError('Unknown manifest fields')
-    repositories = value.get('repositories')
-    if repositories is not None:
-        if type(repositories) is not list or not 1 <= len(repositories) <= 32:
-            raise ValueError('Expected 1..32 repositories')
-        seen = set()
-        for repository in repositories:
-            if set(repository) != {'repository_id', 'default_branch', 'base_commit', 'files', 'owner'}:
-                raise ValueError('Invalid repository binding')
-            key = _identifier(repository['repository_id'])
-            if key in seen:
-                raise ValueError('Duplicate repository')
-            seen.add(key)
-            _identifier(repository['owner'])
-            _text(repository['default_branch'], 'default branch', 256)
-            if not re.fullmatch(r'[a-f0-9]{40}|[a-f0-9]{64}', repository['base_commit']):
-                raise ValueError('Exact repository base required')
-            _strings(repository['files'], 'repository files')
-            for item in repository['files']:
-                _path(item)
-    budget = value['budget']
-    for key in ('tokens', 'cost_micros', 'launches', 'seconds'):
-        _integer(budget[key], key, 1)
-    for key in ('integration_tokens', 'verification_tokens', 'handoff_tokens'):
-        _integer(budget.get(key, 0), key)
-    allocations(budget)
-    if sum(budget.get(k, 0) for k in ('integration_tokens', 'verification_tokens', 'handoff_tokens')) >= budget['tokens']:
-        raise ValueError('No execution token allocation remains')
-    _integer(value.get('heartbeat_seconds', 30), 'heartbeat seconds', 1)
-    if value.get('heartbeat_seconds', 30) > 300:
-        raise ValueError('Heartbeat interval exceeds 300 seconds')
-    _integer(value.get('max_workers', 2), 'max workers', 1)
-    if value.get('max_workers', 2) > 32:
-        raise ValueError('Maximum 32 workers')
-    tasks = value['tasks']
-    if type(tasks) is not list or not 1 <= len(tasks) <= 100:
-        raise ValueError('Expected 1..100 tasks')
-    ids = [_identifier(t['task_id']) for t in tasks]
-    if len(set(ids)) != len(ids):
-        raise ValueError('Duplicate task')
-    by_id = {t['task_id']: t for t in tasks}
-    for task in tasks:
-        if set(task) - {'task_id', 'parent_task_id', 'goal', 'acceptance', 'depends_on', 'plan_version', 'base_commit', 'contracts', 'files', 'resources', 'tools', 'actions', 'limits', 'owner', 'worktree', 'session_id', 'expected_result', 'budget_phase', 'task_queue', 'dispatch_mode', 'required_for_completion', 'repository_id'}:
-            raise ValueError('Unknown task fields')
-        _identifier(task['owner'])
-        for key in ('goal', 'acceptance', 'expected_result'):
-            _text(task[key], key)
-        repository = None
-        if repositories is not None:
-            repository = next((r for r in repositories if r['repository_id'] == task.get('repository_id')), None)
-            if repository is None:
-                raise ValueError('Task repository binding required')
-            if any(not any(_overlap(f, p) and (f == p or f.startswith(p + '/')) for p in repository['files']) for f in task['files']):
-                raise ValueError('Task widens repository file scope')
-        elif task.get('repository_id') is not None:
-            raise ValueError('Repository task requires root repositories')
-        expected_base = repository['base_commit'] if repository else value['base_commit']
-        if task['plan_version'] != value['plan_version'] or task['base_commit'] != expected_base:
-            raise ValueError('Task source/plan drift')
-        if type(task['contracts']) is not dict or len(_canonical(task['contracts'])) > 8192:
-            raise ValueError('Invalid contracts')
-        for key in ('files', 'resources', 'tools', 'actions', 'depends_on'):
-            _strings(task[key], key)
-        for item in task['files']:
-            _path(item)
-        if any(dep not in by_id or dep == task['task_id'] for dep in task['depends_on']):
-            raise ValueError('Invalid dependency')
-        if type(task.get('required_for_completion', True)) is not bool:
-            raise ValueError('Invalid completion requirement')
-        if not task.get('required_for_completion', True) and task.get('dispatch_mode', 'auto') != 'external':
-            raise ValueError('Only external spare stages may be optional')
-        if task.get('dispatch_mode', 'auto') not in ('auto', 'external'):
-            raise ValueError('Unsupported dispatch mode')
-        if task.get('task_queue') is not None:
-            _identifier(task['task_queue'])
-        if task.get('budget_phase', 'execution') not in ('execution', 'integration', 'verification', 'handoff'):
-            raise ValueError('Unsupported allocation phase')
-        parent = task.get('parent_task_id')
-        if parent is not None and (parent not in by_id or parent == task['task_id']):
-            raise ValueError('Invalid parent')
-        for key in ('tokens', 'cost_micros', 'seconds'):
-            _integer(task['limits'][key], key, 1)
-        if parent is not None:
-            ancestor = by_id[parent]
-            if task.get('repository_id') != ancestor.get('repository_id'):
-                raise ValueError('Child cannot change repository')
-            if task.get('required_for_completion', True) != ancestor.get('required_for_completion', True):
-                raise ValueError('Child cannot change completion requirement')
-            if task.get('dispatch_mode', 'auto') != ancestor.get('dispatch_mode', 'auto'):
-                raise ValueError('Child cannot change dispatch mode')
-            if task.get('budget_phase', 'execution') != ancestor.get('budget_phase', 'execution'):
-                raise ValueError('Child cannot change allocation phase')
-            if any(not set(task[k]) <= set(ancestor[k]) for k in ('resources', 'tools', 'actions')) or any(not any(f == p or f.startswith(p + '/') for p in ancestor['files']) for f in task['files']):
-                raise ValueError('Child cannot widen parent permissions')
-            if any(task['limits'][k] > ancestor['limits'][k] for k in ('tokens', 'cost_micros', 'seconds')):
-                raise ValueError('Child cannot widen parent limits')
-        if task.get('session_id') is not None:
-            _identifier(task['session_id'])
-        worktree = task.get('worktree')
-        if worktree is not None:
-            if not isinstance(worktree, str) or not Path(worktree).is_absolute():
-                raise ValueError('Absolute owned worktree required')
-            p = Path(worktree)
-            if any(part.is_symlink() for part in (p, *p.parents)):
-                raise ValueError('Worktree symlink forbidden')
-            if p.exists() and not p.is_dir():
-                raise ValueError('Worktree must be a directory')
-        if task['files'] and worktree is None:
-            raise ValueError('Code ownership requires worktree')
-    if not any(t.get('required_for_completion', True) for t in tasks):
-        raise ValueError('At least one required acceptance task is needed')
-    def visit(task_id, visiting, done, relation):
-        if task_id in visiting:
-            raise ValueError('Cyclic task graph')
-        if task_id in done:
-            return
-        visiting.add(task_id)
-        task = by_id[task_id]
-        edges = task['depends_on'] if relation == 'depends_on' else ([task['parent_task_id']] if task.get('parent_task_id') else [])
-        for child in edges:
-            visit(child, visiting, done, relation)
-        visiting.remove(task_id)
-        done.add(task_id)
-    for relation in ('depends_on', 'parent_task_id'):
-        done = set()
-        for task_id in ids:
-            visit(task_id, set(), done, relation)
-    return value
+
+
+
+
+
+
+
+
+
 
 
 class Dispatcher:
     """One private authority; independent copies do not share resource locks."""
     def __init__(self, db_path):
         self.path = Path(db_path).absolute()
-        if any(p.is_symlink() for p in (self.path, *self.path.parents)):
-            raise ValueError('State symlinks forbidden')
-        self.path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
-        if self.path.exists() and (not self.path.is_file() or self.path.stat().st_mode & 0o077):
-            raise ValueError('State must be a private regular file')
-        if not self.path.exists():
-            fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-            os.close(fd)
-        with self._transaction() as db:
-            tables = {r[0] for r in db.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
-            application = db.execute('PRAGMA application_id').fetchone()[0]
-            if tables:
-                if application != 0x50414C50 or not {'runs', 'tasks', 'events'} <= tables or 'started' not in {r[1] for r in db.execute('PRAGMA table_info(tasks)')}:
-                    raise ValueError('Expected a parallel dispatcher v001 ledger; no automatic state migration')
-            elif application not in (0, 0x50414C50):
-                raise ValueError('State belongs to another application')
-            db.execute('PRAGMA application_id=1346456656')
-            db.execute('PRAGMA user_version=1')
-            schema = '''CREATE TABLE IF NOT EXISTS runs(id TEXT PRIMARY KEY, manifest TEXT NOT NULL, digest TEXT NOT NULL, backend TEXT NOT NULL, created REAL NOT NULL, cancel INTEGER NOT NULL DEFAULT 0);
-            CREATE TABLE IF NOT EXISTS tasks(run TEXT NOT NULL, id TEXT NOT NULL, packet TEXT NOT NULL, state TEXT NOT NULL, attempt INTEGER NOT NULL DEFAULT 0, heartbeat REAL, started REAL, receipt TEXT, verification TEXT, tokens INTEGER NOT NULL DEFAULT 0, cost INTEGER NOT NULL DEFAULT 0, usage_known INTEGER NOT NULL DEFAULT 1, reserve_tokens INTEGER NOT NULL DEFAULT 0, reserve_cost INTEGER NOT NULL DEFAULT 0, reason TEXT, PRIMARY KEY(run,id));
-            CREATE TABLE IF NOT EXISTS events(seq INTEGER PRIMARY KEY AUTOINCREMENT,run TEXT NOT NULL, task TEXT, kind TEXT NOT NULL, at REAL NOT NULL);
-            '''
-            for statement in schema.split(';'):
-                if statement.strip():
-                    db.execute(statement)
+        self.ledger.initialize()
 
-    @contextmanager
+    @property
+    def ledger(self):
+        """Trusted local storage port, also available to legacy read-only views."""
+        if not hasattr(self, '_ledger'):
+            self._ledger = SQLiteLedger(self.path)
+        return self._ledger
+
+    @ledger.setter
+    def ledger(self, value):
+        self._ledger = value
+
+
     def _transaction(self):
-        db = sqlite3.connect(self.path, timeout=30, isolation_level=None)
-        db.row_factory = sqlite3.Row
-        try:
-            db.execute('PRAGMA synchronous=FULL')
-            db.execute('BEGIN IMMEDIATE')
-            yield db
-            if db.in_transaction:
-                db.commit()
-        except BaseException:
-            if db.in_transaction:
-                db.rollback()
-            raise
-        finally:
-            db.close()
+        return self.ledger.transaction()
+
 
     def _event(self, db, run, task, kind):
         db.execute('INSERT INTO events(run,task,kind,at) VALUES(?,?,?,?)', (run, task, kind, time.time()))
@@ -271,7 +84,7 @@ class Dispatcher:
                 return value['run_id']
             db.execute('INSERT INTO runs(id,manifest,digest,backend,created) VALUES(?,?,?,?,?)', (value['run_id'], raw, digest, backend, time.time()))
             for task in value['tasks']:
-                db.execute('INSERT INTO tasks(run,id,packet,state) VALUES(?,?,?,?)', (value['run_id'], task['task_id'], _canonical(task), 'pending'))
+                db.execute('INSERT INTO tasks(run,id,packet,state) VALUES(?,?,?,?)', (value['run_id'], task['task_id'], _canonical(task), TaskState.PENDING))
             self._event(db, value['run_id'], None, 'created')
         return value['run_id']
 
@@ -284,7 +97,7 @@ class Dispatcher:
             rows = db.execute('SELECT * FROM tasks WHERE run=?', (run_id,)).fetchall()
             parent = next((json.loads(r['packet']) for r in rows if r['id'] == parent_task_id), None)
             parent_row = next((r for r in rows if r['id'] == parent_task_id), None)
-            if parent is None or parent_row['state'] not in ('running', 'ready', 'pending'):
+            if parent is None or parent_row['state'] not in (TaskState.RUNNING, TaskState.READY, TaskState.PENDING):
                 raise ValueError('Active registered parent required')
             candidate = dict(manifest, tasks=[json.loads(r['packet']) for r in rows] + list(tasks))
             validate(candidate)
@@ -298,57 +111,60 @@ class Dispatcher:
                     raise ValueError('Child cannot widen file ownership')
                 if any(task['limits'][key] > parent['limits'][key] for key in ('tokens', 'cost_micros', 'seconds')):
                     raise ValueError('Child cannot widen task limits')
-                db.execute('INSERT INTO tasks(run,id,packet,state) VALUES(?,?,?,?)', (run_id, task['task_id'], _canonical(task), 'pending'))
+                db.execute('INSERT INTO tasks(run,id,packet,state) VALUES(?,?,?,?)', (run_id, task['task_id'], _canonical(task), TaskState.PENDING))
                 self._event(db, run_id, task['task_id'], 'child_registered')
         return self.get_run(run_id)
 
     def _run(self, db, run_id):
-        row = db.execute('SELECT * FROM runs WHERE id=?', (run_id,)).fetchone()
-        if row is None:
-            raise ValueError('Unknown run')
-        return row, json.loads(row['manifest'])
+        return self.ledger.read_run(db, run_id)
+
 
     def _status(self, rows, cancelled=False):
         states = {r['state'] for r in rows if r['attempt'] > 0 or json.loads(r['packet']).get('required_for_completion', True)}
-        if 'unknown' in states:
-            return 'unknown'
-        if 'cancel_requested' in states:
-            return 'cancel_requested'
-        if states <= {'verified'}:
-            return 'verified'
+        if TaskState.UNKNOWN in states:
+            return TaskState.UNKNOWN
+        if TaskState.CANCEL_REQUESTED in states:
+            return TaskState.CANCEL_REQUESTED
+        if states <= {TaskState.VERIFIED}:
+            return TaskState.VERIFIED
         if cancelled and states <= _TERMINAL:
-            return 'cancelled'
-        if states & {'running', 'submitted'}:
-            return 'running'
+            return TaskState.CANCELLED
+        if states & {TaskState.RUNNING, TaskState.SUBMITTED}:
+            return TaskState.RUNNING
         if states <= _TERMINAL:
-            return 'failed'
-        return 'ready'
+            return TaskState.FAILED
+        return TaskState.READY
 
     def _task_report(self, row):
-        packet = json.loads(row['packet'])
-        proof = json.loads(row['verification']) if row['verification'] else {}
-        receipt = json.loads(row['receipt']) if row['receipt'] else {}
-        return {'task_id': row['id'], 'parent_task_id': packet.get('parent_task_id'),
-                'attempt_id': row['attempt'], 'state': row['state'], 'reason': row['reason'] if row['reason'] in (None, 'budget', 'heartbeat_lost') else 'operator_reconciled',
-                'owner': packet['owner'],
-                'session_id': packet.get('session_id'), 'task_queue': packet.get('task_queue'),
-                'repository_id': packet.get('repository_id'), 'base_commit': packet['base_commit'], 'plan_version': packet['plan_version'],
-                'depends_on': packet['depends_on'], 'dispatch_mode': packet.get('dispatch_mode', 'auto'), 'required_for_completion': packet.get('required_for_completion', True), 'budget_phase': packet.get('budget_phase', 'execution'),
-                'verified_subject': (proof.get('subject') if isinstance(proof.get('subject'), str) and re.fullmatch(r'[a-f0-9]{40}|[a-f0-9]{64}', proof['subject']) else hashlib.sha256(_canonical(proof.get('subject')).encode()).hexdigest()) if row['state'] == 'verified' else None,
-                'evidence_sha256': hashlib.sha256(_canonical(proof).encode()).hexdigest() if proof else None,
-                'receipt_sha256': hashlib.sha256(_canonical(receipt).encode()).hexdigest() if receipt else None,
-                'heartbeat_at': row['heartbeat'], 'started_at': row['started'],
-                'tokens': row['tokens'], 'cost_micros': row['cost'],
-                'usage_known': bool(row['usage_known']), 'reserved_tokens': row['reserve_tokens'],
-                'reserved_cost_micros': row['reserve_cost']}
+        return self.ledger.project_task(row)
+
 
     def get_run(self, run_id):
         with self._transaction() as db:
             run, manifest = self._run(db, run_id)
-            rows = db.execute('SELECT * FROM tasks WHERE run=? ORDER BY rowid', (run_id,)).fetchall()
-            return {'run_id': run_id, 'backend': run['backend'], 'plan_sha256': run['digest'], 'plan_version': manifest['plan_version'], 'base_commit': manifest['base_commit'], 'tasks_sha256': hashlib.sha256(_canonical([json.loads(r['packet']) for r in rows]).encode()).hexdigest(), 'status': self._status(rows, bool(run['cancel'])), 'stopped': not any(r['state'] in _HELD for r in rows),
-                    'repositories': manifest.get('repositories'), 'budget': manifest['budget'], 'cost_allocations': allocations(manifest['budget']), 'usage': {'tokens': sum(r['tokens'] for r in rows), 'cost_micros': sum(r['cost'] for r in rows), 'reserved_tokens': sum(r['reserve_tokens'] for r in rows), 'reserved_cost_micros': sum(r['reserve_cost'] for r in rows), 'known': all(r['usage_known'] for r in rows)},
-                    'tasks': [self._task_report(r) for r in rows]}
+            rows = self.ledger.read_tasks(db, run_id)
+            packets = [json.loads(row['packet']) for row in rows]
+            return {
+                'run_id': run_id,
+                'backend': run['backend'],
+                'plan_sha256': run['digest'],
+                'plan_version': manifest['plan_version'],
+                'base_commit': manifest['base_commit'],
+                'tasks_sha256': hashlib.sha256(_canonical(packets).encode()).hexdigest(),
+                'status': self._status(rows, bool(run['cancel'])),
+                'stopped': not any(row['state'] in _HELD for row in rows),
+                'repositories': manifest.get('repositories'),
+                'budget': manifest['budget'],
+                'cost_allocations': allocations(manifest['budget']),
+                'usage': {
+                    'tokens': sum(row['tokens'] for row in rows),
+                    'cost_micros': sum(row['cost'] for row in rows),
+                    'reserved_tokens': sum(row['reserve_tokens'] for row in rows),
+                    'reserved_cost_micros': sum(row['reserve_cost'] for row in rows),
+                    'known': all(row['usage_known'] for row in rows),
+                },
+                'tasks': [self._task_report(row) for row in rows],
+            }
 
     def _conflicts(self, db, run_id, packet):
         # Resource keys are canonical operator-owned aliases, project prefix included.
@@ -371,13 +187,13 @@ class Dispatcher:
         with self._transaction() as db:
             self._run(db,run_id)
             row=db.execute('SELECT * FROM tasks WHERE run=? AND id=?',(run_id,task_id)).fetchone()
-            if row is None or row['state'] not in ('pending','ready','failed','blocked','cancelled','handoff_pending'):
+            if row is None or row['state'] not in (TaskState.PENDING,TaskState.READY,TaskState.FAILED,TaskState.BLOCKED,TaskState.CANCELLED,TaskState.HANDOFF_PENDING):
                 raise ValueError('Stop and reconcile active or unknown operations before sharing')
             reason='share:'+share_id+':'+evidence_sha256+':'+plan_hash
-            if row['state']=='handoff_pending' and row['reason']!=reason:
+            if row['state']==TaskState.HANDOFF_PENDING and row['reason']!=reason:
                 raise ValueError('A different share already owns this scope')
             db.execute("UPDATE tasks SET state='handoff_pending',reason=? WHERE run=? AND id=?",(reason,run_id,task_id))
-            self._event(db,run_id,task_id,'handoff_pending')
+            self._event(db,run_id,task_id,TaskState.HANDOFF_PENDING)
             return dict(run_id=run_id,task_id=task_id,share_id=share_id,stopped=True,
                         usage_known=bool(row['usage_known']),tokens=row['tokens'],cost_micros=row['cost'])
 
@@ -405,7 +221,7 @@ class Dispatcher:
         # Run external verifier outside the state transaction; recheck fence below.
         with self._transaction() as db:
             row=db.execute('SELECT * FROM tasks WHERE run=? AND id=?',(run_id,task_id)).fetchone()
-            if row is None or row['state']!='handoff_pending' or not (row['reason'] or '').startswith('share:'+share_id+':'):
+            if row is None or row['state']!=TaskState.HANDOFF_PENDING or not (row['reason'] or '').startswith('share:'+share_id+':'):
                 raise ValueError('Share ownership mismatch')
             if not row['reason'].endswith(':'+shared['offer']['plan_hash']):
                 raise ValueError('Share plan mismatch')
@@ -420,7 +236,7 @@ class Dispatcher:
         with self._transaction() as db:
             current=db.execute('SELECT * FROM tasks WHERE run=? AND id=?',(run_id,task_id)).fetchone()
             run,_=self._run(db,run_id)
-            if run['cancel'] or current['state']!='handoff_pending' or current['reason']!=row['reason']:
+            if run['cancel'] or current['state']!=TaskState.HANDOFF_PENDING or current['reason']!=row['reason']:
                 raise ValueError('Share ownership changed')
             db.execute("UPDATE tasks SET state='verified',receipt=?,verification=?,reserve_tokens=0,reserve_cost=0 WHERE run=? AND id=?",
                        (_canonical(receipt),_canonical(proof),run_id,task_id))
@@ -438,22 +254,22 @@ class Dispatcher:
             rows = db.execute('SELECT * FROM tasks WHERE run=?', (run_id,)).fetchall()
             states = {r['id']: r['state'] for r in rows}
             stopped = bool(run['cancel']) or time.time() - run['created'] >= manifest['budget']['seconds']
-            uncertain = any(r['state'] in ('unknown', 'cancel_requested') for r in rows)
+            uncertain = any(r['state'] in (TaskState.UNKNOWN, TaskState.CANCEL_REQUESTED) for r in rows)
             for row in rows:
-                if row['state'] not in ('pending', 'ready'):
+                if row['state'] not in (TaskState.PENDING, TaskState.READY):
                     continue
                 task = json.loads(row['packet'])
                 if stopped:
-                    state = 'cancelled' if run['cancel'] else 'blocked'
-                elif any(states[dep] in ('failed', 'blocked', 'cancelled') for dep in task['depends_on']):
-                    state = 'blocked'
-                elif not uncertain and all(states[dep] == 'verified' for dep in task['depends_on']):
-                    state = 'ready'
+                    state = TaskState.CANCELLED if run['cancel'] else TaskState.BLOCKED
+                elif any(states[dep] in (TaskState.FAILED, TaskState.BLOCKED, TaskState.CANCELLED) for dep in task['depends_on']):
+                    state = TaskState.BLOCKED
+                elif not uncertain and all(states[dep] == TaskState.VERIFIED for dep in task['depends_on']):
+                    state = TaskState.READY
                 else:
-                    state = 'pending'
+                    state = TaskState.PENDING
                 db.execute('UPDATE tasks SET state=? WHERE run=? AND id=?', (state, run_id, row['id']))
             rows = db.execute('SELECT id,state,packet,attempt FROM tasks WHERE run=?', (run_id,)).fetchall()
-            return {'status': self._status(rows, bool(run['cancel'])), 'stopped': not any(r['state'] in _HELD for r in rows), 'backend': run['backend'], 'available': max(0, manifest.get('max_workers', 2) - sum(r['state'] in _HELD for r in rows)), 'routes': {t['task_id']: t['task_queue'] for t in [json.loads(r[0]) for r in db.execute('SELECT packet FROM tasks WHERE run=?', (run_id,))] if t.get('task_queue')}, 'ready': [r['id'] for r in rows if r['state'] == 'ready' and json.loads(r['packet']).get('dispatch_mode', 'auto') == 'auto'], 'active': [r['id'] for r in rows if r['state'] in _HELD]}
+            return {'status': self._status(rows, bool(run['cancel'])), 'stopped': not any(r['state'] in _HELD for r in rows), 'backend': run['backend'], 'available': max(0, manifest.get('max_workers', 2) - sum(r['state'] in _HELD for r in rows)), 'routes': {t['task_id']: t['task_queue'] for t in [json.loads(r[0]) for r in db.execute('SELECT packet FROM tasks WHERE run=?', (run_id,))] if t.get('task_queue')}, TaskState.READY: [r['id'] for r in rows if r['state'] == TaskState.READY and json.loads(r['packet']).get('dispatch_mode', 'auto') == 'auto'], 'active': [r['id'] for r in rows if r['state'] in _HELD]}
 
     def _admit(self, run_id, task_id, *, feature_binding=None):
         self.tick(run_id)
@@ -461,11 +277,11 @@ class Dispatcher:
             run, manifest = self._run(db, run_id)
             rows = db.execute('SELECT * FROM tasks WHERE run=?', (run_id,)).fetchall()
             row = next((r for r in rows if r['id'] == task_id), None)
-            if self._status(rows, bool(run['cancel'])) in ('verified', 'cancelled'):
+            if self._status(rows, bool(run['cancel'])) in (TaskState.VERIFIED, TaskState.CANCELLED):
                 return None
             if row is None:
                 raise ValueError('Unknown task')
-            if row['state'] != 'ready' or run['cancel'] or any(r['state'] in ('unknown', 'cancel_requested') for r in rows):
+            if row['state'] != TaskState.READY or run['cancel'] or any(r['state'] in (TaskState.UNKNOWN, TaskState.CANCEL_REQUESTED) for r in rows):
                 return None
             if sum(r['state'] in _HELD for r in rows) >= manifest.get('max_workers', 2):
                 return None
@@ -510,7 +326,7 @@ class Dispatcher:
         with self._transaction() as db:
             run, manifest = self._run(db, run_id)
             row = db.execute('SELECT * FROM tasks WHERE run=? AND id=?', (run_id, task_id)).fetchone()
-            if row is None or row['attempt'] != attempt_id or row['state'] not in ('running', 'cancel_requested'):
+            if row is None or row['attempt'] != attempt_id or row['state'] not in (TaskState.RUNNING, TaskState.CANCEL_REQUESTED):
                 return False
             for name, value, old, limit in (('tokens', tokens, row['tokens'], 'tokens'), ('cost_micros', cost_micros, row['cost'], 'cost_micros')):
                 if value is not None:
@@ -541,11 +357,11 @@ class Dispatcher:
             return okay
         try:
             if not beat():
-                receipt = {'status': 'cancelled', 'tokens': 0, 'cost_micros': 0, 'usage_known': True, 'stopped': True}
+                receipt = {'status': TaskState.CANCELLED, 'tokens': 0, 'cost_micros': 0, 'usage_known': True, 'stopped': True}
             else:
                 receipt = adapter.execute(task, heartbeat=beat, cancel=event)
         except Exception:
-            receipt = {'status': 'unknown', 'tokens': 0, 'cost_micros': 0, 'usage_known': False, 'stopped': False}
+            receipt = {'status': TaskState.UNKNOWN, 'tokens': 0, 'cost_micros': 0, 'usage_known': False, 'stopped': False}
         return self.finish_task(run_id, task_id, task['attempt_id'], receipt, verifier, elapsed=time.monotonic() - started)
 
     def claim_task(self, run_id, task_id, *, feature_binding=None):
@@ -561,7 +377,7 @@ class Dispatcher:
             task.update(run_id=run_id, attempt_id=attempt_id)
             elapsed = max(time.time() - row['started'], elapsed or 0) if row['started'] is not None else 0
         try:
-            if type(receipt) is not dict or receipt.get('status') not in ('submitted', 'failed', 'cancelled', 'unknown'):
+            if type(receipt) is not dict or receipt.get('status') not in (TaskState.SUBMITTED, TaskState.FAILED, TaskState.CANCELLED, TaskState.UNKNOWN):
                 raise ValueError('Invalid adapter receipt')
             if set(receipt) - {'status', 'subject', 'tokens', 'cost_micros', 'usage_known', 'stopped'}:
                 raise ValueError('Unknown receipt fields')
@@ -574,11 +390,11 @@ class Dispatcher:
             if len(_canonical(receipt).encode()) > 8192:
                 raise ValueError('Oversized receipt')
         except Exception:
-            receipt = {'status': 'unknown', 'tokens': 0, 'cost_micros': 0, 'usage_known': False, 'stopped': False}
+            receipt = {'status': TaskState.UNKNOWN, 'tokens': 0, 'cost_micros': 0, 'usage_known': False, 'stopped': False}
         with self._transaction() as db:
             run, manifest = self._run(db, run_id)
             row = db.execute('SELECT * FROM tasks WHERE run=? AND id=?', (run_id, task_id)).fetchone()
-            if row['attempt'] != task['attempt_id'] or row['state'] not in ('running', 'cancel_requested'):
+            if row['attempt'] != task['attempt_id'] or row['state'] not in (TaskState.RUNNING, TaskState.CANCEL_REQUESTED):
                 return {'status': 'stale', 'task_id': task_id}
             known = receipt['usage_known']
             tokens, cost = max(row['tokens'], receipt['tokens']), max(row['cost'], receipt['cost_micros'])
@@ -586,14 +402,14 @@ class Dispatcher:
                 known = False
             state = receipt['status']
             if not receipt['stopped'] or not known:
-                state = 'unknown'
+                state = TaskState.UNKNOWN
             elif run['cancel']:
-                state = 'cancelled'
+                state = TaskState.CANCELLED
             elif tokens > task['limits']['tokens'] or cost > task['limits']['cost_micros'] or time.time() - run['created'] >= manifest['budget']['seconds'] or elapsed > task['limits']['seconds']:
-                state = 'failed'
+                state = TaskState.FAILED
             db.execute('UPDATE tasks SET state=?,receipt=?,tokens=?,cost=?,usage_known=?,reserve_tokens=?,reserve_cost=? WHERE run=? AND id=?', (state, _canonical(receipt), tokens, cost, int(known), 0 if known and receipt['stopped'] else max(0, task['limits']['tokens'] - tokens), 0 if known and receipt['stopped'] else max(0, task['limits']['cost_micros'] - cost), run_id, task_id))
             self._event(db, run_id, task_id, state)
-        if state == 'submitted':
+        if state == TaskState.SUBMITTED:
             try:
                 proof = verifier(task, dict(receipt))
                 passed = (type(proof) is dict and not (set(proof) - {'passed', 'subject', 'evidence', 'independent'}) and proof.get('passed') is True and proof.get('independent') is True and isinstance(receipt.get('subject'), str) and bool(receipt['subject']) and proof.get('subject') == receipt['subject'] and isinstance(proof.get('evidence'), str) and bool(proof['evidence']) and len(_canonical(proof).encode()) <= 8192)
@@ -606,8 +422,8 @@ class Dispatcher:
                 if time.time() - run['created'] >= manifest['budget']['seconds']:
                     passed = False
                 row = db.execute('SELECT state,attempt FROM tasks WHERE run=? AND id=?', (run_id, task_id)).fetchone()
-                if row['state'] in ('submitted', 'cancel_requested') and row['attempt'] == task['attempt_id']:
-                    state = 'cancelled' if run['cancel'] else ('verified' if passed else 'failed')
+                if row['state'] in (TaskState.SUBMITTED, TaskState.CANCEL_REQUESTED) and row['attempt'] == task['attempt_id']:
+                    state = TaskState.CANCELLED if run['cancel'] else (TaskState.VERIFIED if passed else TaskState.FAILED)
                     db.execute('UPDATE tasks SET state=?,verification=? WHERE run=? AND id=?', (state, _canonical(proof), run_id, task_id))
                     self._event(db, run_id, task_id, state)
         return {'task_id': task_id, 'attempt_id': task['attempt_id'], 'status': state, 'stopped': receipt['stopped'], 'usage_known': known}
@@ -618,9 +434,9 @@ class Dispatcher:
             db.execute('UPDATE runs SET cancel=1 WHERE id=?', (run_id,))
             db.execute("UPDATE tasks SET state='cancelled' WHERE run=? AND state IN ('pending','ready','blocked')", (run_id,))
             db.execute("UPDATE tasks SET state='cancel_requested' WHERE run=? AND state IN ('running','submitted')", (run_id,))
-            self._event(db, run_id, None, 'cancel_requested')
+            self._event(db, run_id, None, TaskState.CANCEL_REQUESTED)
             active = [r[0] for r in db.execute("SELECT id FROM tasks WHERE run=? AND state IN ('running','submitted','unknown','cancel_requested')", (run_id,))]
-        return {'stopped': not active, 'unknown': active, 'status': 'cancel_requested' if active else 'cancelled'}
+        return {'stopped': not active, TaskState.UNKNOWN: active, 'status': TaskState.CANCEL_REQUESTED if active else TaskState.CANCELLED}
 
     def expire(self, run_id, before):
         """Operator/poller marks lost heartbeat unknown, never frees claims."""
@@ -637,9 +453,9 @@ class Dispatcher:
         with self._transaction() as db:
             run, _ = self._run(db, run_id)
             row = db.execute('SELECT * FROM tasks WHERE run=? AND id=?', (run_id, task_id)).fetchone()
-            if row is None or row['state'] not in ('unknown', 'cancel_requested') or tokens < row['tokens'] or cost_micros < row['cost']:
+            if row is None or row['state'] not in (TaskState.UNKNOWN, TaskState.CANCEL_REQUESTED) or tokens < row['tokens'] or cost_micros < row['cost']:
                 raise ValueError('Invalid reconciliation')
-            state = 'cancelled' if run['cancel'] else 'failed'
+            state = TaskState.CANCELLED if run['cancel'] else TaskState.FAILED
             db.execute('UPDATE tasks SET state=?,tokens=?,cost=?,usage_known=1,reserve_tokens=0,reserve_cost=0,reason=? WHERE run=? AND id=?', (state, tokens, cost_micros, reason, run_id, task_id))
             self._event(db, run_id, task_id, 'reconciled')
 
@@ -655,7 +471,7 @@ class Dispatcher:
             while True:
                 state = self.tick(run_id)
                 busy = set(futures.values())
-                for task_id in state['ready']:
+                for task_id in state[TaskState.READY]:
                     if task_id not in busy and len(futures) < wave:
                         task = self._admit(run_id, task_id)
                         if task is not None:
@@ -666,7 +482,7 @@ class Dispatcher:
                 for future in done:
                     futures.pop(future)
                     future.result()
-                if wave < ceiling and len(self.tick(run_id)['ready']) > len(futures):
+                if wave < ceiling and len(self.tick(run_id)[TaskState.READY]) > len(futures):
                     wave += 1
                     with self._transaction() as db:
                         self._event(db, run_id, None, 'wave_increased_ready_work')
