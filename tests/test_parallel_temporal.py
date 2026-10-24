@@ -120,6 +120,44 @@ class TemporalBoundaryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "digest"):
             bridge.execute({**REQUEST, "plan_sha256": "b" * 64}, "task1")
 
+    @unittest.skipUnless((Path(__file__).resolve().parents[1] / "packages/core/parallelism/dispatcher.py").exists(),
+                         "shared dispatcher integrated by coordinator")
+    def test_shared_dispatcher_cancel_proof_survives_double_sanitization(self):
+        import threading
+        import time
+        from test_parallel_dispatcher import Dispatcher, manifest
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            dispatcher = Dispatcher(root / "private/state.sqlite3")
+            dispatcher.create_run(manifest(root, count=1), backend="temporal")
+            request = envelope("offline-run", dispatcher.get_run("offline-run")["plan_sha256"])
+            started = threading.Event()
+            class Adapter:
+                def execute(self, task, *, heartbeat, cancel):
+                    started.set()
+                    deadline = time.monotonic() + 2
+                    while time.monotonic() < deadline:
+                        if not heartbeat(tokens=1, cost_micros=1):
+                            return dict(status="cancelled", tokens=1, cost_micros=1,
+                                        usage_known=True, stopped=True)
+                        time.sleep(0.002)
+                    return dict(status="unknown", tokens=1, cost_micros=1,
+                                usage_known=False, stopped=False)
+            def verifier(*args):
+                self.fail("cancelled result must not be accepted")
+            bridge = DispatcherBridge(dispatcher, Adapter(), verifier)
+            receipts = []
+            worker = threading.Thread(target=lambda: receipts.append(bridge.execute(request, "task-0")))
+            worker.start()
+            self.assertTrue(started.wait(2))
+            bridge.cancel(request)
+            worker.join(3)
+            self.assertFalse(worker.is_alive())
+            self.assertEqual(receipts[0]["status"], "cancelled")
+            result = safe_receipt(bridge.tick(request))
+            self.assertEqual(result["status"], "cancelled")
+            self.assertTrue(result["stopped"])
+
     def test_compose_profile_is_isolated_and_loopback(self):
         root = Path(__file__).resolve().parents[1]
         profile = json.loads((root / "packages/infrastructure/hosting/temporal.compose.yaml").read_text())
