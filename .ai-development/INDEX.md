@@ -116,3 +116,7 @@
 | setup/2026-10-24-safe-update/0001 | accepted | Three-way owned skill updates, guarded rollback, preserved project settings and trusted global memory check | [record](setup/2026-10-24-safe-update/decisions/0001-three-way-update.md), [handoff](setup/2026-10-24-safe-update/handoff.md) |
 
 | setup/2026-10-24-skills-setup/0001 | accepted | Single skill entrypoint selects guarded install/update, preserves client scope and checks global memory | [record](setup/2026-10-24-skills-setup/decisions/0001-single-entry.md), [handoff](setup/2026-10-24-skills-setup/handoff.md) |
+
+| memory/2026-10-24-research-results/0001 | accepted | Prioritize evidence-backed R&D findings, negative results and applicability using compatible memory-v001 cards | [record](memory/2026-10-24-research-results/decisions/0001-research-first.md), [handoff](memory/2026-10-24-research-results/handoff.md) |
+
+| search/2026-10-24-keenable/0001 | accepted | Native remote MCP with pinned global-only header helper; shared bounded web/docs sources separate from research memory | [record](search/2026-10-24-keenable/decisions/0001-global-source-layer.md), [handoff](search/2026-10-24-keenable/handoff.md) |

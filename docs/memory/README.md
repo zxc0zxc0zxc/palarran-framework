@@ -15,4 +15,6 @@
 
 Интерфейсы и ограничения runtime описаны в contract; deployment templates инертны до review. Установка skill не регистрирует MCP глобально и не открывает VPS.
 
+R&D findings — полноценная часть общей памяти: [research profile](../skills/research-memory.md). При отборе уроков приоритет у применимых результатов/отрицательных findings с условиями и evidence; кодовые patches сохраняются при пользе, массового импорта нет.
+
 Все скиллы используют [автоматический цикл](../skills/global-memory.md): bounded recall до работы и verified sanitized learn после проверок. Автопубликация — только при явной owner policy; отсутствие сервиса не блокирует основную задачу.

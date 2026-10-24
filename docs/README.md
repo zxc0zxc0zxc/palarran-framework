@@ -10,6 +10,8 @@
 | Новый агент/изменение библиотеки | [Shared contracts index](skills/README.md), module AGENTS из root map |
 | Понять решения/сохранить rationale | [Decision memory](skills/decision-memory.md), [accepted ADR index](../.ai-development/INDEX.md) |
 | Создать/изменить AGENTS.md | [Authoring guide](skills/agents-authoring.md) |
+| Сохранить/найти R&D findings | [Research memory](skills/research-memory.md), [global cycle](skills/global-memory.md) |
+| Актуальные web/docs источники | [Context retrieval](skills/context-retrieval.md) |
 | Найти код/зависимости | [Graph context](skills/graph-context.md), [runtime context](product-factory/runtime-context.md), затем original files |
 | План/реализация/проверка | [Execution progress](skills/execution-progress.md), профильный SDD guide |
 

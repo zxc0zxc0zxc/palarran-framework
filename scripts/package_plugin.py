@@ -155,7 +155,7 @@ def build_package(namespace, output, root=ROOT):
     if namespace == "skills":
         resources += ["scripts/project_setup.py", "scripts/project_update.py"]
     resources += ["templates/agents/root.md", "templates/agents/module.md",
-                  "scripts/memory_cycle.py", "scripts/memory_ops.py", "templates/memory/lesson.example.json",
+                  "scripts/memory_cycle.py", "scripts/memory_ops.py", "scripts/keenable_auth.py", "templates/memory/lesson.example.json",
                   "memory/__init__.py", "memory/service.py"]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():

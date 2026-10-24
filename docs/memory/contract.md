@@ -14,6 +14,10 @@ Candidate виден только своему project scope. `promote` треб
 
 `feedback` идемпотентен по card+repo+commit+outcome+note; исход helped/not_applicable/refuted и evidence обязательны. `link` reviewer-only, фиксированный relation allowlist, source/target должны существовать. Отсутствие endpoint — ошибка, не успешная пустая запись. SUPERSEDES не удаляет predecessor и не утверждает истинность автоматически.
 
+## R&D profile
+
+[Исследовательские результаты](../skills/research-memory.md) используют существующий type decision и research-result/kind/outcome tags; exact subject/conditions/metrics/conclusion находятся в problem/root_cause/solution. Новых JSON fields/types нет. Evidence validation PASS не означает supported hypothesis. Тип verification для разрешённого report artifact уже существует; automatic cycle остаётся card-only.
+
 ## Чтение и ошибки
 
 Каждая операция несёт project alias; shared global + exact project visibility. Это фильтр контекста одного владельца, не ACL между враждебными пользователями. Search literal query <=256char, limit1..5, native card+artifact fulltext, candidate cap200. matched_artifact содержит hash/offset для jump к соответствующей странице; совпадение карточки даёт null fields. get по hash. Neighbors максимум20, явно has_more. Artifact <=4096символов/страница, next_offset и complete; выдача разрешена только для доступного case, который ссылается на hash. No path traversal/symlink reads.

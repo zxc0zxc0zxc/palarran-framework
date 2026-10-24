@@ -6,6 +6,12 @@
 
 Проверены 2026-10-24: [Anthropic context engineering, 2025-09-29](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents) — адресное получение и компактные устойчивые notes; [Agent Skills, rolling docs](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) — progressive disclosure; [MCP security, 2025-11-25 profile](https://modelcontextprotocol.io/docs/2025-11-25/tutorials/security/security_best_practices) — минимальные полномочия и доверие к локальному запуску. Наши gates/порог3/ledger — проектные решения, не vendor benchmark. Helper работает с существующим API из public memory service; reviewer не добавляется в MCP inventory.
 
+## R&D findings
+
+Для исследовательских результатов обязателен [research-memory](research-memory.md): сначала рассмотреть переносимые findings, включая отрицательные и inconclusive, затем code lessons в том же лимите0–3. Сохранять гипотезу/subject/data/protocol/baseline/метрики/units/uncertainty/ресурсы/outcome/limitations и provenance. Source claim не наблюдаемый результат; PASS проверки evidence не положительный outcome эксперимента. Профиль совместим с текущим API, без импорта истории и без нового model/search API.
+
+Когда нужны внешние источники, читать [context retrieval](context-retrieval.md): память и web search выполняют разные роли; --plan не включает новые service calls.
+
 ## Вход
 
 1. Выбрать target, прочитать INDEX/accepted ADR/applicable AGENTS. Составить короткий обезличенный запрос: stack + проблема/ограничение, без имён клиентов, кода, endpoints/ключей. В обычном planning разрешён только этот read-only memory scope; application/cloud/SSH execution этим не разрешается. Явный --plan: только локальный query draft, никаких запросов/записи global policy.

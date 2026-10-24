@@ -69,3 +69,7 @@ python3 scripts/project_setup.py rollback --target /ABSOLUTE/project --backup .a
 ```
 
 Rollback отказывается перезаписывать новые пользовательские изменения; сохранить backup и разобрать diff. Нет force/reset/clean и автоматического replay. Cache/backups/attempt ADR сохраняются для review; старые глобальные runtime/tunnel этим не обновляются.
+
+## Optional shared web search
+
+[Keenable context retrieval](../skills/context-retrieval.md) is separate from memory: global key/header helper and native remote MCP, no key in project/TOML. Project setup may check an existing integration by explicit scope, but does not silently install/repair it or disable built-in search. Actual content-call quota/usage and host discovery are separate from metadata handshake.

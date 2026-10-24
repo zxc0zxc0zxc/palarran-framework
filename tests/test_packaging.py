@@ -38,6 +38,9 @@ class PackagingTest(unittest.TestCase):
                 self.assertTrue((package / 'templates/memory/lesson.example.json').is_file())
                 checked = subprocess.run([sys.executable, str(package/'scripts/memory_cycle.py'), '--help'], cwd=directory, capture_output=True, text=True)
                 self.assertEqual(checked.returncode, 0, checked.stderr)
+                search_check = subprocess.run([sys.executable, str(package/'scripts/keenable_auth.py'), 'check', '--plan'], cwd=directory, capture_output=True, text=True)
+                self.assertEqual(search_check.returncode, 0, search_check.stderr)
+                self.assertEqual(json.loads(search_check.stdout)['network'], False)
                 if namespace == "skills":
                     for helper in ("project_setup.py", "project_update.py"):
                         self.assertTrue((package/"scripts"/helper).is_file())

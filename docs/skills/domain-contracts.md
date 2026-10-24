@@ -109,3 +109,7 @@
 ## Skills setup
 
 - `/skills:setup` requires docs/setup/skill.md and README.md, decision-memory and global-memory. Auto dispatch absent receipt to install, existing receipt to guarded update; corrupt/partial/pending states never authorize reinstall. Preserve client scope/config/local changes via ownership contract; health uses pinned pristine bytes and --global, never carried scripts. --plan no writes/network/clone. Bootstrap plugin requires trusted full source; no implicit global settings, credentials, paid/model/app execution. Explain action/revision/health/gaps and actual native commands, not assumed namespace discovery.
+
+## Research memory and web context
+
+- docs/skills/research-memory.md applies to research findings across all skills via global-memory: prioritize applicable R&D, retain negative/inconclusive/source-claim boundaries, conditions/baselines/units/uncertainty and exact provenance. Reuse memory-v001 fields; evidence PASS is not supported hypothesis, no automatic historical upload. docs/skills/context-retrieval.md applies to external web/docs context: bounded primary sources, optional global Keenable header helper, no project secrets/automatic purchases. Native MCP is not wired to orchestrator accounting or a hard cash cap. Metadata doctor is not content/balance/UI verification; global setup needs explicit user scope.
