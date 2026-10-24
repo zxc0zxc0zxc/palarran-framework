@@ -28,7 +28,7 @@ def fixture(root, backend='local'):
     manifest=dict(run_id='feature-run',plan_version='v1',base_commit='a'*40,repositories=repos,max_workers=4,budget=dict(tokens=1000,cost_micros=1000,launches=30,seconds=100,integration_tokens=100,verification_tokens=500,handoff_tokens=100),tasks=tasks)
     dispatcher=Dispatcher(root/'dispatch.sqlite'); dispatcher.create_run(manifest,backend)
     versions={r['repository_id']:r['base_commit'] for r in repos}; initial={r['repository_id']:'0'*40 for r in repos}
-    passport=dict(feature_id='referral',spec_revision=1,plan_revision=1,coordinator='owner-auth',repositories=repos,services=[dict(service_id=r['repository_id'],repository_id=r['repository_id'],owner=r['owner']) for r in repos],owners=[r['owner'] for r in repos],contracts=[dict(contract_id='referral',revision=1,producer='auth',consumers=['cards','ledger'],owners=[r['owner'] for r in repos],schema_sha256='d'*64,semantics_sha256='e'*64)],business_invariants=[dict(invariant_id='no-double-credit',owner='owner-ledger',check_id='business',resolved=True)],task_graph=[t['task_id'] for t in tasks],budget=manifest['budget'],acceptance_protocol=dict(checks=checks),release_plan=dict(environment='staging',initial_versions=initial,allowed_matrices=[initial,versions],steps=[dict(step_id='release',owner='owner-auth',task_id='release',versions=versions,kind='deploy',recovery='Roll back code and retain append-only data',irreversible=False)],observation_seconds=1,thresholds=[dict(metric='errors',max=0)]))
+    passport=dict(feature_id='referral',spec_revision=1,plan_revision=1,coordinator='owner-auth',repositories=repos,services=[dict(service_id=r['repository_id'],repository_id=r['repository_id'],owner=r['owner']) for r in repos],owners=[r['owner'] for r in repos],contracts=[dict(contract_id='referral',revision=1,producer='auth',consumers=['cards','ledger'],owners=[r['owner'] for r in repos],schema_sha256='d'*64,semantics_sha256='e'*64)],business_invariants=[dict(invariant_id='no-double-credit',owner='owner-ledger',check_id='business',resolved=True)],task_graph=[t['task_id'] for t in tasks],budget=manifest['budget'],acceptance_protocol=dict(checks=checks),release_plan=dict(environment='staging',initial_versions=initial,allowed_matrices=[initial,versions],steps=[dict(step_id='release',owner='owner-auth',task_id='release',versions=versions,kind='deploy',recovery='Roll back code and retain append-only data',irreversible=False,reversibility=dict(code=True,schema=True,data=True,external=True),state_sha256='6'*64)],initial_state_sha256='5'*64,allowed_states=[dict(versions=initial,state_sha256='5'*64),dict(versions=versions,state_sha256='6'*64)],observation_seconds=1,thresholds=[dict(metric='errors',max=0)]))
     feature=FeatureAuthority(dispatcher,'feature-run'); feature.create(passport)
     return dispatcher,feature,passport,manifest
 
@@ -68,6 +68,19 @@ class FeatureTests(unittest.TestCase):
     def test_child_cannot_change_repository(self):
         m=copy.deepcopy(self.m); child=copy.deepcopy(m['tasks'][1]); child['parent_task_id']='build-auth'; m['tasks'][1]=child
         with self.assertRaises(ValueError): validate(m)
+    def test_release_direct_worker_claim_denied(self):
+        self.assertIsNone(self.d.claim_task('feature-run','release'))
+    def test_composition_return_does_not_revive_evidence(self):
+        self.build(); original=self.compose(); self.verify(original)
+        self.compose('7'*40); restored=self.compose()
+        self.assertNotEqual(original,restored)
+        self.assertTrue(all(c['verdict']=='NOT_RUN' for c in self.f.report()['checks']))
+    def test_task_contract_rebind_only_before_attempt(self):
+        p=copy.deepcopy(self.p); p['plan_revision']=2;p['contracts'][0]['revision']=2
+        pins={'referral':dict(revision=2,schema_sha256='d'*64,semantics_sha256='e'*64)}
+        self.f.update_passport(p,approvals=p['owners'],task_contracts={'build-auth':pins})
+        self.assertIsNotNone(self.d.claim_task('feature-run','build-auth'))
+        self.assertIsNone(self.d.claim_task('feature-run','build-cards'))
     def test_scope_cannot_widen(self):
         m=copy.deepcopy(self.m); m['tasks'][0]['files']=['private']
         with self.assertRaises(ValueError): validate(m)
@@ -87,7 +100,7 @@ class FeatureTests(unittest.TestCase):
     def test_semantic_failure_despite_green_local_ci(self):
         self.build();key=self.compose();self.verify(key,'FAIL')
         self.assertEqual('failed',self.f.report()['status'])
-        with self.assertRaises(ValueError):self.f.begin_release(key,'staging',authorization=self.auth(key),observed_versions=self.p['release_plan']['initial_versions'])
+        with self.assertRaises(ValueError):self.f.begin_release(key,'staging',authorization=self.auth(key),observed_versions=self.p['release_plan']['initial_versions'],observed_state_sha256='5'*64)
     def test_commit_drift_invalidates_and_spare_check_slots_repair(self):
         self.build();key=self.compose();self.verify(key)
         self.assertEqual('release_ready',self.f.report()['status'])
@@ -98,18 +111,18 @@ class FeatureTests(unittest.TestCase):
         self.assertIn('release_final_matrix_mismatch',self.f.report()['blockers'])
     def test_no_release_authority_from_successful_tests(self):
         self.build();key=self.compose();self.verify(key)
-        with self.assertRaises(ValueError):self.f.begin_release(key,'staging',authorization={},observed_versions=self.p['release_plan']['initial_versions'])
+        with self.assertRaises(ValueError):self.f.begin_release(key,'staging',authorization={},observed_versions=self.p['release_plan']['initial_versions'],observed_state_sha256='5'*64)
     def test_release_once_unknown_reconciles_then_observes(self):
         self.build();key=self.compose();self.verify(key)
-        op=self.f.begin_release(key,'staging',authorization=self.auth(key),observed_versions=self.p['release_plan']['initial_versions'])
-        first=self.f.begin_step(op['operation_id'],'release',authorization=self.auth(key),observed_versions=op['versions'])
+        op=self.f.begin_release(key,'staging',authorization=self.auth(key),observed_versions=self.p['release_plan']['initial_versions'],observed_state_sha256='5'*64)
+        first=self.f.begin_step(op['operation_id'],'release',authorization=self.auth(key),observed_versions=op['versions'],observed_state_sha256=op['state_sha256'])
         self.assertTrue(first['launch_allowed'])
-        self.assertFalse(self.f.begin_step(op['operation_id'],'release',authorization=self.auth(key),observed_versions=op['versions'])['launch_allowed'])
-        proof=lambda s,r:dict(independent=True,subject=key,verdict='PASS',versions=s['versions'],evidence_sha256='1'*64)
+        self.assertFalse(self.f.begin_step(op['operation_id'],'release',authorization=self.auth(key),observed_versions=op['versions'],observed_state_sha256=op['state_sha256'])['launch_allowed'])
+        proof=lambda s,r:dict(independent=True,subject=key,verdict='PASS',versions=s['versions'],state_sha256=s['state_sha256'],evidence_sha256='1'*64)
         self.assertEqual('unknown',self.f.finish_step(op['operation_id'],'release',{},verifier=proof)['state'])
         self.d.finish_task('feature-run','release',first['attempt_id'],dict(status='submitted',subject=key,tokens=1,cost_micros=1,usage_known=True,stopped=True),lambda t,r:dict(passed=True,subject=key,evidence='independent',independent=True))
         self.assertEqual('completed',self.f.finish_step(op['operation_id'],'release',{},verifier=proof)['state'])
-        observation=lambda p,r:dict(independent=True,subject=key,versions=op['versions'] if False else p['steps'][-1]['versions'],verdict='PASS',evidence_sha256='2'*64,observed_seconds=2,metrics={'errors':0})
+        observation=lambda p,r:dict(independent=True,subject=key,versions=op['versions'] if False else p['steps'][-1]['versions'],verdict='PASS',state_sha256='6'*64,evidence_sha256='2'*64,observed_seconds=2,metrics={'errors':0})
         with self.assertRaises(ValueError):self.f.observe(op['operation_id'],{},verifier=observation)
         with patch('packages.core.parallelism.feature.time.time',return_value=time.time()+2):
             self.assertEqual('accepted',self.f.observe(op['operation_id'],{},verifier=observation)['status'])
