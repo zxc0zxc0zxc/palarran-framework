@@ -2,6 +2,8 @@
 
 # Locate the source/portable root when this capability is executed directly.
 import sys as _palarran_sys
+# Disable caches before any imported bootstrap can write into the managed bundle.
+_palarran_sys.dont_write_bytecode = True
 from pathlib import Path as _PalarranPath
 for _palarran_root in _PalarranPath(__file__).resolve().parents:
     if (_palarran_root / 'scripts/palarran_paths.py').is_file():
