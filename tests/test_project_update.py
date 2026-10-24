@@ -41,7 +41,12 @@ class ProjectUpdateTest(unittest.TestCase):
     def snapshot(self):
         return {str(p.relative_to(self.target)):('link',os.readlink(p)) if p.is_symlink() else ('file',p.read_bytes()) for p in self.target.rglob('*') if p.is_symlink() or p.is_file()}
     def verify_settings(self):
-        for name,raw in self.settings.items():self.assertEqual((self.target/name).read_bytes(),raw,name)
+        for name,raw in self.settings.items():
+            actual=(self.target/name).read_bytes()
+            if name in ('AGENTS.md','CLAUDE.md'):
+                # The new common contract is additive; all original user bytes remain.
+                self.assertIn(actual,(raw,setup.parallel_instructions(raw)),name)
+            else:self.assertEqual(actual,raw,name)
     def update(self,**kwargs):return updater.update(self.source,self.target,**kwargs)
 
     def test_upgrade_preserves_settings_adds_skill_checks_memory_and_repeats(self):

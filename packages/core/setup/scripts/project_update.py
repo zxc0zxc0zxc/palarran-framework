@@ -186,13 +186,25 @@ def prepare(source, target, client=None):
     usage_path = target/'.ai-tools/USAGE.md'; usage = read(usage_path)
     baseline_usage = receipt['files'].get('.ai-tools/USAGE.md')
     new_usage = setup.usage_text(revision,names) if sha(usage)==baseline_usage else usage
+    instruction_files = {}
+    for name in (['AGENTS.md','CLAUDE.md'] if receipt['client'] in ('claude','both') else ['AGENTS.md']):
+        path = safe(target/name)
+        exists = path.exists()
+        before = read(path) if exists else b''
+        try:
+            after = setup.parallel_instructions(before)
+        except ValueError:
+            conflicts.append(dict(path=name,reason='modified_parallelism_instructions'))
+            continue
+        if before != after:
+            instruction_files[name] = dict(before=before, after=after, existed=exists)
     config_custom = False
     if receipt['client'] in ('claude','both'):
         try:
             entry = load(target/'.mcp.json')['mcpServers']['engineering-memory']
             config_custom = entry != dict(command='python3',args=['-B','.ai-tools/library/scripts/memory_ops.py','mcp','--global'])
         except (ValueError,KeyError,TypeError,OSError): config_custom = True
-    return dict(target=target,receipt=receipt,resolved_packages=resolved_packages,revision=revision,names=names,directories=directories,upstream=upstream,current=actual,files=result,clean=clean,release=release,before_links=before_links,after_links=after_links,conflicts=conflicts,kept=kept,usage=usage,new_usage=new_usage,customized=bool(overrides or extra or config_custom))
+    return dict(target=target,receipt=receipt,resolved_packages=resolved_packages,revision=revision,names=names,directories=directories,upstream=upstream,current=actual,files=result,clean=clean,release=release,before_links=before_links,after_links=after_links,conflicts=conflicts,kept=kept,usage=usage,new_usage=new_usage,customized=bool(overrides or extra or config_custom),instruction_files=instruction_files)
 
 
 @contextmanager
@@ -230,6 +242,14 @@ def rollback(target, backup=None, plan=False):
         require(value in (read(tx/('before-'+name)),read(tx/('after-'+name))))
     for name in set(record['before_links']) | set(record['after_links']):
         require(link_value(target/name) in (record['before_links'].get(name),record['after_links'].get(name)))
+    for name, metadata in record.get('instruction_files', {}).items():
+        require(name in ('AGENTS.md','CLAUDE.md'))
+        path = safe(target/name)
+        current = read(path) if path.exists() else b''
+        before = read(tx/('before-instruction-'+name)); after = read(tx/('after-instruction-'+name))
+        require(sha(before)==metadata['before_hash'] and sha(after)==metadata['after_hash'])
+        require(current in (before, after))
+        require(path.exists() or not metadata['existed'])
     if plan: return dict(status='ROLLBACK_PLANNED',backup=backup,writes=0,network=False)
     with lock(target):
         rollback(target,backup,True)
@@ -249,6 +269,12 @@ def restore(target,tx,record):
     for name in ('installation.json','USAGE.md'):
         if read(target/'.ai-tools'/name) != read(tx/('before-'+name)):
             atomic(target/'.ai-tools'/name,read(tx/('before-'+name)))
+    for name, metadata in record.get('instruction_files', {}).items():
+        path = safe(target/name)
+        before = read(tx/('before-instruction-'+name))
+        if metadata['existed']:
+            if not path.exists() or read(path) != before: atomic(path,before)
+        elif path.exists(): path.unlink()
     record['phase']='ROLLED_BACK'; atomic(tx/'transaction.json',encoded(record))
     active = target/'.ai-tools/backups/active-update.json'
     if active.exists():
@@ -280,7 +306,7 @@ def update(source,target,client=None,plan=False,event=lambda _:None):
     report = dict(status='UPDATE_PLANNED' if plan else 'UPDATED',from_revision=prepared['receipt']['revision'],revision=prepared['revision'],client=prepared['receipt']['client'],skills=len(prepared['names']),preserved_local_files=sorted(prepared['kept']),conflicts=prepared['conflicts'][:20],conflict_count=len(prepared['conflicts']),network=False,model_calls=0)
     if prepared['conflicts']: report.update(status='CONFLICT',writes=0); return report
     if plan: report['writes']=0; return report
-    if report['from_revision'] == report['revision']:
+    if report['from_revision'] == report['revision'] and not prepared['instruction_files']:
         report['network']=True
         try: report.update(status='UNCHANGED',memory=health(prepared['clean'],prepared['revision'],target))
         except Exception: report.update(status='UNCHANGED_MEMORY_NOT_READY',memory=dict(status='NOT_READY'))
@@ -289,6 +315,7 @@ def update(source,target,client=None,plan=False,event=lambda _:None):
         require(not active.exists())
         again = prepare(source,target,client)
         require(not again['conflicts'] and signature(again['current']) == signature(prepared['current']) and again['revision']==prepared['revision'] and again['receipt']==prepared['receipt'])
+        require(again['instruction_files']==prepared['instruction_files'])
         prepared = again
         tx = target/'.ai-tools/backups'/('update-'+uuid.uuid4().hex); tx.mkdir(mode=0o700)
         atomic(tx/'.gitignore',b'*\n')
@@ -300,6 +327,8 @@ def update(source,target,client=None,plan=False,event=lambda _:None):
             os.rename(tx/'public',prepared['release'])
         new_receipt = dict(prepared['receipt'],version=2,revision=prepared['revision'],skills=prepared['names'],links=prepared['after_links'],backup=backup)
         if prepared['resolved_packages'] is not None:new_receipt['resolved_packages']=prepared['resolved_packages']
+        for name, values in prepared['instruction_files'].items():
+            new_receipt['files'][name] = sha(values['after'])
         new_receipt['files'] = {k:v for k,v in new_receipt['files'].items() if not k.startswith('.ai-tools/library/')}
         new_receipt['files'].update({'.ai-tools/library/'+n:sha(b) for n,b in prepared['upstream'].items()})
         new_receipt['files']['.ai-tools/library/.ai-tools-library.json'] = sha(prepared['files']['.ai-tools-library.json'][0])
@@ -307,6 +336,11 @@ def update(source,target,client=None,plan=False,event=lambda _:None):
         for name,before,after in [('installation.json',read(target/'.ai-tools/installation.json'),encoded(new_receipt)),('USAGE.md',prepared['usage'],prepared['new_usage'])]:
             atomic(tx/('before-'+name),before); atomic(tx/('after-'+name),after)
         record = dict(phase='PREPARED',backup=backup,from_revision=report['from_revision'],revision=report['revision'],old_tree=signature(prepared['current']),new_tree=signature(prepared['files']),before_links=prepared['before_links'],after_links=prepared['after_links'])
+        record['instruction_files'] = {}
+        for name, values in prepared['instruction_files'].items():
+            atomic(tx/('before-instruction-'+name),values['before'])
+            atomic(tx/('after-instruction-'+name),values['after'])
+            record['instruction_files'][name] = dict(existed=values['existed'],before_hash=sha(values['before']),after_hash=sha(values['after']))
         atomic(tx/'transaction.json',encoded(record)); atomic(active,encoded(dict(backup=backup)))
         task = 'update-'+tx.name[7:]; journal = target/'.palarran/setup'/task
         decision = '# Ownership-aware update\n\n## Context and basis\n\nExplicit operator update request.\n\n## Choice and rationale\n\nThree-way hashes preserve local changes; conflicting edits stop before replacement. Settings stay untouched.\n\n## Alternatives\n\nBlind replacement would discard user work.\n\n## Sources and evidence\n\nPinned public source '+report['revision']+'; private backup '+backup+'.\n\n## Consequences and review\n\nRollback guarded by current hashes; memory connectivity is separate from file success.\n\n## Application and verification\n\nAttempt receipt; final status in handoff.\n'
@@ -326,6 +360,12 @@ def update(source,target,client=None,plan=False,event=lambda _:None):
                 require(read(target/'.ai-tools'/name) == read(tx/('before-'+name)))
                 if read(tx/('before-'+name)) != read(tx/('after-'+name)):
                     atomic(target/'.ai-tools'/name,read(tx/('after-'+name)))
+            for name, values in prepared['instruction_files'].items():
+                path = safe(target/name)
+                require(path.exists()==values['existed'])
+                require((read(path) if path.exists() else b'')==values['before'])
+                atomic(path,values['after'])
+                event('instruction-updated')
             record['phase']='COMMITTED'; atomic(tx/'transaction.json',encoded(record)); active.unlink()
         except Exception:
             # Reuse full guarded preflight, under the held lock, before restoring any bytes.
