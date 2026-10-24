@@ -6,18 +6,22 @@ import os
 from pathlib import Path
 import re
 import sqlite3
-from typing import ContextManager, Protocol
+from typing import Any, ContextManager, Dict, List, Optional, Protocol, Tuple
 
-from .primitives import _canonical
+from .primitives import canonical
 
 
 class Ledger(Protocol):
+    """Atomic local extension seam; methods never open nested transactions."""
+
     def transaction(self) -> ContextManager[sqlite3.Connection]: ...
-    def read_run(self, db, run_id): ...
-    def read_tasks(self, db, run_id): ...
-    def read_task(self, db, run_id, task_id): ...
-    def project_task(self, row): ...
-    def update_task_contracts(self, db, run_id, task_contracts): ...
+    def read_run(self, db: sqlite3.Connection, run_id: str) -> Tuple[sqlite3.Row, Dict[str, Any]]: ...
+    def read_tasks(self, db: sqlite3.Connection, run_id: str) -> List[sqlite3.Row]: ...
+    def read_task(self, db: sqlite3.Connection, run_id: str, task_id: str) -> Optional[sqlite3.Row]: ...
+    def project_task(self, row: sqlite3.Row) -> Dict[str, Any]: ...
+    def update_task_contracts(
+        self, db: sqlite3.Connection, run_id: str, task_contracts: Dict[str, Dict[str, Any]]
+    ) -> Dict[str, Dict[str, Any]]: ...
 
 
 def project_task(row):
@@ -32,7 +36,7 @@ def project_task(row):
                 and re.fullmatch(r'[a-f0-9]{40}|[a-f0-9]{64}', raw_subject)):
             subject = raw_subject
         else:
-            subject = hashlib.sha256(_canonical(raw_subject).encode()).hexdigest()
+            subject = hashlib.sha256(canonical(raw_subject).encode()).hexdigest()
     reason = row['reason']
     if reason not in (None, 'budget', 'heartbeat_lost'):
         reason = 'operator_reconciled'
@@ -53,8 +57,8 @@ def project_task(row):
         'required_for_completion': packet.get('required_for_completion', True),
         'budget_phase': packet.get('budget_phase', 'execution'),
         'verified_subject': subject,
-        'evidence_sha256': hashlib.sha256(_canonical(proof).encode()).hexdigest() if proof else None,
-        'receipt_sha256': hashlib.sha256(_canonical(receipt).encode()).hexdigest() if receipt else None,
+        'evidence_sha256': hashlib.sha256(canonical(proof).encode()).hexdigest() if proof else None,
+        'receipt_sha256': hashlib.sha256(canonical(receipt).encode()).hexdigest() if receipt else None,
         'heartbeat_at': row['heartbeat'],
         'started_at': row['started'],
         'tokens': row['tokens'],
@@ -66,9 +70,10 @@ def project_task(row):
 
 
 class SQLiteLedger:
-    def __init__(self, path, read_only=False):
+    def __init__(self, path, read_only=False, timeout=30):
         self.path = Path(path).absolute()
         self.read_only = read_only
+        self.timeout = timeout
 
     def initialize(self):
         if self.read_only:
@@ -102,7 +107,7 @@ class SQLiteLedger:
     @contextmanager
     def transaction(self):
         target = self.path.as_uri() + '?mode=ro' if self.read_only else self.path
-        db = sqlite3.connect(target, timeout=30, isolation_level=None, uri=self.read_only)
+        db = sqlite3.connect(target, timeout=self.timeout, isolation_level=None, uri=self.read_only)
         db.row_factory = sqlite3.Row
         try:
             if not self.read_only:
@@ -139,12 +144,12 @@ class SQLiteLedger:
             row = self.read_task(db, run_id, task_id)
             if (row is None or row['attempt'] != 0
                     or row['state'] not in ('pending', 'ready')
-                    or type(contracts) is not dict or len(_canonical(contracts)) > 8192):
+                    or type(contracts) is not dict or len(canonical(contracts)) > 8192):
                 raise ValueError('Only unattempted pending task pins may change')
             packet = json.loads(row['packet'])
             previous_packets[task_id] = packet
             db.execute('UPDATE tasks SET packet=? WHERE run=? AND id=?',
-                       (_canonical(dict(packet, contracts=contracts)), run_id, task_id))
+                       (canonical(dict(packet, contracts=contracts)), run_id, task_id))
         return previous_packets
 
     project_task = staticmethod(project_task)

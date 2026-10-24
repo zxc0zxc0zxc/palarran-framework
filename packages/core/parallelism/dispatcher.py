@@ -8,41 +8,15 @@ import threading
 import time
 
 from packages.core.parallelism.primitives import (
-    _canonical, _identifier, _integer, _overlap, _path, _strings, _text, allocations,
+    canonical as _canonical, identifier as _identifier, integer as _integer,
+    overlap as _overlap, path as _path, strings as _strings, text as _text, allocations,
 )
 from packages.core.parallelism.manifest_validation import validate
-from packages.core.parallelism.ledger import SQLiteLedger
+from packages.core.parallelism.ledger import Ledger, SQLiteLedger
 from packages.core.parallelism.states import TaskState
 
 _TERMINAL = {TaskState.VERIFIED, TaskState.FAILED, TaskState.CANCELLED, TaskState.BLOCKED, TaskState.HANDOFF_PENDING}
 _HELD = {TaskState.RUNNING, TaskState.SUBMITTED, TaskState.UNKNOWN, TaskState.CANCEL_REQUESTED}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 class Dispatcher:
@@ -52,20 +26,18 @@ class Dispatcher:
         self.ledger.initialize()
 
     @property
-    def ledger(self):
+    def ledger(self) -> Ledger:
         """Trusted local storage port, also available to legacy read-only views."""
         if not hasattr(self, '_ledger'):
             self._ledger = SQLiteLedger(self.path)
         return self._ledger
 
     @ledger.setter
-    def ledger(self, value):
+    def ledger(self, value: Ledger):
         self._ledger = value
-
 
     def _transaction(self):
         return self.ledger.transaction()
-
 
     def _event(self, db, run, task, kind):
         db.execute('INSERT INTO events(run,task,kind,at) VALUES(?,?,?,?)', (run, task, kind, time.time()))
@@ -118,7 +90,6 @@ class Dispatcher:
     def _run(self, db, run_id):
         return self.ledger.read_run(db, run_id)
 
-
     def _status(self, rows, cancelled=False):
         states = {r['state'] for r in rows if r['attempt'] > 0 or json.loads(r['packet']).get('required_for_completion', True)}
         if TaskState.UNKNOWN in states:
@@ -137,7 +108,6 @@ class Dispatcher:
 
     def _task_report(self, row):
         return self.ledger.project_task(row)
-
 
     def get_run(self, run_id):
         with self._transaction() as db:
