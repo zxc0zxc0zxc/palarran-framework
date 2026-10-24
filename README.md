@@ -2,12 +2,12 @@
 
 [![Validate AI tools](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/zxc0zxc0zxc/ai-tools/actions/workflows/validate.yml)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](docs/product-factory/README.md)
-[![Skills: 28](https://img.shields.io/badge/skills-28-2563EB)](skills/README.md)
+[![Skills: 29](https://img.shields.io/badge/skills-29-2563EB)](skills/README.md)
 [![Graphify: optional](https://img.shields.io/badge/Graphify-optional-6F42C1)](docs/skills/graph-context.md)
 
 Библиотека инженерных скиллов, документации и ограниченного Python-runtime для AI-агентов. Покрывает продуктовые исследования, UX/UI, frontend/backend, CI/CD, инфраструктуру, ML и оценку агентов. Подход: **источники → план/контракты → разрешённая реализация → независимая проверка → сохранённые решения**.
 
-В репозитории **28 скиллов и 11 plugin namespaces**. Скиллы переносимы между проектами; runtime связывает их с версиями артефактов, бюджетами и проверками. MCP-серверы — запланированное направление, реализаций в текущем checkout нет.
+В репозитории **29 скиллов и 11 plugin namespaces**. Скиллы переносимы между проектами; runtime связывает их с версиями артефактов, бюджетами и проверками. MCP-серверы — запланированное направление, реализаций в текущем checkout нет.
 
 **Индексы:** [документация](docs/README.md) · [все скиллы и команды](skills/README.md) · [общие правила](docs/skills/README.md) · [инструкции агентам](AGENTS.md) · [решения проекта](.ai-development/INDEX.md).
 
@@ -46,6 +46,7 @@
 | Product | [Исследования и первые клиенты](docs/product/README.md) | Гипотеза, рынок, аналоги, экономика, каналы, B2B/B2C и обоснованный MVP-план |
 | ML | [Эксперименты](docs/ml/README.md) / [данные](docs/ml/data/README.md) | Гипотезы, модель/метод, данные, стоимость, bounded train и benchmark |
 | App acceptance | [Business scenario verification](docs/app/verify/README.md) | Независимые browser/API/readonly DB checks, evidence и defects |
+| Agent improve | [Failure-driven improvements](docs/agent/improve/README.md) | Trace/feedback → regression → scoped skill diff → paired evals; без автоматических paid trials |
 | Agent eval | [Полигон](docs/agent/eval/README.md) | Независимая оценка задачи, токенов, стоимости и времени |
 | Science | [Отчёты-статьи](docs/science/README.md) | LaTeX draft по экспериментам, claim-to-evidence, limitations и reproducibility |
 

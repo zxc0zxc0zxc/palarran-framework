@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "id": "goal_pilot",
+  "incident": {
+    "summary": "Synthetic reconstruction of missing-goal failure",
+    "feedback": "Fix objective before training readiness",
+    "evidence": [
+      {
+        "id": "E1",
+        "kind": "user_report",
+        "sha256": null,
+        "summary": "No original historical trace supplied"
+      }
+    ]
+  },
+  "baseline_skill": "/absolute/baseline-SKILL.md",
+  "candidate_skill": "/absolute/candidate-SKILL.md",
+  "regression_cases": [
+    "goal"
+  ],
+  "control_cases": [
+    "short"
+  ],
+  "suite": {
+    "version": 1,
+    "id": "ml_goal",
+    "revision": "v001",
+    "candidate": "template",
+    "limits": {
+      "run_seconds": 30,
+      "task_seconds": 5,
+      "lease_seconds": 3,
+      "max_attempts": 1,
+      "output_bytes": 65536
+    },
+    "policy": {
+      "executables": [
+        "/absolute/python3"
+      ],
+      "adapters": [
+        "command"
+      ],
+      "env": []
+    },
+    "cases": [
+      {
+        "id": "goal",
+        "category": "plan",
+        "task": {
+          "adapter": "command",
+          "argv": [
+            "/absolute/python3",
+            "/absolute/offline_fixture.py",
+            "{skill}",
+            "goal"
+          ]
+        },
+        "checks": [
+          {
+            "kind": "json_equals",
+            "path": "answer.json",
+            "expected": {
+              "launch_ready": false
+            }
+          }
+        ]
+      },
+      {
+        "id": "short",
+        "category": "plan",
+        "task": {
+          "adapter": "command",
+          "argv": [
+            "/absolute/python3",
+            "/absolute/offline_fixture.py",
+            "{skill}",
+            "short"
+          ]
+        },
+        "checks": [
+          {
+            "kind": "json_equals",
+            "path": "answer.json",
+            "expected": {
+              "launch_ready": true
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

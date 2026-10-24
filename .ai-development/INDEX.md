@@ -99,3 +99,5 @@
 | ml/2026-10-23-diagnostics-runtime/0002 | accepted | Evidence-backed science:preprint / portable LaTeX export | [record](ml/2026-10-23-diagnostics-runtime/decisions/0002-preprint.md) |
 
 | app/2026-10-24-independent-acceptance/0001 | accepted | Independent browser/API/DB acceptance, frozen scenarios and bounded private evidence | [record](app/2026-10-24-independent-acceptance/decisions/0001-acceptance.md); [handoff](app/2026-10-24-independent-acceptance/handoff.md) |
+
+| agent/2026-10-24-improvement-loop/0001 | accepted | Failure/feedback → frozen regression + controlled skill diff → paired eval evidence; no automatic paid runs | [record](agent/2026-10-24-improvement-loop/decisions/0001-reviewed-loop.md); [handoff](agent/2026-10-24-improvement-loop/handoff.md) |

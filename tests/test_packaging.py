@@ -17,7 +17,7 @@ SPEC.loader.exec_module(packager)
 class PackagingTest(unittest.TestCase):
     def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
-            for namespace, expected in [("app", 1), ("science", 1), ("agent", 1), ("ml", 7), ("product", 7), ("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
+            for namespace, expected in [("app", 1), ("science", 1), ("agent", 2), ("ml", 7), ("product", 7), ("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
                 package = packager.build_package(namespace, Path(directory) / namespace).resolve()
                 manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
                 self.assertEqual(manifest["name"], namespace)
@@ -48,6 +48,9 @@ class PackagingTest(unittest.TestCase):
                     self.assertEqual(checked.returncode,0,checked.stderr)
                     self.assertFalse((package/'orchestrator').exists())
                 if namespace == "agent":
+                    self.assertTrue((package / "templates/agent-improve/review.md").is_file())
+                    self.assertTrue((package / "templates/agent-improve/incident.example.json").is_file())
+                    self.assertTrue((package / "skills/agent-improve/SKILL.md").is_file())
                     self.assertTrue((package / "templates/agent-eval/protocol.md").is_file())
                     self.assertTrue((package / "docs/agent/eval/contract.md").is_file())
                     self.assertFalse((package / "orchestrator").exists())

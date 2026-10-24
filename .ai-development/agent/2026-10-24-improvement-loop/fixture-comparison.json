@@ -1,0 +1,50 @@
+{
+  "packet_sha256": "e5272a88bdfb5c3f8c456e8034432275ad9ad1f0c79d24b2f566b679225e5844",
+  "baseline_skill_sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
+  "candidate_skill_sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+  "diff_sha256": "6afa48c7dc699b64722e19f2364846a3fde8694d9c977348412109c319e5cd29",
+  "sample_kind": "fixture",
+  "recommendation": "review_fixture",
+  "coverage": 1.0,
+  "baseline_pass": 1,
+  "candidate_pass": 2,
+  "total_cases": 2,
+  "quality_delta": 1,
+  "usage": {
+    "budget_safe": null,
+    "carry_sources": 0,
+    "complete": false,
+    "invoice_usd": null,
+    "observed_cost_usd": null,
+    "observed_tokens": null,
+    "reserved_total_cost_usd": null,
+    "reserved_total_tokens": null
+  },
+  "efficiency_delta": null,
+  "execution_seconds": {
+    "baseline": 0.17311700000000008,
+    "candidate": 0.16256220900000007
+  },
+  "grader_seconds": {
+    "baseline": 0.5758753329999999,
+    "candidate": 0.7319399600000003
+  },
+  "model_calls_launched": 0,
+  "cases": [
+    {
+      "id": "regression",
+      "group": "regression",
+      "baseline": "FAIL",
+      "candidate": "PASS",
+      "comparable": true
+    },
+    {
+      "id": "control",
+      "group": "control",
+      "baseline": "PASS",
+      "candidate": "PASS",
+      "comparable": true
+    }
+  ],
+  "limitation": "Toy command-fixture integration, not the historical ML run or model A/B; token/cost measurements absent"
+}

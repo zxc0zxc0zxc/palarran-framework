@@ -53,3 +53,5 @@
 Scientific reports: [`/science:preprint`](../skills/science-preprint/SKILL.md), [документация](science/README.md).
 
 Application acceptance: [independent browser/API/DB verification](app/verify/README.md), sources, scenario/evidence contract и operations.
+
+Agent improvement: [failure/feedback → regression → skill diff → paired evaluation](agent/improve/README.md).

@@ -13,7 +13,7 @@ PACKAGES = {
     "science": {"manifest": "plugins/science/plugin.json", "skills": ["science-preprint"], "docs": ["docs/skills", "docs/science"]},
     "agent": {
         "manifest": "plugins/agent/plugin.json",
-        "skills": ["agent-eval"],
+        "skills": ["agent-eval", "agent-improve"],
         "docs": ["docs/skills", "docs/agent"],
     },
     "ml": {
@@ -140,7 +140,7 @@ def build_package(namespace, output, root=ROOT):
     if namespace == "science":
         resources = ["templates/ai-development/decision.md", "templates/science/main.tex", "templates/science/claim-evidence.md", "scripts/science_preprint.py", "scripts/ml_data.py"]
     if namespace == "agent":
-        resources = ["templates/ai-development/decision.md", "templates/agent-eval/protocol.md"]
+        resources = ["templates/ai-development/decision.md", "templates/agent-eval/protocol.md", "templates/agent-improve/review.md", "templates/agent-improve/incident.example.json"]
     resources += ["templates/agents/root.md", "templates/agents/module.md"]
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():

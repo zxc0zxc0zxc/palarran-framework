@@ -7,6 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = {
+    "agent-improve": ("agent", "improve"),
     "app-verify": ("app", "verify"),
     "science-preprint": ("science", "preprint"),
     "agent-eval": ("agent", "eval"),
@@ -93,6 +94,8 @@ def validate(root=ROOT):
             base, guides = "app/verify", ["README.md", "sources.md", "methodology.md", "contract.md", "operations.md", "evidence.md"]
         elif namespace == "science":
             base, guides = "science", ["README.md", "sources.md", "evidence.md", "workflow.md"]
+        elif namespace == "agent" and command == "improve":
+            base, guides = "agent/improve", ["README.md", "sources.md", "methodology.md", "contract.md", "operations.md", "ml-learning-goal.md"]
         elif namespace == "agent":
             base, guides = "agent/eval", ["README.md", "sources.md", "methodology.md", "contract.md", "operations.md"]
         elif namespace == "ml":

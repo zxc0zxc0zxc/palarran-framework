@@ -1,6 +1,6 @@
 {
   "name": "agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "zxc0zxc0zxc"
   },
@@ -8,6 +8,9 @@
   "commands": {
     "eval": {
       "source": "./.claude/commands/agent/eval.md"
+    },
+    "improve": {
+      "source": "./.claude/commands/agent/improve.md"
     }
   }
 }
