@@ -44,17 +44,17 @@ class PackageRegistryTests(unittest.TestCase):
             validate(value)
         self.assertEqual(str(raised.exception), code)
 
-    def test_public_inventory_all_eleven_and_50_single_owners(self):
+    def test_public_inventory_all_eleven_and_51_single_owners(self):
         registry = Registry.load(ROOT / "packages/catalog.json")
         result = registry.resolve(list(PUBLIC_IDS))
         self.assertEqual(result["packages"], list(PUBLIC_IDS))
-        self.assertEqual(len(result["skills"]), 50)
+        self.assertEqual(len(result["skills"]), 51)
         expected = {"palarran-" + name for name in (
             "setup mcp-build memorize remember memorize-session remember-session memory-learn memory-recall vacuum "
             "product-define product-market product-compare product-revenue product-acquisition product-b2b product-b2c "
             "git-commit git-history git-conflicts git-mr ux-design ui-design frontend-plan frontend-build backend-plan backend-build "
             "ml-plan ml-hypotheses ml-model ml-data ml-cost ml-train ml-benchmark science-preprint "
-            "agent-eval agent-improve app-verify infra-plan ci-cd vps-inspect vps-manage infrastructure-incident docs-artifact core-coop security-infrastructure security-ingress security-log security-egress security-code security-cve"
+            "agent-eval agent-improve app-verify infra-plan ci-cd vps-inspect vps-manage infrastructure-incident docs-artifact core-coop core-share security-infrastructure security-ingress security-log security-egress security-code security-cve"
         ).split()}
         self.assertEqual({skill["name"] for skill in result["skills"]}, expected)
         docs = package(registry.catalog, "docs")

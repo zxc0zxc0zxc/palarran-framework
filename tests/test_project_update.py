@@ -146,7 +146,7 @@ class ProjectUpdateTest(unittest.TestCase):
 
     def test_completed_update_can_be_rolled_back_explicitly(self):
         self.advance();result=self.update()
-        command=[sys.executable,str(self.lib/'scripts/project_setup.py'),'rollback','--target',str(self.target),'--backup',result['backup']]
+        command=[sys.executable,'-E',str(self.lib/'scripts/project_setup.py'),'rollback','--target',str(self.target),'--backup',result['backup']]
         rolled=subprocess.run(command,cwd=self.target,capture_output=True,text=True)
         self.assertEqual(rolled.returncode,0,rolled.stdout+rolled.stderr)
         self.assertEqual(json.loads(rolled.stdout)['status'],'ROLLED_BACK')
@@ -182,7 +182,7 @@ class ProjectUpdateTest(unittest.TestCase):
     def test_installed_updater_is_self_contained_and_does_not_write_bytecode(self):
         self.advance();self.assertEqual(self.update()['status'],'UPDATED');before=self.snapshot()
         script=self.lib/'scripts/project_setup.py'
-        result=subprocess.run([sys.executable,str(script),'update','--source',str(self.source),'--target',str(self.target)],cwd=self.target,capture_output=True,text=True)
+        result=subprocess.run([sys.executable,'-E',str(script),'update','--source',str(self.source),'--target',str(self.target)],cwd=self.target,capture_output=True,text=True)
         self.assertEqual(result.returncode,0,result.stderr)
         self.assertEqual(json.loads(result.stdout)['status'],'UNCHANGED')
         self.assertEqual(before,self.snapshot())

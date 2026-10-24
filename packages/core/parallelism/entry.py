@@ -96,6 +96,13 @@ def run_request(dispatcher, request, *, target, binding, profile, origin='ordina
         raise ValueError('Managed binding requires an adapter and independent verifier')
     run = start(dispatcher, selected['manifest'], profile, origin=origin,
                 reviewed=True, active_run_id=active_run_id)
+    if selected.get('share_hint') is not None:
+        from packages.core.coordination.share_runtime import propose
+        advice=propose(dispatcher,run['run_id'],plan_hash=dispatcher.get_run(run['run_id'])['plan_sha256'],
+                       **selected['share_hint'])
+        if advice['suggested']:
+            return dict(dispatcher.get_run(run['run_id']),status='share_suggested',share_advice=advice,
+                        origin=origin,continuation=run['continuation'],local_launches=0)
     result = execute(dispatcher, run, adapter, verifier, temporal_submit=selected.get('temporal_submit'), integration_factory=selected.get('integration_factory'))
     return dict(result, integration=getattr(adapter,'integration','unsupported'), origin=origin,
                 continuation=run['continuation'])
