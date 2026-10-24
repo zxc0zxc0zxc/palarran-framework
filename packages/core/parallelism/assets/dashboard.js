@@ -67,5 +67,5 @@ function renderGraph(tasks){
 }
 
 async function poll(){if(paused)return;try{const response=await fetch('/api/snapshot',{cache:'no-store',credentials:'same-origin'});if(!response.ok)throw new Error('Unavailable');render(await response.json());}catch(_){put('freshness','DISCONNECTED');warning('Connection lost. Last displayed values are stale; current state is unknown.');put('integration-state','Unknown — disconnected');put('feature-state','Unknown — disconnected');put('feature-ready','Readiness unknown: authority disconnected.');}}
-el('pause').addEventListener('click',()=>{paused=!paused;put('pause',paused?'Resume updates':'Pause updates');if(paused){put('freshness','PAUSED');warning('Updates paused. Displayed values are a historical snapshot.');}else poll();});
+el('pause').addEventListener('click',()=>{paused=!paused;put('pause',paused?'Resume updates':'Pause updates');if(paused){put('freshness','PAUSED');warning('Updates paused. Displayed values are a historical snapshot.');put('feature-state','Historical — paused');put('feature-ready','Readiness unknown: updates paused.');put('integration-state','Historical — paused');}else poll();});
 poll();setInterval(poll,3000);
