@@ -1,6 +1,8 @@
 """Fake managed/headless hosts: ordinary entry, limits and no paid model launch."""
 from copy import deepcopy
 import json
+import os
+import subprocess
 from pathlib import Path
 import sys
 import tempfile
@@ -70,6 +72,32 @@ class ManagedEntryTests(unittest.TestCase):
         self.assertEqual(result['status'],'UNAVAILABLE');self.assertEqual(result['local_launches'],0)
         result=entry.execute(self.dispatcher,run,Forbidden(),verifier,temporal_submit=lambda run_id:1/0)
         self.assertEqual(result['status'],'unknown')
+
+    def test_real_cli_ordinary_text_and_skill_continue_existing_run(self):
+        plan=manifest(self.root)
+        binding=self.root/'trusted_fixture.py'
+        source='from packages.core.parallelism.harness import ManagedHarness\nimport threading\n'
+        source+='def factory(request,context):\n assert request=="Implement independent API and documentation tasks"\n'
+        source+=' barrier=threading.Barrier(2)\n'
+        source+=' def handler(task,*,heartbeat,cancel):\n  barrier.wait(timeout=3)\n  return '+repr(receipt())+'\n'
+        source+=' def verify(task,result):\n  return dict(passed=True,subject=result["subject"],evidence="independent-cli-fixture",independent=True)\n'
+        source+=' return dict(reviewed=True,manifest='+repr(plan)+',adapter=ManagedHarness({"task0":handler,"task1":handler},controlled_descendants=True),verifier=verify)\n'
+        binding.write_text(source)
+        request=self.root/'request.txt';request.write_text('Implement independent API and documentation tasks')
+        repo=Path(__file__).resolve().parents[1]
+        command=[sys.executable,'-m','packages.core.parallelism.entry','--request-file',str(request),
+            '--state',str(self.root/'cli/state.sqlite'),'--target',str(self.root),'--binding','trusted_fixture:factory']
+        env=dict(os.environ,PYTHONPATH=str(repo)+os.pathsep+str(self.root))
+        first=subprocess.run(command,cwd=repo,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=10)
+        self.assertEqual(first.returncode,0,first.stderr+first.stdout)
+        original=json.loads(first.stdout);self.assertEqual(original['status'],'verified')
+        self.assertEqual(len(original['tasks']),2)
+        self.assertTrue(all(task['attempt_id']==1 for task in original['tasks']))
+        second=subprocess.run(command+['--active-run-id',original['run_id'],'--origin','skill'],cwd=repo,env=env,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE,timeout=10)
+        self.assertEqual(second.returncode,0,second.stderr+second.stdout)
+        continued=json.loads(second.stdout);self.assertTrue(continued['continuation'])
+        self.assertEqual(original['usage'],continued['usage'])
+        self.assertTrue(all(task['attempt_id']==1 for task in continued['tasks']))
 
     def test_unreviewed_raw_prompt_and_uncontrolled_nested_handlers_rejected(self):
         with self.assertRaises(ValueError):entry.start(self.dispatcher,'do work',TemporalProfile(False,'default'),reviewed=True)
