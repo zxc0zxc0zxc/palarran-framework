@@ -81,3 +81,7 @@
 ## Science
 
 - `/science:preprint` requires docs/science/README.md, sources.md, evidence.md and workflow.md. Existing approved artifacts only; no implied training, paid evaluation or submission. Exact claims/sources/subjects, negative and incomplete results, real authorship/references and privacy boundaries are mandatory. Compile/visual review are distinct from scientific verification. Preserve rationale in target `.ai-development/science/`.
+
+## Application acceptance
+
+- `/app:verify` requires docs/app/verify/README.md, sources.md, methodology.md, contract.md, operations.md, evidence.md. Freeze business scenarios/subject/criteria independently of builder; actual browser + API + readonly DB observations bind one test entity/version. Missing coverage is NOT_RUN/INCONCLUSIVE, not PASS; explicit N/A needs rationale. --plan never executes apps/tools; actual verification stays in existing authorized test scope. No implied fixes/prod mutations/paid judges/install/retry. Decisions/results in target .ai-development/app/, private suites/evidence outside builder workspace; captures are not visual review.

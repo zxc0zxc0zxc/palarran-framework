@@ -51,3 +51,5 @@
 Этот полный индекс не включается целиком в domain-only plugin: пакет содержит только выбранную базу и её dependencies. Portable common entry — [docs/skills/README.md](skills/README.md).
 
 Scientific reports: [`/science:preprint`](../skills/science-preprint/SKILL.md), [документация](science/README.md).
+
+Application acceptance: [independent browser/API/DB verification](app/verify/README.md), sources, scenario/evidence contract и operations.

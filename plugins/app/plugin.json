@@ -1,0 +1,13 @@
+{
+  "name": "app",
+  "version": "0.1.0",
+  "author": {
+    "name": "zxc0zxc0zxc"
+  },
+  "description": "Independent business-scenario browser/API/database acceptance",
+  "commands": {
+    "verify": {
+      "source": "./.claude/commands/app/verify.md"
+    }
+  }
+}

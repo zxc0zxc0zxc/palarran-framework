@@ -7,6 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS = {
+    "app-verify": ("app", "verify"),
     "science-preprint": ("science", "preprint"),
     "agent-eval": ("agent", "eval"),
     **{f"ml-{command}": ("ml", command) for command in ("plan", "hypotheses", "model", "data", "cost", "train", "benchmark")},
@@ -88,7 +89,9 @@ def validate(root=ROOT):
             errors.append(f"Invalid skill frontmatter: {name}")
         if "../../docs/skills/decision-memory.md" not in body:
             errors.append(f"{name}: missing shared decision-memory contract")
-        if namespace == "science":
+        if namespace == "app":
+            base, guides = "app/verify", ["README.md", "sources.md", "methodology.md", "contract.md", "operations.md", "evidence.md"]
+        elif namespace == "science":
             base, guides = "science", ["README.md", "sources.md", "evidence.md", "workflow.md"]
         elif namespace == "agent":
             base, guides = "agent/eval", ["README.md", "sources.md", "methodology.md", "contract.md", "operations.md"]
@@ -134,7 +137,7 @@ def validate(root=ROOT):
         profile = (root / "docs/infra/plan" / f"{level}.md").read_text()
         if profile.count("```mermaid") < 2:
             errors.append(f"Profile {level} needs data and delivery diagrams")
-    for namespace, relative in [("science", "plugins/science/plugin.json"), ("agent", "plugins/agent/plugin.json"), ("ml", "plugins/ml/plugin.json"), ("product", "plugins/product/plugin.json"), ("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json"), ("frontend", "plugins/frontend/plugin.json"), ("backend", "plugins/backend/plugin.json")]:
+    for namespace, relative in [("app", "plugins/app/plugin.json"), ("science", "plugins/science/plugin.json"), ("agent", "plugins/agent/plugin.json"), ("ml", "plugins/ml/plugin.json"), ("product", "plugins/product/plugin.json"), ("infra-plan", ".claude-plugin/plugin.json"), ("ci-cd", "plugins/ci-cd/plugin.json"), ("ux", "plugins/ux/plugin.json"), ("ui", "plugins/ui/plugin.json"), ("frontend", "plugins/frontend/plugin.json"), ("backend", "plugins/backend/plugin.json")]:
         manifest = json.loads((root / relative).read_text())
         expected = {command for ns, command in SKILLS.values() if ns == namespace}
         if manifest.get("name") != namespace or set(manifest.get("commands", {})) != expected:

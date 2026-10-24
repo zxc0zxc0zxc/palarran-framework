@@ -2,7 +2,7 @@
 
 Полный checkout: [root README](../README.md) · [документация](../docs/README.md) · [AGENTS](../AGENTS.md) · [общие contracts](../docs/skills/README.md).
 
-**27 уникальных скиллов.** Slash-команды — project/plugin adapters; переносимый вызов в Codex использует `$skill-name`. Точный workflow, defaults/flags и mandatory docs определяет linked SKILL.md. Этот каталог не запускает действия и не заменяет профильные инструкции.
+**28 уникальных скиллов.** Slash-команды — project/plugin adapters; переносимый вызов в Codex использует `$skill-name`. Точный workflow, defaults/flags и mandatory docs определяет linked SKILL.md. Этот каталог не запускает действия и не заменяет профильные инструкции.
 
 | Slash-команда | Переносимый skill / SKILL.md | Назначение |
 | --- | --- | --- |
@@ -31,6 +31,7 @@
 | `/ml:cost` | [`$ml-cost`](ml-cost/SKILL.md) | Offline cost scenarios/ресурсы/attempts/unknowns |
 | `/ml:train` | [`$ml-train`](ml-train/SKILL.md) | Authorized bounded training; --plan/--status modes |
 | `/ml:benchmark` | [`$ml-benchmark`](ml-benchmark/SKILL.md) | Frozen independent quality/slices/latency/cost protocol |
+| `/app:verify` | [`$app-verify`](app-verify/SKILL.md) | Business scenarios через browser/API/readonly DB; --plan без execution |
 | `/agent:eval` | [`$agent-eval`](agent-eval/SKILL.md) | Frozen задачи, independent graders, tokens/USD/time; --plan offline |
 | `/science:preprint` | [`$science-preprint`](science-preprint/SKILL.md) | LaTeX статья по evidence эксперимента; без запусков и публикации |
 
@@ -46,6 +47,7 @@
 | backend | [manifest](../plugins/backend/plugin.json) | plan/build |
 | product | [manifest](../plugins/product/plugin.json) | define/market/compare/revenue/acquisition/b2b/b2c |
 | ml | [manifest](../plugins/ml/plugin.json) | plan/hypotheses/model/data/cost/train/benchmark |
+| app | [manifest](../plugins/app/plugin.json) | verify |
 | agent | [manifest](../plugins/agent/plugin.json) | eval |
 | science | [manifest](../plugins/science/plugin.json) | preprint |
 

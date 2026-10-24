@@ -15,3 +15,5 @@ Planning/read-only не разрешает installs, application edits, worktree
 Память/документы принадлежат target, checkout скиллов служит источником инструкций. Secrets/raw logs/data/state/checkpoints остаются в approved private storage. Graph не заменяет mandatory docs, не загружается целиком и не запускает semantic/cloud extraction этим workflow.
 
 Scientific reports: `/science:preprint`; в полном checkout см. `docs/science/README.md` и `skills/science-preprint/SKILL.md`.
+
+Application acceptance: `/app:verify`; full checkout `docs/app/verify/README.md`, frozen business scenarios и independent browser/API/readonly DB observations.
