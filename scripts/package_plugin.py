@@ -9,6 +9,8 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
+    "memory": {"manifest": "plugins/memory/plugin.json", "skills": ["memory-recall", "memory-learn"], "docs": ["docs/skills", "docs/memory", "docs/infra"]},
+    "vps": {"manifest": "plugins/vps/plugin.json", "skills": ["vps-inspect", "vps-manage"], "docs": ["docs/skills", "docs/memory", "docs/infra"]},
     "mcp": {"manifest": "plugins/mcp/plugin.json", "skills": ["mcp-build"], "docs": ["docs/skills", "docs/mcp"]},
     "app": {"manifest": "plugins/app/plugin.json", "skills": ["app-verify"], "docs": ["docs/skills", "docs/app"]},
     "science": {"manifest": "plugins/science/plugin.json", "skills": ["science-preprint"], "docs": ["docs/skills", "docs/science"]},
@@ -89,6 +91,7 @@ def build_package(namespace, output, root=ROOT):
         "templates/infra/terraform-hcloud/terraform.tfvars.example",
         "templates/infra/terraform-hcloud/.terraform.lock.hcl",
     ]
+    infra_resources = list(resources)
     if namespace in {"ux", "ui", "frontend"}:
         resources = [
             "templates/ai-development/decision.md",
@@ -136,6 +139,10 @@ def build_package(namespace, output, root=ROOT):
             "templates/ml/data-prepare.example.json", "templates/ml/token-audit.example.json",
             "templates/ml/data-mixture.example.json", "templates/ml/data-preparation.example.json",
         ]
+    if namespace in {"memory", "vps"}:
+        resources = ["templates/ai-development/decision.md", "templates/memory/.env.example", "templates/memory/compose.yaml", "templates/memory/ai-tools-memory.service", "templates/memory/client.example.json", "templates/memory/case.example.json", "templates/memory/deployment-plan.md", "scripts/memory_ops.py", "scripts/memory_acceptance.py", "scripts/vps_ops.py", "scripts/infra_inventory.py", "memory/__init__.py", "memory/service.py", "memory/proxy.py", "mcp/catalog/server.py"]
+    if namespace in {"memory", "vps"}:
+        resources += infra_resources[1:]
     if namespace == "mcp":
         resources = ["templates/ai-development/decision.md", "templates/mcp/build-plan.md", "templates/mcp/catalog.example.json", "scripts/mcp_build.py", "mcp/catalog/server.py"]
     if namespace == "app":

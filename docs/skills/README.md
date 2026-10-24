@@ -21,3 +21,5 @@ Application acceptance: `/app:verify`; full checkout `docs/app/verify/README.md`
 Agent improvement: `docs/agent/improve/README.md`, sources/methodology/contract/operations и ML pilot.
 
 MCP build: `docs/mcp/build/README.md`, sources/tool-design/context-efficiency/protocol-security/evaluation/workflow; reference helper не SDK/remote interoperability proof.
+
+Cross-project memory/VPS: `docs/memory/` guides; scoped candidates/reviewer promotion, native Neo4j recall, private env и SSH operations.

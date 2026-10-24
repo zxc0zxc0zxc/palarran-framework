@@ -2,7 +2,7 @@
 
 Полный checkout: [root README](../README.md) · [документация](../docs/README.md) · [AGENTS](../AGENTS.md) · [общие contracts](../docs/skills/README.md).
 
-**30 уникальных скиллов.** Slash-команды — project/plugin adapters; переносимый вызов в Codex использует `$skill-name`. Точный workflow, defaults/flags и mandatory docs определяет linked SKILL.md. Этот каталог не запускает действия и не заменяет профильные инструкции.
+**34 уникальных скиллов.** Slash-команды — project/plugin adapters; переносимый вызов в Codex использует `$skill-name`. Точный workflow, defaults/flags и mandatory docs определяет linked SKILL.md. Этот каталог не запускает действия и не заменяет профильные инструкции.
 
 | Slash-команда | Переносимый skill / SKILL.md | Назначение |
 | --- | --- | --- |
@@ -32,6 +32,10 @@
 | `/ml:train` | [`$ml-train`](ml-train/SKILL.md) | Authorized bounded training; --plan/--status modes |
 | `/ml:benchmark` | [`$ml-benchmark`](ml-benchmark/SKILL.md) | Frozen independent quality/slices/latency/cost protocol |
 | `/app:verify` | [`$app-verify`](app-verify/SKILL.md) | Business scenarios через browser/API/readonly DB; --plan без execution |
+| `/memory:recall` | [`$memory-recall`](memory-recall/SKILL.md) | Bounded cross-project graph/fulltext recall с applicability |
+| `/memory:learn` | [`$memory-learn`](memory-learn/SKILL.md) | Evidence-backed candidate/promotion/reuse feedback |
+| `/vps:inspect` | [`$vps-inspect`](vps-inspect/SKILL.md) | Readonly SSH inventory, --plan offline |
+| `/vps:manage` | [`$vps-manage`](vps-manage/SKILL.md) | Разрешённые host/service operations с rollback |
 | `/mcp:build` | [`$mcp-build`](mcp-build/SKILL.md) | Task-oriented MCP tools, bounded results, evals; --plan без execution |
 | `/agent:improve` | [`$agent-improve`](agent-improve/SKILL.md) | Failure/feedback → regression + skill diff + paired evidence; --plan без execution |
 | `/agent:eval` | [`$agent-eval`](agent-eval/SKILL.md) | Frozen задачи, independent graders, tokens/USD/time; --plan offline |
@@ -49,6 +53,8 @@
 | backend | [manifest](../plugins/backend/plugin.json) | plan/build |
 | product | [manifest](../plugins/product/plugin.json) | define/market/compare/revenue/acquisition/b2b/b2c |
 | ml | [manifest](../plugins/ml/plugin.json) | plan/hypotheses/model/data/cost/train/benchmark |
+| memory | [manifest](../plugins/memory/plugin.json) | recall, learn |
+| vps | [manifest](../plugins/vps/plugin.json) | inspect, manage |
 | mcp | [manifest](../plugins/mcp/plugin.json) | build |
 | app | [manifest](../plugins/app/plugin.json) | verify |
 | agent | [manifest](../plugins/agent/plugin.json) | eval, improve |

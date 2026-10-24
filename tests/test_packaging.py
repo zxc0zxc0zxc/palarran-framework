@@ -17,7 +17,7 @@ SPEC.loader.exec_module(packager)
 class PackagingTest(unittest.TestCase):
     def test_packages_resolve_skill_docs_and_command_paths_without_checkout(self):
         with tempfile.TemporaryDirectory() as directory:
-            for namespace, expected in [("mcp", 1), ("app", 1), ("science", 1), ("agent", 2), ("ml", 7), ("product", 7), ("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
+            for namespace, expected in [("memory", 2), ("vps", 2), ("mcp", 1), ("app", 1), ("science", 1), ("agent", 2), ("ml", 7), ("product", 7), ("ci-cd", 2), ("infra-plan", 3), ("ux", 1), ("ui", 2), ("frontend", 4), ("backend", 2)]:
                 package = packager.build_package(namespace, Path(directory) / namespace).resolve()
                 manifest = json.loads((package / ".claude-plugin/plugin.json").read_text())
                 self.assertEqual(manifest["name"], namespace)
@@ -41,6 +41,16 @@ class PackagingTest(unittest.TestCase):
                     tokens = json.loads((package / "templates/ui/tokens.example.json").read_text())
                     self.assertEqual(tokens["schema_version"], 1)
                     self.assertTrue((package / "skills/ux-design/SKILL.md").is_file())
+                if namespace in {"memory", "vps"}:
+                    self.assertTrue((package/'memory/service.py').is_file())
+                    for tool in ('memory_ops.py','vps_ops.py'):
+                        checked=subprocess.run([sys.executable,str(package/'scripts'/tool),'--help'],cwd=directory,capture_output=True,text=True)
+                        self.assertEqual(checked.returncode,0,checked.stderr)
+                    private=Path(directory).resolve()/('private-'+namespace+'.env')
+                    checked=subprocess.run([sys.executable,str(package/'scripts/memory_ops.py'),'env-init','--env',str(private)],cwd=directory,capture_output=True,text=True)
+                    self.assertEqual(checked.returncode,0,checked.stderr)
+                    self.assertEqual(private.stat().st_mode & 0o777,0o600)
+                    self.assertNotIn('REPLACE_WITH_RANDOM_AGENT_TOKEN',private.read_text())
                 if namespace == "mcp":
                     self.assertTrue((package / "mcp/catalog/server.py").is_file())
                     checked=subprocess.run([sys.executable,str(package/"scripts/mcp_build.py"),"--help"],cwd=directory,capture_output=True,text=True)

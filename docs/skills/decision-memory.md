@@ -122,3 +122,7 @@ Frontend и backend build используют [общий execution progress pr
 ## Инструкции проекта и ограниченный контекст
 
 Перед изменением кода читать root и применимые module AGENTS; при разрешённой реализации обновлять их по [agents-authoring](agents-authoring.md) на основании реального проекта. Plan-only/read-only не разрешает изменение target instructions или установку инструментов. [Graph context](graph-context.md) — optional bounded fresh navigation с последующей проверкой original sources; graph не заменяет canonical ADR, mandatory docs или approval. Не читать весь graph/все соседние AGENTS в prompt. Если инструменты/индекс отсутствуют, использовать scoped search без автоматического install/LLM extraction.
+
+## Межпроектный опыт
+
+Optional cross-project memory (`docs/memory/README.md` в полном checkout) дополняет локальный журнал. Перед сложным решением полезен bounded recall, затем originals/applicability/refutations и current project evidence. Нет сервиса — local fallback с NOT_RUN, не обязательный сетевой вызов для каждого skill. Глобальный кейс не разрешает действия и не отменяет AGENTS/accepted local ADR. После проверенной задачи /memory:learn предлагает отобранные обезличенные cases; default не импортирует repo/сессии. Reuse сохранять в новом local ADR и feedback с exact subject.

@@ -27,6 +27,7 @@
 
 | Каталог | Контекст |
 | --- | --- |
+| memory | [Cross-project graph memory](memory/AGENTS.md) |
 | mcp | [Readonly stdio reference profiles](mcp/AGENTS.md) |
 | orchestrator | [Runtime/leases/accounting/providers](orchestrator/AGENTS.md) |
 | scripts | [CLI, inventory, validators, packaging](scripts/AGENTS.md) |

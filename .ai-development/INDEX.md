@@ -103,3 +103,9 @@
 | agent/2026-10-24-improvement-loop/0001 | accepted | Failure/feedback → frozen regression + controlled skill diff → paired eval evidence; no automatic paid runs | [record](agent/2026-10-24-improvement-loop/decisions/0001-reviewed-loop.md); [handoff](agent/2026-10-24-improvement-loop/handoff.md) |
 
 | mcp/2026-10-24-agent-tools/0001 | accepted | Task-oriented tools, bounded typed results and honest local stdio reference/scaffold; provider discovery separate | [record](mcp/2026-10-24-agent-tools/decisions/0001-bounded-tools.md); [handoff](mcp/2026-10-24-agent-tools/handoff.md) |
+
+| memory/2026-10-24-cross-project/0001 | accepted | User selected Neo4j CE graph+FTS, content-addressed artifacts, scoped promotion and SSH-only private deployment | [record](memory/2026-10-24-cross-project/decisions/0001-native-graph.md); [handoff](memory/2026-10-24-cross-project/handoff.md) |
+
+| memory/2026-10-24-cross-project/0002 | accepted | Explicit user-authorized isolated VPS deployment, pinned Neo4j CE image and real synthetic acceptance | [record](memory/2026-10-24-cross-project/decisions/0002-authorized-vps.md) |
+
+| memory/2026-10-24-cross-project/0003 | accepted | Explicit global/private project env scope, fail-closed partial profiles and agent-only credential view | [record](memory/2026-10-24-cross-project/decisions/0003-env-scopes.md) |
