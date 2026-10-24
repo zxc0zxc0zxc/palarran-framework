@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, patch
 from packages.core.coordination.share import ShareError, create
 from packages.core.coordination.share_temporal import (
     CoordinationNoticeSink, ShareTemporalGateway, TASK_QUEUE, WORKFLOW_NAME, creation, fingerprint,
-    notification,
+    command, notification,
     transition, validate_creation, workflow_id,
 )
 
@@ -392,6 +392,12 @@ class DeterminismTests(unittest.TestCase):
             transition(initial, request, command, NOW + 1)
         self.assertEqual(initial['events'], {})
 
+    def test_unhashable_event_kind_is_safe_validation_failure(self):
+        for kind in ([], {}, None, True):
+            item = event('offered'); item['kind'] = kind
+            with self.assertRaises(ShareError):
+                command('repo', 'share1', item, 'bob', True)
+
     def test_no_caller_identity_in_event_payload(self):
         request, initial = validate_creation(creation('repo', offer(), 'alice', True), NOW)
         actor, item = sequence()[0]
@@ -431,6 +437,28 @@ class RealSDKTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['state']['status'], 'cancelled')
         self.assertTrue(result['deadline_elapsed'])
         self.assertEqual(waits[0]['timeout'].total_seconds(), 100)
+
+    async def test_terminal_unknown_usage_stays_updatable_until_explicit_reconciliation(self):
+        from datetime import datetime, timezone
+        from packages.core.coordination import share_temporal_worker as module
+        instance = module.ShareWorkflow()
+        instance.request, instance.state = validate_creation(creation('repo', offer(), 'alice', True), NOW)
+        for actor, item in sequence():
+            if item['kind'] == 'ownership_transferred':
+                item['data'].update(usage_known=False, tokens=None, cost_micros=None)
+            instance.state = transition(instance.state, instance.request,
+                dict(project='repo', share_id='share1', actor=actor, event=item, confirmed=True), NOW + 1)
+        self.assertEqual(instance.state['status'], 'accepted')
+        self.assertFalse(instance._terminal())
+        item = event('usage_reconciled', dict(stopped=True, usage_known=True, tokens=25,
+                     cost_micros=30, evidence_sha256='e' * 64), 1)
+        with patch.object(module.workflow, 'now', return_value=datetime.fromtimestamp(NOW+200, timezone.utc)):
+            request = command('repo', 'share1', item, 'alice', False)
+            instance.validate_update(request)
+            result = instance.update(request)
+        self.assertEqual(result['state']['status'], 'accepted')
+        self.assertTrue(instance._terminal())
+        self.assertEqual(result['state']['usage']['alice']['tokens'], 25)
 
     async def test_actual_sdk_sandbox_and_update_query_registration(self):
         from temporalio.worker.workflow_sandbox import SandboxedWorkflowRunner

@@ -91,8 +91,8 @@ def validate_creation(value, now):
 
 def command(project, share_id, event, actor, confirmed):
     ident(project); ident(share_id); ident(actor)
-    require(type(event) is dict)
-    if event.get('kind') in CONSENT:
+    require(type(event) is dict and isinstance(event.get('kind'), str))
+    if event['kind'] in CONSENT:
         require(confirmed is True, 'confirmation_required')
     require(type(confirmed) is bool)
     result = dict(project=project, share_id=share_id, event=copy.deepcopy(event), actor=actor,

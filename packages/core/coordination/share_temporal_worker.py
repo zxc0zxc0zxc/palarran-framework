@@ -49,7 +49,8 @@ class ShareWorkflow:
             raise ApplicationError(str(exc), non_retryable=True) from None
 
     def _terminal(self):
-        return self.state['status'] in TERMINAL or self.state['status'] == 'rework_requested'
+        terminal = self.state['status'] in TERMINAL or self.state['status'] == 'rework_requested'
+        return terminal and all(value['usage_known'] for value in self.state['usage'].values())
 
     @workflow.run
     async def run(self, request):
