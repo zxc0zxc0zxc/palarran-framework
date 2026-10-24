@@ -19,3 +19,5 @@ Scientific reports: `/science:preprint`; в полном checkout см. `docs/sc
 Application acceptance: `/app:verify`; full checkout `docs/app/verify/README.md`, frozen business scenarios и independent browser/API/readonly DB observations.
 
 Agent improvement: `docs/agent/improve/README.md`, sources/methodology/contract/operations и ML pilot.
+
+MCP build: `docs/mcp/build/README.md`, sources/tool-design/context-efficiency/protocol-security/evaluation/workflow; reference helper не SDK/remote interoperability proof.

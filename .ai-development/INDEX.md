@@ -101,3 +101,5 @@
 | app/2026-10-24-independent-acceptance/0001 | accepted | Independent browser/API/DB acceptance, frozen scenarios and bounded private evidence | [record](app/2026-10-24-independent-acceptance/decisions/0001-acceptance.md); [handoff](app/2026-10-24-independent-acceptance/handoff.md) |
 
 | agent/2026-10-24-improvement-loop/0001 | accepted | Failure/feedback → frozen regression + controlled skill diff → paired eval evidence; no automatic paid runs | [record](agent/2026-10-24-improvement-loop/decisions/0001-reviewed-loop.md); [handoff](agent/2026-10-24-improvement-loop/handoff.md) |
+
+| mcp/2026-10-24-agent-tools/0001 | accepted | Task-oriented tools, bounded typed results and honest local stdio reference/scaffold; provider discovery separate | [record](mcp/2026-10-24-agent-tools/decisions/0001-bounded-tools.md); [handoff](mcp/2026-10-24-agent-tools/handoff.md) |

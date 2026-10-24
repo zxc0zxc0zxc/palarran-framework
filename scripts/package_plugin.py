@@ -9,6 +9,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGES = {
+    "mcp": {"manifest": "plugins/mcp/plugin.json", "skills": ["mcp-build"], "docs": ["docs/skills", "docs/mcp"]},
     "app": {"manifest": "plugins/app/plugin.json", "skills": ["app-verify"], "docs": ["docs/skills", "docs/app"]},
     "science": {"manifest": "plugins/science/plugin.json", "skills": ["science-preprint"], "docs": ["docs/skills", "docs/science"]},
     "agent": {
@@ -135,6 +136,8 @@ def build_package(namespace, output, root=ROOT):
             "templates/ml/data-prepare.example.json", "templates/ml/token-audit.example.json",
             "templates/ml/data-mixture.example.json", "templates/ml/data-preparation.example.json",
         ]
+    if namespace == "mcp":
+        resources = ["templates/ai-development/decision.md", "templates/mcp/build-plan.md", "templates/mcp/catalog.example.json", "scripts/mcp_build.py", "mcp/catalog/server.py"]
     if namespace == "app":
         resources = ["templates/ai-development/decision.md", "templates/app/verify/scenarios.md", "templates/app/verify/report.md", "scripts/app_verify.py", "scripts/app_verify_browser.cjs", "scripts/ml_data.py"]
     if namespace == "science":

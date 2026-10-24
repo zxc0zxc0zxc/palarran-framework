@@ -55,3 +55,5 @@ Scientific reports: [`/science:preprint`](../skills/science-preprint/SKILL.md), 
 Application acceptance: [independent browser/API/DB verification](app/verify/README.md), sources, scenario/evidence contract и operations.
 
 Agent improvement: [failure/feedback → regression → skill diff → paired evaluation](agent/improve/README.md).
+
+MCP tooling: [task-oriented tool design, context, protocol/security, evaluation и build](mcp/build/README.md).

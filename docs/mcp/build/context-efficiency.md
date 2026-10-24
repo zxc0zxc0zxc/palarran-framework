@@ -1,0 +1,9 @@
+# Контекст и программная обработка
+
+По [E-MCP-001/002](sources.md) сначала убери ненужные поля, лишние hops и повторяющиеся инструкции; затем измеряй на одной задаче. concise/detailed или field projection выбираются по задаче. Не обрезать ключевые facts, ссылки/IDs и полные результаты без признака неполноты. Pagination/continuation и отдельный full get лучше silent ellipsis. Ограничение bytes не измерение tokens: tokenizer/model/context cache нужны для token comparison, billing остаётся в existing ledger.
+
+Маленькая библиотека: компактный tools/list и ясные descriptions. Большая: client-side search/deferred schema loading при реальной поддержке host; отдельно task corpus selection и tool-selection quality. `defer_loading` и Programmatic Tool Calling из Anthropic article не обязательные MCP server свойства. Нельзя добавлением поля обещать поддержку любого клиента. Reference сервер имеет два инструмента и не реализует provider tool-search API.
+
+Programmatic filtering/aggregation выполняй доверенным typed кодом в разрешённом runtime: промежуточные записи не обязательно слать целиком модели. Ограничивай доступы/volume/time/concurrency, сохраняй provenance и порядок зависимостей; не давать arbitrary eval/shell/SQL/fetch «ради универсальности». Independent outcome checks нужны и при кодовом вызове. Reference implementation не исполняет переданный код и не экспортирует arbitrary batch executor.
+
+Сравни source/output protocol bytes, full vs projected result completeness, calls/retries/errors/latency и task completion. Отдельно actual model tokens/cache/cost при authorized trials. Совпадение JSON schema или меньше bytes не доказывает лучшее решение; duplication structuredContent+text compatibility входит в реальный wire budget. Backend side cost/unknown outcomes считать отдельно.
