@@ -61,7 +61,7 @@ class AlreadyStarted(Exception):
 class FakeHandle:
     def __init__(self, request):
         self.request = copy.deepcopy(request)
-        self.state = create(request['offer'], request['actor'], NOW)
+        self.state = validate_creation(request, NOW)[1]
         self.updates = []
         self.fail_query = False
         self.fail_update_after_commit = False
@@ -209,6 +209,63 @@ class GatewayTests(unittest.IsolatedAsyncioTestCase):
         next(iter(self.client.handles.values())).fail_query = True
         with self.assertRaisesRegex(ShareError, '^temporal_query_unknown$'):
             await self.gateway.status(TOKEN_A, 'repo', 'share1')
+
+    async def prepare_rework(self):
+        await self.start()
+        for actor, item in sequence()[:-1]:
+            await self.gateway.event(TOKEN_A if actor == 'alice' else TOKEN_B,
+                                     'repo', 'share1', item, confirmed=True)
+        await self.gateway.event(TOKEN_A, 'repo', 'share1',
+            event('rework_requested', {'evidence_sha256': 'f' * 64}, 1), confirmed=True)
+        value = offer(); value.update(share_id='share2', previous_share_id='share1')
+        return value
+
+    async def test_linked_rework_preserves_prior_usage_and_compact_lineage(self):
+        value = await self.prepare_rework()
+        result = await self.gateway.create(TOKEN_A, 'repo', value, confirmed=True)
+        self.assertEqual(result['state']['prior_usage']['share1']['bob']['tokens'], 50)
+        self.assertEqual(result['state']['prior_usage']['share1']['alice']['tokens'], 20)
+        request = self.client.starts[-1][1]
+        self.assertEqual(request['predecessor']['status'], 'rework_requested')
+        self.assertNotIn('card', request['predecessor'])
+        self.assertNotIn('events', request['predecessor'])
+        self.assertEqual(len(request['predecessor']['state_sha256']), 64)
+        self.assertEqual(validate_creation(request, NOW)[1], result['state'])
+
+    async def test_link_rejects_active_predecessor_and_other_owner(self):
+        await self.start()
+        value = offer(); value.update(share_id='share2', previous_share_id='share1')
+        with self.assertRaisesRegex(ShareError, 'previous_share_active'):
+            await self.gateway.create(TOKEN_A, 'repo', value, confirmed=True)
+        handle = next(iter(self.client.handles.values()))
+        handle.state['status'] = 'cancelled'
+        with self.assertRaisesRegex(ShareError, 'previous_share_active'):
+            await self.gateway.create(TOKEN_B, 'repo', value, confirmed=True)
+        self.assertEqual(len(self.client.starts), 1)
+
+    async def test_link_rejects_different_repository_task_run_and_self(self):
+        value = await self.prepare_rework()
+        for key in ('repository', 'task_id', 'run_id'):
+            changed = copy.deepcopy(value); changed[key] = 'different'
+            with self.assertRaisesRegex(ShareError, 'lineage_mismatch'):
+                await self.gateway.create(TOKEN_A, 'repo', changed, confirmed=True)
+        value['previous_share_id'] = 'share2'
+        with self.assertRaisesRegex(ShareError, 'lineage_mismatch'):
+            await self.gateway.create(TOKEN_A, 'repo', value, confirmed=True)
+
+    async def test_link_caps_inherited_history_without_dropping_unknown_spend(self):
+        value = await self.prepare_rework()
+        prior = self.client.handles[workflow_id('repo', 'share1')]
+        prior.state['usage']['bob'] = dict(usage_known=False, tokens=50, cost_micros=None)
+        prior.state['prior_usage'] = {'old'+str(i): {} for i in range(7)}
+        result = await self.gateway.create(TOKEN_A, 'repo', value, confirmed=True)
+        self.assertEqual(len(result['state']['prior_usage']), 8)
+        self.assertIsNone(result['state']['prior_usage']['share1']['bob']['cost_micros'])
+        self.assertFalse(result['state']['prior_usage']['share1']['bob']['usage_known'])
+        prior.state['prior_usage']['old7'] = {}
+        value['share_id'] = 'share3'
+        with self.assertRaisesRegex(ShareError, 'capacity_exhausted'):
+            await self.gateway.create(TOKEN_A, 'repo', value, confirmed=True)
 
     async def test_full_consent_handoff_result_and_independent_acceptance(self):
         await self.start()

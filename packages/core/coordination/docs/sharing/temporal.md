@@ -14,7 +14,9 @@ History contains the bounded reviewed card, opaque project/task/run/session refe
 
 One `palarran.share.v1` Workflow contains the shared deterministic reducer state. It performs no Activities, subprocesses, model calls, database mutations or automatic execution. A receiver still needs separately authorized local dispatcher admission and an isolated run/session. No SQLite lifecycle mirror is maintained.
 
-Creation uses a stable project/share-derived Workflow ID with duplicate reuse rejected. An existing ID is attached only when its immutable creation envelope matches. A failed start has unknown outcome: read the existing ID before retrying the same request. A different ID never bypasses uncertainty.
+Creation uses a stable project/share-derived Workflow ID with duplicate reuse rejected. An existing ID is attached only when its immutable creation envelope matches. A linked `previous_share_id` is resolved by the gateway from the same project's terminal Workflow. It must have the same sender, repository, task and root run. Active predecessors are rejected. The creation envelope carries only a compact frozen terminal snapshot: lineage IDs, status, usage, prior usage and full-state digest. Workflow admission validates that snapshot and preserves up to eight prior usage records; private prior cards/events are not copied into new history. The gateway is trusted to obtain the snapshot from the authoritative Workflow, under the same namespace ACL boundary as identity assertions.
+
+A failed start has unknown outcome: read the existing ID before retrying the same request. A different ID never bypasses uncertainty.
 
 Transitions use **completed Updates**, identified by the stable event ID; they return the committed reducer state, not an asynchronous Signal ACK. Unknown update responses require `status()` or the same tracked Update ID; reducer deduplication prevents a second transition. Validators reject malformed/conflicting/out-of-scope transitions before accepted history. No automatic SDK/application side-effect retry or local fallback is configured.
 
