@@ -1,0 +1,11 @@
+**
+!packages/
+!packages/core/
+!packages/core/packaging/
+!packages/core/packaging/__init__.py
+!packages/core/packaging/contract.py
+!packages/core/packaging/storage.py
+!packages/core/packaging/store.py
+!packages/core/packaging/service.py
+!packages/core/packaging/Dockerfile
+!packages/core/packaging/Dockerfile.dockerignore

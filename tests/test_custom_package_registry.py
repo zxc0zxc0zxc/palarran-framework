@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import shutil
 import tempfile
 import threading
 import unittest
@@ -195,6 +196,26 @@ class RegistryTests(unittest.TestCase):
         self.assertEqual(before,path.read_bytes())
         with sqlite3.connect(path) as db:
             self.assertEqual('wal',db.execute('PRAGMA journal_mode').fetchone()[0])
+
+    def test_consistent_stopped_backup_restore_keeps_acl_receipts_and_bytes(self):
+        raw = self.bundle()
+        original = self.publish(raw, request_id='before-backup')
+        # No server or write transaction is active during this copy.
+        restored = self.root/'restored'
+        restored.mkdir(mode=0o700)
+        shutil.copy2(self.store.path, restored/'registry.sqlite3')
+        shutil.copytree(self.blobs.path, restored/'blobs')
+        clone = RegistryStore(restored/'registry.sqlite3',
+                              FilesystemBlobStore(restored/'blobs'), CREDENTIALS)
+        payload = dict(publisher='alice',name='reports',version='0.1.0')
+        self.error(clone.dispatch(TOKENS['carol'],'download',payload),'not_found')
+        downloaded = clone.dispatch(TOKENS['bob'],'download',payload)['result']
+        self.assertEqual(raw,base64.b64decode(downloaded['archive_base64']))
+        receipt = clone.dispatch(TOKENS['alice'],'operation.get',
+                                 dict(request_id='before-backup'))['result']
+        self.assertEqual(original,receipt['receipt'])
+        with sqlite3.connect(clone.path) as db:
+            self.assertEqual('ok',db.execute('PRAGMA integrity_check').fetchone()[0])
 
     def start_http(self):
         self.server=create_server(self.store,port=0)
