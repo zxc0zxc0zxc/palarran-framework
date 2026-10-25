@@ -22,3 +22,5 @@ package/
 ```
 
 Use the CLI's create/build modes only after reviewing their exact parameters. The `package:create` skill orchestrates docs→plan→implementation→tests; it does not claim the deterministic scaffold implements a business capability.
+
+Source refresh/build omits known local authoring caches such as `__pycache__` and `node_modules`; it never deletes them. These paths and bytecode/state/checkpoint files cannot be included explicitly in a distributed archive. Review the final manifest file list; all other payload extras still require explicit hashes.
