@@ -15,6 +15,8 @@ MAX_EXPANDED = 16 * 1024 * 1024
 MAX_FILE = 1024 * 1024
 MAX_FILES = 256
 MANIFEST = 'palarran-package.json'
+AUTHOR_STATE = frozenset(('__pycache__', 'node_modules', '.pytest_cache', '.mypy_cache',
+                          '.ruff_cache', '.venv', '.git', '.palarran', '.graphify'))
 BUILTINS = frozenset(('core', 'memory', 'product', 'design', 'code', 'machine-learning',
                       'docs', 'science', 'validation', 'infrastructure', 'security'))
 SLUG = re.compile(r'[a-z][a-z0-9-]{0,31}\Z')
@@ -92,11 +94,13 @@ def safe_path(value):
     parts = value.split('/')
     forbidden = {'credentials.json', 'id_rsa', 'id_ed25519', 'id_dsa', 'id_ecdsa', 'state.db'}
     for part in parts:
+        require(part not in AUTHOR_STATE, 'private_path')
         require(re.fullmatch(r'[A-Za-z0-9_.-]+', part) and part not in ('.', '..')
                 and not part.endswith('.'), 'invalid_path')
         require(not part.startswith('.') or part == '.env.example', 'private_path')
         require(part.lower() not in forbidden and not part.lower().endswith(
-            ('.env', '.token', '.pem', '.key', '.p12', '.sqlite', '.sqlite3', '.safetensors', '.pt')),
+            ('.env', '.token', '.pem', '.key', '.p12', '.db', '.sqlite', '.sqlite3',
+             '.pyc', '.pyo', '.tfstate', '.ckpt', '.pth', '.safetensors', '.pt')),
             'private_path')
         require(part.split('.')[0].upper() not in
                 {'CON', 'PRN', 'AUX', 'NUL', *('COM'+str(i) for i in range(1,10)),
@@ -251,6 +255,8 @@ def _source_files(source):
         nonlocal scanned, total
         scanned += 1
         require(scanned <= 4096, 'source_entry_limit')
+        if path.name in AUTHOR_STATE or path.suffix.lower() in ('.pyc', '.pyo'):
+            return
         _source(path)
         relative = path.relative_to(source).as_posix()
         if path.is_dir():
