@@ -198,7 +198,7 @@ class InstallTests(unittest.TestCase):
         raw,pin=self.archive('0.0.9')
         with self.assertRaisesRegex(PackageError,'version_not_newer'):self.perform(raw,pin,update=True)
 
-    def test_update_reconciles_removed_skill_and_client_selection(self):
+    def test_update_reconciles_removed_skill_with_same_client_scope(self):
         manifest=json.loads((self.source/MANIFEST).read_text())
         old=manifest['skills'][0];second=dict(old,name=old['name']+'-extra')
         second['path']=old['path'].replace(old['name'],second['name'])
@@ -209,11 +209,41 @@ class InstallTests(unittest.TestCase):
         manifest=json.loads((self.source/MANIFEST).read_text());manifest['skills']=[old]
         (self.source/MANIFEST).write_bytes(canonical(manifest));source.unlink();source.parent.rmdir()
         refresh_manifest(self.source)
-        raw,pin=self.archive('0.2.0');self.perform(raw,pin,client='claude',update=True)
+        raw,pin=self.archive('0.2.0');self.perform(raw,pin,client='both',update=True)
         self.assertFalse((self.target/'.claude/skills'/second['name']).is_symlink())
-        self.assertFalse((self.target/'.agents/skills'/old['name']).is_symlink())
+        self.assertTrue((self.target/'.agents/skills'/old['name']).is_symlink())
         self.assertTrue((self.target/'.claude/skills'/old['name']).is_symlink())
         self.preserved()
+
+    def test_client_scope_change_cannot_remove_existing_discovery(self):
+        self.perform(client='both')
+        raw,pin=self.archive('0.2.0');before=snapshot(self.target)
+        with self.assertRaisesRegex(PackageError,'client_scope_conflict'):
+            self.perform(raw,pin,update=True)
+        self.assertEqual(before,snapshot(self.target))
+
+    def test_receipt_byte_limit_rejects_before_writes(self):
+        before=snapshot(self.target)
+        with patch.object(installer,'MAX_BOOK',512):
+            with self.assertRaisesRegex(PackageError,'install_receipt_too_large'):self.perform()
+        self.assertEqual(before,snapshot(self.target))
+
+    def test_cli_update_without_client_preserves_both_discovery_scopes(self):
+        from packages.core.packaging.cli import main
+        from packages.core.packaging.client import Client
+        import base64
+        self.perform(client='both');raw,pin=self.archive('0.2.0')
+        manifest,_=inspect_archive(raw)
+        package=dict(publisher='alice',name='reports',version='0.2.0',sha256=pin,manifest=manifest)
+        responses=[{'ok':True,'result':{'package':package}},
+                   {'ok':True,'result':{'archive_base64':base64.b64encode(raw).decode(),'sha256':pin}}]
+        with patch.object(Client,'request',side_effect=responses):
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(0,main(['update','alice/reports','--version','0.2.0','--sha256',pin,
+                                         '--target',str(self.target),'--registry',REGISTRY,'--reviewed']))
+        self.assertEqual('both',list_installed(self.target)['packages'][0]['client'])
+        for folder in ('.agents/skills','.claude/skills'):
+            self.assertTrue((self.target/folder/'palarran-x-alice-reports-run').is_symlink())
 
 
 class CliLocalTests(unittest.TestCase):
