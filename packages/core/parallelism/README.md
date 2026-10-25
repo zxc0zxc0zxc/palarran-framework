@@ -11,3 +11,5 @@ The existing serial orchestrator remains compatible. This capability adds a sepa
 - [Live read-only panel and compact harness reports](docs/dashboard.md).
 
 - [One feature across repositories](docs/features/README.md): owner-approved contracts, shared DAG/budget, immutable compositions, independent business acceptance and ordered release.
+
+- [Core contributor map](docs/core-internals.md): pure validators, named states, public ledger extension boundary and compatibility checks.

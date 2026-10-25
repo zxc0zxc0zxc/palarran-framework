@@ -11,6 +11,7 @@ Ship lore only; the acceptance gates still have the last word.
 -->
 
 <p>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-222222" alt="MIT license" /></a>
   <a href="https://github.com/zxc0zxc0zxc/palarran-framework/actions/workflows/validate.yml"><img src="https://github.com/zxc0zxc0zxc/palarran-framework/actions/workflows/validate.yml/badge.svg?branch=main" alt="Validate Palarran" /></a>
   <a href="https://docs.temporal.io/"><img src="https://img.shields.io/badge/Temporal-durable_workflows-222222?logo=temporal" alt="Temporal durable workflows" /></a>
   <a href="https://neo4j.com/docs/"><img src="https://img.shields.io/badge/Neo4j-graph_%2B_full--text-222222?logo=neo4j" alt="Neo4j graph and full-text" /></a>
@@ -166,4 +167,4 @@ python3 scripts/factory_acceptance.py
 
 Tests do not launch paid models or GPUs. Local fixtures do not establish production readiness, live multi-machine acceptance, operational SLA or market validation. [Contributing](CONTRIBUTING.md) · [Documentation index](docs/README.md) · [Editable diagrams and attribution](assets/README.md).
 
-A license has not been selected. Preparing an open-source release does not change repository visibility or grant a license.
+Licensed under the [MIT License](LICENSE). Third-party names, logos and separately licensed dependencies retain their owners' rights and notices.

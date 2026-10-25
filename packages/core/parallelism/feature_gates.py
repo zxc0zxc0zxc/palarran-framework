@@ -126,8 +126,8 @@ class FeatureGateRunner:
         slot = task_id or entry['task_ids'][0]
         if slot not in entry['task_ids']:
             raise ValueError('Unregistered verification slot')
-        with self.dispatcher._transaction() as db:
-            _, manifest = self.dispatcher._run(db, self.run_id)
+        with self.dispatcher.ledger.transaction() as db:
+            _, manifest = self.dispatcher.ledger.read_run(db, self.run_id)
             feature_table = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='features'").fetchone()
             feature_row = db.execute('SELECT state FROM features WHERE run=?', (self.run_id,)).fetchone() if feature_table else None
             if feature_row:

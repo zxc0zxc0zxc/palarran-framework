@@ -1,7 +1,6 @@
 """Read-only, loopback execution view of one authoritative dispatcher ledger."""
 import argparse
 import base64
-from contextlib import contextmanager
 import hmac
 import html
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -10,13 +9,13 @@ import math
 import os
 from pathlib import Path
 import re
-import sqlite3
 import stat
 import threading
 import time
 from urllib.parse import urlsplit
 
 from .dispatcher import Dispatcher
+from .ledger import SQLiteLedger
 
 _ASSETS = Path(__file__).with_name('assets')
 _ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,95}$')
@@ -182,23 +181,18 @@ class LocalReport(Dispatcher):
         if not stat.S_ISREG(meta.st_mode) or meta.st_uid != os.getuid() or meta.st_mode & 0o077:
             raise ValueError('Private existing authority state required')
 
-    @contextmanager
+        self.ledger = SQLiteLedger(self.path, read_only=True, timeout=2)
+
     def _transaction(self):
-        db = sqlite3.connect(self.path.as_uri() + '?mode=ro', uri=True, timeout=2)
-        db.row_factory = sqlite3.Row
-        try:
-            db.execute('PRAGMA query_only=ON')
-            db.execute('BEGIN')
-            yield db
-        finally:
-            db.close()
+        """Compatibility for existing local report integrations."""
+        return self.ledger.transaction()
 
 
 class LocalIntegrationReport(LocalReport):
     """Use the queue's canonical read-only report, never its recovery constructor."""
     def report(self):
         from .integration import IntegrationQueue
-        with self._transaction() as db:
+        with self.ledger.transaction() as db:
             queue = IntegrationQueue.__new__(IntegrationQueue)
             queue.db = db
             return queue.report()
@@ -419,8 +413,7 @@ def main(argv=None):
         if args.feature:
             if args.state:
                 from .feature import FeatureAuthority
-                feature = FeatureAuthority.__new__(FeatureAuthority)
-                feature.dispatcher, feature.run_id = reader, args.run
+                feature = FeatureAuthority.read_only(reader, args.run)
                 feature_reader = feature.report
             else:
                 feature_reader = lambda: reader.get_feature(args.run)

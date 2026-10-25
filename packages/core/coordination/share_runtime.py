@@ -25,8 +25,8 @@ def propose(dispatcher, run_id, *, plan_hash, quota=None, independent_task=False
             reason='low_quota'
     if reason is None:
         return {'suggested':False,'published':False}
-    with dispatcher._transaction() as db:
-        dispatcher._run(db,run_id)
+    with dispatcher.ledger.transaction() as db:
+        dispatcher.ledger.read_run(db,run_id)
         db.execute('CREATE TABLE IF NOT EXISTS share_advice(run TEXT PRIMARY KEY,plan TEXT NOT NULL,at INTEGER NOT NULL)')
         prior=db.execute('SELECT * FROM share_advice WHERE run=?',(run_id,)).fetchone()
         if prior and (now-prior['at']<900 or prior['plan']==plan_hash):
@@ -64,7 +64,7 @@ def execute_received(dispatcher, *, get_share, send_event, share_id, actor, mani
         require(set(task['tools'])<=set(state['offer']['card']['tools']),'scope_expansion')
     key=hashlib.sha256((share_id+':'+str(state['assignment_generation'])).encode()).hexdigest()
     fingerprint=hashlib.sha256(json.dumps(manifest,sort_keys=True).encode()).hexdigest()
-    with dispatcher._transaction() as db:
+    with dispatcher.ledger.transaction() as db:
         db.execute('CREATE TABLE IF NOT EXISTS share_launches(id TEXT PRIMARY KEY,manifest TEXT NOT NULL,status TEXT NOT NULL)')
         prior=db.execute('SELECT * FROM share_launches WHERE id=?',(key,)).fetchone()
         if prior:
@@ -101,6 +101,6 @@ def execute_received(dispatcher, *, get_share, send_event, share_id, actor, mani
         result=execute(dispatcher,entry,FencedAdapter(),verifier,temporal_submit=temporal_submit)
     except Exception:
         return dict(status='unknown',run_id=manifest['run_id'],launched=None,reconciliation_required=True)
-    with dispatcher._transaction() as db:
+    with dispatcher.ledger.transaction() as db:
         db.execute('UPDATE share_launches SET status=? WHERE id=?',(result['status'],key))
     return dict(result,share_id=share_id,assignment_generation=state['assignment_generation'])
