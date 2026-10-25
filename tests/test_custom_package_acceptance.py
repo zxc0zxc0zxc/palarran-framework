@@ -2,6 +2,7 @@
 import base64
 import copy
 import hashlib
+import http.client
 import io
 import json
 import os
@@ -174,6 +175,42 @@ class IndependentArchiveAcceptance(unittest.TestCase):
             with self.subTest(field=field):
                 with self.assertRaises(contract.PackageError):
                     contract.validate_manifest(manifest)
+
+
+    def test_fully_declared_unsafe_paths_and_known_private_key_formats_are_rejected(self):
+        for name in ('../outside', 'docs/../../outside', 'docs/id_dsa', 'docs/auth.token',
+                     'docs/.claude/settings.json', 'docs/a:b', 'docs/NUL.txt'):
+            manifest, files = copy.deepcopy(self.manifest), dict(self.files)
+            files[name] = b'synthetic forbidden payload'
+            manifest['files'][name] = dict(sha256=hashed(files[name]), size=len(files[name]))
+            with self.subTest(name=name):
+                self.rejected(zip_bytes(manifest, files))
+        for header in ('-----BEGIN DSA PRIVATE KEY-----',
+                       '-----BEGIN PGP PRIVATE KEY BLOCK-----'):
+            manifest, files = copy.deepcopy(self.manifest), dict(self.files)
+            files['docs/synthetic-key.txt'] = (header+'\nnot-an-actual-key\n').encode()
+            raw = files['docs/synthetic-key.txt']
+            manifest['files']['docs/synthetic-key.txt'] = dict(sha256=hashed(raw), size=len(raw))
+            with self.subTest(header=header):
+                self.rejected(zip_bytes(manifest, files))
+
+    def test_builder_bounds_empty_directory_traversal_before_collecting_an_unbounded_tree(self):
+        docs = self.source/'docs'
+        for i in range(4097):
+            (docs/('empty-'+str(i))).mkdir()
+        with self.assertRaises(contract.PackageError):
+            contract.build_archive(self.source)
+
+
+    def test_non_allowlisted_archive_decoders_are_rejected_before_payload_processing(self):
+        for compression in (zipfile.ZIP_BZIP2, zipfile.ZIP_LZMA):
+            output = io.BytesIO()
+            with zipfile.ZipFile(output, 'w', compression=compression) as bundle:
+                bundle.writestr('palarran-package.json', canonical(self.manifest))
+                for name, raw in self.files.items():
+                    bundle.writestr(name, raw)
+            with self.subTest(compression=compression):
+                self.rejected(output.getvalue())
 
 
 if __name__ == '__main__':
