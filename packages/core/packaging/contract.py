@@ -211,6 +211,8 @@ def inspect_archive(raw):
                 name = info.filename
                 if name != MANIFEST:
                     safe_path(name)
+                require(info.compress_type in (zipfile.ZIP_STORED, zipfile.ZIP_DEFLATED),
+                        'unsupported_compression')
                 mode = info.external_attr >> 16
                 require(not info.is_dir() and (not stat.S_IFMT(mode) or stat.S_ISREG(mode))
                         and not info.flag_bits & 1, 'nonregular_archive_entry')
