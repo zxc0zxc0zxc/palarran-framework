@@ -12,6 +12,7 @@ python3 /ABSOLUTE/library/scripts/package_ops.py build /ABSOLUTE/package \
   --output /NEW/reports-0.1.0.zip --refresh-manifest
 
 python3 /ABSOLUTE/library/scripts/package_ops.py search reports --target /ABSOLUTE/project
+# Add --mine only for authenticated owner-scoped search.
 python3 /ABSOLUTE/library/scripts/package_ops.py install alice/reports \
   --target /ABSOLUTE/project --client claude --version 0.1.0 \
   --sha256 REVIEWED_64_HEX_DIGEST --reviewed
