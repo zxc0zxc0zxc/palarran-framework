@@ -47,11 +47,11 @@ class SecuritySelectionTests(unittest.TestCase):
         result = registry.resolve(['security'])
         self.assertEqual(result['packages'], ['core', 'security'])
         core = registry.resolve(['core'])['skills']
-        self.assertEqual(len(core), 4)
+        self.assertEqual(len(core), 10)
         self.assertEqual({item['name'] for item in result['skills']} - {item['name'] for item in core},
                          {'palarran-security-' + profile for profile in PROFILES})
         selected = config.selected(selection_bundle(), ['security'])
-        self.assertEqual(sum(name.endswith('/SKILL.md') for name in selected), 10)
+        self.assertEqual(sum(name.endswith('/SKILL.md') for name in selected), 16)
         self.assertIn('security', packager.PUBLIC_GROUPS)
         self.assertEqual(packager.ALIASES['security'], 'palarran-security')
 
@@ -142,10 +142,10 @@ class SecurityExportTests(unittest.TestCase):
                 return original(namespace, output, ROOT)
             with mock.patch.object(packager, '_legacy_package', side_effect=real_core_resources):
                 output = packager.build_package('palarran-security', base / 'export', root).resolve()
-            self.assertEqual(len(list((output / 'skills').iterdir())), 10)
+            self.assertEqual(len(list((output / 'skills').iterdir())), 16)
             manifest = json.loads((output / '.claude-plugin/plugin.json').read_bytes())
             self.assertEqual(manifest['name'], 'palarran-security')
-            self.assertEqual(len(manifest['commands']), 10)
+            self.assertEqual(len(manifest['commands']), 16)
             for item in manifest['commands'].values():
                 self.assertTrue(item['source'].startswith('./commands/'))
                 self.assertTrue((output / item['source']).is_file())
@@ -217,7 +217,7 @@ class SecurityUpdateScopeTests(unittest.TestCase):
                 receipt=json.loads((self.target/'.ai-tools/installation.json').read_bytes())
                 self.assertIn('security',receipt['resolved_packages'])
                 self.assertEqual(receipt['preferences'],preferences)
-                self.assertEqual(len(receipt['skills']),10 if choices==['security'] else 51)
+                self.assertEqual(len(receipt['skills']),16 if choices==['security'] else 57)
                 self.assertEqual(len(receipt['resolved_packages']),2 if choices==['security'] else 11)
 
     def test_old_all_scope_is_frozen_from_receipt_or_verified_prior_catalog(self):
