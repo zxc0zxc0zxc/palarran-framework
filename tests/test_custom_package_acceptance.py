@@ -213,5 +213,231 @@ class IndependentArchiveAcceptance(unittest.TestCase):
                 self.rejected(output.getvalue())
 
 
+class IndependentLifecycleAcceptance(unittest.TestCase):
+    """Real HTTP, persisted SQLite and actual owned project files, never cloud."""
+    def setUp(self):
+        from packages.core.packaging.client import Client
+        from packages.core.packaging.storage import FilesystemBlobStore
+        from packages.core.packaging.store import RegistryStore
+        from packages.core.packaging.service import create_server
+        self.temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temporary.cleanup)
+        self.root = Path(self.temporary.name).resolve()
+        self.credentials = {
+            'a'*40: dict(actor='alice', read_publishers=[]),
+            'b'*40: dict(actor='bob', read_publishers=[]),
+            'r'*40: dict(actor='reader', read_publishers=['alice']),
+        }
+        self.store = RegistryStore(self.root/'registry.sqlite3',
+                                   FilesystemBlobStore(self.root/'blobs'), self.credentials)
+        self.server = create_server(self.store, port=0)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+        self.addCleanup(self.close_server)
+        self.url = 'http://127.0.0.1:'+str(self.server.server_address[1])
+        self.alice = Client(self.url, 'a'*40)
+        self.bob = Client(self.url, 'b'*40)
+        self.reader = Client(self.url, 'r'*40)
+        self.anonymous = Client(self.url)
+        self.target = self.root/'project'
+        self.target.mkdir(mode=0o700)
+        (self.target/'.ai-tools').mkdir(mode=0o700)
+        (self.target/'.ai-tools/installation.json').write_text(
+            json.dumps(dict(version=1, resolved_packages=['core','code'])))
+        (self.target/'.ai-tools/installation.json').chmod(0o600)
+        (self.target/'.palarran').mkdir(mode=0o700)
+        self.preserved = {
+            '.env': b'FEATURE_MODE=synthetic-test\n',
+            '.palarran/config.json': b'{"version":1,"languages":{"docs":"en"}}\n',
+            'AGENTS.md': b'# Existing target instructions\n',
+            'CLAUDE.md': b'# Existing developer context\n',
+            '.mcp.json': b'{"mcpServers":{}}\n',
+            '.claude/skills/foreign/SKILL.md': b'# Unowned local skill\n',
+            '.ai-tools/packages/unowned/notes.md': b'Unowned existing file\n',
+        }
+        for relative, raw in self.preserved.items():
+            path = self.target/relative
+            path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+            path.write_bytes(raw)
+            path.chmod(0o600)
+        self.counter = 0
+
+    @property
+    def installer(self):
+        from packages.core.packaging import installer
+        return installer
+
+    def close_server(self):
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join(timeout=3)
+
+    def request(self, client, operation, **payload):
+        result = client.request(operation, payload)
+        self.assertTrue(result['ok'], result)
+        return result['result']
+
+    def bundle(self, *, visibility='private', release='1.0.0', name='reports'):
+        _, manifest, files = fixture(self.root, visibility=visibility, release=release, name=name)
+        return zip_bytes(manifest, files), manifest, files
+
+    def publish(self, raw, request_id=None):
+        self.counter += 1
+        return self.request(self.alice, 'publish',
+                            request_id=request_id or 'independent-publish-'+str(self.counter),
+                            archive_base64=base64.b64encode(raw).decode())
+
+    def assert_preserved(self):
+        for relative, raw in self.preserved.items():
+            self.assertEqual(raw, (self.target/relative).read_bytes(), relative)
+
+    def install(self, raw, **kwargs):
+        return self.installer.install(self.target, raw, expected_sha256=hashed(raw),
+                                      registry_url=self.url, client='both', reviewed=True,
+                                      **kwargs)
+
+    def test_private_acl_publisher_identity_and_request_receipt_survive_reopen(self):
+        raw, manifest, files = self.bundle()
+        published = self.publish(raw, 'publish-stable')
+        query = dict(publisher='alice', name='reports', version='1.0.0')
+        for client in (self.anonymous, self.bob):
+            self.assertEqual([], self.request(client, 'search')['packages'])
+            denied = client.request('get', query)
+            absent = client.request('get', dict(query, name='missing'))
+            self.assertEqual(denied, absent)
+            self.assertEqual('not_found', denied['error']['code'])
+            self.assertEqual('not_found', client.request('download', query)['error']['code'])
+        downloaded = self.request(self.reader, 'download', **query)
+        self.assertEqual(raw, base64.b64decode(downloaded['archive_base64']))
+        self.assertEqual(hashed(raw), downloaded['sha256'])
+        spoof = self.bob.request('publish', dict(request_id='spoof', archive_base64=base64.b64encode(raw).decode()))
+        self.assertFalse(spoof['ok'])
+        repeated = self.publish(raw, 'publish-stable')
+        self.assertEqual(published, repeated)
+        other, _, _ = self.bundle(release='1.0.1')
+        conflict = self.alice.request('publish', dict(request_id='publish-stable', archive_base64=base64.b64encode(other).decode()))
+        self.assertFalse(conflict['ok'])
+        from packages.core.packaging.storage import FilesystemBlobStore
+        from packages.core.packaging.store import RegistryStore
+        reopened = RegistryStore(self.root/'registry.sqlite3', FilesystemBlobStore(self.root/'blobs'), self.credentials)
+        receipt = reopened.dispatch('a'*40, 'operation.get', {'request_id':'publish-stable'})
+        self.assertTrue(receipt['ok'])
+        self.assertTrue(receipt['result']['found'])
+        self.assertEqual(published, receipt['result']['receipt']['result'])
+        self.assert_preserved()
+
+    def test_wire_response_discard_uses_original_request_lookup_not_another_publication(self):
+        raw, _, _ = self.bundle(visibility='public')
+        payload = dict(request_id='discarded-reply', archive_base64=base64.b64encode(raw).decode())
+        connection = http.client.HTTPConnection('127.0.0.1', self.server.server_address[1], timeout=3)
+        connection.request('POST', '/v1/publish', canonical(payload),
+                           {'Authorization':'Bearer '+'a'*40, 'Content-Type':'application/json'})
+        response = connection.getresponse()
+        self.assertEqual(200, response.status)
+        # Deliberately discard the response body after the actual server committed it.
+        response.close()
+        connection.close()
+        lookup = self.request(self.alice, 'operation.get', request_id='discarded-reply')
+        self.assertTrue(lookup['found'])
+        self.assertEqual('1.0.0', lookup['receipt']['result']['package']['version'])
+        releases = self.request(self.anonymous, 'search')['packages']
+        self.assertEqual(1, len(releases))
+
+    def test_owner_delist_preserves_exact_pin_but_delete_never_reuses_version(self):
+        raw, _, _ = self.bundle(visibility='public')
+        self.publish(raw)
+        query = dict(publisher='alice', name='reports', version='1.0.0')
+        self.assertEqual(1, len(self.request(self.anonymous, 'search')['packages']))
+        self.assertFalse(self.bob.request('delist', dict(query, request_id='not-owner'))['ok'])
+        self.request(self.alice, 'delist', **query, request_id='withdraw-discovery')
+        self.assertEqual([], self.request(self.anonymous, 'search')['packages'])
+        self.assertEqual(raw, base64.b64decode(self.request(self.anonymous, 'download', **query)['archive_base64']))
+        owned = self.request(self.alice, 'search', mine=True)['packages']
+        self.assertEqual(1, len(owned))
+        self.assertFalse(owned[0]['listed'])
+        self.request(self.alice, 'delete', **query, request_id='delete-version')
+        self.assertEqual('not_found', self.anonymous.request('download', query)['error']['code'])
+        resurrection = self.alice.request('publish', dict(request_id='resurrection', archive_base64=base64.b64encode(raw).decode()))
+        self.assertFalse(resurrection['ok'])
+        self.assertTrue(self.request(self.alice, 'search', mine=True)['packages'][0]['deleted'])
+
+    def test_actual_download_install_update_dirt_conflict_and_uninstall_preserve_target(self):
+        raw, manifest, _ = self.bundle(visibility='public')
+        self.publish(raw)
+        downloaded = self.request(self.anonymous, 'download', publisher='alice', name='reports', version='1.0.0')
+        archive = base64.b64decode(downloaded['archive_base64'])
+        with self.assertRaises(contract.PackageError):
+            self.installer.install(self.target, archive, expected_sha256='0'*64,
+                                   registry_url=self.url, reviewed=True)
+        self.assertFalse((self.target/'.palarran/packages/installed.json').exists())
+        self.assertEqual('INSTALLED', self.install(archive)['status'])
+        name = manifest['skills'][0]['name']
+        for folder in ('.claude/skills','.agents/skills'):
+            link = self.target/folder/name
+            self.assertTrue(link.is_symlink())
+            self.assertIn(name, (link/'SKILL.md').read_text())
+        replacement, _, _ = self.bundle(visibility='public', release='1.0.1')
+        installed_readme = self.target/'.ai-tools/packages/alice/reports/README.md'
+        installed_readme.write_text('User local modification\n')
+        with self.assertRaises(contract.PackageError):
+            self.install(replacement, update=True)
+        self.assertEqual('User local modification\n', installed_readme.read_text())
+        self.assertEqual('1.0.0', self.installer.list_installed(self.target)['packages'][0]['version'])
+        installed_readme.write_bytes(contract.inspect_archive(raw)[1]['README.md'])
+        self.assertEqual('UPDATED', self.install(replacement, update=True)['status'])
+        self.assertEqual('1.0.1', self.installer.list_installed(self.target)['packages'][0]['version'])
+        self.assert_preserved()
+        self.assertEqual('UNINSTALLED', self.installer.uninstall(self.target,'alice','reports')['status'])
+        for folder in ('.claude/skills','.agents/skills'):
+            link = self.target/folder/name
+            self.assertFalse(link.exists() or link.is_symlink())
+        self.assertEqual([], self.installer.list_installed(self.target)['packages'])
+        self.assert_preserved()
+
+    def test_interrupted_write_requires_exact_recovery_and_never_adopts_local_dirt(self):
+        raw, manifest, _ = self.bundle()
+        original = self.installer._apply
+        calls = []
+        def interrupted(root, relative, snapshot):
+            original(root, relative, snapshot)
+            calls.append(relative)
+            if len(calls) == 1:
+                raise OSError('independent interruption after actual write')
+        with patch.object(self.installer, '_apply', side_effect=interrupted):
+            with self.assertRaisesRegex(contract.PackageError, 'recovery_required'):
+                self.install(raw)
+        with self.assertRaisesRegex(contract.PackageError, 'recovery_required'):
+            self.install(raw)
+        self.assertEqual('RESTORED', self.installer.recover(self.target)['status'])
+        self.assertEqual([], self.installer.list_installed(self.target)['packages'])
+        self.assert_preserved()
+        self.assertEqual('INSTALLED', self.install(raw)['status'])
+        unowned = self.target/'.ai-tools/packages/alice/reports/unowned.txt'
+        unowned.write_text('Preserve this local work\n')
+        with self.assertRaises(contract.PackageError):
+            self.installer.uninstall(self.target,'alice','reports')
+        self.assertEqual('Preserve this local work\n', unowned.read_text())
+        self.assertTrue((self.target/'.claude/skills'/manifest['skills'][0]['name']).is_symlink())
+        self.assert_preserved()
+
+    def test_bounded_metadata_latency_for_one_hundred_actual_releases(self):
+        _, manifest, files = fixture(self.root, visibility='public')
+        for i in range(100):
+            release = copy.deepcopy(manifest)
+            release['version'] = '1.0.'+str(i)
+            self.publish(zip_bytes(release, files))
+        latencies = []
+        for i in range(100):
+            start = time.perf_counter()
+            result = self.request(self.anonymous, 'get', publisher='alice', name='reports', version='1.0.'+str(i))
+            latencies.append((time.perf_counter()-start)*1000)
+            self.assertEqual('1.0.'+str(i), result['package']['version'])
+        p95 = sorted(latencies)[94]
+        self.assertLessEqual(p95, 250, 'Declared local lab p95 metadata gate')
+        print('\nPackaging metadata lab: '+json.dumps(dict(requests=100,releases=100,
+              mode='sequential-loopback',p95_ms=round(p95,3),python=platform.python_version(),
+              os=platform.system(),machine=platform.machine(),sqlite=sqlite3.sqlite_version)))
+
+
 if __name__ == '__main__':
     unittest.main()
