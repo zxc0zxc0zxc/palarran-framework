@@ -71,6 +71,20 @@ def fixture(root, *, publisher='alice', name='reports', visibility='private', re
     return source, manifest, files
 
 
+def tree_snapshot(root):
+    """Include names, directory/file modes, file bytes and literal links, never follow links."""
+    result = {}
+    for path in sorted(root.rglob('*')):
+        name = path.relative_to(root).as_posix()
+        if path.is_symlink():
+            result[name] = ('link', os.readlink(path))
+        elif path.is_dir():
+            result[name] = ('directory', stat.S_IMODE(path.stat().st_mode))
+        else:
+            result[name] = ('file', stat.S_IMODE(path.stat().st_mode), hashed(path.read_bytes()))
+    return result
+
+
 class IndependentArchiveAcceptance(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -366,9 +380,11 @@ class IndependentLifecycleAcceptance(unittest.TestCase):
         self.publish(raw)
         downloaded = self.request(self.anonymous, 'download', publisher='alice', name='reports', version='1.0.0')
         archive = base64.b64decode(downloaded['archive_base64'])
+        untouched = tree_snapshot(self.target)
         with self.assertRaises(contract.PackageError):
             self.installer.install(self.target, archive, expected_sha256='0'*64,
                                    registry_url=self.url, reviewed=True)
+        self.assertEqual(untouched, tree_snapshot(self.target))
         self.assertFalse((self.target/'.palarran/packages/installed.json').exists())
         self.assertEqual('INSTALLED', self.install(archive)['status'])
         name = manifest['skills'][0]['name']
@@ -379,8 +395,10 @@ class IndependentLifecycleAcceptance(unittest.TestCase):
         replacement, _, _ = self.bundle(visibility='public', release='1.0.1')
         installed_readme = self.target/'.ai-tools/packages/alice/reports/README.md'
         installed_readme.write_text('User local modification\n')
+        before_conflict = tree_snapshot(self.target)
         with self.assertRaises(contract.PackageError):
             self.install(replacement, update=True)
+        self.assertEqual(before_conflict, tree_snapshot(self.target))
         self.assertEqual('User local modification\n', installed_readme.read_text())
         self.assertEqual('1.0.0', self.installer.list_installed(self.target)['packages'][0]['version'])
         installed_readme.write_bytes(contract.inspect_archive(raw)[1]['README.md'])
@@ -414,8 +432,10 @@ class IndependentLifecycleAcceptance(unittest.TestCase):
         self.assertEqual('INSTALLED', self.install(raw)['status'])
         unowned = self.target/'.ai-tools/packages/alice/reports/unowned.txt'
         unowned.write_text('Preserve this local work\n')
+        before_conflict = tree_snapshot(self.target)
         with self.assertRaises(contract.PackageError):
             self.installer.uninstall(self.target,'alice','reports')
+        self.assertEqual(before_conflict, tree_snapshot(self.target))
         self.assertEqual('Preserve this local work\n', unowned.read_text())
         self.assertTrue((self.target/'.claude/skills'/manifest['skills'][0]['name']).is_symlink())
         self.assert_preserved()
