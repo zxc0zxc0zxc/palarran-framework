@@ -274,6 +274,13 @@ class InstallTests(unittest.TestCase):
             self.perform(raw,pin,update=True)
         self.assertEqual(before,snapshot(self.target));self.assertEqual(0o700,path.stat().st_mode & 0o777)
 
+    def test_owned_directory_mode_change_is_preserved(self):
+        self.perform();folder=self.target/'.ai-tools/packages/alice/reports/docs'
+        folder.chmod(0o750);before=snapshot(self.target)
+        with self.assertRaisesRegex(PackageError,'owned_directory_mode_modified'):
+            uninstall(self.target,'alice','reports')
+        self.assertEqual(before,snapshot(self.target));self.assertEqual(0o750,folder.stat().st_mode & 0o777)
+
 
 class CliLocalTests(unittest.TestCase):
     def test_plan_exits_before_parser_configuration_or_input(self):
@@ -302,6 +309,14 @@ class CliLocalTests(unittest.TestCase):
         result=json.loads(output.getvalue());self.assertEqual('stable-request',result['request_id'])
         self.assertEqual('RECONCILIATION_REQUIRED',result['status']);self.assertEqual(1,call.call_count)
 
+
+    def test_search_mine_reaches_owner_scoped_api(self):
+        from packages.core.packaging.cli import main
+        from packages.core.packaging.client import Client
+        with patch.object(Client,'request',return_value={'ok':True,'result':{'packages':[]}}) as call:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(0,main(['search','report','--mine','--registry',REGISTRY]))
+        self.assertEqual(('search',dict(query='report',after=0,limit=20,mine=True)),call.call_args.args)
 
 
 class CliRegistryLifecycleTests(unittest.TestCase):

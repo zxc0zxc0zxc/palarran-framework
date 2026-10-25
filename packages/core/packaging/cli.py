@@ -60,6 +60,7 @@ def parser():
                 command.add_argument('query', nargs='?', default='')
                 command.add_argument('--after', type=int, default=0)
                 command.add_argument('--limit', type=int, default=20)
+                command.add_argument('--mine', action='store_true')
             if action == 'list':
                 command.add_argument('--mine', action='store_true', help='Query owned registry releases separately')
                 command.add_argument('--after', type=int, default=0)
@@ -135,7 +136,7 @@ def _network(args):
     client = _connection(args)
     action = args.action
     if action == 'search':
-        return _call(client, 'search', dict(query=args.query,after=args.after,limit=args.limit,mine=False))
+        return _call(client, 'search', dict(query=args.query,after=args.after,limit=args.limit,mine=args.mine))
     if action == 'list':
         local = list_installed(args.target)
         if args.mine:
