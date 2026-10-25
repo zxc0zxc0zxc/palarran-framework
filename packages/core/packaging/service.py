@@ -92,6 +92,9 @@ def create_server(store, host='127.0.0.1', port=0, container_network=False):
         def error(self, code, status=400):
             self.reply(status, {'ok':False, 'error':{'code':code}})
 
+        def send_error(self, code, message=None, explain=None):
+            self.error('invalid_request', code)
+
         def do_POST(self):
             try:
                 require(self.path.startswith('/v1/') and self.path[4:] in OPERATIONS,
