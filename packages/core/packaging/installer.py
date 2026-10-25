@@ -198,6 +198,7 @@ def _prepare_install(root, manifest, digest_value, registry_url, client, update)
     if previous:
         _verify_record(root, previous)
         require(previous['registry_url'] == registry_url, 'registry_origin_conflict')
+        require(previous['client'] == client, 'client_scope_conflict')
         if previous == record:
             return before, exists, before, record, 'UNCHANGED'
         require(update, 'already_installed')

@@ -48,7 +48,8 @@ def parser():
                 command.add_argument('--sha256', required=True)
                 command.add_argument('--reviewed', action='store_true')
             if action in ('install', 'update'):
-                command.add_argument('--client', choices=('claude', 'codex', 'both'), default='claude')
+                command.add_argument('--client', choices=('claude', 'codex', 'both'),
+                                     default=None if action == 'update' else 'claude')
             if action in ('publish', 'delist', 'delete', 'operation'):
                 command.add_argument('--request-id', required=True)
             if action in ('delist', 'delete'):
@@ -171,8 +172,15 @@ def _network(args):
     manifest, _ = inspect_archive(raw)
     require(all(manifest[k] == v for k,v in identity.items())
             and manifest == package.get('manifest'), 'registry_subject_mismatch')
+    selected_client = args.client
+    if action == 'update' and selected_client is None:
+        installed = list_installed(args.target)['packages']
+        previous = next((p for p in installed if p['publisher'] == identity['publisher']
+                         and p['name'] == identity['name']), None)
+        require(previous is not None, 'not_installed')
+        selected_client = previous['client']
     return install(args.target, raw, expected_sha256=pin, registry_url=client.url,
-                   client=args.client, reviewed=True, update=action == 'update')
+                   client=selected_client, reviewed=True, update=action == 'update')
 
 
 def execute(args):
