@@ -210,6 +210,30 @@
     "core:share": {
       "source": "packages/core/coordination/commands/share.md",
       "argumentHint": "{task?} [--plan]"
+    },
+    "package:create": {
+      "source": "packages/core/packaging/commands/create.md",
+      "argumentHint": "{description?} [--visibility public|private] [--plan]"
+    },
+    "package:search": {
+      "source": "packages/core/packaging/commands/search.md",
+      "argumentHint": "{query} [--mine] [--plan]"
+    },
+    "package:install": {
+      "source": "packages/core/packaging/commands/install.md",
+      "argumentHint": "{publisher/name} --version VERSION --sha256 SHA256 [--target PATH] [--plan]"
+    },
+    "package:update": {
+      "source": "packages/core/packaging/commands/update.md",
+      "argumentHint": "{publisher/name} --version VERSION --sha256 SHA256 [--target PATH] [--plan]"
+    },
+    "package:uninstall": {
+      "source": "packages/core/packaging/commands/uninstall.md",
+      "argumentHint": "{publisher/name} [--target PATH] [--plan]"
+    },
+    "package:list": {
+      "source": "packages/core/packaging/commands/list.md",
+      "argumentHint": "[--mine] [--delist publisher/name@version | --delete publisher/name@version] [--plan]"
     }
   }
 }

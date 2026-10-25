@@ -53,3 +53,7 @@ flowchart BT
 Arrows show required package dependencies. Optional services such as Neo4j memory and the coordination API are configured separately; package selection does not deploy them.
 
 Root `scripts/`, `orchestrator/`, `memory/` and `mcp/` retain fixed compatibility entrypoints. Root `tests/` is the shared integration acceptance suite. Root `docs/` and `skills/` contain navigation only. Portable exports intentionally retain stable legacy paths and rebase links from canonical source.
+
+## Custom extensions
+
+[Core Packaging](core/packaging/README.md) supports publisher-namespaced external packages through a separately versioned archive/registry contract. They do not add arbitrary identities to the eleven-package built-in catalog. Explicit visibility, immutable pins, review and owned installation paths remain required.

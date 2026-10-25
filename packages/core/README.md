@@ -15,3 +15,5 @@ Shared agent foundations, runtime, setup and safe package discovery.
 - **packages** (implemented): Declarative package catalog and dependency closure. [docs](packages/docs/README.md) · [scripts](packages/scripts/) · [plugins](packages/plugins/)
 - **coordination** (implemented): Optional private cross-machine coordination, not external-action enforcement. [docs](coordination/docs/README.md) · [templates](coordination/templates/)
 - **coop** (implemented): Repository-scoped cooperative agent receiver and alerts. 
+
+- **packaging** (implemented): Custom package authoring, public/private registry and scoped install/update/removal. [docs](packaging/docs/README.md) · [skills](packaging/skills/)
