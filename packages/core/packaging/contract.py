@@ -90,13 +90,13 @@ def version(value):
 def safe_path(value):
     require(type(value) is str and 0 < len(value) <= 512, 'invalid_path')
     parts = value.split('/')
-    forbidden = {'credentials.json', 'id_rsa', 'id_ed25519', 'state.db'}
+    forbidden = {'credentials.json', 'id_rsa', 'id_ed25519', 'id_dsa', 'id_ecdsa', 'state.db'}
     for part in parts:
         require(re.fullmatch(r'[A-Za-z0-9_.-]+', part) and part not in ('.', '..')
                 and not part.endswith('.'), 'invalid_path')
         require(not part.startswith('.') or part == '.env.example', 'private_path')
         require(part.lower() not in forbidden and not part.lower().endswith(
-            ('.env', '.pem', '.key', '.p12', '.sqlite', '.sqlite3', '.safetensors', '.pt')),
+            ('.env', '.token', '.pem', '.key', '.p12', '.sqlite', '.sqlite3', '.safetensors', '.pt')),
             'private_path')
         require(part.split('.')[0].upper() not in
                 {'CON', 'PRN', 'AUX', 'NUL', *('COM'+str(i) for i in range(1,10)),
@@ -185,7 +185,7 @@ def _check_files(manifest, files):
         expected = manifest['files'][name]
         require(len(raw) == expected['size'] and hashlib.sha256(raw).hexdigest() == expected['sha256'],
                 'file_digest_mismatch')
-        require(not re.search(rb'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----', raw), 'private_content')
+        require(not re.search(rb'-----BEGIN (?:RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY(?: BLOCK)?-----', raw), 'private_content')
     for skill in manifest['skills']:
         try:
             body = files[skill['path']].decode('utf-8')
@@ -242,25 +242,38 @@ def _source_files(source):
     source = _source(source)
     require(source.is_dir(), 'source_missing')
     payload = {}
-    for root in sorted(source.iterdir()):
-        if root.name == MANIFEST or root.name.startswith('.'):
-            continue
-        _source(root)
-        safe_path(root.name if root.is_file() else root.name+'/placeholder')
-        paths = [root] if root.is_file() else sorted(root.rglob('*'))
-        for path in paths:
-            _source(path)
-            if path.is_dir():
+    scanned = 0
+    total = 0
+
+    def visit(path):
+        nonlocal scanned, total
+        scanned += 1
+        require(scanned <= 4096, 'source_entry_limit')
+        _source(path)
+        relative = path.relative_to(source).as_posix()
+        if path.is_dir():
+            safe_path(relative+'/placeholder')
+            with os.scandir(path) as entries:
+                for entry in entries:
+                    visit(Path(entry.path))
+            return
+        safe_path(relative)
+        require(path.is_file() and path.stat().st_size <= MAX_FILE, 'invalid_source_file')
+        require(len(payload) < MAX_FILES, 'too_many_files')
+        with path.open('rb') as stream:
+            raw = stream.read(MAX_FILE+1)
+        require(len(raw) <= MAX_FILE, 'file_too_large')
+        total += len(raw)
+        require(total <= MAX_EXPANDED, 'expanded_too_large')
+        payload[relative] = raw
+
+    with os.scandir(source) as entries:
+        for entry in entries:
+            scanned += 1
+            require(scanned <= 4096, 'source_entry_limit')
+            if entry.name == MANIFEST or entry.name.startswith('.'):
                 continue
-            require(path.is_file() and path.stat().st_size <= MAX_FILE, 'invalid_source_file')
-            relative = path.relative_to(source).as_posix()
-            safe_path(relative)
-            require(len(payload) < MAX_FILES, 'too_many_files')
-            with path.open('rb') as stream:
-                raw = stream.read(MAX_FILE+1)
-            require(len(raw) <= MAX_FILE, 'file_too_large')
-            payload[relative] = raw
-            require(sum(len(b) for b in payload.values()) <= MAX_EXPANDED, 'expanded_too_large')
+            visit(Path(entry.path))
     _path_set(payload)
     return source, payload
 
