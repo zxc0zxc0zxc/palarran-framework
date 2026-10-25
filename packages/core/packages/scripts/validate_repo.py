@@ -246,6 +246,13 @@ def validate(root=ROOT):
             base, guides = None, []
             if not _has_guide(root, path, body, "packages/core/coop/docs/README.md", cached_source):
                 errors.append(f"{name}: missing repository cooperation guide")
+        elif namespace == "package":
+            base, guides = None, []
+            for reference in ("packages/core/packaging/docs/README.md",
+                              "packages/core/packaging/docs/contract.md",
+                              "packages/core/packaging/docs/" + command + ".md"):
+                if not _has_guide(root, path, body, reference, cached_source):
+                    errors.append(f"{name}: missing mandatory packaging guide {reference}")
         elif namespace == "git":
             base, guides = "git", ["README.md", "sources.md", command + ".md"]
         elif namespace == "security":
@@ -325,6 +332,9 @@ def validate(root=ROOT):
     for profile in ("infrastructure", "ingress", "log", "egress", "code", "cve"):
         if "palarran-security-" + profile in skills:
             manifest_specs[0][2].append("security:" + profile)
+    for action in ("create", "search", "install", "update", "uninstall", "list"):
+        if "palarran-package-" + action in skills:
+            manifest_specs[0][2].append("package:" + action)
     if "palarran-core-share" in skills:
         manifest_specs[0][2].append("core:share")
     if "palarran-core-coop" in skills:

@@ -14,3 +14,5 @@ Read2026-10-25. These references motivate specific boundaries; our schema, limit
 | [Google SRE objectives](https://sre.google/sre-book/service-level-objectives/) | SLO measurements differ from contractual SLA | The plan's250ms/99.5% proposals are ours and not observed production guarantees |
 
 No proprietary snippets are copied. Archive and installer logic are original implementation; tests use synthetic owned fixtures.
+
+S3 adapter method references: [Boto3 put_object](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/client/put_object.html) and [get_object](https://docs.aws.amazon.com/boto3/latest/reference/services/s3/client/get_object.html), read2026-10-25. The adapter uses injected clients, conditional creation and exact byte readback; no SDK installation, real bucket or paid call was used in local tests. Container base digest is retained from the existing reviewed memory Dockerfile; this feature did not pull/build/start the image.

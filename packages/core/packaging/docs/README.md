@@ -1,6 +1,6 @@
 # Custom packages and registry
 
-Checked2026-10-25. Packaging adds a source-backed extension workflow to Core, without making downloaded instructions trusted framework code. Read the [exact contract](contract.md), [sources](sources.md), [creation workflow](create.md), [client lifecycle](lifecycle.md), and [operations](operations.md).
+Checked2026-10-25. Packaging adds a source-backed extension workflow to Core, without making downloaded instructions trusted framework code. Read the [exact contract](contract.md), [sources](sources.md), [creation workflow](create.md), [client lifecycle](lifecycle.md), and [operations](operations.md) and [CLI examples](cli.md).
 
 ```mermaid
 flowchart LR

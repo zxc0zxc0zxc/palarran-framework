@@ -216,6 +216,18 @@
     "templates/science": "packages/science/preprint/templates",
     "templates/ui": "packages/design/ui/templates",
     "templates/ux": "packages/design/ux/templates",
-    "skills/palarran-core-share": "packages/core/coordination/skills/palarran-core-share"
+    "skills/palarran-core-share": "packages/core/coordination/skills/palarran-core-share",
+    "skills/palarran-package-create": "packages/core/packaging/skills/palarran-package-create",
+    "commands/palarran/package/create.md": "packages/core/packaging/commands/create.md",
+    "skills/palarran-package-search": "packages/core/packaging/skills/palarran-package-search",
+    "commands/palarran/package/search.md": "packages/core/packaging/commands/search.md",
+    "skills/palarran-package-install": "packages/core/packaging/skills/palarran-package-install",
+    "commands/palarran/package/install.md": "packages/core/packaging/commands/install.md",
+    "skills/palarran-package-update": "packages/core/packaging/skills/palarran-package-update",
+    "commands/palarran/package/update.md": "packages/core/packaging/commands/update.md",
+    "skills/palarran-package-uninstall": "packages/core/packaging/skills/palarran-package-uninstall",
+    "commands/palarran/package/uninstall.md": "packages/core/packaging/commands/uninstall.md",
+    "skills/palarran-package-list": "packages/core/packaging/skills/palarran-package-list",
+    "commands/palarran/package/list.md": "packages/core/packaging/commands/list.md"
   }
 }
