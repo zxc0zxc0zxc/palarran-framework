@@ -156,6 +156,8 @@ def _missing():
 def _verify_record(root, record):
     path = _safe(root/_store(record))
     require(path.is_dir(), 'owned_files_modified')
+    require(path.stat().st_uid == os.getuid() and stat.S_IMODE(path.stat().st_mode) == 0o700,
+            'owned_directory_mode_modified')
     expected = _file_hashes(record)
     expected_dirs = {str(Path(name).parent) for name in expected if str(Path(name).parent) != '.'}
     expected_dirs |= {str(parent) for name in expected for parent in Path(name).parents
@@ -170,6 +172,8 @@ def _verify_record(root, record):
             require(visited <= len(expected)+len(expected_dirs), 'owned_files_modified')
             relative = child.relative_to(path).as_posix()
             if child.is_dir():
+                require(child.stat().st_uid == os.getuid() and
+                        stat.S_IMODE(child.stat().st_mode) == 0o700, 'owned_directory_mode_modified')
                 require(relative in expected_dirs, 'owned_files_modified')
             else:
                 require(relative in expected, 'owned_files_modified')
@@ -505,6 +509,8 @@ def _recovery_extras(root, journal):
     if not store.exists():
         return
     require(store.is_dir(), 'recovery_conflict')
+    require(store.stat().st_uid == os.getuid() and stat.S_IMODE(store.stat().st_mode) == 0o700,
+            'recovery_conflict')
     allowed_dirs = {str(parent) for name in allowed for parent in Path(name).parents}
     visited = 0
     for directory, folders, filenames in os.walk(store, followlinks=False):
@@ -513,6 +519,9 @@ def _recovery_extras(root, journal):
             visited += 1
             require(visited <= len(allowed)+len(allowed_dirs), 'recovery_conflict')
             relative = child.relative_to(root).as_posix()
+            if child.is_dir():
+                require(child.stat().st_uid == os.getuid() and
+                        stat.S_IMODE(child.stat().st_mode) == 0o700, 'recovery_conflict')
             require(relative in (allowed_dirs if child.is_dir() else allowed), 'recovery_conflict')
 
 
