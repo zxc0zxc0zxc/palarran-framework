@@ -121,7 +121,12 @@ LEGACY_ALIASES = {'skills': 'palarran-setup',
 
 def _legacy_package(namespace, output, root=ROOT):
     namespace = LEGACY_ALIASES.get(namespace, namespace)
-    config = LEGACY_PACKAGES[namespace]
+    config = dict(LEGACY_PACKAGES[namespace])
+    if namespace == "palarran-setup":
+        extra = ["palarran-package-" + action for action in
+                 ("create", "search", "install", "update", "uninstall", "list")]
+        config["skills"] = list(config["skills"]) + [name for name in extra
+            if source_path(root, "skills/" + name + "/SKILL.md").is_file()]
     plugin_name = namespace
     namespace = config['domain']
     root = Path(root).absolute()
@@ -256,6 +261,20 @@ def _legacy_package(namespace, output, root=ROOT):
     if namespace in {"skills", "core", "vps"}:
         resources += ["packages/core/coordination/" + name + ".py" for name in
                       ("share", "share_store", "share_git", "share_runtime", "share_temporal", "share_temporal_worker")]
+    packaging_base = "packages/core/packaging/"
+    if source_path(root, packaging_base + "README.md").is_file():
+        resources += [packaging_base + "README.md", packaging_base + "AGENTS.md"]
+        resources += [p.relative_to(root).as_posix() for p in
+                      sorted((root / packaging_base / "docs").glob("*.md"))]
+        if namespace in {"skills", "core"}:
+            resources += ["scripts/package_ops.py", packaging_base + "Dockerfile",
+                          packaging_base + "Dockerfile.dockerignore"]
+            resources += [packaging_base + name + ".py" for name in
+                          ("__init__", "contract", "storage", "store", "service", "client", "installer", "cli")
+                          if source_path(root, packaging_base + name + ".py").is_file()]
+            resources += [p.relative_to(root).as_posix() for p in
+                          sorted((root / packaging_base / "templates").glob("*"))
+                          if p.is_file() and p.suffix in {".json", ".yaml", ".md"}]
     resources.append("LICENSE")
     paths += [root / resource for resource in resources]
     for command in manifest["commands"].values():

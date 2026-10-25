@@ -52,7 +52,7 @@ Select English, Russian or Serbian Latin independently for agent interaction, co
 
 ## Self-host on your server
 
-Your server can host private cross-project memory, the agent message bus and an optional Temporal deployment. Skills and agents stay on developer machines. Service ports stay private; workstations connect through SSH tunnels. Keenable is an optional external source service, not a dependency of self-hosted memory.
+Your server can host private cross-project memory, the agent message bus, an optional custom-package registry and an optional Temporal deployment. Skills and agents stay on developer machines. Service ports stay private; workstations connect through SSH tunnels. Keenable is an optional external source service, not a dependency of self-hosted memory.
 
 Tell your agent:
 
@@ -133,6 +133,12 @@ The integration queue applies verified changes in an owned branch, reruns affect
 Cross-repository features also define intermediate old/new service combinations, migration order, flags, stop thresholds and recovery. Project-specific independent verifiers check business invariants; matching schemas alone do not prove correct behavior. Release readiness, authorized deployment and observed acceptance remain separate states.
 
 [Integration queue](packages/core/parallelism/docs/integration.md) · [Feature passport and workflow](packages/core/parallelism/docs/features/workflow.md) · [Acceptance and release](packages/core/parallelism/docs/features/acceptance.md) · [Independent application verification](packages/validation/application/docs/README.md).
+
+## Your own packages
+
+Core Packaging keeps third-party extensions separate from the trusted built-in catalog. Create a namespaced capability with documentation, a plan, implementation and tests; select public/private visibility and publish an immutable version to your chosen registry only when authorized. Search and install exact version/SHA256 pins, update without overwriting local changes, and remove only receipt-owned files.
+
+The optional registry uses a small Python API, SQLite metadata and content-addressed filesystem storage, with an explicit S3 client adapter. No package hooks or MCP servers activate during installation. Owner delist/delete is separate from local uninstall. Native Claude skills start with `/palarran-package-create`; unified plugin aliases use `/palarran:package:create`. [Packaging guide](packages/core/packaging/README.md) · [Registry operations](packages/core/packaging/docs/operations.md).
 
 ## Skills ready for parallelism
 

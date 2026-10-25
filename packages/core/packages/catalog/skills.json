@@ -528,6 +528,60 @@
       "adapter": "packages/core/coordination/commands/share.md",
       "arguments": "{task?} [--plan]",
       "legacy": []
+    },
+    {
+      "skill": "palarran-package-create",
+      "domain": "package",
+      "action": "create",
+      "command": "package:create",
+      "adapter": "commands/palarran/package/create.md",
+      "arguments": "{description?} [--visibility public|private] [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-package-search",
+      "domain": "package",
+      "action": "search",
+      "command": "package:search",
+      "adapter": "commands/palarran/package/search.md",
+      "arguments": "{query} [--mine] [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-package-install",
+      "domain": "package",
+      "action": "install",
+      "command": "package:install",
+      "adapter": "commands/palarran/package/install.md",
+      "arguments": "{publisher/name} --version VERSION --sha256 SHA256 [--target PATH] [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-package-update",
+      "domain": "package",
+      "action": "update",
+      "command": "package:update",
+      "adapter": "commands/palarran/package/update.md",
+      "arguments": "{publisher/name} --version VERSION --sha256 SHA256 [--target PATH] [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-package-uninstall",
+      "domain": "package",
+      "action": "uninstall",
+      "command": "package:uninstall",
+      "adapter": "commands/palarran/package/uninstall.md",
+      "arguments": "{publisher/name} [--target PATH] [--plan]",
+      "legacy": []
+    },
+    {
+      "skill": "palarran-package-list",
+      "domain": "package",
+      "action": "list",
+      "command": "package:list",
+      "adapter": "commands/palarran/package/list.md",
+      "arguments": "[--mine] [--delist publisher/name@version | --delete publisher/name@version] [--plan]",
+      "legacy": []
     }
   ]
 }

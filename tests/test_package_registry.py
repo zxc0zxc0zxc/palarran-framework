@@ -44,12 +44,13 @@ class PackageRegistryTests(unittest.TestCase):
             validate(value)
         self.assertEqual(str(raised.exception), code)
 
-    def test_public_inventory_all_eleven_and_51_single_owners(self):
+    def test_public_inventory_all_eleven_and_57_single_owners(self):
         registry = Registry.load(ROOT / "packages/catalog.json")
         result = registry.resolve(list(PUBLIC_IDS))
         self.assertEqual(result["packages"], list(PUBLIC_IDS))
-        self.assertEqual(len(result["skills"]), 51)
+        self.assertEqual(len(result["skills"]), 57)
         expected = {"palarran-" + name for name in (
+            "package-create package-search package-install package-update package-uninstall package-list "
             "setup mcp-build memorize remember memorize-session remember-session memory-learn memory-recall vacuum "
             "product-define product-market product-compare product-revenue product-acquisition product-b2b product-b2c "
             "git-commit git-history git-conflicts git-mr ux-design ui-design frontend-plan frontend-build backend-plan backend-build "

@@ -51,6 +51,11 @@
           "id": "coop",
           "status": "implemented",
           "description": "Repository-scoped cooperative agent receiver and alerts."
+        },
+        {
+          "id": "packaging",
+          "status": "implemented",
+          "description": "Reviewed custom package authoring, scoped registry and ownership-aware lifecycle."
         }
       ],
       "skills": [
@@ -73,6 +78,36 @@
           "name": "palarran-core-share",
           "path": "packages/core/coordination/skills/palarran-core-share/SKILL.md",
           "legacy_path": "skills/palarran-core-share/SKILL.md"
+        },
+        {
+          "name": "palarran-package-create",
+          "path": "packages/core/packaging/skills/palarran-package-create/SKILL.md",
+          "legacy_path": "skills/palarran-package-create/SKILL.md"
+        },
+        {
+          "name": "palarran-package-search",
+          "path": "packages/core/packaging/skills/palarran-package-search/SKILL.md",
+          "legacy_path": "skills/palarran-package-search/SKILL.md"
+        },
+        {
+          "name": "palarran-package-install",
+          "path": "packages/core/packaging/skills/palarran-package-install/SKILL.md",
+          "legacy_path": "skills/palarran-package-install/SKILL.md"
+        },
+        {
+          "name": "palarran-package-update",
+          "path": "packages/core/packaging/skills/palarran-package-update/SKILL.md",
+          "legacy_path": "skills/palarran-package-update/SKILL.md"
+        },
+        {
+          "name": "palarran-package-uninstall",
+          "path": "packages/core/packaging/skills/palarran-package-uninstall/SKILL.md",
+          "legacy_path": "skills/palarran-package-uninstall/SKILL.md"
+        },
+        {
+          "name": "palarran-package-list",
+          "path": "packages/core/packaging/skills/palarran-package-list/SKILL.md",
+          "legacy_path": "skills/palarran-package-list/SKILL.md"
         }
       ]
     },

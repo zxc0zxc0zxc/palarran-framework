@@ -137,3 +137,16 @@ Installer ID: `security`. Optional scoped audits; no automatic fixes or target a
 | `/palarran:security:egress` | [`$palarran-security-egress`](../packages/security/egress/skills/palarran-security-egress/SKILL.md) | `{scope?} [--plan]` |
 | `/palarran:security:code` | [`$palarran-security-code`](../packages/security/code/skills/palarran-security-code/SKILL.md) | `{scope?} [--plan]` |
 | `/palarran:security:cve` | [`$palarran-security-cve`](../packages/security/cve/skills/palarran-security-cve/SKILL.md) | `{scope?} [--plan]` |
+
+## Core / Packaging
+
+Custom packages use a separate publisher namespace and immutable version/digest pins. Native Claude calls use `/palarran-package-ACTION`; the unified plugin aliases below are a separate interface.
+
+| Command | Native skill | Arguments |
+| --- | --- | --- |
+| `/palarran:package:create` | [`$palarran-package-create`](../packages/core/packaging/skills/palarran-package-create/SKILL.md) | `{description?} [--visibility public|private] [--plan]` |
+| `/palarran:package:search` | [`$palarran-package-search`](../packages/core/packaging/skills/palarran-package-search/SKILL.md) | `{query} [--mine] [--plan]` |
+| `/palarran:package:install` | [`$palarran-package-install`](../packages/core/packaging/skills/palarran-package-install/SKILL.md) | `{publisher/name} --version VERSION --sha256 SHA256 [--target PATH] [--plan]` |
+| `/palarran:package:update` | [`$palarran-package-update`](../packages/core/packaging/skills/palarran-package-update/SKILL.md) | `{publisher/name} --version VERSION --sha256 SHA256 [--target PATH] [--plan]` |
+| `/palarran:package:uninstall` | [`$palarran-package-uninstall`](../packages/core/packaging/skills/palarran-package-uninstall/SKILL.md) | `{publisher/name} [--target PATH] [--plan]` |
+| `/palarran:package:list` | [`$palarran-package-list`](../packages/core/packaging/skills/palarran-package-list/SKILL.md) | `[--mine] [--delist publisher/name@version | --delete publisher/name@version] [--plan]` |
