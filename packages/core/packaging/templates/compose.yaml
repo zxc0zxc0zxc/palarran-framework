@@ -1,0 +1,40 @@
+# Inert example. Follow docs/operations.md; no credentials are generated here.
+name: palarran-packaging
+services:
+  registry:
+    build:
+      context: ../../../..
+      dockerfile: packages/core/packaging/Dockerfile
+      args:
+        SOURCE_REV: ${PACKAGING_SOURCE_REV:?Set the reviewed exact source commit}
+    image: palarran-packaging:${PACKAGING_SOURCE_REV:?Set the reviewed exact source commit}
+    user: "10001:10001"
+    read_only: true
+    restart: unless-stopped
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 64
+    stop_grace_period: 30s
+    ports:
+      - "127.0.0.1:${PACKAGING_PORT:-18793}:18793"
+    volumes:
+      - type: bind
+        source: ${PACKAGING_STATE_ROOT:?Set an absolute private owned root}/registry
+        target: /state
+      - type: bind
+        source: ${PACKAGING_STATE_ROOT:?Set an absolute private owned root}/credentials.json
+        target: /run/secrets/registry.json
+        read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=32m,mode=1777
+    networks: [private]
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: "3"
+networks:
+  private:
+    internal: true
