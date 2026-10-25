@@ -128,6 +128,7 @@ def _snapshot(path):
         return {'kind': 'missing'}
     maximum = MAX_BOOK if path.name == 'installed.json' else MAX_FILE
     raw = _read(path, maximum)
+    require(stat.S_IMODE(path.stat().st_mode) == 0o600, 'owned_file_mode_modified')
     return _file_snapshot(raw)
 
 
@@ -172,6 +173,7 @@ def _verify_record(root, record):
                 require(relative in expected_dirs, 'owned_files_modified')
             else:
                 require(relative in expected, 'owned_files_modified')
+                require(stat.S_IMODE(child.stat().st_mode) == 0o600, 'owned_file_mode_modified')
                 require(hashlib.sha256(_read(child, MAX_FILE)).hexdigest() == expected[relative],
                         'owned_files_modified')
                 files.add(relative)

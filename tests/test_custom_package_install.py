@@ -245,6 +245,35 @@ class InstallTests(unittest.TestCase):
         for folder in ('.agents/skills','.claude/skills'):
             self.assertTrue((self.target/folder/'palarran-x-alice-reports-run').is_symlink())
 
+    def test_builtin_framework_update_preserves_custom_package_store_and_links(self):
+        from test_project_update import ProjectUpdateTest
+        helper=ProjectUpdateTest();helper.setUp();self.addCleanup(helper.tearDown)
+        receipt=helper.target/'.ai-tools/installation.json'
+        value=json.loads(receipt.read_text());value['resolved_packages']=['core']
+        receipt.write_bytes(canonical(value)+b'\n')
+        raw,pin=self.archive()
+        install(helper.target,raw,expected_sha256=pin,registry_url=REGISTRY,client='both',reviewed=True)
+        custom_receipt=(helper.target/installer.RECEIPT).read_bytes()
+        store=helper.target/'.ai-tools/packages/alice/reports'
+        before=snapshot(store)
+        links={str(path.relative_to(helper.target)):str(path.readlink())
+               for path in [helper.target/folder/'palarran-x-alice-reports-run'
+                            for folder in ('.agents/skills','.claude/skills')]}
+        helper.advance();result=helper.update()
+        self.assertIn(result['status'],('UPDATED','UPDATED_MEMORY_NOT_READY'))
+        self.assertEqual(custom_receipt,(helper.target/installer.RECEIPT).read_bytes())
+        self.assertEqual(before,snapshot(store))
+        for name,target in links.items():self.assertEqual(target,str((helper.target/name).readlink()))
+        helper.verify_settings()
+
+    def test_owned_mode_changes_are_not_silently_reset(self):
+        self.perform();path=self.target/'.ai-tools/packages/alice/reports/README.md'
+        path.chmod(0o700);before=snapshot(self.target)
+        raw,pin=self.archive('0.2.0')
+        with self.assertRaisesRegex(PackageError,'owned_file_mode_modified'):
+            self.perform(raw,pin,update=True)
+        self.assertEqual(before,snapshot(self.target));self.assertEqual(0o700,path.stat().st_mode & 0o777)
+
 
 class CliLocalTests(unittest.TestCase):
     def test_plan_exits_before_parser_configuration_or_input(self):
@@ -272,6 +301,59 @@ class CliLocalTests(unittest.TestCase):
                                          '--request-id','stable-request','--reviewed']))
         result=json.loads(output.getvalue());self.assertEqual('stable-request',result['request_id'])
         self.assertEqual('RECONCILIATION_REQUIRED',result['status']);self.assertEqual(1,call.call_count)
+
+
+
+class CliRegistryLifecycleTests(unittest.TestCase):
+    def test_real_http_cli_lifecycle_with_pinned_source_and_request_lookup(self):
+        import threading
+        from packages.core.packaging.cli import main
+        from packages.core.packaging.service import create_server
+        from packages.core.packaging.storage import FilesystemBlobStore
+        from packages.core.packaging.store import RegistryStore
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary).resolve();target=root/'project';(target/'.ai-tools').mkdir(parents=True)
+            (target/'.ai-tools/installation.json').write_bytes(canonical({'version':1,'resolved_packages':['core']}))
+            token=root/'publisher.token';token.write_text('a'*40);token.chmod(0o600)
+            store=RegistryStore(root/'state/registry.sqlite3',FilesystemBlobStore(root/'blobs'),
+                                {'a'*40:{'actor':'alice','read_publishers':[]}})
+            server=create_server(store,port=0);thread=threading.Thread(target=server.serve_forever,daemon=True);thread.start()
+            url='http://127.0.0.1:'+str(server.server_port)
+            def run(*args):
+                output=io.StringIO()
+                with contextlib.redirect_stdout(output):code=main(list(args))
+                self.assertEqual(0,code,output.getvalue());return json.loads(output.getvalue())
+            remote=['--registry',url,'--token-file',str(token)]
+            try:
+                source=root/'source'
+                self.assertEqual('DRAFT',run('create',str(source),'--publisher','alice','--name','demo','--visibility','private')['status'])
+                built=run('build',str(source),'--output',str(root/'first.zip'))
+                published=run('publish','--archive',str(root/'first.zip'),'--sha256',built['sha256'],
+                              '--request-id','first-publish','--reviewed',*remote)
+                self.assertEqual('alice',published['package']['publisher'])
+                found=run('operation','--request-id','first-publish',*remote)
+                self.assertTrue(found['found']);self.assertEqual('publish',found['operation'])
+                self.assertEqual([],run('search','--registry',url)['packages'])
+                first=run('install','alice/demo','--version','0.1.0','--sha256',built['sha256'],
+                          '--target',str(target),'--reviewed',*remote)
+                self.assertEqual('INSTALLED',first['status'])
+                self.assertEqual(1,len(run('list','--target',str(target))['packages']))
+                value=json.loads((source/MANIFEST).read_text());value['version']='0.2.0'
+                (source/MANIFEST).write_bytes(canonical(value));(source/'README.md').write_text('# Updated fixture\n')
+                second=run('build',str(source),'--output',str(root/'second.zip'),'--refresh-manifest')
+                run('publish','--archive',str(root/'second.zip'),'--sha256',second['sha256'],
+                    '--request-id','second-publish','--reviewed',*remote)
+                self.assertEqual('UPDATED',run('update','alice/demo','--version','0.2.0','--sha256',second['sha256'],
+                                               '--target',str(target),'--reviewed',*remote)['status'])
+                mine=run('list','--target',str(target),'--mine',*remote)
+                self.assertEqual(2,len(mine['owned_registry_releases']['packages']))
+                self.assertEqual('UNINSTALLED',run('uninstall','alice/demo','--target',str(target))['status'])
+                run('delist','alice/demo','--version','0.2.0','--request-id','delist-second','--reviewed',*remote)
+                run('delete','alice/demo','--version','0.2.0','--request-id','delete-second','--reviewed',*remote)
+                deleted=run('list','--target',str(target),'--mine',*remote)['owned_registry_releases']['packages']
+                self.assertTrue(next(p for p in deleted if p['version']=='0.2.0')['deleted'])
+            finally:
+                server.shutdown();server.server_close();thread.join(timeout=3)
 
 
 if __name__=='__main__':unittest.main()
