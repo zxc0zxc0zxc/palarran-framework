@@ -254,6 +254,16 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(PackageError,'private_listener_required'):
             create_server(self.store,host='0.0.0.0')
 
+    def test_unknown_http_method_has_safe_json_not_reflected_html(self):
+        self.start_http()
+        conn = http.client.HTTPConnection('127.0.0.1', self.server.server_port, timeout=3)
+        conn.request('DO-NOT-REFLECT-METHOD', '/private-marker')
+        response = conn.getresponse()
+        self.assertEqual(501, response.status)
+        self.assertEqual({'ok':False,'error':{'code':'invalid_request'}},
+                         json.loads(response.read()))
+        conn.close()
+
     def test_credential_file_permissions_and_symlinks(self):
         path=self.root/'credentials.json';path.write_bytes(canonical(CREDENTIALS));path.chmod(0o600)
         self.assertEqual(CREDENTIALS,load_credentials(path))
