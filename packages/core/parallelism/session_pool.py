@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sqlite3
 import sys
 import threading
 import time
@@ -64,7 +65,7 @@ def report(dispatcher, journal, run_id, *, after=0):
                 sessions=sessions,roots_active=roots,subagents_observed_active=active_children,
                 agents_observed_active=roots+active_children,
                 children_discovered=sum(s['discovered'] for s in sessions),
-                count_scope='observed_lower_bound',
+                count_scope='observed_incomplete',
                 cost_kinds=sorted({s.get('cost_kind','unknown') for s in sessions}),
                 main_chat_usage='outside_subprocess_ledger',
                 configured_child_capacity_per_session=sorted({s['capacity'] for s in sessions}),
@@ -79,7 +80,7 @@ def report(dispatcher, journal, run_id, *, after=0):
 def text_report(value):
     usage=value['usage']
     lines=[f"Palarran {value['run_id']}: {value['status']}",
-           f"Sessions active: {value['roots_active']}; subagents observed active: {value['subagents_observed_active']}; agents observed active: {value['agents_observed_active']} (lower bound)",
+           f"Sessions active: {value['roots_active']}; subagents observed active: {value['subagents_observed_active']}; agents observed active: {value['agents_observed_active']} (last observation; incomplete)",
            f"Reported tokens: {usage['tokens']}; reported micro-USD: {usage['cost_micros']}; usage complete: {usage['known']}",
            f"Reserved tokens: {usage['reserved_tokens']}; reserved micro-USD: {usage['reserved_cost_micros']}"]
     lines += [f"- {t['task_id']}: {t['state']} / {t['owner']} / "+''.join(c if ord(c)>=32 else ' ' for c in t['goal']) for t in value['tasks']]
@@ -211,7 +212,7 @@ def main(argv=None):
             value=report(dispatcher,journal,args.run,after=args.after)
             print(text_report(value) if args.format=='text' else json.dumps(value))
         return 0
-    except (ValueError,TypeError,KeyError,OSError,ImportError,AttributeError):
+    except (ValueError,TypeError,KeyError,OSError,ImportError,AttributeError,sqlite3.Error):
         print(json.dumps(dict(status='BLOCKED',reason='Check reviewed run, binding, permissions and current attempts; no automatic retry.')))
         return 2
 

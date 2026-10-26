@@ -52,7 +52,7 @@ class TeamObserver:
                     children=[dict(agent_id=k, state=v) for k,v in sorted(self.children.items())],
                     observed_active=sum(v in ('running', 'requested') for v in self.children.values()),
                     discovered=len(self.children), capacity=self.maximum,
-                    count_scope='observed_lower_bound', observation_complete=False,
+                    count_scope='observed_incomplete', observation_complete=False,
                     usage_scope=self.aggregate_scope, telemetry_failed=self.failed,
                     capacity_exceeded=self.over_limit)
 

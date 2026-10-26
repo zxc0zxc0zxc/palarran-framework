@@ -295,6 +295,15 @@ class ControlAndProjectionTests(unittest.TestCase):
                 with self.assertRaises(ValueError):d.run_local('ordinary-test',None,None,initial_workers=value)
             self.assertEqual(d.get_run('ordinary-test')['tasks'][0]['attempt_id'],0)
 
+    def test_status_on_corrupt_sidecar_is_sanitized_and_does_not_repair_it(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();state=root/'private/run.sqlite'
+            Dispatcher(state).create_run(manifest(root,1))
+            sidecar=state.with_name(state.name+'.teams.sqlite')
+            sidecar.write_bytes(b'PRIVATE BROKEN DATABASE');sidecar.chmod(0o600)
+            self.assertEqual(main(['status','--state',str(state),'--run','ordinary-test']),2)
+            self.assertEqual(sidecar.read_bytes(),b'PRIVATE BROKEN DATABASE')
+
     def test_core_export_contains_executable_team_helpers_and_runbook(self):
         import importlib.util
         repo=Path(__file__).resolve().parents[1]
