@@ -120,6 +120,8 @@ Preserved domain requirements from the former root AGENTS.md. Read the applicabl
 
 ## Core parallelism
 
+- Explicit headless-team orchestration also reads `packages/core/parallelism/docs/session-pool.md`. Main chat remains coordinator; roots use reviewed bindings, shared team reservations, owned worktrees, bounded native children and observed metadata. Status/watch are the chat notification surface; no automatic paid launch, quota multiplication or unknown-outcome replay.
+
 - Read parallelism.md for independent multi-step work. Plan bounded DAG/ownership and use isolated owned implementation worktrees, with one coordinator for shared state and sequential integration. Current authorization permits parallel work; preserve every domain boundary, budget and independent verification gate.
 
 ## Installation procedures

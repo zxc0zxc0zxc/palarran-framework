@@ -138,7 +138,12 @@ def common_parallelism():
             'Simple tasks stay single-agent. Reuse active run identity on continuation. '
             'Resolve optional Temporal from project .env then ~/.palarran/.env; never silently fall back from an active Temporal run. '
             'Native desktop integration is instruction-based, not enforced per-message interception. '
-            'Unobservable nested delegation is forbidden; all managed descendants enter the shared dispatcher.')
+            'Unobservable nested delegation is forbidden; all managed descendants enter the shared dispatcher. '
+            'For explicitly authorized headless teams, read .ai-tools/library/packages/core/parallelism/docs/session-pool.md: '
+            'the main chat prepares the shared run and starts its supervisor, then reports observed session/child counts, '
+            'task activity, reported usage, reserved budget and blockers through status/watch. '
+            'Only NativeTeamHarness may enable native children under one reserved team task; default NativeHarness stays single-agent. '
+            'Never equate configured capacity with actual agents or promise chat notifications without an active consumer.')
 
 
 def parallel_instructions(raw):

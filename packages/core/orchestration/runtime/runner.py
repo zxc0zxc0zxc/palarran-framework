@@ -102,7 +102,7 @@ def _kill_group(process):
 
 
 def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
-            usage_adapter=None, on_usage=None):
+            usage_adapter=None, on_usage=None, on_stdout=None):
     """Drain output to a digest only; fence loss/limits kill the process group.
 
     Up to output_limit + 1 bytes are read: the extra byte proves overflow.
@@ -220,6 +220,14 @@ def execute(argv, cwd, *, timeout, output_limit, env, heartbeat, stdin_text="",
                 if output_bytes > output_limit:
                     reason = "output_limit"
                     break
+                if on_stdout is not None and stream is process.stdout:
+                    try:
+                        if on_stdout(chunk) is False:
+                            reason = "observation_stop"
+                            break
+                    except Exception:
+                        reason = "observation_error"
+                        break
                 if usage_stream is not None and stream is process.stdout:
                     try:
                         # Publish every completed line before parsing the next:

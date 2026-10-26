@@ -47,6 +47,27 @@ def _safe(value, kind):
     return result
 
 
+def project_teams(value, run_id):
+    """Team metadata only; never project prompts, provider text or process IDs."""
+    if type(value) is not dict or value.get('run_id') != run_id:
+        raise ValueError('Invalid team report')
+    result = {'status':'observed', 'actual_count_complete':False}
+    for key in ('roots_active','subagents_observed_active','agents_observed_active','children_discovered'):
+        number=value.get(key)
+        if type(number) is not int or not 0 <= number <= 100000:
+            raise ValueError('Invalid team counter')
+        result[key]=number
+    sessions=value.get('sessions')
+    if type(sessions) is not list or len(sessions)>100:
+        raise ValueError('Invalid session inventory')
+    result['sessions']=[]
+    for session in sessions:
+        if not _ID.fullmatch(str(session.get('task_id',''))):
+            raise ValueError('Invalid session identity')
+        result['sessions'].append({k:session.get(k) for k in ('task_id','attempt_id','capacity','observed_active','discovered','root_stopped','usage_complete')})
+    return result
+
+
 def _list(value):
     if type(value) is not list or len(value) > 100:
         raise ValueError('Invalid bounded report list')
@@ -199,12 +220,14 @@ class LocalIntegrationReport(LocalReport):
 
 
 class Snapshot:
-    def __init__(self, reader, run_id, *, integration_reader=None, feature_reader=None, interval=3, stale_after=15, clock=time.time):
+    def __init__(self, reader, run_id, *, integration_reader=None, feature_reader=None, team_reader=None, interval=3, stale_after=15, clock=time.time):
         if not _ID.fullmatch(run_id) or not 1 <= interval <= 60 or stale_after < interval:
             raise ValueError('Invalid snapshot configuration')
         self.reader, self.run_id = reader, run_id
         self.integration_reader = integration_reader
         self.feature_reader = feature_reader
+        self.team_reader = team_reader
+        self.teams = None
         self.interval, self.stale_after, self.clock = interval, stale_after, clock
         self.lock = threading.Lock()
         self.last = None
@@ -223,6 +246,11 @@ class Snapshot:
                     self.error = False
                 except Exception:
                     self.error = True  # Never expose exception strings or authenticated endpoints.
+                if self.team_reader is not None:
+                    try:
+                        self.teams = project_teams(self.team_reader(), self.run_id)
+                    except Exception:
+                        self.teams = {"status":"unavailable"}
                 self.integration = None
                 if self.integration_reader is not None:
                     try:
@@ -241,6 +269,7 @@ class Snapshot:
             value = dict(self.last or {'observed_at': None, 'report': None})
             age = None if value['observed_at'] is None else max(0, now - value['observed_at'])
             value.update(server_time=now, age_seconds=age, freshness='missing' if age is None else ('stale' if self.error or age > self.stale_after else 'current'), source_error=self.error, stale_after=self.stale_after, poll_seconds=self.interval, integration=self.integration, feature=self.feature)
+            if self.team_reader is not None:value["teams"] = self.teams
             return value
 
 
@@ -258,6 +287,9 @@ def markdown(snapshot):
              '| Task | Owner / machine | State | Blocker / human action | Verified subject |', '| --- | --- | --- | --- | --- |']
     for task in report['tasks']:
         lines.append('| ' + ' | '.join(text(v) for v in (task['task_id'], f"{text(task.get('owner'))} / {text(task.get('machine'))}", 'Unused reserve' if task.get('unused_reserve') else task['state'], task.get('reason'), task.get('verified_subject'))) + ' |')
+    teams = snapshot.get('teams')
+    if teams:
+        lines += [f"Headless teams: {text(teams.get('status'))}; sessions {text(teams.get('roots_active'))}; observed subagents {text(teams.get('subagents_observed_active'))}; observed total {text(teams.get('agents_observed_active'))} (incomplete observation)"]
     integration = snapshot.get('integration')
     if integration:
         ready = integration.get('pr_ready') is True and snapshot['freshness'] == 'current'
@@ -384,6 +416,7 @@ def main(argv=None):
     source = parser.add_mutually_exclusive_group()
     source.add_argument('--state', help='Existing private authority SQLite ledger (read only)')
     source.add_argument('--authority', help='Loopback authority URL behind owned tunnel')
+    parser.add_argument('--teams-state', help='Existing private team metadata sidecar; local state only, read only')
     parser.add_argument('--feature', action='store_true', help='Include same-authority cross-repository feature metadata')
     parser.add_argument('--integration-state', help='Existing private same-run integration queue SQLite (read only)')
     parser.add_argument('--token-file', help='Private authority bearer file; never browser-visible')
@@ -395,7 +428,7 @@ def main(argv=None):
         if not 0 <= args.port <= 65535:
             raise ValueError('Invalid port')
         if args.command == 'demo':
-            if args.state or args.authority or args.token_file or args.integration_state or args.feature:
+            if args.state or args.authority or args.token_file or args.integration_state or args.feature or args.teams_state:
                 raise ValueError('Demo is fixture only')
             class Demo:
                 def get_run(self, run_id):
@@ -417,7 +450,14 @@ def main(argv=None):
                 feature_reader = feature.report
             else:
                 feature_reader = lambda: reader.get_feature(args.run)
-        snapshot = Snapshot(reader, args.run, integration_reader=integration.report if integration else None,
+        team_reader = None
+        if args.teams_state:
+            if not args.state:raise ValueError('Team view requires local shared state')
+            from .team_journal import TeamJournal
+            from .session_pool import report as team_report
+            team_journal = TeamJournal(args.teams_state,read_only=True)
+            team_reader = lambda: team_report(reader,team_journal,args.run)
+        snapshot = Snapshot(reader, args.run, team_reader=team_reader, integration_reader=integration.report if integration else None,
                             feature_reader=feature_reader)
         if args.command == 'report':
             print(markdown(snapshot.get()), end='')

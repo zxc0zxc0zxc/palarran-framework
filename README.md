@@ -76,6 +76,9 @@ Project source and contracts remain authoritative. `.palarran/` holds project pr
 
 ## Adaptive true parallelism
 
+The main chat can also supervise a [pool of headless sessions](packages/core/parallelism/docs/session-pool.md), each with an explicitly bounded native team. Reports distinguish observed session/subagent activity, shared spend, held reservations and blockers; native UI integration and provider telemetry coverage remain explicit.
+
+
 Start a small wave of independent ready tasks, then admit more work when dependencies, observed capacity and the remaining budget allow. Each writer gets an owned Git worktree and explicit file/resource boundaries. Tasks can span backend, frontend and SDK repositories while sharing contracts and one feature goal.
 
 ![Adaptive parallel agents across repositories and developer machines](assets/parallel-worktrees.png)

@@ -12,6 +12,8 @@ function render(s){
   warning(s.freshness!=='current'?'Authority '+s.freshness+'. Values below are the last observation; do not treat them as current.':'');
   if(!s.report){put('status','Unknown');return;}
   const r=s.report,u=r.usage,b=r.budget,known=u.known===true;
+  const teams=s.teams;el('teams-summary').hidden=!teams;
+  if(teams){put('teams-count',teams.status==='observed'?`${number(teams.roots_active)} sessions · ${number(teams.subagents_observed_active)} observed subagents · ${number(teams.agents_observed_active)} observed agents`:'Team observation unavailable');put('teams-note','Counts are incomplete observations. Configured capacity is not actual concurrency. Spend and reservations below cover the shared run.');}
   put('run',r.run_id);put('status',value(r.status));put('meta',`${value(r.backend)} backend · plan ${value(r.plan_version)}${r.backend==='fixture'?' · DEMO FIXTURE':''}`);
   put('observed',`Observed ${new Date(s.observed_at*1000).toLocaleTimeString()} · ${Math.round(s.age_seconds)}s ago`);
   put('tokens',known?number(u.tokens):'Unknown total');put('cost',known?money(u.cost_micros):'Unknown total');
