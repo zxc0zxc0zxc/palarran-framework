@@ -608,13 +608,15 @@ class Dispatcher:
             )
             self._event(db, run_id, task_id, 'reconciled')
 
-    def run_local(self, run_id, adapter, verifier):
+    def run_local(self, run_id, adapter, verifier, *, initial_workers=None):
         if self.get_run(run_id)['backend'] != 'local':
             raise ValueError('Temporal backend cannot fall back to local')
         with self._transaction() as db:
             _, manifest = self._run(db, run_id)
         ceiling = manifest.get('max_workers', 2)
-        wave = min(2, ceiling)
+        if initial_workers is not None and (type(initial_workers) is not int or not 1 <= initial_workers <= ceiling):
+            raise ValueError("Initial worker wave exceeds reviewed concurrency")
+        wave = min(2, ceiling) if initial_workers is None else initial_workers
         with ThreadPoolExecutor(max_workers=ceiling) as pool:
             futures = {}
             while True:

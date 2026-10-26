@@ -32,3 +32,7 @@ This adapter is instruction-based: CLI permission/sandbox settings and a no-dele
 Native admission additionally verifies an existing registered **linked Git worktree**, its exact top-level directory, distinct common/admin Git directories, reciprocal Git registration and `HEAD == task.base_commit` before any native executable starts. Primary checkouts, ordinary folders, nested paths, symlink aliases and source drift are rejected without launching. Each task owns a distinct worktree in the adapter registry; reuse by another task is blocked even after the first session exits. The helper does not create/reset worktrees or change branches. The coordinator provisions them in its already-authorized preparation stage. These checks bind admission; they do not sandbox a native CLI that intentionally edits outside its task files.
 
 Git's [official worktree documentation](https://git-scm.com/docs/git-worktree), checked **2026-10-24**, distinguishes main and linked working trees, documents the linked administrative metadata and provides machine-readable `worktree list --porcelain -z`. Palarran's exact base/ownership admission is additional policy, not a claim that Git isolates filesystem permissions.
+
+## Optional headless teams
+
+For explicitly authorized native descendants, select `NativeTeamHarness` through the [session-pool workflow](session-pool.md). One session task reserves its entire tree. Do not remove the default NativeHarness restriction or add native agents outside this explicit team binding.
