@@ -95,3 +95,9 @@ Final status must distinguish files installed, memory connected/not ready/not ru
 ## Common parallelism instructions (1.1.0)
 
 Installation appends a separate `palarran:parallelism` block to the recorded client's AGENTS/CLAUDE instruction files, preserving all original bytes. This applies to ordinary requests and subject skills; native clients remain instruction-based. Before apply resolve the optional Temporal question/profile under [Temporal setup](../temporal.md), preserving explicit project disable and existing global settings. An answer does not grant global writes, Worker startup, deployment or models. Follow the reviewed local Worker procedure only within actual scope, and report its missing readiness honestly.
+
+## Local-first extension (version 1.2.0)
+
+Use `--mode local` (CLI default) for a supported existing Git target when tracked project instructions must stay clean. The plan lists this mode and private paths before writes. Apply creates the public library store, private preferences/receipt, selected discovery links, local Claude instructions and idempotent Git-local excludes. It does not rewrite tracked AGENTS.md, CLAUDE.md, .mcp.json or .gitignore. A pre-existing tracked private output blocks; no automatic untracking. Codex skill discovery is supported, but automatic local instruction/MCP activation is not claimed. `--mode project` is a separate explicit choice retaining the prior shared-file integration.
+
+Do not load parallelism/Temporal/session-pool documents for a simple installation explanation. Use the concise generated context entry, then the specific skill/runbook needed. Missing preferences return a structured missing_preferences diagnostic with the required flags. Do not print private config or raw exception text to diagnose it.

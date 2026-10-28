@@ -81,3 +81,15 @@ Rollback refuses to overwrite new user changes. Keep the backup and review the d
 [Core runbooks](runbooks/README.md) bind install/update commands, preconditions, expected statuses, partial-state recovery and source revisions. Agents choose a supported procedure before applying changes. Missing support produces a concrete runbook extension, not an invented installation sequence.
 
 Optional engine setup and actual native/managed integration levels: [Temporal and harness compatibility](temporal.md). A new install asks whether to enable Temporal; updates inherit the checked answer. Project setup never implicitly changes a user's global env or starts a Worker. Common parallelism instructions apply to ordinary requests and every skill. Managed adapters use the common dispatcher; AGENTS/CLAUDE instructions alone are instruction-based.
+
+## Local installation default (1.2)
+
+New `setup` and CLI `install` requests use `--mode local` by default. In an existing Git project, this creates the private store, selected native skill links and `CLAUDE.local.md` for Claude without changing tracked `CLAUDE.md`, `AGENTS.md`, `.mcp.json` or `.gitignore`. Reviewed Git-local exclude entries protect generated private paths. A tracked private output is a conflict; ignore rules do not untrack it. Review the exact mode/paths with `--plan` before applying.
+
+Use `--mode project` only when the shared project-instruction/MCP edits are intended. The low-level `install()` API retains its prior project-mode default for compatibility. Existing receipts retain their recorded mode, including legacy project receipts; update does not silently migrate them. An explicit conflicting mode blocks update. Global configuration is never changed.
+
+Claude loads local instructions from `CLAUDE.local.md`; restart/trust requirements remain client-specific. Codex native skills are discoverable through `.agents/skills`, but local mode does not claim automatic loading of a new project instruction file or activate a global MCP connection. Read `.ai-tools/USAGE.md` and follow the selected skill's bounded entry. Shared instruction activation requires explicit project mode or a separately reviewed client configuration.
+
+Memory is optional when its package is not selected. Such setup returns success with `memory.status: NOT_SELECTED`, records the gap and runs no memory subprocess. Explicitly selected memory that fails the real health probe remains `*_MEMORY_NOT_READY`/exit2. File installation, memory readiness and native UI discovery are separate outcomes. Legacy receipts without a package selection keep their existing health policy.
+
+Diagnostics are safe JSON `{status, code, field, hint}`. Missing preferences identify the packages/language remedy; doctor reports the failed protocol stage without provider contents. Arbitrary exception text and raw tracebacks are never printed. On Darwin, only the expected system root aliases `/tmp`, `/var` and `/etc` are canonicalized; other symlink components remain rejected.
