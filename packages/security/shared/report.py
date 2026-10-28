@@ -254,10 +254,18 @@ def read_report(path):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    class SafeParser(argparse.ArgumentParser):
+        def error(self, message):
+            raise ReportError('invalid_arguments','arguments')
+    parser = SafeParser(description=__doc__)
     parser.add_argument('--plan', action='store_true'); parser.add_argument('--validate', action='store_true')
     parser.add_argument('--input')
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+    except ReportError:
+        print(json.dumps(dict(status='REJECTED',code='invalid_arguments',field='arguments',
+              hint='Use --help for supported flags and provide values for input options.',network=False,writes=0)))
+        return 2
     if args.plan:
         print('{"status":"PLANNED","network":false,"writes":0}'); return 0
     try:

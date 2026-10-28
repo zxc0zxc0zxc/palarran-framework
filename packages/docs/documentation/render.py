@@ -499,13 +499,21 @@ def render_to_target(data, target):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    class SafeParser(argparse.ArgumentParser):
+        def error(self, message):
+            raise ArtifactError('Use --help for supported flags and provide values for input options.',
+                                code='invalid_arguments',field='arguments')
+    parser = SafeParser(description=__doc__)
     parser.add_argument('--plan', action='store_true')
     parser.add_argument('--check', action='store_true', help='Validate only the explicit input; no target reads or writes')
     parser.add_argument('--approved', action='store_true')
     parser.add_argument('--input')
     parser.add_argument('--target')
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+    except ArtifactError as error:
+        print(json.dumps(error.diagnostic(),sort_keys=True))
+        return 2
     if args.plan:
         print('PLAN ONLY: select the visible feature, prepare scoped evidence, review privacy, then explicitly render a new artifact. No input or target read.')
         return 0
