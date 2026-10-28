@@ -15,3 +15,7 @@ Modules return safe JSON fields `status`, stable lowercase `code`, schema `field
 ## Scope boundaries
 
 Local installation, private artifact output and Git-local excludes must be concrete/reviewable in --plan. Preserve legacy installation ownership on update. Validation of user input is separate from filesystem mutation. Private artifact export to a user-selected public location is explicit, never the default. Small task records retain rationale/evidence without requiring multiple service documents. No fixture/structural PASS is promoted to business acceptance or model quality.
+
+## Primary sources
+
+Read2026-10-28: [Git ignore documentation](https://git-scm.com/docs/gitignore) distinguishes local `info/exclude` from shared `.gitignore` and explicitly says ignore rules do not untrack existing files. [Python pathlib](https://docs.python.org/3/library/pathlib.html#pathlib.Path.resolve) documents that `resolve()` follows symlinks; therefore unrestricted resolution is not an equivalent replacement for validation. System-root alias allowlisting and safe JSON diagnostics are framework choices, not vendor security guarantees.
