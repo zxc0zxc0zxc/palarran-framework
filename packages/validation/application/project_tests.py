@@ -253,7 +253,8 @@ def main(argv=None):
         return 0 if report['status'] == 'CHECKS_PASSED' else (1 if report['status'] == 'FAIL' else 2)
     except ProjectTestError as error:
         print(json.dumps(error.report(), sort_keys=True))
-    except (ValueError, TypeError, KeyError, AttributeError, ImportError, OSError):
+    except Exception:
+        # Unexpected trusted binding failures never echo source/credential values.
         print(json.dumps(dict(status='REJECTED', code='project_tests_unavailable', field=None,
                               hint='Check the reviewed binding, local tools and current subject; no automatic retry.')))
     return 2

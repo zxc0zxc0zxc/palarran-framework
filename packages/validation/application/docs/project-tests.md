@@ -1,6 +1,6 @@
 # Existing project test suites
 
-This optional adapter covers local server, worker and bot tests when the web CLI's HTTP/SQLite/Playwright shape does not apply. It runs reviewed project commands and links their results to requirement IDs. It does not replace browser/API/DB evidence or certify the test's business predicates. [Primary basis](../../../code/review/docs/sources.md): Google review/testing guidance and the Git diff manual, read2026-10-28. Documentation preceded this adapter's implementation.
+This optional adapter covers local server, worker and bot tests when the web CLI's HTTP/SQLite/Playwright shape does not apply. It runs reviewed project commands and links their results to requirement IDs. It does not replace browser/API/DB evidence or certify the test's business predicates. Primary basis, read2026-10-28: [Google review guidance](https://google.github.io/eng-practices/review/reviewer/looking-for.html), [focused testing guidance](https://testing.googleblog.com/2015/04/just-say-no-to-more-end-to-end-tests.html) (published2015-04-22), and the [Git diff manual](https://git-scm.com/docs/git-diff). Documentation preceded this adapter's implementation.
 
 ## Frozen binding
 
@@ -47,3 +47,5 @@ def factory():
 ```
 
 The example is not auto-discovered or executed. The named test/cache may not exist; the operator supplies an actual existing executable, cache and fake-provider test. No dependency download or cache creation is performed by the adapter.
+
+The definition digest binds the reviewed command values, not the executable or complete transitive toolchain bytes. Preserve actual tool/runtime versions in the surrounding review when reproducibility needs them. Unexpected trusted-binding errors receive a safe CLI fallback without raw exception values or traceback; this does not make arbitrary binding code safe to import.
