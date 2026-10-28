@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import sys
 import time
 
 from packages.core.orchestration.runtime import runner
@@ -226,6 +227,7 @@ def _quiet_binding():
     # CLI-only, single-threaded boundary: logging can retain original stream
     # objects and native code can write directly to stdout/stderr descriptors.
     saved = []
+    original_streams = (sys.stdout, sys.stderr, sys.__stdout__, sys.__stderr__)
     with open(os.devnull, 'w') as sink:
         try:
             for descriptor in (1, 2):
@@ -234,11 +236,21 @@ def _quiet_binding():
             with redirect_stdout(sink), redirect_stderr(sink):
                 yield
         finally:
-            for descriptor, original in reversed(saved):
-                try:
-                    os.dup2(original, descriptor)
-                finally:
-                    os.close(original)
+            try:
+                # Retained stream objects may buffer until interpreter shutdown.
+                # Drain them while their descriptors still point at the null sink.
+                for stream in original_streams:
+                    if stream is not None:
+                        try:
+                            stream.flush()
+                        except Exception:
+                            pass  # A broken stream must not prevent fd restoration.
+            finally:
+                for descriptor, original in reversed(saved):
+                    try:
+                        os.dup2(original, descriptor)
+                    finally:
+                        os.close(original)
 
 
 def main(argv=None):
