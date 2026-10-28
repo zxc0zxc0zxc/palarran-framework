@@ -12,6 +12,8 @@ _ALIASES = {'/tmp':'/private/tmp', '/var':'/private/var', '/etc':'/private/etc'}
 
 def safe_path(path):
     """Canonicalize only verified Darwin system roots, then reject other links."""
+    if any(ord(c)<32 or ord(c)==127 for c in os.fspath(path)):
+        raise ValueError('unsafe_path')
     original = Path(path)
     if '..' in original.parts:
         raise ValueError('unsafe_path')
@@ -64,13 +66,14 @@ def ensure_private_excludes(target, patterns):
     if not isinstance(patterns,(list,tuple)) or not 1<=len(patterns)<=256:
         raise ValueError('invalid_private_patterns')
     root_result = _git(target,'rev-parse','--show-toplevel')
-    exclude_result = _git(target,'rev-parse','--git-path','info/exclude')
+    exclude_result = _git(target,'rev-parse','--path-format=absolute','--git-path','info/exclude')
     if root_result.returncode or exclude_result.returncode:
         raise ValueError('git_metadata_unavailable')
     root = safe_path(root_result.stdout.decode().strip())
     exclude = Path(exclude_result.stdout.decode().strip())
     exclude = safe_path(exclude if exclude.is_absolute() else target/exclude)
     additions = []
+    probe_paths = []
     for pattern in patterns:
         if not isinstance(pattern,str) or len(pattern)>256:
             raise ValueError('invalid_private_patterns')
@@ -93,7 +96,16 @@ def ensure_private_excludes(target, patterns):
         entry = '/'+escaped+('/' if pattern.endswith('/') else '')
         if entry not in additions:
             additions.append(entry)
+            probe_paths.append(name+'/palarran-private-probe' if pattern.endswith('/') else name)
+    def verify_effective_ignore():
+        for candidate in probe_paths:
+            result = _git(root,'check-ignore','--no-index','-q','--',candidate,quiet=True)
+            if result.returncode == 1:
+                raise ValueError('private_ignore_overridden')
+            if result.returncode != 0:
+                raise ValueError('git_metadata_unavailable')
     before = b''
+    existed = exclude.exists()
     mode = 0o600
     if exclude.exists():
         info = exclude.stat()
@@ -103,6 +115,7 @@ def ensure_private_excludes(target, patterns):
         mode = stat.S_IMODE(info.st_mode)
     block = ('# palarran:private-outputs\n'+'\n'.join(additions)+'\n').encode()
     if before.endswith(block):
+        verify_effective_ignore()
         return exclude
     after = before+(b'\n' if before and not before.endswith(b'\n') else b'')+block
     if len(after)>65536:
@@ -116,6 +129,19 @@ def ensure_private_excludes(target, patterns):
         if (exclude.read_bytes() if exclude.exists() else b'') != before:
             raise ValueError('exclude_changed_during_update')
         os.replace(temporary,exclude)
+        try:
+            verify_effective_ignore()
+        except ValueError:
+            if exclude.is_symlink() or exclude.read_bytes()!=after:
+                raise ValueError('exclude_changed_during_update') from None
+            if existed:
+                fd=os.open(temporary,os.O_CREAT|os.O_EXCL|os.O_WRONLY|getattr(os,'O_NOFOLLOW',0),mode)
+                with os.fdopen(fd,'wb') as stream:
+                    stream.write(before);stream.flush();os.fsync(stream.fileno())
+                os.replace(temporary,exclude)
+            else:
+                exclude.unlink()
+            raise
     finally:
         if temporary.exists():temporary.unlink()
     return exclude
