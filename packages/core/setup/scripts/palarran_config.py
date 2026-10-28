@@ -27,9 +27,8 @@ FIELDS = ("skills", "code", "docs")
 
 
 def read(path):
-    path = Path(path).absolute()
-    if any(p.is_symlink() for p in (path, *path.parents)):
-        raise ValueError("Configuration symlinks are not supported")
+    from packages.core.security.local_io import safe_path
+    path = safe_path(path)
     if not path.exists():
         return {}
     if not path.is_file() or path.stat().st_size > 65536:

@@ -14,16 +14,16 @@ From a complete trusted Palarran checkout:
 
 ```sh
 python3 scripts/project_setup.py install --target /ABSOLUTE/project --client codex \
-  --packages backend app --skills-language en --code-language en --docs-language en --plan
+  --packages code validation --skills-language en --code-language en --docs-language en --plan
 # Review the proposal, then repeat without --plan.
 python3 scripts/project_setup.py doctor --target /ABSOLUTE/project
 ```
 
-Choose `codex`, `claude` or explicitly `both`. First setup asks for missing packages and each output-language preference; automation supplies flags or checked config. Source distribution includes public tracked files from the selected HEAD commit, excluding dirty/untracked work, Git history, target journals/state and credentials. The pinned library lives in target `.ai-tools/library`; relative discovery links move with the project. Do not install bare SKILL.md files without shared guides/templates/helpers. The manifest records revision and source hashes. Repeating install is not an upgrade mechanism.
+Choose `codex`, `claude` or explicitly `both`. The setup agent asks for missing packages and each output-language preference; automation supplies flags or checked config. Source distribution includes public tracked files from the selected HEAD commit, excluding dirty/untracked work, Git history, target journals/state and credentials. The pinned library lives in target `.ai-tools/library`; relative discovery links move with the project. Do not install bare SKILL.md files without shared guides/templates/helpers. The manifest records revision and source hashes. Repeating install is not an upgrade mechanism.
 
-An existing skill/config collision, symlink parent, changed owned bundle or modified managed AGENTS section blocks replacement. Preserve existing AGENTS and add a small managed entry; Claude's CLAUDE.md also receives a usage link without replacing rules. Project `.mcp.json` contains a launch command rather than credentials. Do not bypass client approvals: wire connectivity does not prove a trust dialog was accepted.
+An existing skill/config collision, symlink parent, changed owned bundle or modified managed AGENTS section blocks replacement. In explicit project mode, preserve existing AGENTS and add a small managed entry; Claude's CLAUDE.md also receives a usage link without replacing rules. Project `.mcp.json` contains a launch command rather than credentials. Do not bypass client approvals: wire connectivity does not prove a trust dialog was accepted.
 
-Install writes a target decision, receipt and usage guide; it executes no application tests, code or hooks. `--plan` writes nothing and performs no network/global configuration changes. Doctor performs bounded actual stdio initialize/list/search with at most3 cards and reports counts/status rather than memory contents. Missing memory is NOT_READY, never PASS. No model is called. Explain `.ai-tools/USAGE.md`, installed commands and remaining gaps. A new/restarted client may be required; do not invent UI discovery evidence.
+Install writes a target decision, receipt and usage guide; it executes no application tests, code or hooks. `--plan` writes nothing and performs no network/global configuration changes. Doctor performs bounded actual stdio initialize/list/search with at most3 cards and reports counts/status rather than memory contents. Explicitly selected missing memory is NOT_READY, never PASS; unselected optional memory is NOT_SELECTED with success. No model is called. Explain `.ai-tools/USAGE.md`, installed commands and remaining gaps. A new/restarted client may be required; do not invent UI discovery evidence.
 
 ## Global memory prerequisites
 
@@ -60,7 +60,7 @@ Inside the library compare old upstream hashes, local files and incoming upstrea
 
 Stop active clients/agents while swapping the library. After full preflight, write private backup/intent and target ADR, then swap the library, owned discovery links and receipt. Never replace user-owned links. `.ai-tools/backups/` is private/ignored and can contain local data. Doctor uses pristine public files in `.ai-tools/releases/`, never carried scripts or project hooks. A customized working library cannot become an export/install source. Global wire PASS does not verify a customized project launcher or client UI; report CUSTOMIZED_NOT_VERIFIED.
 
-After update, global initialize/list/search from target CWD is mandatory. Health failure gives UPDATED_MEMORY_NOT_READY and exit2 even when file updates completed. Repeat doctor after fixing connectivity; do not replay apply for a network failure. No application execution or paid calls are performed.
+After update with selected memory (or a legacy receipt without package scope), global initialize/list/search from target CWD is mandatory. Unselected memory is NOT_SELECTED and makes no connection. Health failure gives UPDATED_MEMORY_NOT_READY and exit2 even when file updates completed. Repeat doctor after fixing connectivity; do not replay apply for a network failure. No application execution or paid calls are performed.
 
 For ordinary I/O failure, rollback only when current hashes/links match expected transaction state. Crashes or concurrent changes yield RECOVERY_REQUIRED and block new updates. Guarded explicit recovery:
 

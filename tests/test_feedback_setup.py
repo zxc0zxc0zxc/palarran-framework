@@ -186,5 +186,83 @@ class FeedbackSetupTests(unittest.TestCase):
         self.assertFalse((self.target / 'CLAUDE.local.md').exists())
 
 
+    def test_overridden_privacy_rule_stops_before_generated_outputs(self):
+        ignore = self.target / '.gitignore'
+        ignore.write_text('!.palarran/\n!.palarran/**\n')
+        original = (self.target / '.git/info/exclude').read_bytes()
+        with mock.patch.object(setup, 'library', return_value=(self.revision, self.bundle)):
+            with self.assertRaises(ValueError):
+                setup.install(ROOT, self.target, 'claude', preferences=self.preferences, mode='local')
+        self.assertFalse((self.target / '.ai-tools').exists())
+        self.assertFalse((self.target / '.palarran').exists())
+        self.assertEqual((self.target / '.git/info/exclude').read_bytes(), original)
+        self.assertEqual(ignore.read_text(), '!.palarran/\n!.palarran/**\n')
+
+    def test_doctor_reports_failed_stage_without_provider_contents(self):
+        script = self.fixture.source / 'scripts/memory_ops.py'
+        script.write_text("import json\nprint(json.dumps({'result':{'protocolVersion':'private-provider-value'}}))\n")
+        output = self.root / 'broken-helper'
+        # Doctor of a public committed synthetic snapshot executes only its local helper.
+        self.git('-C', str(self.fixture.source), 'add', '--', 'scripts/memory_ops.py')
+        self.git('-C', str(self.fixture.source), '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'Broken offline protocol fixture')
+        setup.export(self.fixture.source, output)
+        with self.assertRaises(setup.SetupError) as raised:
+            setup.doctor(output, self.target)
+        report = raised.exception.report()
+        self.assertEqual(report['code'], 'memory_initialize_failed')
+        self.assertEqual(report['field'], 'memory.initialize')
+        self.assertEqual(report['checks'][0], dict(id='process', status='PASS'))
+        self.assertEqual(report['checks'][1], dict(id='initialize', status='FAIL'))
+        self.assertNotIn('private-provider-value', json.dumps(report))
+
+    def test_tracked_local_instruction_is_preserved_without_claiming_activation(self):
+        local = self.target / 'CLAUDE.local.md'
+        local.write_text('Existing tracked local instructions\n')
+        self.git('-C', str(self.target), 'add', '--', 'CLAUDE.local.md')
+        with mock.patch.object(setup, 'library', return_value=(self.revision, self.bundle)):
+            result = setup.install(ROOT, self.target, 'claude', preferences=self.preferences, mode='local')
+        self.assertEqual(local.read_text(), 'Existing tracked local instructions\n')
+        receipt = json.loads((self.target / '.ai-tools/installation.json').read_bytes())
+        self.assertEqual(receipt['local_instructions'], 'NOT_ACTIVATED_TRACKED_LOCAL_FILE')
+        self.assertNotIn('CLAUDE.local.md', result['private_excludes'])
+
+    def test_tracked_sibling_skill_keeps_exact_ignores_and_repeat_is_safe(self):
+        sibling = self.target / '.claude/skills/team/SKILL.md'
+        sibling.parent.mkdir(parents=True)
+        sibling.write_text('Shared team skill\n')
+        self.git('-C', str(self.target), 'add', '--', '.claude/skills/team/SKILL.md')
+        with mock.patch.object(setup, 'library', return_value=(self.revision, self.bundle)):
+            first = setup.install(ROOT, self.target, 'claude', preferences=self.preferences, mode='local')
+            second = setup.install(ROOT, self.target, 'claude', preferences=self.preferences, mode='local')
+        self.assertEqual(first, second)
+        self.assertEqual(sibling.read_text(), 'Shared team skill\n')
+        self.assertNotIn('.claude/skills/', first['private_excludes'])
+
+    def test_cli_rejects_mode_migration_and_bad_arguments_without_echo(self):
+        with mock.patch.object(setup, 'library', return_value=(self.revision, self.bundle)):
+            setup.install(ROOT, self.target, 'claude', preferences=self.preferences, mode='local')
+        code, out, err = self.run_main(['update', '--target', str(self.target), '--mode', 'project', '--plan'])
+        self.assertEqual(code, 2)
+        self.assertEqual(self.structured(out, err)['code'], 'installation_mode_conflict')
+        code, out, err = self.run_main(['doctor', '--target', str(self.target), '--PRIVATE_TOKEN=never-echo'])
+        self.assertEqual(code, 2)
+        self.assertEqual(self.structured(out, err)['code'], 'invalid_arguments')
+        self.assertNotIn('PRIVATE_TOKEN', out + err)
+
+    def test_local_update_inherits_scope_and_skips_unselected_memory(self):
+        with mock.patch.object(setup, 'library', return_value=(self.revision, self.bundle)):
+            setup.install(ROOT, self.target, 'claude', preferences=self.preferences, mode='local')
+            local = self.target / 'CLAUDE.local.md'
+            original = local.read_bytes()
+            with mock.patch.object(setup, 'doctor', side_effect=AssertionError('unselected memory')):
+                result = setup.setup(ROOT, self.target)
+        self.assertEqual(result['action'], 'update')
+        self.assertEqual(result['installation_mode'], 'local')
+        self.assertEqual(result['memory']['status'], 'NOT_SELECTED')
+        self.assertEqual(local.read_bytes(), original)
+        for name, value in self.before.items():
+            self.assertEqual((self.target / name).read_bytes(), value)
+
+
 if __name__ == '__main__':
     unittest.main()
