@@ -67,6 +67,7 @@ Installer ID: `code`. Specification-driven frontend and backend planning and imp
 | `/palarran:frontend:build` | [`$palarran-frontend-build`](../packages/code/frontend/skills/palarran-frontend-build/SKILL.md) | `{task/context} [profile flags]` |
 | `/palarran:backend:plan` | [`$palarran-backend-plan`](../packages/code/backend/skills/palarran-backend-plan/SKILL.md) | `{task/context} [profile flags]` |
 | `/palarran:backend:build` | [`$palarran-backend-build`](../packages/code/backend/skills/palarran-backend-build/SKILL.md) | `{task/context} [profile flags]` |
+| `/palarran:code:review` | [`$palarran-code-review`](../packages/code/review/skills/palarran-code-review/SKILL.md) | `{range?} [--plan]` |
 | `/palarran:git:commit` | [`$palarran-git-commit`](../packages/code/git/skills/palarran-git-commit/SKILL.md) | `{stage?} [--plan]` |
 | `/palarran:git:history` | [`$palarran-git-history`](../packages/code/git/skills/palarran-git-history/SKILL.md) | `@file [--plan]` |
 | `/palarran:git:conflicts` | [`$palarran-git-conflicts`](../packages/code/git/skills/palarran-git-conflicts/SKILL.md) | `{target-branch} [--plan]` |

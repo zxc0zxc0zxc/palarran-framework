@@ -582,6 +582,15 @@
       "adapter": "commands/palarran/package/list.md",
       "arguments": "[--mine] [--delist publisher/name@version | --delete publisher/name@version] [--plan]",
       "legacy": []
+    },
+    {
+      "skill": "palarran-code-review",
+      "domain": "code",
+      "action": "review",
+      "command": "code:review",
+      "adapter": "commands/palarran/code/review.md",
+      "arguments": "{range?} [--plan]",
+      "legacy": []
     }
   ]
 }

@@ -235,6 +235,10 @@ def _legacy_package(namespace, output, root=ROOT):
     if source_path(root, hosting_guides[0]).is_file():
         resources += hosting_guides
     resources += ["packages/core/agents/docs/usage-and-pipelines.md"]
+    # Keep the canonical import path for portable setup and test bindings.
+    local_io = "packages/core/security/local_io.py"
+    if source_path(root, local_io).is_file():
+        resources.append(local_io)
     # Core parallelism is an installed cross-domain contract. Export its explicit
     # source closure, never task journals, logs or arbitrary package-local files.
     parallel_guides = ["packages/core/parallelism/README.md"] + [
@@ -465,6 +469,16 @@ def _public_package(output, root, resolved, name):
                 source = source_path(root, reference, required=True)
                 destination = bundle / reference; destination.parent.mkdir(parents=True, exist_ok=True)
                 destination.write_bytes(portable_bytes(source.read_bytes(), source.relative_to(root).as_posix(), reference, moves))
+        if "code" in resolved["packages"]:
+            for reference in ("packages/code/review/docs/README.md", "packages/code/review/docs/sources.md", "packages/code/review/README.md"):
+                source = source_path(root, reference, required=True)
+                destination = bundle / reference; destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_bytes(portable_bytes(source.read_bytes(), source.relative_to(root).as_posix(), reference, moves))
+        if "validation" in resolved["packages"]:
+            reference = "packages/validation/application/project_tests.py"
+            source = source_path(root, reference, required=True)
+            destination = bundle / reference; destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_bytes(source.read_bytes())
         if "infrastructure" in resolved["packages"]:
             references = ['packages/infrastructure/hosting/compose.yaml', 'packages/infrastructure/hosting/runtime.py', 'packages/infrastructure/hosting/prepare.py', 'packages/infrastructure/hosting/docs/README.md', 'packages/infrastructure/hosting/docs/runbook.md', 'packages/infrastructure/hosting/docs/sources.md', 'packages/memory/knowledge/Dockerfile', 'packages/memory/knowledge/Dockerfile.dockerignore', 'packages/memory/knowledge/runtime/service.py', 'packages/core/coordination/Dockerfile', 'packages/core/coordination/Dockerfile.dockerignore', 'packages/core/coordination/service.py', 'packages/core/coordination/share.py', 'packages/core/coordination/share_store.py', 'packages/core/coordination/build_sqlite.py']
             for reference in references:

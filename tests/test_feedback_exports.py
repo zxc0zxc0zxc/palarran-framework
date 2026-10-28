@@ -29,11 +29,11 @@ class FeedbackExportsTest(unittest.TestCase):
                         'packages.validation.application.project_tests', '--plan'],
                         cwd=bundle, env={'PATH':'/usr/bin:/bin'}, capture_output=True, text=True)
                     self.assertEqual(checked.returncode, 0, checked.stderr)
-                    self.assertEqual(json.loads(checked.stdout)['status'], 'PLANNED')
+                    self.assertEqual(json.loads(checked.stdout)['status'], 'PLAN_ONLY')
 
     def test_setup_bootstrap_preserves_security_module(self):
         with tempfile.TemporaryDirectory() as directory:
-            bundle = packager.build_package('core', Path(directory) / 'core')
+            bundle = packager._legacy_package('skills', Path(directory) / 'setup')
             checked = subprocess.run([sys.executable, '-B', '-c',
                 'from packages.core.security.local_io import safe_path; '
                 'import runpy; runpy.run_path("scripts/project_setup.py", run_name="bootstrap")'],

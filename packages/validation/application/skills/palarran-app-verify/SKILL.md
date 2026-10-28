@@ -17,3 +17,5 @@ Check happy and failure paths, authorization, duplicate/retry behavior, state li
 For a small existing-test review, save target `.palarran/app/<task>/summary.md` and `report.json`, with decisions/reasons inline and one task index link; reuse that task record across related skills. Larger multi-surface acceptance can use the [report template](../../templates/report.md) and separately required private receipts/captures. Do not create ADR/context/handoff files solely because another skill joined the same task.
 
 Return actual checks and scope, findings, source/deployment identity, fixture/live distinctions and remaining required gates. Unit/fixture PASS is not application acceptance, live-model quality or production SLA. Prose follows project documentation language; source IDs/statuses remain stable.
+
+Apply the selected [global memory](../../../../core/agents/docs/global-memory.md) and [decision memory](../../../../core/agents/docs/decision-memory.md) sections through the shared task context once.

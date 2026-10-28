@@ -14,3 +14,5 @@ Inspect changed code and the necessary callers, state owners and tests. Follow i
 Use existing project tests only under already authorized commands/fixture scope. A fake-provider PASS does not prove live integration; mark missing checks NOT_RUN. The project-tests adapter is optional and accepts only explicitly reviewed local bindings. No auto repair, dependency install, model call, exploit, commit, MR or deploy.
 
 For a small review, save `summary.md` and `report.json` under target `.palarran/code-review/<task>/`: exact subject/scope, prioritized findings, actual tests/gaps, an MR-ready Testing paragraph and accepted decision reasons inline. Add one task index link; reuse the same task record across related skills instead of producing separate ADR/context/handoff files. Link an existing ADR only when relevant. Prose follows the project documentation locale; public skill identifiers remain English.
+
+Use the selected [global memory cycle](../../../../core/agents/docs/global-memory.md) and [decision record](../../../../core/agents/docs/decision-memory.md) sections through the shared task context; reuse its completed entry rather than repeating it.

@@ -289,6 +289,11 @@
           "id": "git",
           "status": "implemented",
           "description": "Scoped stage commits, file history, semantic conflict resolution and concise review requests."
+        },
+        {
+          "id": "review",
+          "status": "implemented",
+          "description": "Scoped correctness reviews with exact source subjects and test evidence."
         }
       ],
       "skills": [
@@ -331,6 +336,11 @@
           "name": "palarran-git-mr",
           "path": "packages/code/git/skills/palarran-git-mr/SKILL.md",
           "legacy_path": "skills/palarran-git-mr/SKILL.md"
+        },
+        {
+          "name": "palarran-code-review",
+          "path": "packages/code/review/skills/palarran-code-review/SKILL.md",
+          "legacy_path": "skills/palarran-code-review/SKILL.md"
         }
       ]
     },
