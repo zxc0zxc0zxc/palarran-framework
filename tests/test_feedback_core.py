@@ -25,7 +25,7 @@ class SecurityFeedbackTests(unittest.TestCase):
 
     def test_cli_argument_errors_never_echo_unknown_operator_values(self):
         renderer=importlib.import_module('packages.docs.documentation.render')
-        for module in (report,renderer):
+        for module in (report,renderer,importlib.import_module('packages.validation.application.project_tests')):
             with self.subTest(module=module.__name__):
                 output=io.StringIO();errors=io.StringIO()
                 with contextlib.redirect_stdout(output),contextlib.redirect_stderr(errors):
