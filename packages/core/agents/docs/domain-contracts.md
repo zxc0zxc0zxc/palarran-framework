@@ -145,8 +145,8 @@ Palarran service container hosting additionally requires packages/infrastructure
 
 ## Code review
 
-`/palarran:code:review` uses the [review profile](../../../code/review/README.md) and selected review guide/source rows. Bind exact range/subject and relevant surrounding state lifecycle, distinguish hypotheses from reproduced defects, and produce summary+report with evidence and safe retests. No automatic application edits, publication, installs or model calls. Use compact task records for a small review; escalate scope for cross-service/architectural changes.
+`/palarran:code:review` uses the review profile `packages/code/review/README.md` and selected review guide/source rows. Bind exact range/subject and relevant surrounding state lifecycle, distinguish hypotheses from reproduced defects, and produce summary+report with evidence and safe retests. No automatic application edits, publication, installs or model calls. Use compact task records for a small review; escalate scope for cross-service/architectural changes.
 
 ## Review artifacts
 
-`/palarran:docs:artifact` uses the [artifact guide](../../../docs/documentation/docs/artifact.md), selected schema/render/verification sections and the task-context entry. Private output defaults to target `.palarran/docs/artifacts/`; plan is zero-I/O, check validates only its explicit input without output/exclude edits. Rendering does not prove visual or business acceptance. One project locale, independent source/evidence review and actual browser checks remain required.
+`/palarran:docs:artifact` uses the artifact guide `packages/docs/documentation/docs/artifact.md`, selected schema/render/verification sections and the task-context entry. Private output defaults to target `.palarran/docs/artifacts/`; plan is zero-I/O, check validates only its explicit input without output/exclude edits. Rendering does not prove visual or business acceptance. One project locale, independent source/evidence review and actual browser checks remain required.
