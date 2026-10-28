@@ -33,8 +33,10 @@ def safe_path(path):
 
 
 def _git(target, *arguments, quiet=False):
-    command = ['/usr/bin/git','--no-replace-objects','--literal-pathspecs',
-               '-c','core.hooksPath=/dev/null','-c','core.fsmonitor=false','-C',str(target),*arguments]
+    command = ['/usr/bin/git','--no-replace-objects']
+    if arguments[0] != 'check-ignore':
+        command.append('--literal-pathspecs')
+    command += ['-c','core.hooksPath=/dev/null','-c','core.fsmonitor=false','-C',str(target),*arguments]
     environment = {'PATH':'/usr/bin:/bin','GIT_CONFIG_NOSYSTEM':'1',
                    'GIT_CONFIG_GLOBAL':'/dev/null','GIT_OPTIONAL_LOCKS':'0'}
     try:
