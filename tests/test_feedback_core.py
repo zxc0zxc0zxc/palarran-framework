@@ -87,6 +87,48 @@ class LocalPathFeedbackTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'tracked_private_path'):helper.ensure_private_excludes(root,('.palarran/',))
             self.assertEqual(before,self.git(root,'status','--porcelain'));self.assertEqual(p.read_text(),'fixture')
 
+    def test_owned_leaf_link_excludes_are_idempotent_without_following_the_link(self):
+        helper=self.helper()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();self.git(root,'init','-q')
+            folder=root/'.agents/skills';folder.mkdir(parents=True)
+            (folder/'user.md').write_text('tracked user skill');self.git(root,'add','--','.agents/skills/user.md')
+            destination=root/'outside';destination.mkdir()
+            (folder/'owned').symlink_to(destination,target_is_directory=True)
+            for _ in range(2):helper.ensure_private_excludes(root,('.agents/skills/owned',))
+            self.assertTrue((folder/'owned').is_symlink())
+            self.assertEqual((root/'.git/info/exclude').read_text().count('/.agents/skills/owned'),1)
+            self.assertIn('.agents/skills/user.md',self.git(root,'ls-files'))
+
+    def test_higher_priority_unignore_blocks_and_preserves_exclude_bytes(self):
+        helper=self.helper()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();self.git(root,'init','-q')
+            (root/'.gitignore').write_text('!/.palarran/\n');self.git(root,'add','.gitignore')
+            exclude=root/'.git/info/exclude';before=exclude.read_bytes()
+            with self.assertRaisesRegex(ValueError,'private_ignore_overridden'):
+                helper.ensure_private_excludes(root,('.palarran/',))
+            self.assertEqual(exclude.read_bytes(),before)
+            self.assertFalse((root/'.palarran').exists())
+
+    def test_selective_unignore_cannot_hide_behind_an_ignored_probe(self):
+        helper=self.helper()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();self.git(root,'init','-q')
+            (root/'.gitignore').write_text('!/.palarran/\n/.palarran/*\n!/.palarran/docs/\n')
+            before=(root/'.git/info/exclude').read_bytes()
+            with self.assertRaisesRegex(ValueError,'private_ignore_overridden'):
+                helper.ensure_private_excludes(root,('.palarran/',))
+            self.assertEqual((root/'.git/info/exclude').read_bytes(),before)
+
+    def test_nested_target_uses_absolute_git_metadata_and_anchored_relative_scope(self):
+        helper=self.helper()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();self.git(root,'init','-q');target=root/'nested/target';target.mkdir(parents=True)
+            path=helper.ensure_private_excludes(target,('.palarran/',))
+            self.assertEqual(path,root/'.git/info/exclude')
+            self.assertIn('/nested/target/.palarran/',path.read_text())
+
     def test_non_git_detection_has_no_initialization_side_effect(self):
         helper=self.helper()
         with tempfile.TemporaryDirectory() as tmp:
