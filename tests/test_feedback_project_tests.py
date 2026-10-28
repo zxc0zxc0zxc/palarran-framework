@@ -190,6 +190,20 @@ class ProjectTestsRegression(unittest.TestCase):
         self.assertTrue(marker.exists())
 
 
+    def test_cli_binding_exception_does_not_expose_operator_values(self):
+        factory = self.root/'private_error_fixture.py'
+        factory.write_text('def factory():\n raise RuntimeError("PRIVATE_OPERATOR_VALUE")\n')
+        env = dict(os.environ, PYTHONPATH=str(ROOT)+os.pathsep+str(self.root))
+        result = subprocess.run([sys.executable, '-m', MODULE, '--target', str(self.target),
+                                 '--revision', self.revision, '--binding', 'private_error_fixture:factory',
+                                 '--authorized'], cwd=ROOT, env=env, text=True,
+                                capture_output=True, timeout=5)
+        self.assertEqual(result.returncode, 2)
+        self.assertEqual(json.loads(result.stdout)['code'], 'project_tests_unavailable')
+        self.assertNotIn('PRIVATE_OPERATOR_VALUE', result.stdout+result.stderr)
+        self.assertNotIn('Traceback', result.stdout+result.stderr)
+
+
 class ReviewSkillRegression(unittest.TestCase):
     def test_light_review_profile_has_bounded_entry_and_exact_range_lifecycle_contract(self):
         path = ROOT/'packages/code/review/skills/palarran-code-review/SKILL.md'
