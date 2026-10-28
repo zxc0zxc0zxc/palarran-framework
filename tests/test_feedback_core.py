@@ -23,6 +23,19 @@ class SecurityFeedbackTests(unittest.TestCase):
             self.assertIn('field',result);self.assertTrue(result['hint'])
             self.assertNotIn('PRIVATE_INVALID_PROFILE',output.getvalue())
 
+    def test_cli_argument_errors_never_echo_unknown_operator_values(self):
+        renderer=importlib.import_module('packages.docs.documentation.render')
+        for module in (report,renderer):
+            with self.subTest(module=module.__name__):
+                output=io.StringIO();errors=io.StringIO()
+                with contextlib.redirect_stdout(output),contextlib.redirect_stderr(errors):
+                    code=module.main(['--PRIVATE_OPERATOR_VALUE'])
+                self.assertEqual(code,2)
+                value=json.loads(output.getvalue())
+                self.assertEqual(value['code'],'invalid_arguments')
+                self.assertEqual(value['field'],'arguments')
+                self.assertNotIn('PRIVATE_OPERATOR_VALUE',output.getvalue()+errors.getvalue())
+
     def test_unknown_access_time_requires_concrete_note_and_remains_incomplete(self):
         value=fixture();value['sources'][0]['accessed_at']=None
         value['sources'][0]['access_note']='Unavailable in this offline review; original reference retained.'
