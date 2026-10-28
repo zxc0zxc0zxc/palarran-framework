@@ -58,7 +58,7 @@ def ensure_private_excludes(target, patterns):
     target = safe_path(target)
     if not is_git_target(target):
         raise ValueError('not_git_repository')
-    if not isinstance(patterns,(list,tuple)) or not 1<=len(patterns)<=32:
+    if not isinstance(patterns,(list,tuple)) or not 1<=len(patterns)<=256:
         raise ValueError('invalid_private_patterns')
     root_result = _git(target,'rev-parse','--show-toplevel')
     exclude_result = _git(target,'rev-parse','--git-path','info/exclude')
