@@ -199,6 +199,8 @@ class ProjectTestsRegression(unittest.TestCase):
                           'logging.warning("PRIVATE_OPERATOR_VALUE")\n'
                           'os.write(1, b"PRIVATE_OPERATOR_VALUE")\n'
                           'os.write(2, b"PRIVATE_OPERATOR_VALUE")\n'
+                          'sys.__stdout__.write("PRIVATE_OPERATOR_VALUE")\n'
+                          'sys.__stderr__.write("PRIVATE_OPERATOR_VALUE")\n'
                           'raise RuntimeError("PRIVATE_OPERATOR_VALUE")\n')
                 body = 'import sys, os, logging\n'
                 body += output if phase == 'import' else 'def factory():\n'+''.join(' '+line+'\n' for line in output.splitlines())
