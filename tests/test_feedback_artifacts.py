@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from contextlib import redirect_stdout, redirect_stderr
 
 import test_docs_artifact as fixtures
@@ -73,6 +74,13 @@ class FeedbackArtifactTests(unittest.TestCase):
         self.assertFalse((self.target / '.palarran').exists())
         self.assertFalse((self.target / 'artifacts').exists())
 
+    def test_check_never_reads_or_renders_even_an_explicit_unavailable_target(self):
+        with patch.object(render, 'render_to_target', side_effect=AssertionError('target accessed')):
+            status, output, error = self.cli([
+                '--check', '--input', str(self.input), '--target', '/UNAVAILABLE/DO_NOT_READ'])
+        self.assertEqual(status, 0, output + error)
+        self.assertEqual(json.loads(output)['writes'], 0)
+
     def test_check_invalid_input_reports_field_without_any_target_mutation(self):
         data = fixtures.fixture()
         data['flow']['nodes'][0]['label'] = ''
@@ -91,6 +99,25 @@ class FeedbackArtifactTests(unittest.TestCase):
         self.assertEqual(diagnostic['field'], 'target')
         self.assertTrue(diagnostic['hint'])
         self.assertNotIn('Traceback', output + error)
+
+    def test_standalone_cli_from_target_cwd_keeps_check_readonly(self):
+        environment = dict(os.environ)
+        environment.pop('PYTHONPATH', None)
+        result = subprocess.run(
+            [sys.executable, str(fixtures.RENDER), '--check', '--input', str(self.input)],
+            cwd=self.target, env=environment, text=True, capture_output=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertEqual(json.loads(result.stdout)['status'], 'VALIDATED_INPUT')
+        self.assertFalse((self.target / '.palarran').exists())
+
+    def test_missing_input_has_safe_structured_reason_without_path_echo(self):
+        source = self.root / 'PRIVATE_PATH_SENTINEL.json'
+        status, output, error = self.cli(['--check', '--input', str(source)])
+        self.assertEqual(status, 2)
+        diagnostic = json.loads(output)
+        self.assertEqual(diagnostic['code'], 'input_unavailable')
+        self.assertEqual(diagnostic['field'], 'input')
+        self.assertNotIn('PRIVATE_PATH_SENTINEL', output + error)
 
     def test_default_output_is_private_ignored_and_preserves_tracked_files(self):
         tracked = self.target / 'README.md'

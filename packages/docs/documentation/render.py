@@ -10,6 +10,8 @@ import os
 from pathlib import Path
 import re
 import stat
+import sys
+import unicodedata
 from urllib.parse import urlsplit
 
 MAX_BYTES = 128 * 1024
@@ -22,31 +24,42 @@ ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,63}\Z")
 
 
 class ArtifactError(ValueError):
-    """Invalid input or unsafe local destination."""
+    """Typed, safe diagnostic; never carries source values or OS exception text."""
+
+    def __init__(self, hint, *, code="invalid_artifact", field=None):
+        super().__init__(hint)
+        self.code = code
+        self.field = field
+        self.hint = hint
+
+    def diagnostic(self):
+        return {"status": "REJECTED", "code": self.code,
+                "field": self.field, "hint": self.hint}
+
 
 
 def obj(value, required, optional=()):
     if type(value) is not dict or set(value) - set(required) - set(optional) or set(required) - set(value):
-        raise ArtifactError("Invalid object fields")
+        raise ArtifactError("Use exactly the documented object fields.", code="invalid_fields")
 
 
 def text(value, limit=2000):
     if not isinstance(value, str) or not value.strip() or len(value) > limit:
-        raise ArtifactError("Expected bounded nonempty text")
+        raise ArtifactError("Provide nonempty text within the documented length limit.", code="invalid_text")
     if any((ord(c) < 32 and c not in '\n\t') or 0xD800 <= ord(c) <= 0xDFFF or ord(c) == 127 for c in value):
-        raise ArtifactError("Invalid text characters")
+        raise ArtifactError("Remove control or invalid Unicode characters.", code="invalid_text")
     return value
 
 
 def items(value, limit):
     if type(value) is not list or len(value) > limit:
-        raise ArtifactError("Invalid collection size")
+        raise ArtifactError("Use a list within the documented item limit.", code="invalid_collection")
     return value
 
 
 def identifier(value):
     if not isinstance(value, str) or not ID.fullmatch(value):
-        raise ArtifactError("Invalid identifier")
+        raise ArtifactError("Use a bounded documented identifier.", code="invalid_identifier")
     return value
 
 
@@ -76,80 +89,98 @@ def public_url(value):
     return value
 
 
+def _field(field, check, *args):
+    """Attach only schema-authored paths, never input keys or values."""
+    try:
+        return check(*args)
+    except ArtifactError as error:
+        if error.field is None:
+            error.field = field
+        raise
+
+
 def validate(data):
-    obj(data, ('version', 'approved_for_render', 'privacy_reviewed') + CONTENT_FIELDS, ('language',))
+    _field(None, obj, data, ('version', 'approved_for_render', 'privacy_reviewed') + CONTENT_FIELDS, ('language',))
     if 'language' in data and data['language'] not in LOCALES:
-        raise ArtifactError('Invalid language tag')
+        raise ArtifactError('Use en, ru or sr-Latn.', code='invalid_language', field='language')
     if type(data['version']) is not int or data['version'] != 1:
-        raise ArtifactError("Unsupported version")
-    if data['approved_for_render'] is not True or data['privacy_reviewed'] is not True:
-        raise ArtifactError("Explicit input approval and privacy review required")
+        raise ArtifactError('Use schema version 1.', code='unsupported_version', field='version')
+    for key in ('approved_for_render', 'privacy_reviewed'):
+        if data[key] is not True:
+            raise ArtifactError('Declare true only after actual review.', code='approval_required', field=key)
     if not isinstance(data['feature'], str) or not SLUG.fullmatch(data['feature']):
-        raise ArtifactError("Invalid feature slug")
+        raise ArtifactError('Use a lowercase feature slug of at most 64 characters.', code='invalid_feature', field='feature')
     for key in ('title', 'revision', 'readiness'):
-        text(data[key])
+        _field(key, text, data[key])
     for key in ('what', 'why', 'how', 'results'):
-        text(data[key], 8000)
-    for name in items(data['environment_names'], 40):
+        _field(key, text, data[key], 8000)
+    for index, name in enumerate(_field('environment_names', items, data['environment_names'], 40)):
         if not isinstance(name, str) or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]{0,127}', name):
-            raise ArtifactError("Invalid environment variable name")
-    for risk in items(data['risks'], 40):
-        text(risk)
+            raise ArtifactError('Provide a variable name, never its value.', code='invalid_environment_name', field=f'environment_names[{index}]')
+    for index, risk in enumerate(_field('risks', items, data['risks'], 40)):
+        _field(f'risks[{index}]', text, risk)
     evidence_ids = set()
-    for evidence in items(data['evidence'], 60):
-        obj(evidence, ('id', 'description'), ('url',))
-        eid = identifier(evidence['id'])
+    for index, evidence in enumerate(_field('evidence', items, data['evidence'], 60)):
+        base = f'evidence[{index}]'
+        _field(base, obj, evidence, ('id', 'description'), ('url',))
+        eid = _field(base + '.id', identifier, evidence['id'])
         if eid in evidence_ids:
-            raise ArtifactError("Duplicate evidence ID")
+            raise ArtifactError('Use unique evidence IDs.', code='duplicate_id', field=base + '.id')
         evidence_ids.add(eid)
-        text(evidence['description'])
+        _field(base + '.description', text, evidence['description'])
         if 'url' in evidence:
-            public_url(evidence['url'])
-    for test in items(data['tests'], 80):
-        obj(test, ('name', 'status', 'environment', 'steps', 'prerequisites', 'evidence_ids'), ('note',))
-        for field in ('name', 'environment'):
-            text(test[field])
+            _field(base + '.url', public_url, evidence['url'])
+    for index, test in enumerate(_field('tests', items, data['tests'], 80)):
+        base = f'tests[{index}]'
+        _field(base, obj, test, ('name', 'status', 'environment', 'steps', 'prerequisites', 'evidence_ids'), ('note',))
+        for key in ('name', 'environment'):
+            _field(base + '.' + key, text, test[key])
         if not isinstance(test['status'], str) or test['status'] not in STATUSES:
-            raise ArtifactError("Unknown test status")
-        if not items(test['steps'], 20):
-            raise ArtifactError("Test steps required")
-        for field in ('steps', 'prerequisites'):
-            for entry in items(test[field], 20):
-                text(entry)
-        for eid in items(test['evidence_ids'], 60):
-            identifier(eid)
+            raise ArtifactError('Use PASS, FAIL, NOT_RUN, INCONCLUSIVE or NA.', code='invalid_status', field=base + '.status')
+        if not _field(base + '.steps', items, test['steps'], 20):
+            raise ArtifactError('Provide at least one safe test step.', code='missing_steps', field=base + '.steps')
+        for key in ('steps', 'prerequisites'):
+            for child, entry in enumerate(_field(base + '.' + key, items, test[key], 20)):
+                _field(f'{base}.{key}[{child}]', text, entry)
+        for child, eid in enumerate(_field(base + '.evidence_ids', items, test['evidence_ids'], 60)):
+            field = f'{base}.evidence_ids[{child}]'
+            _field(field, identifier, eid)
             if eid not in evidence_ids:
-                raise ArtifactError("Unknown test evidence reference")
+                raise ArtifactError('Reference an existing evidence ID.', code='unknown_reference', field=field)
         if test['status'] == 'NA' and 'note' not in test:
-            raise ArtifactError('NA requires an explicit rationale')
+            raise ArtifactError('Explain why this scenario is not applicable.', code='missing_rationale', field=base + '.note')
         if 'note' in test:
-            text(test['note'])
-    for metric in items(data['metrics'], 40):
-        obj(metric, ('name', 'value', 'unit', 'source', 'kind', 'denominator', 'uncertainty'))
-        for field in ('name', 'unit', 'source', 'denominator', 'uncertainty'):
-            text(metric[field])
+            _field(base + '.note', text, test['note'])
+    for index, metric in enumerate(_field('metrics', items, data['metrics'], 40)):
+        base = f'metrics[{index}]'
+        _field(base, obj, metric, ('name', 'value', 'unit', 'source', 'kind', 'denominator', 'uncertainty'))
+        for key in ('name', 'unit', 'source', 'denominator', 'uncertainty'):
+            _field(base + '.' + key, text, metric[key])
         if not isinstance(metric['kind'], str) or metric['kind'] not in ('observed', 'target', 'estimate'):
-            raise ArtifactError("Invalid metric kind")
+            raise ArtifactError('Use observed, target or estimate.', code='invalid_metric_kind', field=base + '.kind')
         value = metric['value']
         if value is not None and (type(value) not in (int, float) or abs(value) > 1e100 or not math.isfinite(value)):
-            raise ArtifactError("Metric must be a bounded finite number or null")
-    obj(data['flow'], ('nodes', 'edges'))
+            raise ArtifactError('Use a bounded finite number or null for unknown.', code='invalid_metric_value', field=base + '.value')
+    _field('flow', obj, data['flow'], ('nodes', 'edges'))
     node_ids = set()
-    for node in items(data['flow']['nodes'], 12):
-        obj(node, ('id', 'label'))
-        nid = identifier(node['id'])
+    for index, node in enumerate(_field('flow.nodes', items, data['flow']['nodes'], 12)):
+        base = f'flow.nodes[{index}]'
+        _field(base, obj, node, ('id', 'label'))
+        nid = _field(base + '.id', identifier, node['id'])
         if nid in node_ids:
-            raise ArtifactError("Duplicate flow node")
+            raise ArtifactError('Use unique flow node IDs.', code='duplicate_id', field=base + '.id')
         node_ids.add(nid)
-        text(node['label'], 120)
-    for edge in items(data['flow']['edges'], 24):
-        obj(edge, ('from', 'to', 'label'))
-        identifier(edge['from']); identifier(edge['to']); text(edge['label'], 120)
-        if edge['from'] not in node_ids or edge['to'] not in node_ids:
-            raise ArtifactError("Unknown flow node reference")
-    # Apply the same byte bound to direct Python callers as to JSON files.
+        _field(base + '.label', text, node['label'], 120)
+    for index, edge in enumerate(_field('flow.edges', items, data['flow']['edges'], 24)):
+        base = f'flow.edges[{index}]'
+        _field(base, obj, edge, ('from', 'to', 'label'))
+        for key in ('from', 'to'):
+            _field(base + '.' + key, identifier, edge[key])
+            if edge[key] not in node_ids:
+                raise ArtifactError('Reference an existing flow node ID.', code='unknown_reference', field=base + '.' + key)
+        _field(base + '.label', text, edge['label'], 120)
     if len(json.dumps(data, ensure_ascii=False).encode('utf-8')) > MAX_BYTES:
-        raise ArtifactError("Input exceeds byte limit")
+        raise ArtifactError('Keep approved input within 128 KiB.', code='input_too_large')
     return data
 
 
@@ -157,44 +188,66 @@ def _pairs(pairs):
     result = {}
     for key, value in pairs:
         if key in result:
-            raise ArtifactError("Duplicate JSON key")
+            raise ArtifactError("Remove duplicate JSON object keys.", code="duplicate_json_key", field="input")
         result[key] = value
     return result
 
 
-def _path(path):
-    """Check components without resolving away symlinks; trusted local filesystem only."""
-    path = Path(os.path.abspath(os.fspath(path)))
-    current = Path(path.anchor)
-    for part in path.parts[1:]:
-        current = current / part
-        try:
-            metadata = current.lstat()
-        except FileNotFoundError:
-            continue
-        if stat.S_ISLNK(metadata.st_mode):
-            raise ArtifactError("Symlink components are forbidden")
-        if current != path and not stat.S_ISDIR(metadata.st_mode):
-            raise ArtifactError("Parent component must be a directory")
-    return path
+def _local_io():
+    """Find the trusted source/portable library root for direct script invocation."""
+    for parent in Path(__file__).resolve().parents:
+        if (parent / 'scripts' / 'palarran_paths.py').is_file():
+            root = str(parent)
+            if root not in sys.path:
+                sys.path.insert(0, root)
+            break
+    bytecode = sys.dont_write_bytecode
+    try:
+        # Input-only checks must not create Core import caches on first use.
+        sys.dont_write_bytecode = True
+        from packages.core.security import local_io
+    except ImportError:
+        raise ArtifactError('Use a complete reviewed library with its Core dependency.',
+                            code='core_dependency_missing') from None
+    finally:
+        sys.dont_write_bytecode = bytecode
+    return local_io
+
+
+def _path(path, *, field=None):
+    """Use the shared system-alias allowlist without resolving arbitrary links."""
+    local_io = _local_io()
+    try:
+        result = local_io.safe_path(path)
+    except (ValueError, OSError):
+        raise ArtifactError('Use a nonsymlink local path; standard Darwin root aliases are supported.',
+                            code='unsafe_path', field=field) from None
+    for parent in result.parents:
+        if parent.exists() and not parent.is_dir():
+            raise ArtifactError('Use directory parents for this path.', code='unsafe_path', field=field)
+    return result
 
 
 def load_input(path):
-    path = _path(path)
+    path = _path(path, field="input")
     # Bound reads even if a file grows after the metadata check.
     flags = os.O_RDONLY | getattr(os, 'O_NOFOLLOW', 0) | getattr(os, 'O_NONBLOCK', 0)
-    with os.fdopen(os.open(path, flags), 'rb') as stream:
-        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
-            raise ArtifactError("Input must be a regular file")
-        raw = stream.read(MAX_BYTES + 1)
+    try:
+        with os.fdopen(os.open(path, flags), 'rb') as stream:
+            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                raise ArtifactError("Use a regular JSON input file.", code="unsafe_input_path", field="input")
+            raw = stream.read(MAX_BYTES + 1)
+    except OSError:
+        raise ArtifactError('Select a readable regular JSON input file.',
+                            code='input_unavailable', field='input') from None
     if len(raw) > MAX_BYTES:
-        raise ArtifactError("Input exceeds byte limit")
+        raise ArtifactError("Keep approved input within 128 KiB.", code="input_too_large", field="input")
     try:
         data = json.loads(raw.decode('utf-8'), object_pairs_hook=_pairs,
                           parse_constant=lambda _: (_ for _ in ()).throw(ArtifactError('Nonfinite JSON number')))
         return validate(data)
     except (UnicodeError, json.JSONDecodeError, RecursionError, OverflowError) as exc:
-        raise ArtifactError("Invalid UTF-8 JSON input") from exc
+        raise ArtifactError("Use valid UTF-8 JSON within the documented bounds.", code="invalid_json", field="input") from None
 
 
 def esc(value):
@@ -291,6 +344,55 @@ pages.forEach(page=>{
 '''
 
 
+def _label_lines(value, columns):
+    """Wrap bounded labels without discarding text; wide glyphs use two columns."""
+    lines = []
+    current = ''
+    width = 0
+    for character in value:
+        units = 0 if unicodedata.combining(character) else (2 if unicodedata.east_asian_width(character) in ('W', 'F') else 1)
+        if character == '\n' or (current and width + units > columns):
+            lines.append(current)
+            current = ''
+            width = 0
+            if character == '\n':
+                continue
+        current += character
+        width += units
+    if current or not lines:
+        lines.append(current)
+    return lines
+
+
+def _svg_text(label, lines, x, y):
+    spans = ''.join('<tspan x="' + str(x) + '" dy="' + ('0' if index == 0 else '18') + '">' + esc(line) + '</tspan>'
+                    for index, line in enumerate(lines))
+    return '<text x="' + str(x) + '" y="' + str(y) + '"><title>' + esc(label) + '</title>' + spans + '</text>'
+
+
+def _flow_svg(labels, edges, arrow, caption):
+    rows = []
+    height = 20
+    for index, edge in enumerate(edges):
+        left, right = labels[edge['from']], labels[edge['to']]
+        relation = str(index + 1) + '. ' + edge['label']
+        left_lines = _label_lines(left, 26)
+        right_lines = _label_lines(right, 26)
+        edge_lines = _label_lines(relation, 78)
+        node_height = max(50, max(len(left_lines), len(right_lines)) * 18 + 20)
+        rows.append((height, node_height, left, right, relation, left_lines, right_lines, edge_lines))
+        height += node_height + 30 + 18 * len(edge_lines) + 18
+    parts = ['<svg viewBox="0 0 700 ' + str(height) + '" role="img" aria-label="' + esc(caption) + '"><defs><marker id="' + arrow + '" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#b9dbc5"/></marker></defs>']
+    for y, node_height, left, right, relation, left_lines, right_lines, edge_lines in rows:
+        middle = y + node_height // 2
+        parts.append(f'<rect x="5" y="{y}" width="235" height="{node_height}" rx="8" fill="#252525"/><rect x="460" y="{y}" width="235" height="{node_height}" rx="8" fill="#252525"/><path d="M245,{middle} H450" stroke="#b9dbc5" marker-end="url(#{arrow})"/>')
+        parts.append(_svg_text(left, left_lines, 15, y + 23))
+        parts.append(_svg_text(right, right_lines, 470, y + 23))
+        parts.append(_svg_text(relation, edge_lines, 15, y + node_height + 28))
+    parts.append('</svg>')
+    return ''.join(parts)
+
+
 def _render_page(data, locale):
     e = esc
     ui = UI[locale]
@@ -316,11 +418,8 @@ def _render_page(data, locale):
                 parts.append('<h3>'+t('flow')+'</h3>')
                 if edges:
                     arrow=pid('arrow')
-                    parts.append('<svg viewBox="0 0 700 '+str(len(edges)*110)+'" role="img" aria-label="'+t('flow_aria')+'"><defs><marker id="'+arrow+'" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#b9dbc5"/></marker></defs>')
-                    for i, edge in enumerate(edges):
-                        y=i*110+20
-                        parts.append(f'<rect x="5" y="{y}" width="235" height="45" rx="8" fill="#252525"/><rect x="460" y="{y}" width="235" height="45" rx="8" fill="#252525"/><path d="M245,{y+22} H450" stroke="#b9dbc5" marker-end="url(#{arrow})"/><text x="15" y="{y+28}">{e(labels[edge["from"]][:23])}</text><text x="470" y="{y+28}">{e(labels[edge["to"]][:23])}</text><text x="15" y="{y+78}">{i+1}. {e(edge["label"][:70])}</text>')
-                    parts.append('</svg><div class="table-wrap"><table><caption>'+t('relationships')+'</caption><thead><tr><th scope="col">'+t('from')+'</th><th scope="col">'+t('relationship')+'</th><th scope="col">'+t('to')+'</th></tr></thead><tbody>')
+                    parts.append(_flow_svg(labels, edges, arrow, ui['flow_aria']))
+                    parts.append('<div class="table-wrap"><table><caption>'+t('relationships')+'</caption><thead><tr><th scope="col">'+t('from')+'</th><th scope="col">'+t('relationship')+'</th><th scope="col">'+t('to')+'</th></tr></thead><tbody>')
                     for edge in edges:
                         parts.append('<tr><td>'+e(labels[edge['from']])+'</td><td>'+e(edge['label'])+'</td><td>'+e(labels[edge['to']])+'</td></tr>')
                     parts.append('</tbody></table></div>')
@@ -375,14 +474,24 @@ def render_html(data):
 
 
 def render_to_target(data, target):
+    """Write a new owner-only private page; never overwrite or untrack output."""
+    local_io = _local_io()
     page = render_html(data)
-    target = _path(target)
+    target = _path(target, field='target')
     if not target.is_dir():
-        raise ArtifactError("Target must be an existing directory")
-    output = target / 'artifacts' / data['feature'] / 'index.html'
-    _path(output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    _path(output)
+        raise ArtifactError('Select an existing target directory.', code='invalid_target', field='target')
+    output = _path(target / '.palarran' / 'docs' / 'artifacts' / data['feature'] / 'index.html', field='target')
+    if local_io.is_git_target(target):
+        try:
+            local_io.ensure_private_excludes(target, ['/.palarran/'])
+        except ValueError as error:
+            if str(error) == 'tracked_private_path':
+                raise ArtifactError('Choose an untracked private destination; inspect already tracked private files separately.',
+                                    code='tracked_private_output', field='target') from None
+            raise ArtifactError('Private output requires a safe Git-local exclude configuration.',
+                                code='private_ignore_failed', field='target') from None
+    output.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+    _path(output, field='target')
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, 'O_NOFOLLOW', 0)
     with os.fdopen(os.open(output, flags, 0o600), 'w', encoding='utf-8') as stream:
         stream.write(page)
@@ -390,24 +499,40 @@ def render_to_target(data, target):
 
 
 def main(argv=None):
-    parser=argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--plan', action='store_true')
+    parser.add_argument('--check', action='store_true', help='Validate only the explicit input; no target reads or writes')
     parser.add_argument('--approved', action='store_true')
     parser.add_argument('--input')
     parser.add_argument('--target')
-    args=parser.parse_args(argv)
+    args = parser.parse_args(argv)
     if args.plan:
         print('PLAN ONLY: select the visible feature, prepare scoped evidence, review privacy, then explicitly render a new artifact. No input or target read.')
         return 0
-    if not args.approved or not args.input or not args.target:
-        parser.error('rendering requires --approved, --input and --target')
+    required = ('input',) if args.check else ('approved', 'input', 'target')
+    for name in required:
+        if not getattr(args, name):
+            error = ArtifactError('Pass --' + name + ' for this operation.', code='missing_argument', field=name)
+            print(json.dumps(error.diagnostic(), sort_keys=True))
+            return 2
     try:
-        output=render_to_target(load_input(args.input), args.target)
-    except (ArtifactError, OSError, ValueError, RecursionError, OverflowError):
-        # Never echo source contents, private URLs or credential-bearing exception strings.
-        print('Artifact not rendered: invalid input, unsafe path, or existing/unwritable output.')
+        data = load_input(args.input)
+        if args.check:
+            print(json.dumps({'status': 'VALIDATED_INPUT', 'writes': 0, 'network': False}, sort_keys=True))
+            return 0
+        output = render_to_target(data, args.target)
+    except ArtifactError as error:
+        print(json.dumps(error.diagnostic(), sort_keys=True))
         return 2
-    print('Rendered: '+str(output))
+    except FileExistsError:
+        print(json.dumps(ArtifactError('Use a new feature slug; existing artifacts are preserved.',
+                                      code='output_exists', field='target').diagnostic(), sort_keys=True))
+        return 2
+    except (OSError, ValueError, RecursionError, OverflowError):
+        print(json.dumps(ArtifactError('Inspect input readability and private destination permissions.',
+                                      code='io_or_validation_error').diagnostic(), sort_keys=True))
+        return 2
+    print('Rendered: ' + str(output))
     return 0
 
 
