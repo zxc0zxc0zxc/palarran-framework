@@ -68,6 +68,8 @@ class ProjectTestsRegression(unittest.TestCase):
         self.assertEqual(report['surfaces'], dict(browser='NOT_RUN', api='NOT_RUN', db='NOT_RUN'))
         self.assertEqual(report['cases'][0]['requirements'], ['R1', 'R7'])
         self.assertEqual(report['cases'][0]['kind'], 'fixture')
+        self.assertEqual(report['cases'][0]['binding'], 'state-test')
+        self.assertRegex(report['cases'][0]['binding_sha256'], r'^[a-f0-9]{64}$')
         self.assertEqual(report['cases'][0]['status'], 'PASS')
         self.assertTrue(report['source_unchanged'])
         self.assertEqual(report['subject']['revision'], self.revision)
@@ -166,6 +168,26 @@ class ProjectTestsRegression(unittest.TestCase):
         self.assertEqual(value['writes'], 0)
         self.assertEqual(value['model_calls'], 0)
         self.assertFalse((self.root/'missing').exists())
+
+
+    def test_actual_cli_imports_only_reviewed_binding_after_source_check(self):
+        marker = self.root/'binding-imported'
+        factory = self.root/'trusted_test_fixture.py'
+        factory.write_text('from pathlib import Path\nPath('+repr(str(marker))+').touch()\n'
+                           +'def factory():\n return '+repr(dict(cases=self.cases, bindings=self.bindings, run_seconds=5))+'\n')
+        env = dict(os.environ, PYTHONPATH=str(ROOT)+os.pathsep+str(self.root))
+        command = [sys.executable, '-m', MODULE, '--target', str(self.target),
+                   '--binding', 'trusted_test_fixture:factory', '--authorized', '--revision']
+        stale = subprocess.run(command+['a'*40], cwd=ROOT, env=env, text=True,
+                               capture_output=True, timeout=5)
+        self.assertEqual(stale.returncode, 2)
+        self.assertEqual(json.loads(stale.stdout)['code'], 'source_mismatch')
+        self.assertFalse(marker.exists())
+        actual = subprocess.run(command+[self.revision], cwd=ROOT, env=env, text=True,
+                                capture_output=True, timeout=5)
+        self.assertEqual(actual.returncode, 0, actual.stderr+actual.stdout)
+        self.assertEqual(json.loads(actual.stdout)['status'], 'CHECKS_PASSED')
+        self.assertTrue(marker.exists())
 
 
 class ReviewSkillRegression(unittest.TestCase):

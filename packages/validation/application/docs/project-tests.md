@@ -1,6 +1,6 @@
 # Existing project test suites
 
-This optional adapter covers local server, worker and bot tests when the web CLI's HTTP/SQLite/Playwright shape does not apply. It runs reviewed project commands and links their results to requirement IDs. It does not replace browser/API/DB evidence or certify the test's business predicates. [Primary basis](../../../../code/review/docs/sources.md): Google review/testing guidance and the Git diff manual, read2026-10-28. Documentation preceded this adapter's implementation.
+This optional adapter covers local server, worker and bot tests when the web CLI's HTTP/SQLite/Playwright shape does not apply. It runs reviewed project commands and links their results to requirement IDs. It does not replace browser/API/DB evidence or certify the test's business predicates. [Primary basis](../../../code/review/docs/sources.md): Google review/testing guidance and the Git diff manual, read2026-10-28. Documentation preceded this adapter's implementation.
 
 ## Frozen binding
 
@@ -14,12 +14,12 @@ The existing orchestration subprocess transport drains output to a digest, bound
 
 ## Statuses and scope
 
-Each case returns `PASS`, `FAIL`, `INCONCLUSIVE` or `NOT_RUN`, its requirement IDs/kind, opaque output SHA256, byte/time counters, stop evidence and a safe reason code. Exit0 with complete transport/stop evidence gives test PASS. A normal nonzero test exit is FAIL. Timeout, missing stop evidence, source drift or an interrupted/unsupported execution is INCONCLUSIVE; unexecuted later cases stay NOT_RUN.
+Each case returns `PASS`, `FAIL`, `INCONCLUSIVE` or `NOT_RUN`, its requirement IDs/kind, binding ID and opaque reviewed-definition/output SHA256, byte/time counters, stop evidence and a safe reason code. Exit0 with complete transport/stop evidence gives test PASS. A normal nonzero test exit is FAIL. Timeout, missing stop evidence, source drift or an interrupted/unsupported execution is INCONCLUSIVE; unexecuted later cases stay NOT_RUN.
 
 The aggregate is `CHECKS_PASSED`, `FAIL` or `INCONCLUSIVE`. **`acceptance` remains `NOT_RUN`**, and browser/API/DB remain NOT_RUN. A fixture PASS and an existing project-test PASS retain their different `kind`; neither becomes live-provider, deployment or full application acceptance. Reports record `model_calls: 0` for the adapter itself, `provider_cost: null`; they do not claim that arbitrary operator commands are free. Exact clean Git source is checked again after execution. Any changed source invalidates the aggregate even when commands exited successfully.
 
 ## CLI and main-agent use
 
-`python3 -m packages.validation.application.project_tests --plan` performs no input reads, imports, writes or launches. Actual execution requires `--target /ABSOLUTE/project --revision FULL_COMMIT --binding reviewed_module:factory --authorized`. The explicit trusted factory returns `{cases, bindings, run_seconds}`. Importing it executes operator code; never select a module from a model-generated suite or download it automatically. Run from the trusted library root with a reviewed Python import path. CLI emits structured JSON, no files; redirect only into an already ignored private target journal or use the Python API and the project's existing evidence writer.
+`python3 -m packages.validation.application.project_tests --plan` performs no input reads, imports, writes or launches. Actual execution requires `--target /ABSOLUTE/project --revision FULL_COMMIT --binding reviewed_module:factory --authorized`. After exact clean-source preflight, the explicit trusted factory returns `{cases, bindings, run_seconds}`. Importing it executes operator code; never select a module from a model-generated suite or download it automatically. Run from the trusted library root with a reviewed Python import path. CLI emits structured JSON, no files; redirect only into an already ignored private target journal or use the Python API and the project's existing evidence writer.
 
 For example, an existing fake-provider Go test can be bound to an R-ID after the command and test scope are approved. The adapter only records its exit/transport evidence. A reviewer still verifies that its assertions cover the specified failure and binds the report's digest to the actual test source and result. No direct production Postgres or paid model adapter is implied.
