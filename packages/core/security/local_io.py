@@ -32,7 +32,7 @@ def safe_path(path):
     return value
 
 
-def _git(target, *arguments, quiet=False):
+def _git(target, *arguments, quiet=False, input_data=None):
     command = ['/usr/bin/git','--no-replace-objects']
     if arguments[0] != 'check-ignore':
         command.append('--literal-pathspecs')
@@ -41,7 +41,7 @@ def _git(target, *arguments, quiet=False):
                    'GIT_CONFIG_GLOBAL':'/dev/null','GIT_OPTIONAL_LOCKS':'0'}
     try:
         result = subprocess.run(command,env=environment,stdout=subprocess.DEVNULL if quiet else subprocess.PIPE,
-                                stderr=subprocess.DEVNULL,timeout=5,check=False)
+                                stderr=subprocess.DEVNULL,timeout=5,check=False,input=input_data)
     except (OSError,subprocess.SubprocessError):
         raise ValueError('git_unavailable') from None
     if not quiet and len(result.stdout)>65536:
@@ -76,6 +76,7 @@ def ensure_private_excludes(target, patterns):
     exclude = safe_path(exclude if exclude.is_absolute() else target/exclude)
     additions = []
     probe_paths = []
+    directory_paths = []
     for pattern in patterns:
         if not isinstance(pattern,str) or len(pattern)>256:
             raise ValueError('invalid_private_patterns')
@@ -98,8 +99,31 @@ def ensure_private_excludes(target, patterns):
         entry = '/'+escaped+('/' if pattern.endswith('/') else '')
         if entry not in additions:
             additions.append(entry)
-            probe_paths.append(name+'/palarran-private-probe' if pattern.endswith('/') else name)
+            if pattern.endswith('/'):
+                # The parent itself must be excluded: a child probe alone can
+                # miss a higher-priority rule reopening selected descendants.
+                directory_paths.append(name)
+                probe_paths.append(name+'/palarran-private-probe')
+            else:
+                probe_paths.append(name)
     def verify_effective_ignore():
+        for directory in directory_paths:
+            result = _git(root,'check-ignore','--no-index','-v','-z','--stdin',
+                          input_data=(directory+'/\0').encode())
+            fields = result.stdout.split(b'\0')
+            if result.returncode not in (0,1):
+                raise ValueError('git_metadata_unavailable')
+            # A child wildcard is not proof that the directory is closed.
+            # Require a positive literal directory rule; Git may otherwise
+            # reopen selected children through a higher-priority ignore file.
+            rule = fields[2].decode(errors='replace') if len(fields)>=4 else ''
+            literal = rule.rstrip('/')
+            if (result.returncode != 0 or not rule.endswith('/') or
+                    any(c in rule for c in '!\\*?[]') or
+                    not (directory == literal.lstrip('/') or
+                         directory.endswith('/'+literal) or
+                         directory.startswith(literal.lstrip('/')+'/'))):
+                raise ValueError('private_ignore_overridden')
         for candidate in probe_paths:
             result = _git(root,'check-ignore','--no-index','-q','--',candidate,quiet=True)
             if result.returncode == 1:

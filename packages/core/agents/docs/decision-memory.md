@@ -2,6 +2,10 @@
 
 This contract applies to every current and future skill in `skills/`. The user requires a saved explanation for every accepted decision, reused as context by later tasks. This is a project-local engineering journal, separate from host memory and hidden model reasoning.
 
+## Small scoped reviews
+
+The [small review entry](task-context.md#small-review) may keep identifiable decisions inline in `summary.md`, alongside `report.json`. Each decision still records choice, reason, evidence/alternatives, applicability and limitations before dependent changes. A single task-level INDEX link supports later recall. Separate context, ADR and handoff files are optional for that scope; a sequence of skills reuses the same task record. Existing accepted history is preserved. The full layouts below apply when the domain needs versioned plans, operational recovery or broader coordination.
+
 ## Location and ownership
 
 Write in the **target project's root**, not the installed library. Resolve the target from explicit user scope and the current workspace/Git root. When several projects exist, identify the chosen root and keep their histories separate. The skill directory provides instructions; the target owns results and rationale.

@@ -3,6 +3,7 @@
 This index travels with domain plugins. Read applicable guides before decisions; each SKILL.md identifies mandatory domain documentation.
 
 | Guide | Use when | Core invariant |
+| [Task context](task-context.md) | Start a task | Bounded selected reading; small reviews retain rationale in summary+report |
 | --- | --- | --- |
 | [Domain contracts](domain-contracts.md) | Every domain task | The selected profile defines mandatory guides and execution boundaries |
 | [Research memory](research-memory.md) | Research, experiments, benchmarks and discovery | Preserve negative findings, exact conditions and uncertainty; evidence PASS is not experimental success |
