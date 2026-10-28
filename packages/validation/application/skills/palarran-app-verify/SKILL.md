@@ -1,31 +1,19 @@
 ---
 name: palarran-app-verify
-description: Independently accept applications against business scenarios through real browser/API/database checks with exact subjects/evidence and PASS/FAIL/INCONCLUSIVE. Use for /palarran:app:verify; --plan executes nothing, tests make no paid launches.
+description: Independently check business scenarios using the relevant project tests or browser/API/database surfaces, with exact subjects/evidence and explicit gaps. Use for /palarran:app:verify; --plan performs no application execution or paid calls.
 ---
-
-Shared cycle: before work and after checks follow [global memory](../../../../core/agents/docs/global-memory.md): bounded recall → applicability → sanitized verified learn/dedup. This memory scope is explicitly authorized; other profile restrictions remain. `--plan` permits no network/publication; outages do not block the main task.
-
 
 # /palarran:app:verify {target/scenarios} [--plan]
 
-First read [README](../../docs/README.md), [sources](../../docs/sources.md), [methodology](../../docs/methodology.md), [contract](../../docs/contract.md), [operations](../../docs/operations.md), [evidence](../../docs/evidence.md) and [decision-memory](../../../../core/agents/docs/decision-memory.md). Distinguish installed checkout/target. Read target README/AGENTS, INDEX/accepted ADRs, product/UX/API/DB requirements/source plan/DoD; build/handoff is not acceptance.
+Begin with [task context](../../../../core/agents/docs/task-context.md), target instructions and [adapter selection](../../docs/README.md#choose-the-relevant-surface). Read the relevant branch below, not every adapter guide. Reuse the task's existing decisions, context and bounded memory results; missing optional memory does not block acceptance work.
 
-## Freeze acceptance scope
+Freeze R-IDs, actor, Given/When/Then, expected business outcomes and the exact reviewed source/deployment subject before checks. Checkers and expected results are independent of the builder. `--plan` prepares the protocol from available context; it does not run tests, apps, browser/API/DB tools, installs or model calls. Execution uses only already authorized local test/fixture or target access. Never infer approval for production effects, paid providers, new services or downloads.
 
-Before acting map R-IDs to actor/role, Given/When/Then, good/bad business outcomes and browser/API/DB predicates using the [scenario template](../../templates/scenarios.md). Clarify materially unclear processes rather than invent criteria; do not repeat explicit requirements. Freeze suite/revision/subject/source files, actual deployment identity/URL/DB, fixture effects/limits. Checkers/criteria are separate from builders; evaluators never rewrite implementation/expected outcomes/ignore rules to pass.
+- **Server/worker/bot project tests:** read [project-tests](../../docs/project-tests.md). Map existing reviewed commands to R-IDs, use fake providers when the real dependency is outside scope, and keep `fixture`/`project_test` PASS distinct from business acceptance. Do not invent a browser/HTTP/SQLite shape for a server or mark its entire review incomplete just because those surfaces do not exist.
+- **Browser/API/database acceptance:** read the relevant [methodology](../../docs/methodology.md), [contract](../../docs/contract.md), [operations](../../docs/operations.md), [evidence](../../docs/evidence.md) and [sources](../../docs/sources.md) sections. Use actual controls, API read-back and readonly DB invariants for the same entity/run/version where the application requires them. SQLite/loopback automation is one supported adapter, not every application's architecture. Missing required layers remain NOT_RUN; explicit N/A needs a domain reason. Capture and actually view needed renders; screenshots are not automatic visual acceptance.
 
---plan creates protocol/coverage/ADR/handoff only; no app edits/install/worktrees/app startup/browser/API/DB calls. Otherwise perform specifically authorized acceptance in existing test environments; routine agreed tests need no repeated authorization. No implied production/real payments/emails/orders/account creation/paid judges/new cloud resources/downloads/installs. Missing tools/scope/identity mean NOT_RUN/blocked; prepare reviewable packets before requesting missing authority.
+Check happy and failure paths, authorization, duplicate/retry behavior, state lifecycle and persistence as relevant. Do not insert expected DB rows or change implementation/criteria to make a check pass. A failure returns a concrete reproduction and requirement/subject/evidence to the builder; a fix needs a new reviewed subject and affected/critical retests. Unknown effects are reconciled before retry. No raw bodies, credentials, customer data or hidden reasoning in reports/Git.
 
-## Independent execution
+For a small existing-test review, save target `.palarran/app/<task>/summary.md` and `report.json`, with decisions/reasons inline and one task index link; reuse that task record across related skills. Larger multi-surface acceptance can use the [report template](../../templates/report.md) and separately required private receipts/captures. Do not create ADR/context/handoff files solely because another skill joined the same task.
 
-Use suitable existing browser tools/project tests. Local HTTP+SQLite automation uses `python3 scripts/app_verify.py create/run/report` under operations; bridge requires existing Node/Playwright/Chromium and installs nothing. Other DB/remote targets require existing authorized domain tools/separate evidence; never claim unsupported adapters implemented.
-
-Exercise real controls/relevant roles/errors/reload/idempotency/responsive states. Then independent API read-back/readonly DB invariants for the same entity/tenant/run/version. Do not insert expected DB rows instead of UI actions. Label mocks; HTTP200/DOM parsing is not browser acceptance. Capture and actually view needed renders; captured PNGs are not viewed/approved. Browser emulation is not a real mobile device. No raw bodies/cookies/auth state/PII/console/DB dumps in public reports/Git.
-
-On assertion failure save minimal repro/bug cards with R-ID, subject, failed predicate, affected actor/private evidence references; return to builders, no app fixes here without separate scope. After fixes use new subjects/runs and affected+critical scenarios. Unknown mutation outcomes never retry before reconciliation. All required cases/layers stay in denominator; N/A needs reasons. PASS requires actual independent checks/final exact-subject verification; missing/stale means INCONCLUSIVE/NOT_RUN. No automatic model reviewers/trial escalation.
-
-## Results and memory
-
-Before dependent decisions preserve rationale/alternatives/source applicability in target `.palarran/app/<task>/decisions/`, then INDEX/coverage/bug list/handoff using [report template](../../templates/report.md). Private suites/receipts/screenshots stay outside target Git/builder-writable scope. Prior PASS never transfers to new builds without impact review.
-
-Conclude with business verdict/coverage, actual browser/API/DB evidence, captured/viewed distinction, defects/unknown effects, exact source/deployment subject and remaining gates. Successful fixture counts prove neither model quality, semantic completeness of all requirements nor production SLA.
+Return actual checks and scope, findings, source/deployment identity, fixture/live distinctions and remaining required gates. Unit/fixture PASS is not application acceptance, live-model quality or production SLA. Prose follows project documentation language; source IDs/statuses remain stable.

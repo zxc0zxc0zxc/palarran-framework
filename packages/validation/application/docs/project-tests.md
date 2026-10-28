@@ -23,3 +23,27 @@ The aggregate is `CHECKS_PASSED`, `FAIL` or `INCONCLUSIVE`. **`acceptance` remai
 `python3 -m packages.validation.application.project_tests --plan` performs no input reads, imports, writes or launches. Actual execution requires `--target /ABSOLUTE/project --revision FULL_COMMIT --binding reviewed_module:factory --authorized`. After exact clean-source preflight, the explicit trusted factory returns `{cases, bindings, run_seconds}`. Importing it executes operator code; never select a module from a model-generated suite or download it automatically. Run from the trusted library root with a reviewed Python import path. CLI emits structured JSON, no files; redirect only into an already ignored private target journal or use the Python API and the project's existing evidence writer.
 
 For example, an existing fake-provider Go test can be bound to an R-ID after the command and test scope are approved. The adapter only records its exit/transport evidence. A reviewer still verifies that its assertions cover the specified failure and binds the report's digest to the actual test source and result. No direct production Postgres or paid model adapter is implied.
+
+## Good small server-side pass
+
+An approved fake-provider test for `R7` covers two turns: a provider failure followed by a normal reply. The reviewer checks that a replacement code is not lost or delivered on an unrelated turn. Bind only that existing test command, run it against the reviewed clean commit, and retain its output hash/result. A failing assertion is a test FAIL; fixing or calling the real provider is separate scope. The final summary explains what the fake proves and which live integration remains untested.
+
+A trusted Python factory can return this inert shape after replacing every placeholder and approving the command:
+
+```python
+def factory():
+    return {
+        'run_seconds': 30,
+        'cases': [{'id': 'CASE_DELIVERY', 'requirements': ['R7'],
+                   'binding': 'delivery-test', 'kind': 'fixture'}],
+        'bindings': {'delivery-test': {
+            'argv': ['/ABSOLUTE/go', 'test', './internal/conversation',
+                     '-run', '^TestDeliveryFailure$', '-count=1'],
+            'cwd': '/ABSOLUTE/reviewed-project',
+            'environment': {'PATH': '/usr/bin:/bin', 'GOPROXY': 'off',
+                            'GOCACHE': '/PRIVATE/existing-go-cache'},
+            'seconds': 20, 'max_output_bytes': 65536}}
+    }
+```
+
+The example is not auto-discovered or executed. The named test/cache may not exist; the operator supplies an actual existing executable, cache and fake-provider test. No dependency download or cache creation is performed by the adapter.
