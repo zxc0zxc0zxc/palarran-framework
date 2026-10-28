@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import hashlib
 import importlib
 import json
@@ -219,6 +220,27 @@ def run_project_tests(*, target, revision, cases, bindings, authorized=False, ru
                              'Reviewed commands are operator code; provider effects and cost need separate authorization.'])
 
 
+@contextmanager
+def _quiet_binding():
+    """Discard synchronous binding diagnostics without buffering private values."""
+    # CLI-only, single-threaded boundary: logging can retain original stream
+    # objects and native code can write directly to stdout/stderr descriptors.
+    saved = []
+    with open(os.devnull, 'w') as sink:
+        try:
+            for descriptor in (1, 2):
+                saved.append((descriptor, os.dup(descriptor)))
+                os.dup2(sink.fileno(), descriptor)
+            with redirect_stdout(sink), redirect_stderr(sink):
+                yield
+        finally:
+            for descriptor, original in reversed(saved):
+                try:
+                    os.dup2(original, descriptor)
+                finally:
+                    os.close(original)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--plan', action='store_true')
@@ -242,9 +264,10 @@ def main(argv=None):
         _need(target.is_dir() and _source_matches(target, args.revision),
               'source_mismatch', 'revision', 'Use the exact reviewed clean worktree before importing a trusted binding.')
         module, attribute = args.binding.split(':')
-        factory = getattr(importlib.import_module(module), attribute)
-        _need(callable(factory), 'invalid_binding', 'binding')
-        selection = factory()
+        with _quiet_binding():
+            factory = getattr(importlib.import_module(module), attribute)
+            _need(callable(factory), 'invalid_binding', 'binding')
+            selection = factory()
         _need(type(selection) is dict and set(selection) == {'cases', 'bindings', 'run_seconds'},
               'invalid_binding', 'binding')
         report = run_project_tests(target=args.target, revision=args.revision,
