@@ -242,13 +242,21 @@ def _quiet_binding():
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    class SafeParser(argparse.ArgumentParser):
+        def error(self, message):
+            raise ProjectTestError('invalid_arguments','arguments',
+                                   'Use --help for supported flags and required option values.')
+    parser = SafeParser(description=__doc__)
     parser.add_argument('--plan', action='store_true')
     parser.add_argument('--target', type=Path)
     parser.add_argument('--revision')
     parser.add_argument('--binding')
     parser.add_argument('--authorized', action='store_true')
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+    except ProjectTestError as error:
+        print(json.dumps(error.report(),sort_keys=True))
+        return 2
     if args.plan:
         print(json.dumps(dict(status='PLAN_ONLY', writes=0, launches=0, model_calls=0)))
         return 0
