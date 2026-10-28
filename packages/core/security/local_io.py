@@ -49,6 +49,9 @@ def is_git_target(target):
     target = safe_path(target)
     if not target.is_dir():
         return False
+    # Plain export directories do not require Git to be installed.
+    if not any((parent/'.git').exists() or (parent/'.git').is_symlink() for parent in (target,*target.parents)):
+        return False
     result = _git(target,'rev-parse','--is-inside-work-tree')
     return result.returncode == 0 and result.stdout.strip() == b'true'
 
@@ -74,7 +77,9 @@ def ensure_private_excludes(target, patterns):
         relative = pattern.lstrip('/').rstrip('/')
         if not relative or any(not re.fullmatch(r'[A-Za-z0-9_.-]+',p) or p in ('.','..','.git') for p in relative.split('/')):
             raise ValueError('invalid_private_patterns')
-        path = safe_path(target/relative)
+        raw_path = target/relative
+        # Ignore an owned discovery link as a literal leaf; never follow it.
+        path = safe_path(raw_path) if pattern.endswith('/') else safe_path(raw_path.parent)/raw_path.name
         try:
             name = path.relative_to(root).as_posix()
         except ValueError:
