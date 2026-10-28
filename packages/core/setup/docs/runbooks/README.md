@@ -61,3 +61,7 @@ Report file state, memory wire state and native client discovery separately. `PL
 This documentation lane ran no installation or live doctor. Its publication does not establish target readiness. External vendor references and access dates are maintained in the linked setup guides; ownership, dispatch and recovery rules are Palarran policy grounded in the implementation above.
 
 The shared [installation contract](contract.md) is mandatory before every procedure. [Service routing](services.md) defines the boundary for memory/application-stack operations and prevents ad-hoc root commands when no supported target procedure exists.
+
+## Version 1.2.0 local-first extension
+
+Reviewed2026-10-28 against production-feedback regression cases. Fresh CLI setup/install defaults to `--mode local`; receipt-owned updates retain their previous mode. Local mode requires an existing Git target and uses Git-local excludes, native skill links and Claude.local.md. It does not modify tracked team instructions/config or global client state. `--mode project` retains the explicitly requested shared-file behavior. Known Darwin system aliases are canonicalized through Core local_io; arbitrary symlinks still block. Optional-unselected memory returns NOT_SELECTED/exit0 without probing; explicit selected unhealthy memory stays actionable/exit2. Safe structured diagnostics name fields/stages without echoing input or exception values. The existing plan/apply/recovery and exact-ownership requirements remain.

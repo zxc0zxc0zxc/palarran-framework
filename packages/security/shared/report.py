@@ -7,7 +7,15 @@ import os
 from pathlib import Path
 import re
 import stat
+import sys
 from urllib.parse import urlsplit
+
+# Direct script entrypoints also work from an installed target directory.
+for _root in Path(__file__).resolve().parents:
+    if (_root / 'packages/core/security/local_io.py').is_file():
+        sys.path.insert(0,str(_root))
+        break
+from packages.core.security.local_io import safe_path
 
 MAX_BYTES = 256 * 1024
 PROFILES = ('infrastructure', 'ingress', 'log', 'egress', 'code', 'cve')
@@ -18,15 +26,19 @@ SHA = re.compile(r'[0-9a-f]{64}\Z')
 
 class ReportError(ValueError):
     """Fixed safe validation code, without private report contents."""
+    def __init__(self,code,field=None):
+        super().__init__(code)
+        self.code=code
+        self.field=field
 
 
-def need(value, code='invalid_report'):
+def need(value, code='invalid_report', field=None):
     if not value:
-        raise ReportError(code)
+        raise ReportError(code,field)
 
 
-def fields(value, names):
-    need(type(value) is dict and set(value) == set(names), 'invalid_fields')
+def fields(value, names, optional=()):
+    need(type(value) is dict and set(names)<=set(value) and not set(value)-set(names)-set(optional), 'invalid_fields')
 
 
 def text(value, maximum=4096):
@@ -61,13 +73,18 @@ def references(value, known, minimum=0):
     return value
 
 
-def index(value, keys, pattern=ID, minimum=0):
+def index(value, keys, pattern=ID, minimum=0, optional=(), section=None):
     result = {}
-    for row in rows(value, minimum=minimum):
-        fields(row, keys)
-        key = identifier(row['id'], pattern)
-        need(key not in result, 'duplicate_identifier')
-        result[key] = row
+    for position,row in enumerate(rows(value, minimum=minimum)):
+        try:
+            fields(row, keys, optional)
+            key = identifier(row['id'], pattern)
+            need(key not in result, 'duplicate_identifier')
+            result[key] = row
+        except ReportError as error:
+            if error.field is None and section:
+                error.field = f'{section}[{position}]'
+            raise
     return result
 
 
@@ -104,7 +121,7 @@ def validate_report(value):
     fields(value, ('version', 'profile', 'subject', 'inspected_at', 'sources', 'evidence',
                    'coverage', 'findings', 'advisories', 'limitations', 'privacy_reviewed'))
     need(type(value['version']) is int and value['version'] == 1, 'unsupported_version')
-    need(value['profile'] in PROFILES and type(value['profile']) is str, 'invalid_profile')
+    need(value['profile'] in PROFILES and type(value['profile']) is str, 'invalid_profile','profile')
     need(value['privacy_reviewed'] is True, 'privacy_review_required')
     inspected = timestamp(value['inspected_at'])
     subject = value['subject']
@@ -115,10 +132,24 @@ def validate_report(value):
     need(revision is None or type(revision) is str and re.fullmatch('[0-9a-f]{40}|[0-9a-f]{64}', revision), 'invalid_subject')
     need(snapshot is None or type(snapshot) is str and SHA.fullmatch(snapshot), 'invalid_subject')
     need(revision is not None or snapshot is not None, 'missing_subject_identity')
-    sources = index(value['sources'], ('id', 'title', 'publisher', 'url', 'published_at', 'accessed_at'), minimum=1)
-    for source in sources.values():
+    sources = index(value['sources'], ('id', 'title', 'publisher', 'url', 'published_at', 'accessed_at'), minimum=1,optional=('access_note',),section='sources')
+    source_retrieval_unknown=0
+    for position,source in enumerate(sources.values()):
         text(source['title'], 1024); text(source['publisher'], 256); public_url(source['url'])
-        need(timestamp(source['accessed_at']) <= inspected, 'future_source')
+        if source['accessed_at'] is None:
+            need(type(source.get('access_note')) is str and bool(source['access_note'].strip()),
+                 'source_access_note_required',f'sources[{position}].access_note')
+            text(source['access_note'],1024)
+            need(type(value['limitations']) is list and bool(value['limitations']),
+                 'source_retrieval_limitation_required','limitations')
+            source_retrieval_unknown+=1
+        else:
+            try:
+                need(timestamp(source['accessed_at']) <= inspected, 'future_source')
+            except ReportError as error:
+                error.field=f'sources[{position}].accessed_at'
+                raise
+            if 'access_note' in source:text(source['access_note'],1024)
         if source['published_at'] is not None:
             published = source['published_at']
             if type(published) is str and re.fullmatch(r'\d{4}-\d{2}-\d{2}', published):
@@ -192,18 +223,20 @@ def validate_report(value):
         text(limitation)
     unknown = advisory_states['unknown'] + advisory_states['not_checked']
     checked = statuses['PASS'] + statuses['FAIL']
-    complete = not statuses['NOT_RUN'] and not unknown and not suspected and checked > 0
+    complete = not statuses['NOT_RUN'] and not unknown and not suspected and not source_retrieval_unknown and checked > 0
     conclusion = 'REVIEW_REQUIRED' if findings or advisory_states['affected'] else ('NO_FINDINGS_WITHIN_CHECKED_SCOPE' if complete else 'INCOMPLETE')
     return {'status': 'VALIDATED_REPORT', 'profile': value['profile'], 'coverage': statuses,
             'checked_controls': checked, 'findings': len(findings), 'severity': severities,
             'advisories': advisory_states, 'coverage_complete': complete, 'conclusion': conclusion,
             'evidence_mode': 'synthetic' if any(e['kind'] == 'synthetic' for e in evidence.values()) else 'declared_evidence',
-            'security_certification': 'NOT_PROVIDED', 'network': False, 'writes': 0}
+            'security_certification': 'NOT_PROVIDED', 'source_retrieval_unknown':source_retrieval_unknown, 'network': False, 'writes': 0}
 
 
 def read_report(path):
-    path = Path(path).absolute()
-    need(not any(p.is_symlink() for p in (path, *path.parents)), 'unsafe_input_path')
+    try:
+        path=safe_path(path)
+    except ValueError:
+        raise ReportError('unsafe_input_path','input') from None
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     with os.fdopen(fd, 'rb') as stream:
         info = os.fstat(stream.fileno())
@@ -221,18 +254,37 @@ def read_report(path):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    class SafeParser(argparse.ArgumentParser):
+        def error(self, message):
+            raise ReportError('invalid_arguments','arguments')
+    parser = SafeParser(description=__doc__)
     parser.add_argument('--plan', action='store_true'); parser.add_argument('--validate', action='store_true')
     parser.add_argument('--input')
-    args = parser.parse_args(argv)
+    try:
+        args = parser.parse_args(argv)
+    except ReportError:
+        print(json.dumps(dict(status='REJECTED',code='invalid_arguments',field='arguments',
+              hint='Use --help for supported flags and provide values for input options.',network=False,writes=0)))
+        return 2
     if args.plan:
         print('{"status":"PLANNED","network":false,"writes":0}'); return 0
     try:
         need(args.validate and args.input is not None, 'explicit_input_required')
         result = validate_report(read_report(args.input))
         print(json.dumps(result, sort_keys=True)); return 0
-    except (ReportError, OSError, ValueError, TypeError, KeyError, UnicodeError, RecursionError):
-        print('{"status":"REJECTED","code":"invalid_or_unavailable_report","network":false,"writes":0}'); return 2
+    except ReportError as error:
+        hints={'explicit_input_required':'Pass --validate --input with a prepared report.',
+               'invalid_profile':'Choose a documented security profile.',
+               'unsafe_input_path':'Use a regular file without arbitrary symlink components.',
+               'source_access_note_required':'Describe unavailable source retrieval without inventing a timestamp.',
+               'source_retrieval_limitation_required':'Record unavailable retrieval in limitations.'}
+        print(json.dumps(dict(status='REJECTED',code=error.code,field=error.field,
+              hint=hints.get(error.code,'Check the security report schema and declared evidence references.'),network=False,writes=0)))
+        return 2
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError, RecursionError):
+        print(json.dumps(dict(status='REJECTED',code='invalid_or_unavailable_report',field='input',
+              hint='Provide an available bounded UTF-8 JSON report matching the documented schema.',network=False,writes=0)))
+        return 2
 
 
 if __name__ == '__main__':

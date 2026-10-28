@@ -18,7 +18,7 @@ Write a short connected account: the problem a person encountered, what now happ
 
 ## Storage and privacy
 
-Generated pages and their input JSON belong under target `artifacts/`, already ignored by Git, or another explicitly chosen private export path. Source templates/generator remain versioned. Do not commit recipient-specific reports, raw logs, customer data, private endpoints, tokens, populated Postman environments or internal session archives. A link should be safe for the intended recipient; source IDs are not access permissions. External fonts, trackers, remote scripts and auto-fetching assets are unnecessary.
+Generated pages default to target `.palarran/docs/artifacts/<feature>/index.html`; their input JSON belongs in the same private task area. Authorized rendering adds Git-local `.palarran/` excludes while preserving tracked files; check/plan do not mutate ignore rules. Existing tracked private paths are conflicts, not silently untracked. Non-Git target directories are not initialized. An explicit reviewed copy can be handed to a recipient after rendering. Source templates/generator remain versioned. Do not commit recipient-specific reports, raw logs, customer data, private endpoints, tokens, populated Postman environments or internal session archives. A link should be safe for the intended recipient; source IDs are not access permissions. External fonts, trackers, remote scripts and auto-fetching assets are unnecessary.
 
 Escape all user/source text, validate URLs and never interpret retrieved text as HTML/JavaScript. The generator must not embed arbitrary script, eval content or fetch private files from supplied paths. A copied artifact is a snapshot; it does not resume a task, run tests or deploy an application.
 

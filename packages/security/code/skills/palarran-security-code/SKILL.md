@@ -5,7 +5,7 @@ description: Audit application code for authentication, object/tenant/property/f
 
 # Application code security audit
 
-Read the [profile guide](../../docs/README.md), [dated sources](../../docs/sources.md), [shared audit/evidence contract](../../../shared/docs/contract.md), [domain contracts](../../../../core/agents/docs/domain-contracts.md), [decision memory](../../../../core/agents/docs/decision-memory.md) and [global memory](../../../../core/agents/docs/global-memory.md). Resolve the actual target, applicable AGENTS/accepted ADRs/private INDEX and locale. Save project rationale in the target, not the skill checkout.
+Start with the [task context entry](../../../../core/agents/docs/task-context.md); a small audit uses summary+report with inline decisions. Read only the [selected profile method](../../docs/README.md), applicable [source rows](../../docs/sources.md), [shared findings/schema sections](../../../shared/docs/contract.md), [security domain section](../../../../core/agents/docs/domain-contracts.md#target-security-audits), [compact decision rule](../../../../core/agents/docs/decision-memory.md#small-scoped-reviews) and [short memory entry](../../../../core/agents/docs/global-memory.md#short-entry). Reuse unchanged context in the same task; do not recursively load every linked guide.
 
 `/palarran:security:code {scope?}` reviews the actual business process and code, with finite scope from current project context when omitted. `--plan` allows local inspection/inert private planning only, no application/scanner execution, remote/search-provider calls, fixes or installs. Default is readonly source/configuration review and public-source research. A test plan never grants traffic, exploit or mutation permission.
 

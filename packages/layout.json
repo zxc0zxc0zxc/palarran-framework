@@ -228,6 +228,8 @@
     "skills/palarran-package-uninstall": "packages/core/packaging/skills/palarran-package-uninstall",
     "commands/palarran/package/uninstall.md": "packages/core/packaging/commands/uninstall.md",
     "skills/palarran-package-list": "packages/core/packaging/skills/palarran-package-list",
-    "commands/palarran/package/list.md": "packages/core/packaging/commands/list.md"
+    "commands/palarran/package/list.md": "packages/core/packaging/commands/list.md",
+    "commands/palarran/code/review.md": "packages/code/review/commands/review.md",
+    "skills/palarran-code-review": "packages/code/review/skills/palarran-code-review"
   }
 }

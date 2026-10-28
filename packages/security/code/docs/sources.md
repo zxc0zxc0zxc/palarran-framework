@@ -14,3 +14,15 @@ Primary pages retrieved 2026-10-24; source review recorded 2026-10-24T11:59:42Z.
 | C-S8 [GitHub Dependabot limitations](https://docs.github.com/en/code-security/concepts/supply-chain-security/dependabot-alerts) | Current provider docs; modified date unknown | Advisory/manifest coverage has limits; no alerts does not establish absence of vulnerable dependencies. |
 
 The actor/resource matrix, race interleavings, audit-only execution boundary and evidence classification are our method under the [shared contract](../../shared/docs/contract.md). Review proposed remediation against official installed-stack documentation before implementation. Publication/modified dates missing from the retrieved material stay unknown; retrieval date is recorded independently and must be refreshed when the source affects a later decision.
+
+## LLM application sources
+
+Actually retrieved2026-10-28; edition2025, rolling page modification dates not captured. Select these rows for LLM/chatbot boundaries instead of reading unrelated password/framework sources.
+
+| ID / primary source | Application and limit |
+| --- | --- |
+| C-L1 [OWASP LLM01 Prompt Injection](https://genai.owasp.org/llmrisk/llm01-prompt-injection/) | Treat user, retrieved and peer-generated content as untrusted inputs. Prompt instructions do not establish an authorization boundary. |
+| C-L2 [OWASP LLM05 Improper Output Handling](https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/) | Validate model output at the downstream consumer: rendering, SQL, paths, tools and response construction. A model-generated value is not trusted merely because the request was authenticated. |
+| C-L3 [OWASP LLM06 Excessive Agency](https://genai.owasp.org/llmrisk/llm062025-excessive-agency/) | Bound tool functionality, permissions and autonomous effects to the actual user. Review the application's real side effects rather than assuming an allowlist in a prompt enforces them. |
+
+Our additional state-lifecycle method traces mutation → provider result/failure → final response/fallback → durable delivery and retry/compensation. This is framework engineering guidance, not a claim that OWASP prescribes a particular transaction design. Use fake providers only in authorized local tests; do not call paid models merely to reproduce application state logic.

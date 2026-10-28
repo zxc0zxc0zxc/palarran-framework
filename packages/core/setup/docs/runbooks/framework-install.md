@@ -22,9 +22,9 @@ Ask for missing preferences once when they cannot be inferred from checked confi
 
 ## Preflight and offline plan
 
-Complete the shared source/path checks. Resolve conflicting instruction sections, existing skill paths or `.mcp.json` entries by preserving them and stopping; no adoption or overwrite. Existing `.palarran/config.json` must agree with the resolved selection: the installer requires equivalent serialized configuration and will not rewrite a conflicting file. Unknown local JSON fields remain preserved. When configuration is absent, a fresh managed configuration can be created from the resolved package/language fields.
+Complete the shared source/path checks. Local mode requires an existing Git repository so private output can be protected by effective Git-local excludes. Conflicting tracked private paths or overriding ignore rules stop before output writes. Resolve conflicting instruction sections, existing skill paths or `.mcp.json` entries by preserving them and stopping; no adoption or overwrite. Existing `.palarran/config.json` must agree with the resolved selection: the installer requires equivalent serialized configuration and will not rewrite a conflicting file. Unknown local JSON fields remain preserved. When configuration is absent, a fresh managed configuration can be created from the resolved package/language fields.
 
-Record original hashes/existence of AGENTS.md, CLAUDE.md, `.mcp.json`, project config and existing target index in private evidence. Do not store their full contents in public output. Fresh installation may append managed onboarding sections, update the target index and, for Claude/both, add the exact project `engineering-memory` launch declaration while preserving unrelated settings. An unrelated entry with that name stops installation. It does not edit Codex user configuration or transfer credentials.
+Record original hashes/existence of AGENTS.md, CLAUDE.md, `.mcp.json`, project config and existing target index in private evidence. Do not store their full contents in public output. Fresh modern setup defaults to local mode: private CLAUDE.local.md (Claude/both), native links and Git-local excludes; tracked team instructions and MCP settings stay unchanged. Explicit `--mode project` may append shared onboarding sections and add the project `engineering-memory` launch declaration. An unrelated entry with that name stops installation. It does not edit Codex user configuration or transfer credentials.
 
 Example resolved selection; substitute the actual reviewed values rather than inheriting these examples:
 
@@ -39,7 +39,7 @@ python3 "$PALARRAN_SOURCE/scripts/project_setup.py" setup \
 
 Expected: exit `0`, JSON `status: PLANNED`, `action: install`, selected `revision`, `client`, nonzero `skills`, `writes: 0`, `network: false`, `model_calls: 0`, `memory: NOT_CHECKED`. `--plan` performs local preflight only, with no installation, target journal writes or memory calls. It does not check the remote default branch. Capture the plan/pin privately and verify that all resolved values match the intended target. Recheck target state if it changes before apply.
 
-Any exit `2`, generic `Setup incomplete` stderr, unexpected action or changed revision is a stop condition. Do not remove an existing library, bypass a collision or repeatedly rerun the command. Missing local source/runtime support requires a versioned extension proposal, not installation of tools.
+Any exit `2`, a safe JSON diagnostic, unexpected action or changed revision is a stop condition. Do not remove an existing library, bypass a collision or repeatedly rerun the command. Missing local source/runtime support requires a versioned extension proposal, not installation of tools.
 
 ## Apply within existing authorization
 
@@ -51,9 +51,9 @@ python3 "$PALARRAN_SOURCE/scripts/project_setup.py" setup \
   --packages code validation --skills-language en --code-language en --docs-language en
 ```
 
-The helper records a target setup decision before dependent installation writes, creates the pinned `.ai-tools/library`, source/ownership manifests and `.ai-tools/USAGE.md`, adds selected native discovery links and updates managed instructions/index. Claude/both may update project `.mcp.json`; unrelated configuration is preserved. Shared public support resources remain available, but only selected skills receive discovery links. It runs no project hooks, app tests, models or deployment.
+The helper records a target setup decision before dependent installation writes, creates the pinned `.ai-tools/library`, source/ownership manifests and `.ai-tools/USAGE.md`, adds selected native discovery links and updates private instructions/index. Only explicit project mode may update shared instructions or `.mcp.json`; unrelated configuration is preserved. Shared public support resources remain available, but only selected skills receive discovery links. It runs no project hooks, app tests, models or deployment.
 
-The dispatcher then uses pristine pinned public bytes for bounded stdio `initialize`, `tools/list` and one `knowledge.search` with at most three cards, through `--global`. The helper's current timeout is 20 seconds; output is limited to 262144 bytes after process completion, not a hard memory/disk quota. Do not expose returned cards or claim unlimited resource protection.
+When memory is selected (or an existing legacy receipt has no package scope), the dispatcher uses pristine pinned public bytes for bounded stdio `initialize`, `tools/list` and one `knowledge.search` with at most three cards, through `--global`. The helper's current timeout is 20 seconds; output is limited to 262144 bytes after process completion, not a hard memory/disk quota. Do not expose returned cards or claim unlimited resource protection.
 
 If authority covers **file installation only**, use the exact same selection with operation `install` instead of `setup` (plan first, then apply). Expected exit `0`, `PLANNED` then `INSTALLED`, `memory: NOT_CHECKED`; no health call is made and `action`/dispatcher fields are absent. Report health NOT_RUN. This is a documented low-level route, not permission to skip a check already authorized and required. Do not add a doctor call outside the actual read scope.
 
@@ -61,6 +61,7 @@ If authority covers **file installation only**, use the exact same selection wit
 
 | Observed outcome | Meaning and deterministic next step |
 | --- | --- |
+| Exit `0`, `INSTALLED`, nested memory `NOT_SELECTED` | Optional memory was not selected; no health subprocess/network call occurred; explain that gap |
 | Exit `0`, `INSTALLED`, `action: install`, nested memory `PASS`/`CONNECTED` | Dispatcher completed file installation and bounded memory wire check; verify ownership and explain native usage |
 | Exit `2`, `INSTALLED_MEMORY_NOT_READY`, memory `NOT_READY` | Files may already be installed; retain receipt, investigate only authorized prerequisites and rerun doctor after resolution, never reinstall to repair network |
 | Exit `0`, low-level `install` with `INSTALLED`, `memory: NOT_CHECKED` | Files installed, health NOT_RUN; perform doctor only when that read scope is covered |
@@ -95,3 +96,9 @@ Final status must distinguish files installed, memory connected/not ready/not ru
 ## Common parallelism instructions (1.1.0)
 
 Installation appends a separate `palarran:parallelism` block to the recorded client's AGENTS/CLAUDE instruction files, preserving all original bytes. This applies to ordinary requests and subject skills; native clients remain instruction-based. Before apply resolve the optional Temporal question/profile under [Temporal setup](../temporal.md), preserving explicit project disable and existing global settings. An answer does not grant global writes, Worker startup, deployment or models. Follow the reviewed local Worker procedure only within actual scope, and report its missing readiness honestly.
+
+## Local-first extension (version 1.2.0)
+
+Use `--mode local` (CLI default) for a supported existing Git target when tracked project instructions must stay clean. The plan lists this mode and private paths before writes. Apply creates the public library store, private preferences/receipt, selected discovery links, local Claude instructions and idempotent Git-local excludes. It does not rewrite tracked AGENTS.md, CLAUDE.md, .mcp.json or .gitignore. A pre-existing tracked private output blocks; no automatic untracking. Codex skill discovery is supported, but automatic local instruction/MCP activation is not claimed. `--mode project` is a separate explicit choice retaining the prior shared-file integration.
+
+Do not load parallelism/Temporal/session-pool documents for a simple installation explanation. Use the concise generated context entry, then the specific skill/runbook needed. Missing preferences return a structured missing_preferences diagnostic with the required flags. Do not print private config or raw exception text to diagnose it.

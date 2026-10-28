@@ -125,7 +125,7 @@ class ArtifactTests(unittest.TestCase):
     def test_real_output_unicode_responsive_accessible_self_contained(self):
         with tempfile.TemporaryDirectory(dir=Path(tempfile.gettempdir()).resolve()) as tmp:
             output=render.render_to_target(fixture(), tmp)
-            self.assertEqual(output, Path(tmp)/'artifacts/safe-export/index.html')
+            self.assertEqual(output, Path(tmp)/'.palarran/docs/artifacts/safe-export/index.html')
             source=output.read_text(); doc=Document(); doc.feed(source)
             self.assertIn('Привет 世界', ''.join(doc.content))
             self.assertIn('@media(max-width:600px)', source)
@@ -138,7 +138,7 @@ class ArtifactTests(unittest.TestCase):
             self.assertEqual(doc.tags.count('script'), 1)
             self.assertFalse(any('src' in attrs for tag,attrs in doc.attrs))
             self.assertNotIn('fetch(', source); self.assertNotIn('<link', source)
-            self.assertEqual(set(Path(tmp).rglob('*')), {output, output.parent, output.parent.parent})
+            self.assertEqual(set(Path(tmp).rglob('*')), {output, output.parent, output.parent.parent, output.parent.parent.parent, output.parent.parent.parent.parent})
             self.assertEqual(output.stat().st_mode & 0o777, 0o600)
 
     def test_hostile_text_never_becomes_markup_script_or_attributes(self):
@@ -199,10 +199,10 @@ class ArtifactTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=Path(tempfile.gettempdir()).resolve()) as tmp:
             root=Path(tmp); real=root/'real'; real.mkdir(); link=root/'link'; link.symlink_to(real, target_is_directory=True)
             with self.assertRaises(render.ArtifactError): render.render_to_target(fixture(), link)
-            (real/'artifacts').symlink_to(root/'outside', target_is_directory=True)
+            (real/'.palarran').symlink_to(root/'outside', target_is_directory=True)
             with self.assertRaises(render.ArtifactError): render.render_to_target(fixture(), real)
-            (real/'artifacts').unlink(); (real/'artifacts/safe-export').mkdir(parents=True)
-            (real/'artifacts/safe-export/index.html').symlink_to(root/'missing')
+            (real/'.palarran').unlink(); (real/'.palarran/docs/artifacts/safe-export').mkdir(parents=True)
+            (real/'.palarran/docs/artifacts/safe-export/index.html').symlink_to(root/'missing')
             with self.assertRaises(render.ArtifactError): render.render_to_target(fixture(), real)
             inp=root/'input.json'; inp.write_text(json.dumps(fixture())); (root/'alias.json').symlink_to(inp)
             with self.assertRaises(render.ArtifactError): render.load_input(root/'alias.json')
@@ -236,7 +236,9 @@ class ArtifactTests(unittest.TestCase):
             self.assertIn('No input or target read', output.getvalue())
 
     def test_cli_explicit_approval_and_sanitized_error(self):
-        with self.assertRaises(SystemExit), redirect_stderr(io.StringIO()): render.main([])
+        with redirect_stdout(io.StringIO()) as missing:
+            self.assertEqual(render.main([]), 2)
+        self.assertEqual(json.loads(missing.getvalue())['code'], 'missing_argument')
         with tempfile.TemporaryDirectory(dir=Path(tempfile.gettempdir()).resolve()) as tmp:
             inp=Path(tmp)/'in.json'; data=fixture(); data['evidence'][0]['url']='https://user:SECRET@example.com'
             inp.write_text(json.dumps(data))

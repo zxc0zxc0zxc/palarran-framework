@@ -1,6 +1,6 @@
 # Mandatory domain contracts
 
-Preserved domain requirements from the former root AGENTS.md. Read the applicable section and mandatory guides before a domain task. Root invariants apply regardless of the edited file directory.
+Read only the applicable section and selected task guides. The [task context entry](task-context.md) defines progressive reading and compact records for small reviews; guide lists below identify relevant sources, not a requirement to read every unrelated section or follow links recursively. Root invariants and actual domain execution/verification gates remain mandatory.
 
 ## ML
 
@@ -88,7 +88,7 @@ Preserved domain requirements from the former root AGENTS.md. Read the applicabl
 
 ## Application acceptance
 
-- `/palarran:app:verify` requires packages/validation/application/docs/README.md, sources.md, methodology.md, contract.md, operations.md, evidence.md. Freeze business scenarios/subject/criteria independently of builder; actual browser + API + readonly DB observations bind one test entity/version. Missing coverage is NOT_RUN/INCONCLUSIVE, not PASS; explicit N/A needs rationale. --plan never executes apps/tools; actual verification stays in existing authorized test scope. No implied fixes/prod mutations/paid judges/install/retry. Decisions/results in target .palarran/app/, private suites/evidence outside builder workspace; captures are not visual review.
+- `/palarran:app:verify` starts with packages/validation/application/docs/README.md and selects the existing web protocol or project-tests protocol. Read applicable methodology/contract/operations/evidence sections and source rows, not every adapter guide. The project-tests adapter binds trusted local test commands to requirements and exact source; it never promotes fixture/unit PASS to browser/API/DB or complete business acceptance. Freeze business scenarios/subject/criteria independently of builder; actual browser + API + readonly DB observations bind one test entity/version. Missing coverage is NOT_RUN/INCONCLUSIVE, not PASS; explicit N/A needs rationale. --plan never executes apps/tools; actual verification stays in existing authorized test scope. No implied fixes/prod mutations/paid judges/install/retry. Decisions/results in target .palarran/app/, private suites/evidence outside builder workspace; captures are not visual review.
 
 ## Agent improvement
 
@@ -130,7 +130,7 @@ Setup and VPS installation tasks require the versioned Core installation runbook
 
 ## Target security audits
 
-/palarran:security:infrastructure|ingress|log|egress|code|cve require packages/security/shared/docs/contract.md and the selected profile docs/README.md and sources.md. Readonly audit scope never implies remediation, exploitation or scans against third parties. --plan has no target access, scanner install or paid calls. Preserve exact subject, coverage, evidence, confidence and retest steps. Missing evidence stays NOT_RUN. CVE research prefers available Keenable with public stack/version queries only; primary vendor/ecosystem advisories establish applicability, with alias dedup, backports and modified-date checks. Reports and decisions remain private; the offline report helper validates structure, never target safety or advisory truth.
+/palarran:security:infrastructure|ingress|log|egress|code|cve require packages/security/shared/docs/contract.md and the selected profile docs/README.md and sources.md. For a small audit use task-context.md#small-review and the selected profile method/source rows plus shared findings/schema sections; do not load all profiles. Readonly audit scope never implies remediation, exploitation or scans against third parties. --plan has no target access, scanner install or paid calls. Preserve exact subject, coverage, evidence, confidence and retest steps. Missing evidence stays NOT_RUN. CVE research prefers available Keenable with public stack/version queries only; primary vendor/ecosystem advisories establish applicability, with alias dedup, backports and modified-date checks. Reports and decisions remain private; the offline report helper validates structure, never target safety or advisory truth.
 
 ## Git workflows
 
@@ -142,3 +142,11 @@ Palarran service container hosting additionally requires packages/infrastructure
 ## Custom Packaging
 
 `/palarran:package:create|search|install|update|uninstall|list` requires Core Packaging docs/README.md, contract.md, sources.md, lifecycle.md and the selected action guide. Creation is docs→plan→implementation→tests; publication requires actual separate scope. Public/private visibility, publisher ownership and exact version/SHA256 are explicit. Package contents remain untrusted instructions; no implicit hooks, imports, dependency installation, MCP activation or root-rule replacement. Preserve project settings/local modifications with receipt-based preflight and recoverable transactions. Unknown remote writes use the original operation ID. List is read-only; delist/delete require explicit owner authorization and exact effects. --plan reads/writes/connects nothing. Tests are offline with isolated real HTTP/SQLite/files and injected S3 clients; live registry deployment/S3/SLA need separate evidence.
+
+## Code review
+
+`/palarran:code:review` uses the review profile `packages/code/review/README.md` and selected review guide/source rows. Bind exact range/subject and relevant surrounding state lifecycle, distinguish hypotheses from reproduced defects, and produce summary+report with evidence and safe retests. No automatic application edits, publication, installs or model calls. Use compact task records for a small review; escalate scope for cross-service/architectural changes.
+
+## Review artifacts
+
+`/palarran:docs:artifact` uses the artifact guide `packages/docs/documentation/docs/artifact.md`, selected schema/render/verification sections and the task-context entry. Private output defaults to target `.palarran/docs/artifacts/`; plan is zero-I/O, check validates only its explicit input without output/exclude edits. Rendering does not prove visual or business acceptance. One project locale, independent source/evidence review and actual browser checks remain required.

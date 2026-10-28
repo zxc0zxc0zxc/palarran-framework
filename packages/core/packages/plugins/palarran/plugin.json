@@ -234,6 +234,10 @@
     "package:list": {
       "source": "packages/core/packaging/commands/list.md",
       "argumentHint": "[--mine] [--delist publisher/name@version | --delete publisher/name@version] [--plan]"
+    },
+    "code:review": {
+      "source": "packages/code/review/commands/review.md",
+      "argumentHint": "{range?} [--plan]"
     }
   }
 }

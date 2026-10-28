@@ -9,3 +9,4 @@ Specification-driven frontend and backend planning and implementation.
 - **frontend** (implemented): Adaptive interface planning, implementation and browser acceptance. [docs](frontend/docs/README.md) · [skills](frontend/skills/) · [templates](frontend/templates/) · [commands](frontend/commands/) · [plugins](frontend/plugins/)
 - **backend** (implemented): Scale-aware backend SDD, delivery and independent checks. [docs](backend/docs/) · [skills](backend/skills/) · [templates](backend/templates/) · [commands](backend/commands/) · [plugins](backend/plugins/)
 - **git** (implemented): Scoped commits, file history, semantic conflicts and concise MR/PR preparation. [docs](git/docs/README.md)
+- **review** (implemented): Bounded correctness review of an exact change, state lifecycle and test gaps. [docs](review/docs/README.md) · [skill](review/skills/palarran-code-review/SKILL.md) · [command](review/commands/review.md)

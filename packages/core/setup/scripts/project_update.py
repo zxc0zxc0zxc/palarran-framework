@@ -117,6 +117,7 @@ def prepare(source, target, client=None):
     target = safe(target); require(target.is_dir())
     safe(target/'.ai-tools/backups'); safe(target/'.palarran/INDEX.md')
     receipt = load(target/'.ai-tools/installation.json'); require(receipt['version'] in (1,2))
+    mode = setup.receipt_mode(receipt)
     selection_version=receipt.get('package_selection_version',1)
     require(type(selection_version) is int and selection_version in (1,2))
     require(re.fullmatch('[0-9a-f]{40,64}',receipt['revision']) is not None)
@@ -189,7 +190,7 @@ def prepare(source, target, client=None):
     baseline_usage = receipt['files'].get('.ai-tools/USAGE.md')
     new_usage = setup.usage_text(revision,names) if sha(usage)==baseline_usage else usage
     instruction_files = {}
-    for name in (['AGENTS.md','CLAUDE.md'] if receipt['client'] in ('claude','both') else ['AGENTS.md']):
+    for name in setup.instruction_names(receipt['client'],mode,receipt):
         path = safe(target/name)
         exists = path.exists()
         before = read(path) if exists else b''
@@ -201,7 +202,7 @@ def prepare(source, target, client=None):
         if before != after:
             instruction_files[name] = dict(before=before, after=after, existed=exists)
     config_custom = False
-    if receipt['client'] in ('claude','both'):
+    if mode == 'project' and receipt['client'] in ('claude','both'):
         try:
             entry = load(target/'.mcp.json')['mcpServers']['engineering-memory']
             config_custom = entry != dict(command='python3',args=['-B','.ai-tools/library/scripts/memory_ops.py','mcp','--global'])
@@ -245,7 +246,7 @@ def rollback(target, backup=None, plan=False):
     for name in set(record['before_links']) | set(record['after_links']):
         require(link_value(target/name) in (record['before_links'].get(name),record['after_links'].get(name)))
     for name, metadata in record.get('instruction_files', {}).items():
-        require(name in ('AGENTS.md','CLAUDE.md'))
+        require(name in ('AGENTS.md','CLAUDE.md','CLAUDE.local.md'))
         path = safe(target/name)
         current = read(path) if path.exists() else b''
         before = read(tx/('before-instruction-'+name)); after = read(tx/('after-instruction-'+name))
@@ -284,7 +285,9 @@ def restore(target,tx,record):
     return dict(status='ROLLED_BACK',revision=record['from_revision'],backup=record['backup'],memory='NOT_CHECKED')
 
 
-def health(clean, revision, target):
+def health(clean, revision, target, preferences=None, resolved_packages=None):
+    if not setup.memory_selected(preferences,resolved_packages):
+        return dict(status='NOT_SELECTED')
     # Do not execute locally carried scripts, hooks or customized MCP declarations.
     with tempfile.TemporaryDirectory(prefix='ai-tools-update-check-') as directory:
         root = Path(directory).resolve()/'public'; populate(root,clean)
@@ -308,10 +311,17 @@ def update(source,target,client=None,plan=False,event=lambda _:None):
     report = dict(status='UPDATE_PLANNED' if plan else 'UPDATED',from_revision=prepared['receipt']['revision'],revision=prepared['revision'],client=prepared['receipt']['client'],skills=len(prepared['names']),preserved_local_files=sorted(prepared['kept']),conflicts=prepared['conflicts'][:20],conflict_count=len(prepared['conflicts']),network=False,model_calls=0)
     if prepared['conflicts']: report.update(status='CONFLICT',writes=0); return report
     if plan: report['writes']=0; return report
+    if setup.receipt_mode(prepared['receipt']) == 'local':
+        from packages.core.security.local_io import ensure_private_excludes
+        patterns = setup.private_patterns(target, prepared['after_links'],
+                    setup.instruction_names(prepared['receipt']['client'], 'local', prepared['receipt']))
+        ensure_private_excludes(target, patterns)
     if report['from_revision'] == report['revision'] and not prepared['instruction_files']:
         report['network']=True
-        try: report.update(status='UNCHANGED',memory=health(prepared['clean'],prepared['revision'],target))
-        except Exception: report.update(status='UNCHANGED_MEMORY_NOT_READY',memory=dict(status='NOT_READY'))
+        try: report.update(status='UNCHANGED',memory=health(prepared['clean'],prepared['revision'],target,prepared['receipt'].get('preferences'),prepared['resolved_packages']))
+        except Exception as error: report.update(status='UNCHANGED_MEMORY_NOT_READY',memory=setup.health_error(error))
+        if report['memory'].get('status')=='NOT_SELECTED':
+            report.update(network=False,warnings=[dict(code='optional_memory_not_selected',hint='Memory was not selected; configure it separately when needed.')])
         return report
     with lock(target):
         require(not active.exists())
@@ -377,8 +387,11 @@ def update(source,target,client=None,plan=False,event=lambda _:None):
             except Exception:
                 report.update(status='RECOVERY_REQUIRED',backup=backup,memory=dict(status='NOT_CHECKED')); journal_result(journal,report); return report
         report['network']=True
-        try: report['memory'] = setup.doctor(prepared['release'],target)
-        except Exception: report.update(status='UPDATED_MEMORY_NOT_READY',memory=dict(status='NOT_READY'))
+        try:
+            report['memory'] = health(prepared['clean'],prepared['revision'],target,prepared['receipt'].get('preferences'),prepared['resolved_packages'])
+            if report['memory'].get('status')=='NOT_SELECTED':
+                report.update(network=False,warnings=[dict(code='optional_memory_not_selected',hint='Memory was not selected; configure it separately when needed.')])
+        except Exception as error: report.update(status='UPDATED_MEMORY_NOT_READY',memory=setup.health_error(error))
         report.update(backup=backup,client_integration='CUSTOMIZED_NOT_VERIFIED' if prepared['customized'] else 'DECLARED_NOT_UI_VERIFIED')
         journal_result(journal,report)
         return report

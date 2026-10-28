@@ -4,6 +4,19 @@
 
 Read the actual plan, accepted decisions, diff, source revision and observed checks. The artifact is a delivery snapshot; canonical architecture/API docs remain authoritative. Separate observed results, targets and estimates. Local tests never establish production SLA. Source IDs and links do not grant access.
 
+## Quick start
+
+For a small review, read this section, [input contract](#input-contract-version-1) when authoring the JSON, and [render and verify](#render-and-verify). Reuse the current task's summary and report; keep decision rationale inline there. One task-level index entry is enough. Separate context/ADR/handoff files are for a material architectural choice, handoff or a long-running task, not each render attempt. Read the bounded [task context entry](../../../core/agents/docs/task-context.md) and only the [review-artifact domain section](../../../core/agents/docs/domain-contracts.md#review-artifacts); do not load unrelated domains.
+
+From the installed target project, validate input before rendering:
+
+```sh
+python3 .ai-tools/library/packages/docs/documentation/render.py --check --input /PRIVATE/approved.json
+python3 .ai-tools/library/packages/docs/documentation/render.py --approved --input /PRIVATE/approved.json --target /ABSOLUTE/project
+```
+
+`--check` reads only its explicit JSON input, returns `VALIDATED_INPUT` with `writes: 0` and `network: false`, and never reads a target or changes ignores. It validates the same schema and approval/privacy declarations as rendering; it does not verify the claims. `--plan` remains zero input/target I/O. Default rendering creates a new `.palarran/docs/artifacts/<feature>/index.html`. In a Git target, rendering protects `.palarran/` with Git-local `info/exclude`; it never changes tracked `.gitignore`, untracks files or publishes the page. Inspect the scope before an authorized render. Non-Git target directories remain supported without Git initialization.
+
 ## Write a short human story
 
 Start with the concrete difficulty the reviewer or user faced, then say what changed and how that helps. Explain the reason for the chosen approach, what the evidence actually shows and what the reviewer should do next. Use short connected paragraphs and everyday words; define technical terms once. The four sections organize that story, rather than inviting a list of sterile labels.
@@ -37,7 +50,7 @@ The standard-library renderer `packages/docs/documentation/render.py` accepts a 
 | `metrics` | Up to 40 objects: `name`, `value` (finite number or null), `unit`, `source`, `kind` (`observed`, `target`, `estimate`), `denominator`, `uncertainty` |
 | `flow` | Object with `nodes` (up to 12 unique `{id,label}`) and `edges` (up to 24 `{from,to,label}` referring to existing nodes); both may be empty |
 
-Every text is plain text, never HTML, JavaScript, Markdown execution or a file include. Most text fields allow 2,000 characters; IDs allow 64. At most 20 steps/prerequisites per test. Numeric values require supplied source and unit; denominator/uncertainty must be explicit, such as `n=12 requests` / `not measured`, or `not applicable: configuration limit`. Missing measurements use `null` and render as **Unknown**, never zero. Test distribution counts listed scenarios, not executions or an inferred coverage percentage. Independent metric cards avoid comparing incompatible units. A flow shows provided directed edges; it is not runtime tracing. Label proposed topology in its labels or How text.
+Every text is plain text, never HTML, JavaScript, Markdown execution or a file include. Node labels and edge labels are required nonempty text of at most120characters; an unlabeled relationship must be given a concise meaningful label, not an empty string. Long diagram labels wrap without silent truncation and have complete SVG titles and table equivalents. Most text fields allow 2,000 characters; IDs allow 64. At most 20 steps/prerequisites per test. Numeric values require supplied source and unit; denominator/uncertainty must be explicit, such as `n=12 requests` / `not measured`, or `not applicable: configuration limit`. Missing measurements use `null` and render as **Unknown**, never zero. Test distribution counts listed scenarios, not executions or an inferred coverage percentage. Independent metric cards avoid comparing incompatible units. A flow shows provided directed edges; it is not runtime tracing. Label proposed topology in its labels or How text.
 
 Public links allow HTTPS DNS hosts only, without credentials, IP literals, local/private suffixes, query strings or nonstandard ports. This deliberately excludes private MR links; retain a safe textual evidence ID instead. An allowed domain is not proof that its contents are public or safe. Review recipient access and sanitization yourself. The privacy flag is a declaration, **not a DLP guarantee**: no tokens, private endpoints, raw logs, customer information or session archives in any field. The renderer reads no referenced files and performs no network requests.
 
@@ -74,7 +87,13 @@ After authorized local artifact preparation and review:
 python3 packages/docs/documentation/render.py --approved --input /private/approved.json --target /chosen/project
 ```
 
-The existing target directory owns `artifacts/<feature>/index.html`. Keep generated HTML/input JSON private and ignored by Git; do not silently edit target ignore rules. The renderer refuses an existing output, symlink components, non-directory parents and inputs outside the explicit input file. It creates no alternate export/search paths. A new revision needs a new feature slug or an explicitly managed export lifecycle. Paths are local only; on macOS pass physical paths (for example `/private/tmp`, not the `/tmp` symlink). Metadata checks do not protect against a hostile concurrent filesystem actor; use a trusted target directory.
+The existing target directory owns `.palarran/docs/artifacts/<feature>/index.html`; input JSON also belongs in private task storage. During an authorized render in Git, reviewed target-relative `.palarran/` exclusions are appended idempotently to Git-local `info/exclude`, preserving its previous bytes and tracked files. This is a documented local side effect of rendering, not part of `--check` or `--plan`. A pre-existing tracked private destination yields `tracked_private_output`; inspect it separately instead of automatically untracking or overwriting it. Non-Git targets need no ignore edit and are not initialized as repositories.
+
+The renderer refuses existing output, arbitrary symlink components, non-directory parents and inputs outside the explicit input file. On macOS the verified system aliases `/tmp`, `/var` and `/etc` are supported; other symlinks remain rejected. A new revision needs a new feature slug. To hand off the page, explicitly copy the reviewed standalone HTML to the chosen recipient destination; rendering itself does not publish or create a second public export. Metadata checks do not protect against a hostile concurrent filesystem actor; use a trusted local directory.
+
+### Diagnostics
+
+Failures return safe structured JSON with `status`, `code`, schema `field` (or null) and a fixed `hint`. For example, an empty edge label reports `{"status":"REJECTED","code":"invalid_text","field":"flow.edges[0].label","hint":"Provide nonempty text within the documented length limit."}`. Input contents, URL credentials, paths from arbitrary exceptions and raw tracebacks are never echoed. CLI missing-argument errors identify the missing option; unreadable input is `input_unavailable`. A successful render retains the `Rendered: <path>` line for existing callers.
 
 The page uses local CSS, native SVG and a fixed script for navigation, status filtering and a review checklist. Localized text is escaped as HTML; no input text is interpolated into JavaScript. No CDN, fonts, fetch, input JavaScript or external assets. Text/table equivalents remain available for diagrams and charts; all content is readable without JavaScript. A reviewer checklist is local page state, never test evidence or durable acceptance.
 

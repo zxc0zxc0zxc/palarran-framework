@@ -22,6 +22,9 @@ class ProjectUpdateTest(unittest.TestCase):
         (self.source/'scripts/project_setup.py').write_bytes(Path(setup.__file__).read_bytes())
         (self.source/'scripts/project_update.py').write_bytes(Path(updater.__file__).read_bytes())
         (self.source/'scripts/palarran_paths.py').write_bytes((Path(setup.ROOT)/'scripts/palarran_paths.py').read_bytes())
+        helper=self.source/'packages/core/security/local_io.py'
+        helper.parent.mkdir(parents=True)
+        helper.write_bytes((Path(setup.ROOT)/'packages/core/security/local_io.py').read_bytes())
         self.commit('guide')
         setup.install(self.source,self.target,'both')
         self.old=setup.library(self.source)[0]

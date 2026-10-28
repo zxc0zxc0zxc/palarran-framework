@@ -253,6 +253,15 @@ def validate(root=ROOT):
                               "packages/core/packaging/docs/" + command + ".md"):
                 if not _has_guide(root, path, body, reference, cached_source):
                     errors.append(f"{name}: missing mandatory packaging guide {reference}")
+        elif namespace == "code" and command == "review":
+            base, guides = None, []
+            for reference in ("packages/code/review/docs/README.md",
+                              "packages/core/agents/docs/task-context.md",
+                              "packages/core/agents/docs/domain-contracts.md#code-review"):
+                if not _has_guide(root, path, body, reference.split("#")[0], cached_source):
+                    errors.append(f"{name}: missing selected review guide {reference}")
+            if "domain-contracts.md#code-review" not in body:
+                errors.append(f"{name}: missing Code review domain anchor")
         elif namespace == "git":
             base, guides = "git", ["README.md", "sources.md", command + ".md"]
         elif namespace == "security":
@@ -269,7 +278,9 @@ def validate(root=ROOT):
         elif namespace == "mcp":
             base, guides = "mcp/build", ["README.md", "sources.md", "tool-design.md", "context-efficiency.md", "protocol-security.md", "evaluation.md", "workflow.md"]
         elif namespace == "app":
-            base, guides = "app/verify", ["README.md", "sources.md", "methodology.md", "contract.md", "operations.md", "evidence.md"]
+            base, guides = "app/verify", ["README.md", "sources.md", "methodology.md", "contract.md", "operations.md", "evidence.md", "project-tests.md"]
+            if not _has_guide(root, path, body, "packages/core/agents/docs/task-context.md", cached_source):
+                errors.append(f"{name}: missing selected task context entry")
         elif namespace == "science":
             base, guides = "science", ["README.md", "sources.md", "evidence.md", "workflow.md"]
         elif namespace == "agent" and command == "improve":
@@ -335,6 +346,8 @@ def validate(root=ROOT):
     for action in ("create", "search", "install", "update", "uninstall", "list"):
         if "palarran-package-" + action in skills:
             manifest_specs[0][2].append("package:" + action)
+    if "palarran-code-review" in skills:
+        manifest_specs[0][2].append("code:review")
     if "palarran-core-share" in skills:
         manifest_specs[0][2].append("core:share")
     if "palarran-core-coop" in skills:
