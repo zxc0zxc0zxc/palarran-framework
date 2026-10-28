@@ -34,17 +34,23 @@ The bounded Python runtime coordinates approved adapters; agents and their crede
 
 Tell your agent:
 
-> Set up Palarran from https://github.com/zxc0zxc0zxc/palarran-framework in this project. Follow packages/core/setup/docs/runbooks/README.md. Ask which packages and languages I need, preserve my configuration and local edits, check the configured global memory connection, and explain the available commands.
+> Set up Palarran from https://github.com/zxc0zxc0zxc/palarran-framework in this project. Follow packages/core/setup/docs/runbooks/README.md. Ask which packages and languages I need, use the default local installation, preserve my configuration and local edits, check global memory only if selected, and explain the available commands and any deferred checks.
 
 Or start from a trusted complete checkout:
 
 ```sh
 python3 scripts/project_setup.py setup --target /ABSOLUTE/project --client codex \
-  --packages code validation memory \
+  --packages code validation \
   --skills-language en --code-language en --docs-language en --plan
 ```
 
-Review the plan, then repeat without `--plan`. Choose `claude` or `both` for the client when needed. Setup detects an existing installation and uses an ownership-aware update. Local changes and settings are preserved; conflicting replacements stop for review.
+Review the plan, then repeat without `--plan`. Supply all package/language preferences through flags or checked configuration; missing choices return a safe JSON diagnostic. Choose `claude` or `both` for the client when needed.
+
+Fresh setup defaults to **local mode** in an existing Git project: selected native skill links, private `.palarran/` state and Claude's `CLAUDE.local.md`. Git-local excludes protect generated files; tracked `AGENTS.md`, `CLAUDE.md`, `.mcp.json` and `.gitignore` stay unchanged. Existing tracked local instructions are preserved and reported as not activated. Codex skill discovery does not imply automatic instruction or MCP activation; follow `.ai-tools/USAGE.md` and any actual client trust/restart requirements.
+
+Use explicit `--mode project` when shared instruction/MCP edits are intended. Existing installations retain their receipt mode, settings and local changes through ownership-aware updates; conflicting replacements stop for review.
+
+Memory is optional: the example above returns `NOT_SELECTED` without a memory probe. Add `memory` to the package selection when its configured service is needed. An explicitly selected unhealthy service returns `*_MEMORY_NOT_READY`/exit 2 even when files installed successfully; inspect the safe diagnostic and rerun doctor after resolving the prerequisite. Setup never installs or repairs global services automatically.
 
 Select English, Russian or Serbian Latin independently for agent interaction, code comments and documentation. Canonical skills and guides remain English. Generated review artifacts use the project's documentation language, including captions and controls, with no language selector.
 
