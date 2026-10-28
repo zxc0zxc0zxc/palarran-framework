@@ -191,17 +191,28 @@ class ProjectTestsRegression(unittest.TestCase):
 
 
     def test_cli_binding_exception_does_not_expose_operator_values(self):
-        factory = self.root/'private_error_fixture.py'
-        factory.write_text('def factory():\n raise RuntimeError("PRIVATE_OPERATOR_VALUE")\n')
-        env = dict(os.environ, PYTHONPATH=str(ROOT)+os.pathsep+str(self.root))
-        result = subprocess.run([sys.executable, '-m', MODULE, '--target', str(self.target),
-                                 '--revision', self.revision, '--binding', 'private_error_fixture:factory',
-                                 '--authorized'], cwd=ROOT, env=env, text=True,
-                                capture_output=True, timeout=5)
-        self.assertEqual(result.returncode, 2)
-        self.assertEqual(json.loads(result.stdout)['code'], 'project_tests_unavailable')
-        self.assertNotIn('PRIVATE_OPERATOR_VALUE', result.stdout+result.stderr)
-        self.assertNotIn('Traceback', result.stdout+result.stderr)
+        for phase in ('import', 'factory'):
+            with self.subTest(phase=phase):
+                factory = self.root/'private_error_fixture.py'
+                output = ('print("PRIVATE_OPERATOR_VALUE")\n'
+                          'print("PRIVATE_OPERATOR_VALUE", file=sys.stderr)\n'
+                          'logging.warning("PRIVATE_OPERATOR_VALUE")\n'
+                          'os.write(1, b"PRIVATE_OPERATOR_VALUE")\n'
+                          'os.write(2, b"PRIVATE_OPERATOR_VALUE")\n'
+                          'raise RuntimeError("PRIVATE_OPERATOR_VALUE")\n')
+                body = 'import sys, os, logging\n'
+                body += output if phase == 'import' else 'def factory():\n'+''.join(' '+line+'\n' for line in output.splitlines())
+                factory.write_text(body)
+                env = dict(os.environ, PYTHONPATH=str(ROOT)+os.pathsep+str(self.root))
+                result = subprocess.run([sys.executable, '-B', '-m', MODULE, '--target', str(self.target),
+                                         '--revision', self.revision, '--binding', 'private_error_fixture:factory',
+                                         '--authorized'], cwd=ROOT, env=env, text=True,
+                                        capture_output=True, timeout=5)
+                self.assertEqual(result.returncode, 2)
+                self.assertNotIn('PRIVATE_OPERATOR_VALUE', result.stdout+result.stderr)
+                self.assertNotIn('Traceback', result.stdout+result.stderr)
+                self.assertEqual(result.stderr, '')
+                self.assertEqual(json.loads(result.stdout)['code'], 'project_tests_unavailable')
 
 
 class ReviewSkillRegression(unittest.TestCase):
