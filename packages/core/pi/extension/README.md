@@ -10,6 +10,12 @@ Checked2026-11-09 against the installed `@earendil-works/pi-coding-agent`1.0.0 d
 
 The widget polls bounded status/events without inserting new model turns. It distinguishes queued/running/unknown tasks and known spend/reservations. A session switch or reload aborts the old poll; a response for the former session cannot update the new session. Only the selected run identity is restored from pi custom entries. Detailed results are requested explicitly rather than dumping worker transcripts into the parent context. Closing the UI stops its polling, not the durable run.
 
+## Ordinary task entry
+
+The `before_agent_start` hook appends one bounded Palarran entry block to the existing `event.systemPrompt`. It preserves earlier provider/project instructions and uses an idempotent marker. The block points to the installed canonical domain, decision-memory, global-memory and parallelism guides using physical paths derived from the extension location. It asks the agent to read only the relevant sections and current project sources, retain accepted decisions, consider independent parallel work and report unperformed checks as NOT_RUN.
+
+This is instruction-based integration, not execution interception or additional permission. It reads no guide contents, starts no process/model turn, and does not automatically call memory, spawn workers or spend money. The UTF-8 block is capped at1536bytes; unavailable/nonregular guide files or longer path combinations leave the existing prompt intact and produce one fixed UI warning. Later pi extensions can still replace the prompt, so native loading does not establish universal enforcement. The installed1.0.0 `BeforeAgentStartEventResult` and bundled `claude-rules.ts` example support this append pattern; SDK upgrades require checking the actual declarations again.
+
 ## Transport and safety
 
 Default state is `~/.palarran/pi/state.sqlite`; an operator can set the absolute `PALARRAN_PI_STATE` path. The client invokes the fixed adjacent `supervisor.mjs` through the current Node executable, with a bounded JSON stdin request, bounded JSON response, discarded stderr, a scrubbed environment and a deadline. Timeout/abort of a mutating command is an unknown outcome, never evidence of rollback and never an automatic retry. All authorities remain in the supervisor. This trusted extension is not a sandbox for arbitrary project shell commands.
