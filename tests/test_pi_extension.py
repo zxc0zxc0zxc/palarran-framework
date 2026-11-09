@@ -51,6 +51,19 @@ assert.equal(calls[0].command,'spawn');assert.deepEqual(calls[0].payload.parent,
 assert.equal(calls[0].payload.command,undefined);assert.equal(modelMessages,0);
 """)
 
+    def test_task_acceptance_is_normalized_and_string_profiles_are_rejected(self):
+        self.js(self.prefix()+"""
+const calls=[];registerPalarran(pi,{...dependencies,rpc:async(command,payload)=>{calls.push({command,payload});return {status:'QUEUED',run_id:'run-a'}}});
+const ctx=context();await handlers.get('session_start')({},ctx);
+const task={task_id:'one',goal:'Inspect',acceptance:'No regressions',repository:process.cwd(),profile:{kind:'fake'}};
+await tools.get('swarm_spawn').execute('t',{idempotency_key:'key-a',tasks:[task]},undefined,undefined,ctx);
+assert.deepEqual(calls[0].payload.tasks[0].acceptance,['No regressions']);
+await tools.get('swarm_follow_up').execute('f',{run_id:'run-a',task_id:'one',idempotency_key:'key-b',task:{...task,task_id:'two'}},undefined,undefined,ctx);
+assert.deepEqual(calls[1].payload.task.acceptance,['No regressions']);
+const before=calls.length;const bad=await tools.get('swarm_spawn').execute('x',{idempotency_key:'key-c',tasks:[{...task,profile:'smart'}]},undefined,undefined,ctx);
+assert.equal(bad.isError,true);assert.equal(calls.length,before);
+""")
+
     def test_old_session_poll_cannot_update_the_new_parent(self):
         self.js(self.prefix()+"""
 let finish;const calls=[];
