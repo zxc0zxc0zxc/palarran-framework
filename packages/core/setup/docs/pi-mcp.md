@@ -17,7 +17,7 @@ python3.11 packages/core/setup/pi_mcp.py \
 
 `--home` and `--agent-dir` select an explicit operator/test home and personal pi directory. Only `engineering-memory` or `engineering_memory` may be selected. The target name is `engineering_memory`. No source entry means DEFERRED with no write; it never creates a new memory service. This does not copy Keenable, HTTP headers, other Codex servers, credentials into project files, tunnels or memory policies. Migration itself performs no server execution, network connection, model request or deployment.
 
-Only an already configured trusted absolute regular executable and literal stdio fields are reused. Shell/package-manager launchers, inline interpreter execution, HTTP/mixed transports, unknown execution/access restrictions, relative cwd and dynamic pi env syntax (`${...}` or `!command`) are rejected for operator review. This migration is not a sandbox or an audit of the selected program. Existing local wrappers remain local; executable bytes are not copied.
+Only an already configured trusted absolute regular executable and literal stdio fields are reused. Shell/package-manager launchers, inline interpreter execution, HTTP/mixed transports, unknown execution/access restrictions, relative cwd and dynamic pi env syntax (`${...}` or `!command`) are rejected for operator review. Executable-path rejection consistently reports `unsafe_executable`, including symlinked executable files or parent directories on merged-`/usr` Linux layouts; those aliases are not followed or accepted. Source/receipt path failures retain metadata diagnostics. This migration is not a sandbox or an audit of the selected program. Existing local wrappers remain local; executable bytes are not copied.
 
 ## Ownership and recovery
 
