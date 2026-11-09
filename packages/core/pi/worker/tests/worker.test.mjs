@@ -4,6 +4,9 @@ import {mkdtempSync, existsSync, mkdirSync, writeFileSync, symlinkSync, linkSync
 import {tmpdir} from 'node:os';
 import {join,dirname} from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {createHash} from 'node:crypto';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {createGatedFetch, GateError} from '../gate.mjs';
 import {runWorker, guardToolCall, createSdkSession, createSafeTools} from '../worker.mjs';
 
@@ -61,6 +64,13 @@ test('installed SDK HTTP transport actually traverses reservation gate with fake
   f.config.profile={...f.config.profile,sdk_path:sdkPath,model:physical.id};f.config.limits.seconds=5;
   const result=await runWorker(f.config,{env:{PI_TEST_KEY:'synthetic-not-real-key'},rpc:async(command,payload)=>{if(command==='mailbox')return{status:'MESSAGES',cursor:0,messages:[]};if(command==='request_admit'){admissions.push(payload);return{status:'ADMITTED',request_id:payload.request_id}}if(command==='request_complete'){completions.push(payload);return{status:'RECORDED'}}throw new Error('Unexpected broker command')},transport:async()=>{calls++;const chunks=[{id:'fixture',object:'chat.completion.chunk',created:1,model:physical.id,choices:[{index:0,delta:{role:'assistant',content:'SDK HTTP fixture complete'},finish_reason:null}]},{id:'fixture',object:'chat.completion.chunk',created:1,model:physical.id,choices:[{index:0,delta:{},finish_reason:'stop'}]},{id:'fixture',object:'chat.completion.chunk',created:1,model:physical.id,choices:[],usage:{prompt_tokens:10,completion_tokens:2}}];return new Response(chunks.map(x=>'data: '+JSON.stringify(x)+'\n\n').join('')+'data: [DONE]\n\n',{headers:{'content-type':'text/event-stream'}})}});
   assert.equal(result.status,'COMPLETED',JSON.stringify(result));assert.equal(result.sdk_settled,true);assert.equal(result.acceptance,'NOT_RUN');assert.equal(network,0);assert.equal(calls,1);assert.equal(admissions.length,1);assert.equal(completions[0].outcome,'known');assert.equal(completions[0].usage.cost_micros,14);assert.equal(existsSync(join(f.artifacts,'pi-agent/auth.json')),false);
+  assert(result.session_checkpoint);const checkpoint=join(f.artifacts,result.session_checkpoint.path);const prior=readFileSync(checkpoint);
+  assert.equal(result.session_checkpoint.sha256,createHash('sha256').update(prior).digest('hex'));
+  const nextArtifacts=join(f.root,'next-artifacts');mkdirSync(nextArtifacts);const nextWorkspace=join(f.root,'next-workspace');mkdirSync(nextWorkspace);let priorContext=false;
+  const next={...f.config,attempt_id:'a2',artifact_dir:nextArtifacts,workspace:nextWorkspace,session_checkpoint:{path:checkpoint,sha256:result.session_checkpoint.sha256},prompt:'Continue from the prior fixture answer'};
+  const continued=await runWorker(next,{env:{PI_TEST_KEY:'synthetic-not-real-key'},rpc:async(command,payload)=>command==='mailbox'?{status:'MESSAGES',cursor:0,messages:[]}:command==='request_admit'?{status:'ADMITTED',request_id:payload.request_id}:{status:'RECORDED'},transport:async(_url,options)=>{priorContext=options.body.includes('SDK HTTP fixture complete')&&options.body.includes('Return bounded fixture answer');return new Response('data: '+JSON.stringify({id:'next',object:'chat.completion.chunk',created:1,model:physical.id,choices:[{index:0,delta:{role:'assistant',content:'Continued fixture'},finish_reason:'stop'}]})+'\n\n'+usage,{headers:{'content-type':'text/event-stream'}})}});
+  assert.equal(continued.status,'COMPLETED',JSON.stringify(continued));assert.equal(priorContext,true);assert.deepEqual(readFileSync(checkpoint),prior);assert.equal(network,0);
+
  } finally {globalThis.fetch=originalFetch;rmSync(f.root,{recursive:true,force:true})}
 });
 
@@ -80,3 +90,7 @@ test('installed Anthropic SDK transport traverses gate with fake SSE', {skip:!pr
 });
 
 test('Anthropic SDK beta query is allowed but arbitrary query values are rejected',async()=>{const p={...profile,provider:'anthropic',api:'anthropic-messages',base_url:'https://api.example.invalid'};const h=harness({profile:p});await(await h.fetch('https://api.example.invalid/v1/messages?beta=true',request)).text();assert.equal(h.calls.length,1);await assert.rejects(h.fetch('https://api.example.invalid/v1/messages?secret=PRIVATE',request),e=>e.code==='request_not_allowed');assert.equal(h.calls.length,1)});
+
+test('changed checkpoint hash is rejected before SDK load',async()=>{const f=setup();let imports=0;try{writeFileSync(join(f.root,'package.json'),JSON.stringify({name:'@earendil-works/pi-coding-agent',version:'1.0.0'}));const checkpoint=join(f.root,'checkpoint.jsonl');writeFileSync(checkpoint,'{"type":"session","id":"fixture"}\n');f.config.session_checkpoint={path:checkpoint,sha256:'0'.repeat(64)};await assert.rejects(createSdkSession(f.config,{importSdk:async()=>{imports++;throw new Error('must not import')},env:{PI_TEST_KEY:'fixture'}}),e=>e.code==='checkpoint_changed');assert.equal(imports,0)}finally{rmSync(f.root,{recursive:true,force:true})}});
+
+test('CLI discards SDK stdout/stderr diagnostics before its one safe result',()=>{const f=setup();try{writeFileSync(join(f.root,'package.json'),JSON.stringify({name:'@earendil-works/pi-coding-agent',version:'1.0.0',type:'module'}));mkdirSync(join(f.root,'dist'));writeFileSync(join(f.root,'dist/index.js'),"process.stdout.write('PRIVATE_OPERATOR_STDOUT');process.stderr.write('PRIVATE_OPERATOR_STDERR');console.warn('PRIVATE_OPERATOR_LOG');throw new Error('PRIVATE_OPERATOR_ERROR');");const result=spawnSync(process.execPath,[fileURLToPath(new URL('../worker.mjs',import.meta.url)),'--palarran-attempt','a1'],{input:JSON.stringify(f.config),encoding:'utf8',env:{PATH:process.env.PATH,HOME:'/nonexistent',PI_TEST_KEY:'fixture'}});assert.equal(result.status,2);const data=JSON.parse(result.stdout);assert.equal(data.type,'result');assert.equal(data.result.status,'FAILED');assert(!result.stdout.includes('PRIVATE_OPERATOR'));assert(!result.stderr.includes('PRIVATE_OPERATOR'))}finally{rmSync(f.root,{recursive:true,force:true})}});
