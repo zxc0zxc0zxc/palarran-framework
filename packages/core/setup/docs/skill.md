@@ -4,6 +4,8 @@ Mandatory alongside [installation/safe updates](README.md), [decision memory](..
 
 ## Resolve context
 
+For a requested pi personal installation, follow [pi setup](pi.md) and use the dedicated `pi_setup.py`; the project installer does not accept `--client pi`. Native pi exposes `/skill:palarran-setup`. Preserve the receipt-defined package scope on updates.
+
 Arguments: `/palarran:setup {target?} [--client codex|claude|both] [--plan]`. Target is an explicit directory or current project root; clarify only target if ambiguous. Do not select the library checkout instead of the app. Read target AGENTS/INDEX/accepted ADRs. New installs choose the current Codex/Claude agent; both clients only if requested. Updates inherit client from receipt without expanding scope.
 
 Source is a complete trusted palarran checkout with committed HEAD or verified public snapshot. Customized installed libraries are not update sources. Bootstrap-only plugins need full source: use an existing trusted checkout; otherwise clone the known repository into a new dedicated directory and verify origin/HEAD. Never reset/stash/pull others' changes or run remote-shell pipes. Under --plan no clone/fetch/install: missing source is a blocker. For ordinary unpinned updates the agent checks known-origin default-branch HEAD readonly (`git ls-remote --symref URL HEAD`). If trusted checkout is behind, obtain a new separate checkout/verify origin/exact commit without changing the old one. Explicit user pins win; inaccessible remotes cannot be called latest. CLI itself does not fetch/update source; record selected revision, never distribute dirty/untracked content.

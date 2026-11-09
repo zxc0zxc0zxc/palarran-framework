@@ -56,6 +56,11 @@
           "id": "packaging",
           "status": "implemented",
           "description": "Reviewed custom package authoring, scoped registry and ownership-aware lifecycle."
+        },
+        {
+          "id": "pi",
+          "status": "implemented",
+          "description": "Pi-native skills, durable scoped workers, request gates and verified code integration."
         }
       ],
       "skills": [

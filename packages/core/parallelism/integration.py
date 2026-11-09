@@ -124,7 +124,12 @@ def _git(path, *args):
 
 class IntegrationQueue:
     """One coordinator-owned queue, never an independent financial authority."""
-    def __init__(self, db_path, *, gate_registry, budget_binding):
+    def __init__(self, db_path, *, gate_registry, budget_binding, git_identity=None):
+        if git_identity is not None:
+            if not isinstance(git_identity, dict) or set(git_identity) != {"name", "email"} or any(not isinstance(v, str) or not v or len(v) > 128 or any(ord(c) < 32 for c in v) for v in git_identity.values()):
+                raise ValueError("invalid reviewed Git identity")
+        self.git_identity = git_identity
+        self.git_args = [] if git_identity is None else ["-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "commit.gpgsign=false", "-c", "user.name=" + git_identity["name"], "-c", "user.email=" + git_identity["email"]]
         self.path = Path(db_path).absolute()
         if any(p.is_symlink() for p in (self.path, *self.path.parents)):
             raise ValueError("private queue paths cannot be symlinks")
@@ -150,6 +155,8 @@ class IntegrationQueue:
             row = self.db.execute("SELECT data FROM queue WHERE id=1").fetchone()
             if row:
                 self.state = json.loads(row[0])
+                if self.state.get("git_identity") != self.git_identity:
+                    raise ValueError("frozen Git identity changed")
                 if self.state["registry_sha256"] != self.registry_sha256:
                     raise ValueError("frozen gate registry changed")
                 pending = self.db.execute("SELECT id FROM operations WHERE status IN ('intent','observed')").fetchall()
@@ -341,7 +348,7 @@ class IntegrationQueue:
                     if any(root == resolved or root in resolved.parents for root in (repo, worktree)):
                         raise ValueError("independent gate code must be outside application worktrees")
             self.state = dict(run_id=run_id, repo=str(repo), base_commit=base_commit, head=base_commit,
-                              branch=branch, worktree=str(worktree), items=normalized,
+                              branch=branch, worktree=str(worktree), items=normalized, git_identity=self.git_identity,
                               required_gates=required_gates, registry_sha256=self.registry_sha256,
                               status="pending", reason=None, final_checks=[], fingerprint=None, final_attempt=0, acceptance=None)
             self._save()
@@ -358,7 +365,7 @@ class IntegrationQueue:
 
     def _mutate(self, cwd, args, kind, ticket):
         operation = self._intent(kind, {"head": self.state["head"], "item": self.state.get("current")})
-        result = execute([GIT, "--no-replace-objects", "-C", str(cwd), *args], str(cwd),
+        result = execute([GIT, "--no-replace-objects", *self.git_args, "-C", str(cwd), *args], str(cwd),
                          timeout=30, output_limit=65536, env=ENV, heartbeat=lambda: self.budget.heartbeat(ticket))
         if result.reason != "exited" or getattr(result, "stopped", None) is not True:
             self._done(operation, "unknown", {"output_sha256": result.output_sha256})

@@ -68,6 +68,17 @@ Tell your agent:
 
 A runbook defines supported inputs and exact checks. An unsupported host or an uncertain previous operation needs reconciliation or a reviewed procedure extension before changes.
 
+### Pi agent
+
+Install the selected native pi package from a trusted clean checkout:
+
+```sh
+python3 packages/core/setup/pi_setup.py --source /ABSOLUTE/palarran-framework --packages all --plan
+python3 packages/core/setup/pi_setup.py --source /ABSOLUTE/palarran-framework --packages all
+```
+
+The installer preserves existing pi settings, models, authentication, extensions and themes. Reload pi to discover `/swarm` and `/skill:palarran-…` commands. The [pi guide](packages/core/pi/docs/README.md) separates queue size, running workers, HTTP streams, cumulative run budgets and independently verified results. SDK workers currently support explicitly reviewed pi1.0.0 OpenAI/Anthropic HTTP profiles; the main pi conversation and other extensions are outside this worker ledger. Setup and offline checks make no paid model calls.
+
 ## Overall architecture
 
 Palarran is designed for distributed, parallel engineering: split independent work, execute it on approved developer machines, and scale participation while keeping one coordinator and one root ledger. A product can span multiple repositories; its feature passport binds owners, contracts, dependencies and the exact composition to accept.

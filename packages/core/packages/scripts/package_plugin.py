@@ -256,6 +256,19 @@ def _legacy_package(namespace, output, root=ROOT):
         helpers += ["packages/core/parallelism/fixtures/features/" + name for name in ("service.py", "check.py")]
         helpers += ["packages/core/parallelism/assets/" + name for name in ("dashboard.html", "dashboard.css", "dashboard.js")]
         helpers += ["packages/core/setup/temporal_config.py"]
+        # Pi is a Core capability. Keep this closure explicit: no journals,
+        # state databases, credentials, worker sessions or Node test fixtures.
+        pi_resources = ["README.md", "AGENTS.md", "supervisor.mjs", "control.mjs", "store.mjs", "validation.mjs",
+                        "execution.mjs", "integration.mjs", "bridge.py", "context.mjs", "fake-worker.mjs",
+                        "docs/README.md", "docs/contract.md", "docs/sources.md", "docs/context.md",
+                        "extension/index.ts", "extension/core.mjs", "extension/rpc.mjs", "extension/README.md",
+                        "worker/worker.mjs", "worker/gate.mjs", "worker/README.md"]
+        helpers += ["packages/core/pi/" + name for name in pi_resources]
+        helpers += ["packages/core/setup/pi_setup.py", "packages/core/setup/pi_mcp.py"]
+        # The existing integration queue imports these canonical modules.
+        helpers += ["packages/core/orchestration/runtime/" + name for name in
+                    ("__init__.py", "runner.py", "diagnostics.py", "workspaces.py")]
+
         helpers += ["packages/core/orchestration/runtime/" + name + ".py" for name in
                     ("__init__", "runner", "usage", "diagnostics", "accounting", "budgets", "workspaces")]
         resources += [name for name in helpers if source_path(root, name).is_file()]

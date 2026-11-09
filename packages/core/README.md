@@ -17,3 +17,7 @@ Shared agent foundations, runtime, setup and safe package discovery.
 - **coop** (implemented): Repository-scoped cooperative agent receiver and alerts. 
 
 - **packaging** (implemented): Custom package authoring, public/private registry and scoped install/update/removal. [docs](packaging/docs/README.md) · [skills](packaging/skills/)
+
+## Pi integration
+
+[Pi runtime](pi/docs/README.md) adds a durable local queue, native `/swarm` tools/widget, bounded SDK workers and existing independent integration gates. [Personal setup](setup/docs/pi.md) installs selected skills and the extension without replacing user models, authentication or custom extensions. Supported workers use pinned pi1.0.0 HTTP providers; live provider/scale acceptance remains separate.
