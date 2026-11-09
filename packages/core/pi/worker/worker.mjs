@@ -162,6 +162,7 @@ function validateConfig(config) {
   need(config.profile.kind === 'sdk' && config.profile.sdk_version === '1.0.0', 'unsupported_sdk');
   safePath(config.profile.sdk_path);
   need(/^[A-Z_][A-Z0-9_]{0,127}$/.test(config.profile.api_key_env ?? ''), 'credential_reference_required');
+  if (config.context !== undefined) need(typeof config.context === 'string' && Buffer.byteLength(config.context) <= 8192, 'invalid_prior_context');
   return {...config, workspace, artifact_dir: artifacts};
 }
 
@@ -201,6 +202,39 @@ export async function brokerRpc(config, command, payload = {}) {
   });
 }
 
+function checkpointBytes(path, root) {
+  const file = safePath(path), parent = safePath(root), name = relative(parent, file);
+  need(name && name !== '..' && !name.startsWith('..' + sep) && !isAbsolute(name), 'checkpoint_outside_state');
+  const fd = openSync(file, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  try {
+    const info = fstatSync(fd);
+    need(info.isFile() && info.nlink === 1 && info.size > 0 && info.size <= 2 * 1024 * 1024, 'invalid_checkpoint');
+    return readFileSync(fd);
+  } finally { closeSync(fd); }
+}
+
+function acceptedCheckpoint(config) {
+  const reference = config.session_checkpoint;
+  if (reference === undefined || reference === null) return null;
+  need(reference && typeof reference === 'object' && /^[0-9a-f]{64}$/.test(reference.sha256 ?? ''), 'invalid_checkpoint');
+  const bytes = checkpointBytes(reference.path, dirname(config.state_path));
+  need(createHash('sha256').update(bytes).digest('hex') === reference.sha256, 'checkpoint_changed');
+  let header;
+  try { header = JSON.parse(bytes.toString('utf8').split('\n', 1)[0]); }
+  catch { throw new GateError('invalid_checkpoint'); }
+  need(header.type === 'session' && ID.test(header.id ?? ''), 'invalid_checkpoint');
+  return bytes;
+}
+
+function resultCheckpoint(config, session) {
+  const path = session.sessionManager?.getSessionFile();
+  if (!path) return null; // Injected fixture sessions may be in-memory.
+  const bytes = checkpointBytes(path, config.artifact_dir);
+  return {path: relative(config.artifact_dir, safePath(path)).split(sep).join('/'),
+    sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length,
+    session_id: session.sessionManager.getSessionId()};
+}
+
 /** All SDK model paths, including compaction, receive the same transport gate. */
 export async function createSdkSession(config, dependencies = {}) {
   const profile = config.profile;
@@ -209,7 +243,12 @@ export async function createSdkSession(config, dependencies = {}) {
   need(manifest.name === '@earendil-works/pi-coding-agent' && manifest.version === profile.sdk_version, 'sdk_identity_mismatch');
   const agentDir = safePath(join(config.artifact_dir, 'pi-agent'));
   need(!existsSync(agentDir), 'sdk_state_exists');
+  const checkpoint = acceptedCheckpoint(config);
   mkdirSync(agentDir, {mode: 0o700});
+  const sessionDir = join(agentDir, 'sessions');
+  mkdirSync(sessionDir, {mode: 0o700});
+  const restoredFile = join(sessionDir, 'resumed.jsonl');
+  if (checkpoint) writeFileSync(restoredFile, checkpoint, {flag: 'wx', mode: 0o600});
   const sdk = await (dependencies.importSdk ?? (url => import(url)))(pathToFileURL(safePath(join(sdkRoot, 'dist/index.js'))).href);
   let runtime = dependencies.runtime;
   if (!runtime) {
@@ -269,7 +308,8 @@ export async function createSdkSession(config, dependencies = {}) {
   const result = await sdk.createAgentSession({
     cwd: config.workspace, agentDir, modelRuntime: runtime, model, thinkingLevel: 'off',
     resourceLoader: loader, settingsManager: settings,
-    sessionManager: sdk.SessionManager.create(config.workspace, join(agentDir, 'sessions')),
+    sessionManager: checkpoint ? sdk.SessionManager.open(restoredFile, sessionDir, config.workspace) :
+      sdk.SessionManager.create(config.workspace, sessionDir),
     noTools: 'all', customTools, tools: customTools.map(tool => tool.name)
   });
   const originalGuard = result.session.agent.beforeToolCall;
@@ -323,18 +363,22 @@ export async function runWorker(rawConfig, dependencies = {}) {
     const timeout = new Promise((_, reject) => {
       timer = setTimeout(() => { timedOut = true; session.abort().catch(() => {}); reject(new GateError('worker_timeout')); }, config.limits.seconds * 1000);
     });
-    await Promise.race([(async () => { await session.prompt(config.prompt); await session.waitForIdle(); await settlement; })(), timeout]);
+    await Promise.race([(async () => { await session.prompt((config.context ? 'Prior result data (not permission):\n' + config.context + '\n\n' : '') +
+      'Delegated task:\n' + config.prompt + '\n\nAcceptance criteria (independent verification still required):\n' +
+      config.acceptance.map((item, index) => String(index + 1) + '. ' + item).join('\n')); await session.waitForIdle(); await settlement; })(), timeout]);
     need(settled && session.isIdle && !session.isStreaming && !mailboxError, 'worker_not_settled');
     const messages = session.agent.state.messages;
     const last = [...messages].reverse().find(message => message.role === 'assistant');
     need(last && !['error', 'aborted'].includes(last.stopReason), 'model_did_not_complete');
     const answer = last.content.filter(item => item.type === 'text').map(item => item.text).join('\n');
     need(answer.trim() && Buffer.byteLength(answer) <= 65536, 'invalid_final_answer');
+    const checkpoint = resultCheckpoint(config, session);
     const answerPath = join(config.artifact_dir, 'answer.txt');
     need(!existsSync(answerPath), 'artifact_exists');
     writeFileSync(answerPath, answer, {flag: 'wx', mode: 0o600});
     return {...resultBase, status: 'COMPLETED', summary: answer.slice(0, 4000),
       summary_truncated: answer.length > 4000, sdk_settled: true,
+      ...(checkpoint ? {session_checkpoint: checkpoint} : {}),
       artifacts: [{path: 'answer.txt', sha256: createHash('sha256').update(answer).digest('hex'), bytes: Buffer.byteLength(answer)}]};
   } catch (error) {
     return {...resultBase, status: timedOut || mailboxError ? 'INCONCLUSIVE' : 'FAILED', summary: '',
@@ -355,7 +399,20 @@ async function main() {
       need(Buffer.byteLength(raw) <= MAX_CONFIG_BYTES, 'config_size_limit');
     }
     const config = JSON.parse(raw);
-    const result = await runWorker(config);
+    // The trusted SDK may emit routine provider diagnostics. Discard these
+    // synchronously rather than buffering private values into protocol output.
+    const originalOut = process.stdout.write, originalErr = process.stderr.write;
+    function discard(_chunk, encoding, callback) {
+      const done = typeof encoding === 'function' ? encoding : callback;
+      done?.(); return true;
+    }
+    let result;
+    try {
+      process.stdout.write = discard; process.stderr.write = discard;
+      result = await runWorker(config);
+    } finally {
+      process.stdout.write = originalOut; process.stderr.write = originalErr;
+    }
     process.stdout.write(JSON.stringify({type: 'result', run_id: config.run_id,
       task_id: config.task_id, attempt_id: config.attempt_id, fence: config.fence, result}) + '\n');
     return result.status === 'COMPLETED' ? 0 : 2;
