@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+const CREDENTIAL_NAMES=new Set(['OPENAI_API_KEY','ANTHROPIC_API_KEY']);
 const MUTATING = new Set(['spawn','send','follow_up','cancel','approve','start','recover','integrate','tick']);
 const DEFAULT_SUPERVISOR = fileURLToPath(new URL('../supervisor.mjs',import.meta.url));
 function absolute(value) {
@@ -18,7 +19,10 @@ export function createRpcClient(options={}) {
   const statePath=options.statePath??process.env.PALARRAN_PI_STATE??path.join(os.homedir(),'.palarran/pi/state.sqlite');
   const timeoutMs=options.timeoutMs??8000;
   const outputLimit=options.outputLimit??262144;
+  const credentialNames=options.credentialEnv??(process.env.PALARRAN_PI_CREDENTIAL_ENV??'').split(',').map(x=>x.trim()).filter(Boolean);
+  const validCredentials=Array.isArray(credentialNames)&&credentialNames.length<=2&&new Set(credentialNames).size===credentialNames.length&&credentialNames.every(x=>CREDENTIAL_NAMES.has(x));
   return async function rpc(command,payload={},call={}) {
+    if(!validCredentials)return {status:'REJECTED',code:'invalid_credential_selection',hint:'Select only reviewed provider credential names in operator configuration.'};
     if (!absolute(supervisorPath)||!absolute(statePath)) return {status:'REJECTED',code:'unsafe_operator_path',hint:'Use absolute operator-owned runtime and state paths.'};
     let input;
     try { input=JSON.stringify({version:1,command,payload}); }
@@ -29,6 +33,7 @@ export function createRpcClient(options={}) {
     return await new Promise(resolve=>{
       let child,finished=false,total=0,chunks=[];
       const env={PATH:process.env.PATH??'/usr/bin:/bin',HOME:os.homedir(),LANG:'C.UTF-8',NODE_NO_WARNINGS:'1'};
+      for(const name of credentialNames){const value=process.env[name];if(typeof value==='string'&&value.length>0&&value.length<=16384)env[name]=value;}
       const finish=value=>{if(finished)return;finished=true;clearTimeout(timer);call.signal?.removeEventListener('abort',abort);resolve(value);};
       const abort=()=>{child?.kill('SIGKILL');finish(rejected(command,'supervisor_aborted'));};
       const timer=setTimeout(()=>{child?.kill('SIGKILL');finish(rejected(command,'supervisor_timeout'));},timeoutMs+seconds*1000);
