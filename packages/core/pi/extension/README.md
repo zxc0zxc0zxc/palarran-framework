@@ -14,6 +14,10 @@ The widget polls bounded status/events without inserting new model turns. It dis
 
 Default state is `~/.palarran/pi/state.sqlite`; an operator can set the absolute `PALARRAN_PI_STATE` path. The client invokes the fixed adjacent `supervisor.mjs` through the current Node executable, with a bounded JSON stdin request, bounded JSON response, discarded stderr, a scrubbed environment and a deadline. Timeout/abort of a mutating command is an unknown outcome, never evidence of rollback and never an automatic retry. All authorities remain in the supervisor. This trusted extension is not a sandbox for arbitrary project shell commands.
 
+## Reviewed credential forwarding
+
+The default RPC environment does not forward model credentials. An operator may explicitly select `OPENAI_API_KEY` and/or `ANTHROPIC_API_KEY` with `PALARRAN_PI_CREDENTIAL_ENV=OPENAI_API_KEY,ANTHROPIC_API_KEY`, or supply the same names in a trusted `createRpcClient({credentialEnv:[...]})` configuration. Only those reviewed names are accepted; model-tool arguments cannot set them. Selected existing values travel only in the supervisor child environment, never the JSON request, output, widget or persistent selection record. Missing values are not replaced or inferred; the selected worker profile must still pass its own credential/provider/budget preflight. This does not load pi's global auth store or promise compatibility with arbitrary custom routers. Existing pi authentication and routing files remain untouched.
+
 ## Sources and compatibility
 
 The installed package's `dist/core/extensions/types.d.ts` defines tool execute context, `registerCommand`, `session_start`, `session_shutdown`, `setWidget` and `ReadonlySessionManager.getSessionId`; its `docs/extensions.md` documents jiti loading of TypeScript without compilation. The [upstream extension guide](https://github.com/earendil-works/pi/blob/v1.0.0/packages/coding-agent/docs/extensions.md) is versioned; later `main` may differ.
