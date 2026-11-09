@@ -130,3 +130,47 @@ class PiSetupTests(unittest.TestCase):
         result=subprocess.run([shutil.which('python3'),str(entry),'--PRIVATE_OPERATOR_VALUE'],capture_output=True,text=True)
         self.assertEqual(result.returncode,2);self.assertNotIn('PRIVATE_OPERATOR_VALUE',result.stdout+result.stderr)
         self.assertEqual(json.loads(result.stdout)['code'],'invalid_arguments')
+
+    def test_interrupted_receipt_update_restores_only_exact_owned_settings(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source,home,agent,_=self.fixture(Path(temporary).resolve())
+            before=(agent/'settings.json').read_bytes();module=self.module();original=module._atomic
+            def fail_receipt(path,raw,expected):
+                if path.name=='installation.json' and path.parent.name=='pi':
+                    raise OSError('PRIVATE_OS_ERROR')
+                return original(path,raw,expected)
+            with mock.patch.object(module,'_atomic',side_effect=fail_receipt):
+                with self.assertRaises(OSError):self.install(source,home,packages=['all'])
+            self.assertEqual((agent/'settings.json').read_bytes(),before)
+            self.assertTrue((home/'.palarran/pi/pending.json').exists())
+            with self.assertRaisesRegex(ValueError,'recovery_required'):self.install(source,home,packages=['all'])
+
+    def test_global_selection_is_inherited_without_implicit_all(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source,home,agent,_=self.fixture(Path(temporary).resolve())
+            (home/'.palarran').mkdir();(home/'.palarran/config.json').write_text('{"packages":["code"]}')
+            result=self.install(source,home,plan=True)
+            self.assertEqual(result['packages'],['core','code'])
+            self.assertLess(result['skill_count'],58)
+
+    @unittest.skipUnless(Path('/Users/zxc0zxc0zxc/.pi/agent/install/releases/1.0.0/node_modules/@earendil-works/pi-coding-agent/dist/index.js').is_file() and shutil.which('node'),'installed pi1.0.0 optional offline loader')
+    def test_actual_pi_loader_discovers_native_skills_and_extension_without_models(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source,home,agent,_=self.fixture(Path(temporary).resolve())
+            (agent/'settings.json').write_text('{"enableInstallTelemetry":false}')
+            (agent/'extensions/custom.ts').write_text('export default function() {}')
+            result=self.install(source,home,packages=['all'])
+            sdk='/Users/zxc0zxc0zxc/.pi/agent/install/releases/1.0.0/node_modules/@earendil-works/pi-coding-agent/dist/index.js'
+            script="""
+const {DefaultResourceLoader,SettingsManager}=await import(process.argv[1]);
+const agentDir=process.argv[2],cwd=process.argv[3];
+const loader=new DefaultResourceLoader({cwd,agentDir,settingsManager:SettingsManager.create(cwd,agentDir),noContextFiles:true,noPromptTemplates:true,noThemes:true});
+await loader.reload();
+const skills=loader.getSkills(),extensions=loader.getExtensions();
+console.log(JSON.stringify({skills:skills.skills.map(s=>s.name),diagnostics:skills.diagnostics.length,extensions:extensions.extensions.length,errors:extensions.errors}));
+"""
+            env={'PATH':os.environ.get('PATH','/usr/bin:/bin'),'HOME':str(home),'PI_CODING_AGENT_DIR':str(agent)}
+            checked=subprocess.run([shutil.which('node'),'--input-type=module','-e',script,sdk,str(agent),str(home)],capture_output=True,text=True,env=env,timeout=30)
+            self.assertEqual(checked.returncode,0,checked.stderr)
+            observed=json.loads(checked.stdout.strip().splitlines()[-1]);self.assertEqual(observed['extensions'],2);self.assertEqual(len(observed['skills']),58);self.assertEqual(observed['errors'],[])
+            self.assertIn('palarran-code-review',observed['skills'])
