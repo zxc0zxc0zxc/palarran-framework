@@ -1,0 +1,13 @@
+# Task context and checkpoint references
+
+Checked2026-11-09. This helper follows the bounded-original-source contract: [AGENTS authoring](../../agents/docs/agents-authoring.md) and the parent [pi integration contract](contract.md). Native checkpoint header version3 is observed in installed pi1.0.0 `SessionManager.CURRENT_SESSION_VERSION`. Filesystem operations follow [Node fs](https://nodejs.org/api/fs.html); the following bounds and scope rules are Palarran policy, not a sandbox guarantee.
+
+`buildTaskContext({workspace,files=[],goal,prior=null,dependencies=[]})` reads root `AGENTS.md` and existing ancestor `AGENTS.md` files for the exact owned relative files. Sources are deduplicated, ordered parent-before-child and identified by relative path and SHA256. No user-global instructions, recursive documentation tree, unrelated module instructions or file contents are loaded. A physical existing workspace is required; verified Darwin system-root aliases may be canonicalized, but arbitrary symlinks and traversal are rejected. Missing owned files are allowed for planned new code.
+
+Each instruction file must be a regular single-link bounded UTF-8 file of at most16KiB. The complete instruction/goal prompt is at most64000UTF-8 bytes. Required oversize, invalid text or unsafe paths fail closed; instructions are never silently truncated. No file, directory or ignore rule is written. Filesystem guards constrain ordinary access and do not establish OS containment against concurrent hostile filesystem changes.
+
+Prior/dependency results are caller-sanitized compact JSON data, labelled as evidence rather than instructions or permissions. They appear separately in `context`, bounded to8192UTF-8 bytes; raw transcript/reasoning and credential-key fields are rejected. Large data fails rather than being clipped. This is compact prior-result transfer, not native session restoration.
+
+`validateCheckpoint(artifact_dir,metadata)` accepts only a relative artifact path, SHA256 and optional exact bytes/session ID. It validates containment, no symlink/traversal, regular single-link file, a2MiB bound, hash and native version3 session header. The returned `{path,sha256,bytes,session_id}` contains an absolute private path and metadata only, never transcript. The supervisor owns parent/agent lineage, current fencing token and CAS promotion after stop/verification; this helper cannot authorize checkpoint adoption. Private native history stays outside shareable artifact exports.
+
+Offline checks: `python3 -m unittest discover -s tests -p test_pi_context.py -v`. Synthetic filesystem cases cover module selection, size/encoding/ownership boundaries, data limits and checkpoint drift. No model/provider/global configuration call is made.
