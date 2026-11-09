@@ -169,7 +169,7 @@ const r=await rpc('spawn',{{}});assert.equal(r.status,'REJECTED');assert.equal(r
             script.write_text(f"import fs from 'node:fs';fs.appendFileSync({json.dumps(str(marker))},'1');console.error('PRIVATE_OPERATOR_VALUE');setTimeout(()=>{{}},60000);")
             output=self.js(f"""
 import {{ createRpcClient }} from {json.dumps((EXT/'rpc.mjs').as_uri())};
-const rpc=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))},timeoutMs:80}});
+const rpc=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))},timeoutMs:1000}});
 const result=await rpc('spawn',{{idempotency_key:'same'}});
 assert.equal(result.status,'UNKNOWN');assert.equal(result.code,'supervisor_timeout');console.log(JSON.stringify(result));
 """)

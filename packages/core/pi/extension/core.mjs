@@ -14,6 +14,13 @@ const scrub=(value,limit=120)=>String(value??'').replace(/[\x00-\x1f\x7f-\x9f]/g
 const count=value=>Number.isSafeInteger(value)&&value>=0?String(value):'?';
 const money=value=>Number.isSafeInteger(value)&&value>=0?'$'+(value/1e6).toFixed(4):'unknown';
 function error(code){return {status:'REJECTED',code,hint:'Use the current pi session and a scoped run; no automatic retry.'};}
+function normalizeTask(value){
+  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('invalid_task');
+  const task={...value};
+  if(typeof task.acceptance==='string')task.acceptance=[task.acceptance];
+  if(task.profile!==undefined&&(!task.profile||typeof task.profile!=='object'||Array.isArray(task.profile)||!['fake','sdk'].includes(task.profile.kind)))throw new Error('invalid_task_profile');
+  return task;
+}
 export async function resolveRepository(cwd){
   const physical=await fs.realpath(cwd);
   try {
@@ -118,6 +125,8 @@ export function registerPalarran(pi,options={}){
     const parent=await parentFor(ctx);
     const payload={};
     for(const name of KEYS[command]??[])if(Object.hasOwn(params??{},name))payload[name]=params[name];
+    if(command==='spawn'&&Array.isArray(payload.tasks))payload.tasks=payload.tasks.map(normalizeTask);
+    if(command==='follow_up')payload.task=normalizeTask(payload.task);
     payload.parent=parent;
     if(!payload.run_id&&command!=='spawn')payload.run_id=known.get(key(parent));
     const value=await rpc(command,payload,{signal});
