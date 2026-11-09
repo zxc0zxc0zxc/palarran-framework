@@ -353,7 +353,7 @@ def main(argv=None):
         print(json.dumps(result, sort_keys=True)); return 0
     except PiSetupError as error:
         print(json.dumps(error.report(), sort_keys=True)); return 2
-    except (ValueError, OSError, TypeError, KeyError, RuntimeError):
+    except (ValueError, OSError, TypeError, KeyError, RuntimeError, subprocess.SubprocessError):
         print(json.dumps(PiSetupError('pi_setup_unavailable').report(), sort_keys=True)); return 2
 
 
