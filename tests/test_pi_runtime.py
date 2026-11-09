@@ -2,7 +2,8 @@
 import hashlib,json,os,shutil,signal,subprocess,sys,tempfile,time,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];CLI=ROOT/'packages/core/pi/supervisor.mjs';NODE=shutil.which('node')
-@unittest.skipUnless(NODE,'Node.js optional')
+from pi_support import NODE_SQLITE
+@unittest.skipUnless(NODE_SQLITE,'Optional Node with built-in SQLite required')
 class PiRuntimeTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name).resolve();self.repo=self.root/'repo';self.repo.mkdir();self.state=self.root/'private/state.sqlite';self.parent={'session_id':'p1','repository':str(self.repo)};self.daemon=None

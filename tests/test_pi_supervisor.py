@@ -3,17 +3,19 @@ import json,os,subprocess,tempfile,unittest
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 CLI=ROOT/'packages/core/pi/supervisor.mjs'
+from pi_support import NODE, NODE_SQLITE
+@unittest.skipUnless(NODE_SQLITE, 'Optional Node with built-in SQLite required')
 class PiSupervisorTests(unittest.TestCase):
  def setUp(self):
   self.tmp=tempfile.TemporaryDirectory();self.root=Path(self.tmp.name).resolve();self.repo=self.root/'repo';self.repo.mkdir();self.state=self.root/'private/state.sqlite';(self.root/'sdk').mkdir();self.parent={'session_id':'parent-a','repository':str(self.repo)}
  def tearDown(self):self.tmp.cleanup()
  def rpc(self,command,**data):
-  p=subprocess.run(['node',str(CLI),'rpc','--state',str(self.state)],input=json.dumps({'version':1,'command':command,'payload':dict(parent=self.parent,**data)}),text=True,capture_output=True,timeout=15)
+  p=subprocess.run([NODE,str(CLI),'rpc','--state',str(self.state)],input=json.dumps({'version':1,'command':command,'payload':dict(parent=self.parent,**data)}),text=True,capture_output=True,timeout=15)
   self.assertTrue(p.stdout,p.stderr);return json.loads(p.stdout)
  def spawn(self,key='one',tasks=None,**kw):
   return self.rpc('spawn',idempotency_key=key,tasks=tasks or [{'task_id':'task-a','goal':'Read fixture','acceptance':['Return a scoped summary'],'mode':'read','repository':str(self.repo),'depends_on':[],'files':[],'profile':{'kind':'fake'}}],**kw)
  def test_plan_performs_no_state_or_target_io(self):
-  p=subprocess.run(['node',str(CLI),'--plan','--state','/DOES_NOT_EXIST/secret'],capture_output=True,text=True);self.assertEqual(p.returncode,0);self.assertFalse(self.state.exists());self.assertEqual(json.loads(p.stdout)['writes'],0)
+  p=subprocess.run([NODE,str(CLI),'--plan','--state','/DOES_NOT_EXIST/secret'],capture_output=True,text=True);self.assertEqual(p.returncode,0);self.assertFalse(self.state.exists());self.assertEqual(json.loads(p.stdout)['writes'],0)
  def test_spawn_duplicate_ack_is_durable_and_body_conflict_is_rejected(self):
   a=self.spawn();self.assertEqual(a['status'],'QUEUED');b=self.spawn();self.assertEqual(a,b);self.assertEqual(self.rpc('status',run_id=a['run_id'])['counts']['total'],1)
   tasks=[{'task_id':'other','goal':'Different','acceptance':['Report'],'mode':'read','repository':str(self.repo),'depends_on':[],'files':[],'profile':{'kind':'fake'}}];self.assertEqual(self.spawn(tasks=tasks)['code'],'idempotency_conflict')
@@ -30,7 +32,7 @@ class PiSupervisorTests(unittest.TestCase):
   r=self.rpc('PRIVATE_SECRET_OPERATION',password='PRIVATE_OPERATOR_VALUE');self.assertEqual(r['status'],'REJECTED');self.assertNotIn('PRIVATE',json.dumps(r))
  def node(self,body):
   script=f"import {{Store}} from {json.dumps((ROOT/'packages/core/pi/store.mjs').as_uri())};import {{handle,claim}} from {json.dumps((ROOT/'packages/core/pi/control.mjs').as_uri())};import {{finishAttempt}} from {json.dumps((ROOT/'packages/core/pi/execution.mjs').as_uri())};const state={json.dumps(str(self.state))};const parent={json.dumps(self.parent)};"+body
-  p=subprocess.run(['node','--input-type=module','-e',script],text=True,capture_output=True,timeout=15);self.assertEqual(p.returncode,0,p.stderr);return json.loads(p.stdout)
+  p=subprocess.run([NODE,'--input-type=module','-e',script],text=True,capture_output=True,timeout=15);self.assertEqual(p.returncode,0,p.stderr);return json.loads(p.stdout)
  def test_unknown_live_attempts_keep_global_worker_slots(self):
   a=self.spawn();run=a['run_id']
   result=self.node("const s=new Store(state);handle(s,'approve',{parent,run_id:"+json.dumps(run)+"});const a=claim(s);s.tx(()=>{s.run(\"UPDATE attempts SET state='UNKNOWN',stopped=0 WHERE id=?\",a.attempt_id);s.run(\"UPDATE tasks SET state='UNKNOWN' WHERE run_id=?\",a.run.id);});for(let n=0;n<15;n++)s.run(\"INSERT INTO attempts(id,run_id,task_id,fence,state,started,deadline) VALUES(?,?,?,?,?,?,?)\",'orphan-'+n,a.run.id,a.task.id,1,'UNKNOWN',0,1);const p={parent,idempotency_key:'new',tasks:[{task_id:'new',goal:'read',acceptance:['summary'],profile:{kind:'fake'}}]};const b=handle(s,'spawn',p);handle(s,'approve',{parent,run_id:b.run_id});console.log(JSON.stringify({claimed:claim(s)}));s.close();")

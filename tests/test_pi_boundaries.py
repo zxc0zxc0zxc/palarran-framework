@@ -12,7 +12,8 @@ PI=ROOT/'packages/core/pi'
 NODE=shutil.which('node')
 
 
-@unittest.skipUnless(NODE,'Node.js is optional')
+from pi_support import NODE_SQLITE
+@unittest.skipUnless(NODE_SQLITE,'Optional Node with built-in SQLite required')
 class PiBoundaryTests(unittest.TestCase):
     def js(self,source,timeout=15):
         result=subprocess.run([NODE,'--input-type=module','-e',"import assert from 'node:assert/strict';\n"+source],
