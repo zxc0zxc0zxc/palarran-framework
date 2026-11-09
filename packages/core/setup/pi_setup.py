@@ -11,11 +11,15 @@ for _root in Path(__file__).resolve().parents:
         break
 
 import argparse
+import io
 import hashlib
 import json
 import os
 import re
 import stat
+import subprocess
+import tarfile
+import threading
 import uuid
 from packages.core.security.local_io import safe_path, _git
 from packages.core.packages.registry import Registry
@@ -96,6 +100,51 @@ def parse_json(raw):
     return result
 
 
+def _canonical_public_snapshot(source, revision):
+    """Keep source paths/imports unchanged; read one bounded public Git archive."""
+    command = ['/usr/bin/git', '--no-replace-objects', '--literal-pathspecs',
+               '-c', 'core.hooksPath=/dev/null', '-c', 'core.fsmonitor=false',
+               '-C', str(source), 'archive', '--format=tar', revision]
+    environment = {'PATH': '/usr/bin:/bin', 'GIT_CONFIG_NOSYSTEM': '1',
+                   'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_OPTIONAL_LOCKS': '0'}
+    process = subprocess.Popen(command, env=environment, stdout=subprocess.PIPE,
+                               stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+    timer = threading.Timer(15, process.kill)
+    timer.daemon = True
+    timer.start()
+    try:
+        raw = process.stdout.read(project_setup.LIMIT + 1)
+        need(len(raw) <= project_setup.LIMIT, 'source_size_limit', 'source')
+        need(process.wait(timeout=2) == 0, 'source_archive_failed', 'source')
+    finally:
+        timer.cancel(); timer.join()
+        if process.poll() is None:
+            process.kill(); process.wait(timeout=2)
+        process.stdout.close()
+    files = {}
+    try:
+        with tarfile.open(fileobj=io.BytesIO(raw)) as archive:
+            members = archive.getmembers()
+            need(len(members) <= 10000, 'source_entry_limit', 'source')
+            for member in members:
+                if member.isdir() or not project_setup.public(member.name):
+                    continue
+                name = member.name
+                need(not any(ord(c) < 32 or ord(c) == 127 for c in name)
+                     and '\\' not in name and member.isfile()
+                     and not member.issym() and not member.islnk(),
+                     'unsafe_source_entry', 'source')
+                # Live state has no place in an installed public runtime, even
+                # when accidentally tracked inside an otherwise public folder.
+                if re.search(r'\.(?:sqlite3?|db)(?:-(?:wal|shm))?$', name):
+                    continue
+                need(name not in files, 'duplicate_source_entry', 'source')
+                files[name] = archive.extractfile(member).read()
+    except (tarfile.TarError, EOFError):
+        raise PiSetupError('invalid_source_archive', 'source') from None
+    return files
+
+
 def _source(source):
     source = safe(source)
     need(source.is_dir(), 'invalid_source', 'source')
@@ -103,13 +152,14 @@ def _source(source):
     clean = _git(source, 'status', '--porcelain', '--untracked-files=no')
     need(head.returncode == clean.returncode == 0, 'invalid_source', 'source')
     need(not clean.stdout, 'dirty_source', 'source')
-    revision, files = project_setup.library(source)
-    need(head.stdout.decode().strip() == revision, 'source_changed', 'source')
+    revision = head.stdout.decode().strip()
+    need(re.fullmatch(r'[0-9a-f]{40,64}', revision) is not None, 'invalid_source', 'source')
+    files = _canonical_public_snapshot(source, revision)
+    after = _git(source, 'rev-parse', 'HEAD')
+    need(after.returncode == 0 and after.stdout.decode().strip() == revision,
+         'source_changed', 'source')
     need(not _git(source, 'status', '--porcelain', '--untracked-files=no').stdout,
          'dirty_source', 'source')
-    # The older project exporter adds a synthetic library journal; pi distributes
-    # only public resources, so even this inert private directory is omitted.
-    files = {name: raw for name, raw in files.items() if not name.startswith(('.palarran/', '.ai-development/'))}
     need('packages/core/pi/extension/index.ts' in files and 'packages/core/pi/supervisor.mjs' in files,
          'pi_capability_missing', 'source')
     need('packages/catalog.json' in files, 'invalid_catalog', 'source')
@@ -194,8 +244,8 @@ def install_pi(*, source, home=None, agent_dir=None, packages=None, plan=False):
     resolved = registry.resolve(choices)
     skill_paths = []
     for skill in resolved['skills']:
-        path = next((candidate for candidate in (skill['path'], skill['legacy_path']) if candidate in files), None)
-        need(path is not None, 'missing_skill', 'source')
+        path = skill['path']
+        need(path in files, 'missing_skill', 'source')
         skill_paths.append('./' + path)
     package = dict(name='palarran-pi', version='0.0.0', private=True, keywords=['pi-package'],
                    peerDependencies={name: '*' for name in PEERS},
