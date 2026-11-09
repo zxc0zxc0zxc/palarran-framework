@@ -1,5 +1,8 @@
 /** Native UI/client registration; contains no scheduler or provider execution. */
 import fs from "node:fs/promises";
+import { realpathSync, lstatSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createRpcClient } from "./rpc.mjs";
@@ -55,6 +58,35 @@ function normalizeTask(value) {
   )
     throw new Error("invalid_task_profile");
   return task;
+}
+const ENTRY_MARKER = "[PALARRAN_PI_ENTRY_V1]";
+/** Resolve guide metadata only; the model reads applicable source sections later. */
+export function entryInstructions(moduleUrl = import.meta.url) {
+  try {
+    const core = realpathSync(fileURLToPath(new URL("../../", moduleUrl)));
+    const names = [
+      "../../agents/docs/domain-contracts.md",
+      "../../agents/docs/decision-memory.md",
+      "../../agents/docs/global-memory.md",
+      "../../parallelism/docs/contract.md",
+      "../docs/contract.md",
+    ];
+    const guides = names.map((name) => {
+      const original = fileURLToPath(new URL(name, moduleUrl)),
+        physical = realpathSync(original);
+      if (
+        !lstatSync(original).isFile() ||
+        !physical.startsWith(core + path.sep) ||
+        /[\x00-\x1f\x7f]/u.test(physical)
+      )
+        throw new Error();
+      return physical;
+    });
+    const block = `\n\n${ENTRY_MARKER}\nPalarran entry is instruction-based; it grants no extra tool, spend or execution authority.\nFor tasks, read target AGENTS, .palarran/INDEX.md and relevant accepted decisions; honor project locale. Read only applicable guide sections and current sources. Record accepted decisions before dependent changes; reuse bounded task records. Consider independent parallel work within existing ownership and budget. Verify exact results; missing checks stay NOT_RUN. Respect task/--plan boundaries. Use configured memory only; no automatic setup or paid work. Fake tasks are synthetic; real workers need a reviewed supported profile and approved budget. Main-session auth/smart routing are not inherited.\nGuides:\nDomain: ${guides[0]}\nDecisions: ${guides[1]}\nMemory: ${guides[2]}\nParallelism: ${guides[3]}\nPi integration: ${guides[4]}\n[/PALARRAN_PI_ENTRY_V1]\n`;
+    return Buffer.byteLength(block) <= 1536 ? block : null;
+  } catch {
+    return null;
+  }
 }
 export async function resolveRepository(cwd) {
   const physical = await fs.realpath(cwd);
@@ -405,6 +437,26 @@ export function registerPalarran(pi, options = {}) {
         );
       }
     },
+  });
+  let entryWarning = false;
+  pi.on("before_agent_start", (event, ctx) => {
+    if (
+      typeof event.systemPrompt !== "string" ||
+      event.systemPrompt.includes(ENTRY_MARKER)
+    )
+      return;
+    const block = entryInstructions();
+    if (!block) {
+      if (!entryWarning && ctx?.hasUI) {
+        entryWarning = true;
+        ctx.ui.notify(
+          "Palarran entry guides unavailable; inspect the installed runtime with /swarm doctor.",
+          "warning",
+        );
+      }
+      return;
+    }
+    return { systemPrompt: event.systemPrompt + block };
   });
   pi.on("session_start", async (_event, ctx) => {
     try {
