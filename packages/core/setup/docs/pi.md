@@ -13,7 +13,7 @@ python3 packages/core/setup/pi_setup.py --source /TRUSTED/palarran --packages al
 
 `--home` and `--agent-dir` select an explicit test/operator home and pi configuration directory. Default paths are the current user's home and `~/.pi/agent`. No network, package-manager install, model prompt, auth read, supervisor start, MCP activation or remote deployment occurs. `--plan` reads the trusted source and owned installation metadata but writes nothing. This command installs a reviewed local package; pi loads it on a fresh session or `/reload`.
 
-The runtime is pinned under `~/.palarran/pi/runtimes/<commit>/<selection-hash>/`. The public library, complete supporting guides and helpers stay together; only selected skills are exposed by the native package manifest. Explicit `--packages` wins. Updates otherwise inherit their exact selection. A fresh installation can inherit `packages` from the global Palarran config; absent choices are `missing_packages`, not an implicit `all`.
+The runtime is pinned under `~/.palarran/pi/runtimes/<commit>/<selection-hash>/`. The public Git snapshot preserves original canonical paths and `packages/layout.json`; Python integration imports, Node sibling imports and relative skill guides remain unchanged. It does not reuse the old flattened project-library layout. Complete supporting guides and helpers stay together; only selected canonical skill paths are exposed by the native package manifest. Explicit `--packages` wins. Updates otherwise inherit their exact selection. A fresh installation can inherit `packages` from the global Palarran config; absent choices are `missing_packages`, not an implicit `all`.
 
 ## Ownership and recovery
 
