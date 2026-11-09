@@ -135,7 +135,7 @@ process.env.OPENAI_API_KEY='PRIVATE_OPERATOR_VALUE';process.env.ANTHROPIC_API_KE
 const rpc=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))},credentialEnv:['OPENAI_API_KEY']}});
 const r=await rpc('status',{{}});assert.equal(r.openai,true);assert.equal(r.anthropic,false);assert.equal(r.other,false);assert.equal(r.requestHasKey,false);
 process.env.PALARRAN_PI_CREDENTIAL_ENV='ANTHROPIC_API_KEY';
-const fromEnv=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))}});
+const fromEnv=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))}}});
 const e=await fromEnv('status',{{}});assert.equal(e.openai,false);assert.equal(e.anthropic,true);assert.equal(e.requestHasKey,false);
 """)
 
