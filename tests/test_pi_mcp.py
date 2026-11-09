@@ -130,3 +130,26 @@ class PiMemoryMigrationTests(unittest.TestCase):
             checked,result=self.run_cli(home,agent,source);self.assertEqual(checked.returncode,2)
             checked=subprocess.run([PYTHON,str(ROOT/'packages/core/setup/pi_mcp.py'),'--PRIVATE_SECRET_FIXTURE'],capture_output=True,text=True)
             self.assertEqual(checked.returncode,2);self.assertNotIn('PRIVATE_SECRET_FIXTURE',checked.stdout+checked.stderr);self.assertEqual(json.loads(checked.stdout)['code'],'invalid_arguments')
+
+    def test_receipt_write_failure_restores_owned_config_and_preserves_pending_intent(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary).resolve();home,agent,source,wrapper=self.fixture(root);target=agent/'mcp.json'
+            target.write_text('{"custom":"preserve-exact-bytes","mcpServers":{}}\n');before=target.read_bytes()
+            script='''from pathlib import Path
+import json,sys
+from packages.core.setup import pi_mcp as m
+source,home,agent=map(Path,sys.argv[1:]);original=m._atomic
+before=(agent/'mcp.json').read_bytes()
+def fail(path,raw,expected):
+ if path.name=='mcp-installation.json':raise OSError('PRIVATE_SECRET_FIXTURE')
+ return original(path,raw,expected)
+m._atomic=fail
+try:m.migrate_memory(codex_config=source,source_server='engineering-memory',home=home,agent_dir=agent)
+except OSError:pass
+else:raise AssertionError('Expected injected failure')
+print(json.dumps({'restored':(agent/'mcp.json').read_bytes()==before,'pending':(home/'.palarran/pi/mcp-pending.json').is_file()}))
+'''
+            checked=subprocess.run([PYTHON,'-c',script,str(source),str(home),str(agent)],cwd=ROOT,env={'PATH':os.environ.get('PATH',os.defpath),'PYTHONPATH':str(ROOT),'PYTHONDONTWRITEBYTECODE':'1'},capture_output=True,text=True,timeout=15)
+            self.assertEqual(checked.returncode,0,checked.stderr);self.assertNotIn('PRIVATE_SECRET_FIXTURE',checked.stdout+checked.stderr)
+            self.assertEqual(json.loads(checked.stdout),{'restored':True,'pending':True});self.assertEqual(target.read_bytes(),before)
+            checked,result=self.run_cli(home,agent,source);self.assertEqual(checked.returncode,2);self.assertEqual(result['code'],'recovery_required')
