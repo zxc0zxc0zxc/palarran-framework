@@ -174,3 +174,48 @@ console.log(JSON.stringify({skills:skills.skills.map(s=>s.name),diagnostics:skil
             self.assertEqual(checked.returncode,0,checked.stderr)
             observed=json.loads(checked.stdout.strip().splitlines()[-1]);self.assertEqual(observed['extensions'],2);self.assertEqual(len(observed['skills']),58);self.assertEqual(observed['errors'],[])
             self.assertIn('palarran-code-review',observed['skills'])
+
+    def test_canonical_runtime_keeps_python_bridge_node_siblings_and_skill_paths(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source,home,agent,_=self.fixture(Path(temporary).resolve())
+            files={
+                'packages/core/parallelism/integration.py':(ROOT/'packages/core/parallelism/integration.py').read_text(),
+                'packages/core/orchestration/runtime/__init__.py':'',
+                'packages/core/orchestration/runtime/runner.py':'def execute(*args, **kwargs): raise AssertionError("No execution during discovery")\n',
+                'packages/core/orchestration/runtime/workspaces.py':'def fingerprint(*args, **kwargs): raise AssertionError("No execution during discovery")\n',
+                'packages/core/pi/worker/gate.mjs':'export const fixtureGate = "bounded-fixture";\n',
+                'packages/core/pi/worker/worker.mjs':'import {fixtureGate} from "./gate.mjs"; export const fixture = fixtureGate;\n',
+            }
+            moves={
+                'orchestrator/__init__.py':'packages/core/orchestration/runtime/__init__.py',
+                'orchestrator/runner.py':'packages/core/orchestration/runtime/runner.py',
+                'orchestrator/workspaces.py':'packages/core/orchestration/runtime/workspaces.py',
+                'skills/palarran-code-review':'packages/code/review/skills/palarran-code-review',
+            }
+            files['packages/layout.json']=json.dumps({'version':1,'moves':moves})
+            files['packages/core/pi/state.sqlite']='PRIVATE_DATABASE_FIXTURE'
+            for name,raw in files.items():
+                path=source/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(raw)
+            self.git(source,'add','.');self.git(source,'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','runtime closure')
+            result=self.install(source,home,packages=['all']);runtime=Path(result['runtime'])
+            self.assertTrue((runtime/'packages/core/orchestration/runtime/runner.py').is_file())
+            self.assertTrue((runtime/'packages/layout.json').is_file())
+            self.assertFalse((runtime/'packages/core/pi/state.sqlite').exists())
+            manifest=json.loads((runtime/'package.json').read_text())
+            self.assertIn('./packages/code/review/skills/palarran-code-review/SKILL.md',manifest['pi']['skills'])
+            env={'PATH':os.defpath,'PYTHONPATH':str(runtime),'PYTHONDONTWRITEBYTECODE':'1','HOME':str(home)}
+            imported=subprocess.run([shutil.which('python3'),'-c','from packages.core.parallelism.integration import IntegrationQueue; print(IntegrationQueue.__name__)'],cwd=runtime,env=env,capture_output=True,text=True,timeout=15)
+            self.assertEqual(imported.returncode,0,imported.stderr);self.assertEqual(imported.stdout.strip(),'IntegrationQueue')
+            if shutil.which('node'):
+                imported=subprocess.run([shutil.which('node'),'--input-type=module','-e','const m=await import(process.argv[1]);console.log(m.fixture)',str(runtime/'packages/core/pi/worker/worker.mjs')],cwd=runtime,env=env,capture_output=True,text=True,timeout=15)
+                self.assertEqual(imported.returncode,0,imported.stderr);self.assertEqual(imported.stdout.strip(),'bounded-fixture')
+
+    def test_tracked_public_symlink_is_not_followed_or_installed(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary).resolve();source,home,agent,_=self.fixture(root)
+            outside=root/'private';outside.write_text('SECRET_SYMLINK_FIXTURE')
+            (source/'packages/core/pi/leak.mjs').symlink_to(outside)
+            self.git(source,'add','.');self.git(source,'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','hostile public link')
+            with self.assertRaises(ValueError):self.install(source,home,packages=['all'])
+            self.assertFalse((home/'.palarran').exists())
+            self.assertEqual(outside.read_text(),'SECRET_SYMLINK_FIXTURE')
