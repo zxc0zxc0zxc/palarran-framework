@@ -60,8 +60,12 @@ def selected_entry(source,server):
          'unsupported_transport','source_entry')
     need(set(entry)<={'command','args','env','cwd','enabled','description'},'unsupported_source_fields','source_entry')
     command=literal(entry.get('command'))
-    need(command and Path(command).is_absolute(),'unsafe_executable','source_entry')
-    executable=safe(command)
+    need(command and Path(command).is_absolute()
+         and Path(command).name.lower() not in UNSAFE_LAUNCHERS,'unsafe_executable','source_entry')
+    try:
+        executable=safe(command)
+    except PiSetupError:
+        raise MigrationError('unsafe_executable','source_entry') from None
     need(executable.is_file() and os.access(executable,os.X_OK)
          and executable.name.lower() not in UNSAFE_LAUNCHERS,'unsafe_executable','source_entry')
     args=entry.get('args',[])
