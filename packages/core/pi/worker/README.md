@@ -19,3 +19,7 @@ The worker's SDK package path/version, physical model/API, HTTPS origin, positiv
 ## Offline verification
 
 `python3 -m unittest discover -s tests -p test_pi_worker.py -v` executes Node's built-in tests using fake fetch/SSE/SDK dependencies. An optional smoke uses an already installed pi1.0.0 package with a synthetic model stream and empty credentials; it makes no network/model calls. Missing local SDK is SKIP, not installation. These tests do not establish live provider billing, rate limits, subscriptions, multi-machine behavior or a throughput claim.
+
+## Checkpoint continuation
+
+A settled real SDK worker returns a hash-bound `session_checkpoint` reference separate from shareable artifacts. The supervisor alone promotes that reference with the current attempt fence/CAS after process-stop and its acceptance policy. A follow-up may pass the accepted file path/hash; the worker checks regular-file type, a2MiB bound, private state-root containment and the session header, then copies bytes into the new attempt before `SessionManager.open(copy, newSessionDir, workspace)`. It never appends to the previous attempt's file. A changed hash blocks continuation. Native SDK history is private runtime state; it may contain provider-side reasoning blocks, and is never injected into the parent summary or exported as an artifact. An optional bounded `context` string provides explicitly labelled prior-result data when a full checkpoint is unavailable; this is not native session restoration.
