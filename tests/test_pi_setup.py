@@ -14,6 +14,15 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def supported_installed_node():
+    binary=shutil.which('node')
+    if not binary:return False
+    try:
+        result=subprocess.run([binary,'--input-type=module','-e',"import {DatabaseSync} from 'node:sqlite';const v=process.versions.node.split('.').map(Number);if(v[0]<22||v[0]===22&&v[1]<13)process.exit(1);new DatabaseSync(':memory:').close();"],capture_output=True,timeout=5,env={'PATH':'/usr/bin:/bin','NODE_NO_WARNINGS':'1'})
+        return result.returncode==0
+    except (OSError,subprocess.SubprocessError):return False
+
+
 class PiSetupTests(unittest.TestCase):
     def module(self):
         return importlib.import_module('packages.core.setup.pi_setup')
@@ -45,9 +54,13 @@ class PiSetupTests(unittest.TestCase):
         (agent/'settings.json').write_text(json.dumps(settings))
         (agent/'auth.json').write_text('PRIVATE_AUTH_FIXTURE')
         (agent/'extensions').mkdir(); (agent/'extensions/custom.ts').write_text('CUSTOM_EXTENSION')
+        executable=root/'fixture-node'
+        executable.write_text('#!/bin/sh\nprintf \'{"node":"22.13.0","sqlite":"3.54.1"}\\n\'\n');executable.chmod(0o700)
         return source,home,agent,settings
 
     def install(self, source, home, **kwargs):
+        if not kwargs.get('plan') and 'node_executable' not in kwargs:
+            kwargs['node_executable']=Path(home).parent/'fixture-node'
         return self.module().install_pi(source=source, home=home, **kwargs)
 
     def test_plan_is_write_free_and_explicit_selection_is_required(self):
@@ -155,13 +168,13 @@ class PiSetupTests(unittest.TestCase):
             self.assertEqual(result['packages'],['core','code'])
             self.assertLess(result['skill_count'],58)
 
-    @unittest.skipUnless(Path('/Users/zxc0zxc0zxc/.pi/agent/install/releases/1.0.0/node_modules/@earendil-works/pi-coding-agent/dist/index.js').is_file() and shutil.which('node'),'installed pi1.0.0 optional offline loader')
+    @unittest.skipUnless(Path('/Users/zxc0zxc0zxc/.pi/agent/install/releases/1.0.0/node_modules/@earendil-works/pi-coding-agent/dist/index.js').is_file() and supported_installed_node(),'installed pi1.0.0 and supported Node optional offline loader')
     def test_actual_pi_loader_discovers_native_skills_and_extension_without_models(self):
         with tempfile.TemporaryDirectory() as temporary:
             source,home,agent,_=self.fixture(Path(temporary).resolve())
             (agent/'settings.json').write_text('{"enableInstallTelemetry":false}')
             (agent/'extensions/custom.ts').write_text('export default function() {}')
-            result=self.install(source,home,packages=['all'])
+            result=self.install(source,home,packages=['all'],node_executable=shutil.which('node'))
             sdk='/Users/zxc0zxc0zxc/.pi/agent/install/releases/1.0.0/node_modules/@earendil-works/pi-coding-agent/dist/index.js'
             script="""
 const {DefaultResourceLoader,SettingsManager}=await import(process.argv[1]);

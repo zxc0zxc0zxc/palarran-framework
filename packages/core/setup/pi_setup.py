@@ -16,6 +16,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import stat
 import subprocess
 import tarfile
@@ -44,6 +45,7 @@ class PiSetupError(ValueError):
             'discovery_modified': 'Review the changed owned pi package declaration before updating.',
             'recovery_required': 'Inspect the private pending intent and exact settings backup before manual recovery.',
             'invalid_arguments': 'Use --help for supported flags and required option values.',
+            'node_runtime_unsupported': 'Use the intended pi Node executable, version 22.13 or newer with built-in node:sqlite DatabaseSync; no automatic upgrade is performed.',
         }
         return dict(status='REJECTED', code=self.code, field=self.field,
                     hint=hints.get(self.code, 'Inspect trusted source, private path ownership and pi settings; no automatic retry.'),
@@ -206,7 +208,42 @@ def _verify_runtime(runtime, hashes):
     need(actual == set(hashes), 'runtime_modified', 'runtime')
 
 
-def install_pi(*, source, home=None, agent_dir=None, packages=None, plan=False):
+def _node_runtime(executable=None):
+    """Probe existing local Node built-ins only; no SDK, model or filesystem DB."""
+    try:
+        selected = shutil.which('node') if executable is None else os.fspath(executable)
+        need(selected is not None and Path(selected).is_absolute()
+             and not any(ord(c) < 32 or ord(c) == 127 for c in selected),
+             'node_runtime_unsupported', 'node')
+        # A selected trusted executable may be a normal package-manager link;
+        # this is not permission to resolve arbitrary target/state symlinks.
+        binary = Path(selected).resolve(strict=True)
+        need(binary.is_file() and os.access(binary, os.X_OK), 'node_runtime_unsupported', 'node')
+        script = ("import {DatabaseSync} from 'node:sqlite';"
+                  "const db=new DatabaseSync(':memory:');"
+                  "const row=db.prepare('SELECT sqlite_version() version').get();"
+                  "db.close();console.log(JSON.stringify({node:process.versions.node,sqlite:row.version}));")
+        checked = subprocess.run([str(binary), '--input-type=module', '--eval', script],
+                                 cwd=os.path.abspath(os.sep),
+                                 env={'PATH': '/usr/bin:/bin', 'NODE_NO_WARNINGS': '1'},
+                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                 timeout=5, check=False)
+        need(checked.returncode == 0 and len(checked.stdout) <= 4096,
+             'node_runtime_unsupported', 'node')
+        observed = parse_json(checked.stdout)
+        need(set(observed) == {'node', 'sqlite'} and type(observed['node']) is str
+             and re.fullmatch(r'\d+\.\d+\.\d+', observed['node']) is not None
+             and type(observed['sqlite']) is str
+             and re.fullmatch(r'\d+\.\d+\.\d+', observed['sqlite']) is not None,
+             'node_runtime_unsupported', 'node')
+        version = tuple(int(value) for value in observed['node'].split('.'))
+        need(version >= (22, 13, 0), 'node_runtime_unsupported', 'node')
+        return dict(status='SUPPORTED', node=observed['node'], sqlite=observed['sqlite'])
+    except (ValueError, OSError, TypeError, subprocess.SubprocessError):
+        raise PiSetupError('node_runtime_unsupported', 'node') from None
+
+
+def install_pi(*, source, home=None, agent_dir=None, packages=None, plan=False, node_executable=None):
     """Preflight, pin and register public resources; never invoke pi or providers."""
     home = safe(Path.home() if home is None else home)
     agent = safe(home / '.pi/agent' if agent_dir is None else agent_dir)
@@ -248,6 +285,7 @@ def install_pi(*, source, home=None, agent_dir=None, packages=None, plan=False):
         need(path in files, 'missing_skill', 'source')
         skill_paths.append('./' + path)
     package = dict(name='palarran-pi', version='0.0.0', private=True, keywords=['pi-package'],
+                   engines={'node': '>=22.13'},
                    peerDependencies={name: '*' for name in PEERS},
                    pi=dict(extensions=['./packages/core/pi/extension/index.ts'], skills=skill_paths,
                            prompts=[], themes=[]))
@@ -276,7 +314,11 @@ def install_pi(*, source, home=None, agent_dir=None, packages=None, plan=False):
                   writes=0 if plan or unchanged else None, network=False, model_calls=0,
                   workers_started=0, native_discovery='NOT_VERIFIED',
                   next_step='Start a fresh pi session or /reload; native skills use /skill:<name>.')
-    if plan or unchanged:
+    if plan:
+        result['node_runtime'] = dict(status='NOT_RUN', reason='plan_only')
+        return result
+    result['node_runtime'] = _node_runtime(node_executable)
+    if unchanged:
         return result
     # All ownership/config/source checks above precede target mutations. A lock
     # serializes this installer's apply; a durable intent blocks crash replay.
@@ -345,11 +387,12 @@ def main(argv=None):
         parser.add_argument('--source', type=Path, required=True)
         parser.add_argument('--home', type=Path)
         parser.add_argument('--agent-dir', type=Path)
+        parser.add_argument('--node', type=Path)
         parser.add_argument('--packages', nargs='+')
         parser.add_argument('--plan', action='store_true')
         args = parser.parse_args(argv)
         result = install_pi(source=args.source, home=args.home, agent_dir=args.agent_dir,
-                            packages=args.packages, plan=args.plan)
+                            packages=args.packages, plan=args.plan, node_executable=args.node)
         print(json.dumps(result, sort_keys=True)); return 0
     except PiSetupError as error:
         print(json.dumps(error.report(), sort_keys=True)); return 2
