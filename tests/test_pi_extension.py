@@ -114,6 +114,42 @@ const result=await rpc('status',{{parent:{{session_id:'a',repository:process.cwd
 assert.equal(result.status,'OK');assert.equal(result.command,'status');assert.equal(result.secretPresent,false);
 """)
 
+    def test_default_rpc_does_not_inherit_provider_keys(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);script=root/'supervisor.mjs'
+            script.write_text("console.log(JSON.stringify({status:'OK',openai:!!process.env.OPENAI_API_KEY,anthropic:!!process.env.ANTHROPIC_API_KEY}));")
+            self.js(f"""
+import {{ createRpcClient }} from {json.dumps((EXT/'rpc.mjs').as_uri())};
+process.env.OPENAI_API_KEY='PRIVATE_OPERATOR_VALUE';process.env.ANTHROPIC_API_KEY='PRIVATE_OPERATOR_VALUE';delete process.env.PALARRAN_PI_CREDENTIAL_ENV;
+const rpc=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))}}});
+const r=await rpc('status',{{}});assert.equal(r.openai,false);assert.equal(r.anthropic,false);
+""")
+
+    def test_reviewed_credential_selection_is_child_environment_only(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);script=root/'supervisor.mjs'
+            script.write_text("let s='';for await(const x of process.stdin)s+=x;console.log(JSON.stringify({status:'OK',openai:!!process.env.OPENAI_API_KEY,anthropic:!!process.env.ANTHROPIC_API_KEY,other:!!process.env.PRIVATE_TEST_SECRET,requestHasKey:s.includes('PRIVATE_OPERATOR_VALUE')}));")
+            self.js(f"""
+import {{ createRpcClient }} from {json.dumps((EXT/'rpc.mjs').as_uri())};
+process.env.OPENAI_API_KEY='PRIVATE_OPERATOR_VALUE';process.env.ANTHROPIC_API_KEY='PRIVATE_OPERATOR_VALUE';process.env.PRIVATE_TEST_SECRET='PRIVATE_OPERATOR_VALUE';
+const rpc=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))},credentialEnv:['OPENAI_API_KEY']}});
+const r=await rpc('status',{{}});assert.equal(r.openai,true);assert.equal(r.anthropic,false);assert.equal(r.other,false);assert.equal(r.requestHasKey,false);
+process.env.PALARRAN_PI_CREDENTIAL_ENV='ANTHROPIC_API_KEY';
+const fromEnv=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))}});
+const e=await fromEnv('status',{{}});assert.equal(e.openai,false);assert.equal(e.anthropic,true);assert.equal(e.requestHasKey,false);
+""")
+
+    def test_arbitrary_credential_names_fail_before_starting_a_child(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);script=root/'supervisor.mjs';marker=root/'calls'
+            script.write_text(f"import fs from 'node:fs';fs.writeFileSync({json.dumps(str(marker))},'launched');console.log(JSON.stringify({{status:'OK'}}));")
+            self.js(f"""
+import {{ createRpcClient }} from {json.dumps((EXT/'rpc.mjs').as_uri())};
+const rpc=createRpcClient({{supervisorPath:{json.dumps(str(script))},statePath:{json.dumps(str(root/'state.sqlite'))},credentialEnv:['PRIVATE_TEST_SECRET']}});
+const r=await rpc('spawn',{{}});assert.equal(r.status,'REJECTED');assert.equal(r.code,'invalid_credential_selection');assert.ok(!JSON.stringify(r).includes('PRIVATE_TEST_SECRET'));
+""")
+            self.assertFalse(marker.exists())
+
     def test_rpc_timeout_reports_unknown_mutation_without_replay(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);script=root/'supervisor.mjs';marker=root/'calls'
