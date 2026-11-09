@@ -4,7 +4,7 @@ Checked2026-11-09 against the installed `@earendil-works/pi-coding-agent`1.0.0 d
 
 ## Use
 
-`swarm_spawn`, `swarm_status`, `swarm_wait`, `swarm_result`, `swarm_send`, `swarm_follow_up` and `swarm_cancel` always bind the current pi session and physical project directory. `spawn` means durably queued, not running. Model tools cannot approve a budget, start a supervisor, recover an unknown attempt or integrate code.
+`swarm_spawn`, `swarm_status`, `swarm_wait`, `swarm_result`, `swarm_send`, `swarm_follow_up` and `swarm_cancel` always bind the current pi session and physical project directory. `spawn` means durably queued, not running. A single acceptance string is normalized to a one-item acceptance array before RPC; profile objects must explicitly declare `kind: fake` or `kind: sdk`. Omitted profile remains inert fake work; role/model name strings are rejected rather than silently choosing a provider. Model tools cannot approve a budget, start a supervisor, recover an unknown attempt or integrate code.
 
 `/swarm doctor` checks metadata only. `/swarm status RUN`, `/swarm use RUN` and `/swarm result RUN TASK` inspect the current parent's runs. `/swarm approve RUN`, `/swarm start RUN`, `/swarm recover RUN` and `/swarm integrate RUN TASK` are explicit human commands. Start is operator approval of the already reviewed bounded run; absent budget/provider support fails closed in the supervisor. Installation and opening pi never start paid work. `/swarm cancel RUN [TASK]` requests cancellation and reports the supervisor's actual state.
 
