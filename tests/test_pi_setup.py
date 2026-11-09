@@ -231,3 +231,26 @@ console.log(JSON.stringify({skills:skills.skills.map(s=>s.name),diagnostics:skil
             self.assertEqual(code,2)
             self.assertEqual(json.loads(output.getvalue())['code'],'pi_setup_unavailable')
             self.assertNotIn('PRIVATE_ARCHIVE_COMMAND',output.getvalue())
+
+    def test_unsupported_node_blocks_before_install_mutation_and_plan_skips_probe(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary).resolve();source,home,agent,_=self.fixture(root)
+            before=(agent/'settings.json').read_bytes();marker=root/'executed'
+            executable=root/'old-node';executable.write_text('#!/bin/sh\nprintf ran > "'+str(marker)+'"\nprintf \'{"node":"20.0.0","sqlite":"3.54.1"}\\n\'\n');executable.chmod(0o700)
+            proposal=self.install(source,home,packages=['all'],node_executable=executable,plan=True)
+            self.assertEqual(proposal['status'],'PLANNED');self.assertFalse(marker.exists())
+            with self.assertRaisesRegex(ValueError,'node_runtime_unsupported'):
+                self.install(source,home,packages=['all'],node_executable=executable)
+            self.assertTrue(marker.is_file());self.assertEqual((agent/'settings.json').read_bytes(),before)
+            self.assertFalse((home/'.palarran').exists())
+
+    def test_native_package_declares_node_engine_and_missing_node_is_safe(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary).resolve();source,home,agent,_=self.fixture(root)
+            with self.assertRaisesRegex(ValueError,'node_runtime_unsupported'):
+                self.install(source,home,packages=['all'],node_executable=root/'missing-node')
+            self.assertFalse((home/'.palarran').exists())
+            result=self.install(source,home,packages=['all'])
+            manifest=json.loads((Path(result['runtime'])/'package.json').read_text())
+            self.assertEqual(manifest['engines']['node'],'>=22.13')
+            self.assertEqual(result['node_runtime']['status'],'SUPPORTED')
