@@ -1,5 +1,7 @@
 """Offline ownership and native-discovery regressions for global pi setup."""
 import importlib
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -219,3 +221,13 @@ console.log(JSON.stringify({skills:skills.skills.map(s=>s.name),diagnostics:skil
             with self.assertRaises(ValueError):self.install(source,home,packages=['all'])
             self.assertFalse((home/'.palarran').exists())
             self.assertEqual(outside.read_text(),'SECRET_SYMLINK_FIXTURE')
+
+    def test_archive_timeout_has_safe_cli_diagnostic_without_command_echo(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source,home,agent,_=self.fixture(Path(temporary).resolve());module=self.module();output=io.StringIO()
+            with mock.patch.object(module,'_source',side_effect=subprocess.TimeoutExpired('PRIVATE_ARCHIVE_COMMAND',2)):
+                with contextlib.redirect_stdout(output):
+                    code=module.main(['--source',str(source),'--home',str(home),'--packages','all','--plan'])
+            self.assertEqual(code,2)
+            self.assertEqual(json.loads(output.getvalue())['code'],'pi_setup_unavailable')
+            self.assertNotIn('PRIVATE_ARCHIVE_COMMAND',output.getvalue())
