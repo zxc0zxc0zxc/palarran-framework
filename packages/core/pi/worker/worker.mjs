@@ -699,7 +699,26 @@ export async function runWorker(rawConfig, dependencies = {}) {
     acceptance: "NOT_RUN",
   };
   try {
+    const now = dependencies.now ?? Date.now;
+    const started = now();
     config = validateConfig(rawConfig);
+    const deadline = started + config.limits.seconds * 1000;
+    function checkDeadline() {
+      if (now() >= deadline) {
+        timedOut = true;
+        throw new GateError("worker_timeout");
+      }
+    }
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(
+        () => {
+          timedOut = true;
+          session?.abort().catch(() => {});
+          reject(new GateError("worker_timeout"));
+        },
+        Math.max(1, deadline - now()),
+      );
+    });
     need(
       typeof (dependencies.env ?? process.env)[config.profile.api_key_env] ===
         "string" &&
@@ -712,6 +731,8 @@ export async function runWorker(rawConfig, dependencies = {}) {
       ((command, payload) => brokerRpc(config, command, payload));
     const gatedFetch = createGatedFetch({
       profile: config.profile,
+      now,
+      admission_deadline_ms: deadline,
       admit: dependencies.admit ?? ((payload) => rpc("request_admit", payload)),
       complete:
         dependencies.complete ??
@@ -721,11 +742,34 @@ export async function runWorker(rawConfig, dependencies = {}) {
         }),
       transport: dependencies.transport ?? globalThis.fetch,
     });
-    const made = await (dependencies.createSession ?? createSdkSession)(
-      config,
-      { ...dependencies, fetch: gatedFetch },
-    );
-    session = made.session;
+    const creation = Promise.resolve()
+      .then(() =>
+        (dependencies.createSession ?? createSdkSession)(config, {
+          ...dependencies,
+          fetch: gatedFetch,
+        }),
+      )
+      .then((made) => {
+        if (timedOut) {
+          void (async () => {
+            try {
+              await made.session?.abort();
+            } catch {
+              /* late initialization has no active authority */
+            }
+            try {
+              made.session?.dispose();
+            } catch {
+              /* never expose SDK exceptions */
+            }
+          })();
+          throw new GateError("worker_timeout");
+        }
+        session = made.session;
+        return made;
+      });
+    await Promise.race([creation, timeout]);
+    checkDeadline();
     let settled = false,
       resolveSettled;
     const settlement = new Promise((resolve) => {
@@ -775,13 +819,6 @@ export async function runWorker(rawConfig, dependencies = {}) {
     // Injected fake SDK tests need no unrelated broker process; actual workers always poll.
     if (!dependencies.createSession || dependencies.rpc)
       mailboxTimer = setInterval(pollMailbox, 500);
-    const timeout = new Promise((_, reject) => {
-      timer = setTimeout(() => {
-        timedOut = true;
-        session.abort().catch(() => {});
-        reject(new GateError("worker_timeout"));
-      }, config.limits.seconds * 1000);
-    });
     await Promise.race([
       (async () => {
         await session.prompt(
@@ -800,6 +837,7 @@ export async function runWorker(rawConfig, dependencies = {}) {
       })(),
       timeout,
     ]);
+    checkDeadline();
     need(
       settled && session.isIdle && !session.isStreaming && !mailboxError,
       "worker_not_settled",

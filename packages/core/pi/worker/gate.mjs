@@ -229,6 +229,7 @@ export function createGatedFetch({
   complete,
   transport = globalThis.fetch,
   admission_timeout_ms = 10000,
+  admission_deadline_ms,
   now = Date.now,
 }) {
   const base = validateProfile(profile);
@@ -244,6 +245,12 @@ export function createGatedFetch({
     admission_timeout_ms > 60000
   )
     throw new GateError("invalid_admission_timeout");
+  if (
+    admission_deadline_ms !== undefined &&
+    (!integer(admission_deadline_ms) ||
+      admission_deadline_ms - now() > 86400000)
+  )
+    throw new GateError("invalid_admission_deadline");
   const endpoint =
     base.href.replace(/\/$/, "") +
     (profile.api === "openai-completions"
@@ -322,8 +329,10 @@ export function createGatedFetch({
         true,
       ),
     };
-    const deadline = now() + admission_timeout_ms;
+    const deadline = admission_deadline_ms ?? now() + admission_timeout_ms;
     while (true) {
+      if (signal?.aborted) throw new GateError("request_cancelled");
+      if (now() >= deadline) throw new GateError("admission_timeout");
       let receipt;
       try {
         receipt = await admit(metadata);
@@ -354,6 +363,12 @@ export function createGatedFetch({
       } catch {
         throw new GateError("settlement_unknown");
       }
+    }
+    if (signal?.aborted || now() >= deadline) {
+      await settle("cancelled");
+      throw new GateError(
+        signal?.aborted ? "request_cancelled" : "admission_timeout",
+      );
     }
     let response;
     try {
