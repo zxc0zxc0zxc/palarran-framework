@@ -50,8 +50,8 @@ const prompt='Existing provider rules\\nPreserve these exact bytes.\\n';
 const first=await hook({systemPrompt:prompt,prompt:'ordinary task'},context());
 assert.equal(first.systemPrompt.slice(0,prompt.length),prompt);
 const block=first.systemPrompt.slice(prompt.length);assert.ok(Buffer.byteLength(block)<=1536);
-assert.ok(block.includes('[PALARRAN_PI_ENTRY_V1]'));assert.ok(block.includes('instruction-based'));assert.ok(block.includes('NOT_RUN'));
-for(const guide of ['domain-contracts.md','decision-memory.md','global-memory.md','parallelism/docs/contract.md'])assert.ok(block.includes(guide));
+assert.ok(block.includes('[PALARRAN_PI_ENTRY_V1]'));assert.ok(block.includes('instruction-based'));assert.ok(block.includes('NOT_RUN'));assert.ok(block.includes('synthetic'));assert.ok(block.includes('approved budget'));assert.ok(block.includes('not inherited'));
+for(const guide of ['domain-contracts.md','decision-memory.md','global-memory.md','parallelism/docs/contract.md','pi/docs/contract.md'])assert.ok(block.includes(guide));
 assert.ok(!block.includes('# Mandatory domain contracts'));assert.equal(await hook({systemPrompt:first.systemPrompt,prompt:'again'},context()),undefined);
 assert.equal(calls,0);assert.equal(timers.length,0);assert.equal(modelMessages,0);
 """)
@@ -60,7 +60,7 @@ assert.equal(calls,0);assert.equal(timers.length,0);assert.equal(modelMessages,0
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp).resolve();extension=root/'runtime/packages/core/pi/extension';extension.mkdir(parents=True)
             for name in ['core.mjs','rpc.mjs']:shutil.copyfile(EXT/name,extension/name)
-            guides=['agents/docs/domain-contracts.md','agents/docs/decision-memory.md','agents/docs/global-memory.md','parallelism/docs/contract.md']
+            guides=['agents/docs/domain-contracts.md','agents/docs/decision-memory.md','agents/docs/global-memory.md','parallelism/docs/contract.md','pi/docs/contract.md']
             for name in guides:
                 file=root/'runtime/packages/core'/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_text('PRIVATE_GUIDE_BODY_SHOULD_NOT_BE_EAGERLY_LOADED')
             self.js(f"""
