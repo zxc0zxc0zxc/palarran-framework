@@ -117,3 +117,21 @@ try{{const first=new Scheduler(store),second=new Scheduler(store);assert.equal(f
  assert.equal(store.get('SELECT identity FROM supervisor WHERE id=1').identity,first.identity);
 }}finally{{store.close()}}
 """)
+
+    def test_unknown_integration_stays_attention_after_cancel(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve()
+            self.js(self.store_prefix(root)+"""
+try{const scope=makeRun('unknown');store.tx(()=>{store.run("UPDATE tasks SET state='SUBMITTED' WHERE run_id=?",scope.run_id);store.run('INSERT INTO integration_operations VALUES(?,?,?,?,?)','op',scope.run_id,'UNKNOWN','{}',Date.now());store.settleRun(scope.run_id);});
+ assert.equal(handle(store,'status',scope).status,'ATTENTION');handle(store,'cancel',scope);assert.equal(handle(store,'status',scope).status,'ATTENTION');
+}finally{store.close()}
+""")
+
+    def test_task_cancel_fences_queued_composition(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve()
+            self.js(self.store_prefix(root)+"""
+try{const scope=makeRun('composition');store.tx(()=>{store.run("UPDATE tasks SET state='SUBMITTED' WHERE run_id=?",scope.run_id);store.run('INSERT INTO integration_operations VALUES(?,?,?,?,?)','op',scope.run_id,'QUEUED',JSON.stringify({items:[{task_id:'one'}]}),Date.now());store.settleRun(scope.run_id);});
+ handle(store,'cancel',{...scope,task_id:'one'});assert.equal(store.get('SELECT state FROM tasks WHERE run_id=?',scope.run_id).state,'CANCELLED');assert.equal(store.get('SELECT status FROM integration_operations WHERE id=?','op').status,'CANCELLED');
+}finally{store.close()}
+""")

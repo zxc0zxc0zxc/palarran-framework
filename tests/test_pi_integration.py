@@ -24,7 +24,7 @@ class PiIntegrationTests(test_pi_runtime.PiRuntimeTests):
   items=[]
   for name in ('a','b'):
    result=self.rpc('result',run_id=run,task_id=name)['result'];receipt=self.root/(name+'-verified.json');receipt.write_text(json.dumps({'task_id':name,'status':'verified','independent':True,'subject':result['source_commit']}));items.append(dict(task_id=name,receipt_file=str(receipt),receipt_sha256=hashlib.sha256(receipt.read_bytes()).hexdigest(),gates=['sum'],impacts={'sum':['sum']}))
-  config=dict(base_commit=base,items=items,required_gates=['sum'],python=sys.executable,gate_registry={'sum':dict(argv=[sys.executable,str(gate)],pins={str(gate):hashlib.sha256(gate.read_bytes()).hexdigest()},contract='sum',timeout=5)})
+  config=dict(base_commit=base,items=items,required_gates=['sum'],python=str(Path(sys.executable).resolve()),gate_registry={'sum':dict(argv=[sys.executable,str(gate)],pins={str(gate):hashlib.sha256(gate.read_bytes()).hexdigest()},contract='sum',timeout=5)})
   submitted=self.rpc('integrate',run_id=run,idempotency_key='merge',config=config);self.assertEqual(submitted['status'],'QUEUED',submitted)
   def finished():
    value=self.rpc('status',run_id=run)
