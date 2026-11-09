@@ -113,6 +113,35 @@ class PiMemoryMigrationTests(unittest.TestCase):
             link=root/'alias';link.symlink_to(wrapper);self.write_source(source,link);checked,result=self.run_cli(home,agent,source);self.assertEqual(checked.returncode,2)
             self.assertFalse((home/'.palarran').exists())
 
+    def test_symlinked_executable_layout_has_stable_diagnostic_without_side_effects(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            home, agent, source, wrapper = self.fixture(root)
+            physical = root / 'usr-bin'
+            physical.mkdir()
+            for name in ('sh', 'memory-wrapper'):
+                executable = physical / name
+                executable.write_bytes(wrapper.read_bytes())
+                executable.chmod(0o700)
+            alias = root / 'bin'
+            alias.symlink_to(physical, target_is_directory=True)
+            link = root / 'memory-alias'
+            link.symlink_to(wrapper)
+            for command in (alias / 'sh', alias / 'memory-wrapper', link):
+                self.write_source(source, command)
+                before = {p.relative_to(home).as_posix(): p.read_bytes()
+                          for p in home.rglob('*') if p.is_file()}
+                for plan in (True, False):
+                    with self.subTest(command=command.name, plan=plan):
+                        checked, result = self.run_cli(home, agent, source, plan=plan)
+                        self.assertEqual(checked.returncode, 2)
+                        self.assertEqual(result['code'], 'unsafe_executable')
+                        self.assertEqual(result['field'], 'source_entry')
+                        after = {p.relative_to(home).as_posix(): p.read_bytes()
+                                 for p in home.rglob('*') if p.is_file()}
+                        self.assertEqual(before, after)
+                        self.assertFalse((home / '.palarran').exists())
+
     def test_disabled_source_stays_disabled_and_pending_outcome_blocks_replay(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary).resolve();home,agent,source,wrapper=self.fixture(root)
