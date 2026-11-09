@@ -42,6 +42,49 @@ assert.deepEqual([...tools.keys()].sort(),['swarm_cancel','swarm_follow_up','swa
 assert.ok(commands.has('swarm'));assert.equal(calls,0);assert.equal(timers.length,0);assert.equal(modelMessages,0);
 """)
 
+    def test_before_agent_start_preserves_prompt_and_adds_one_bounded_entry(self):
+        self.js(self.prefix()+"""
+let calls=0;registerPalarran(pi,{...dependencies,rpc:async()=>{calls++;return {status:'OK'}}});
+const hook=handlers.get('before_agent_start');assert.equal(typeof hook,'function');
+const prompt='Existing provider rules\\nPreserve these exact bytes.\\n';
+const first=await hook({systemPrompt:prompt,prompt:'ordinary task'},context());
+assert.equal(first.systemPrompt.slice(0,prompt.length),prompt);
+const block=first.systemPrompt.slice(prompt.length);assert.ok(Buffer.byteLength(block)<=1536);
+assert.ok(block.includes('[PALARRAN_PI_ENTRY_V1]'));assert.ok(block.includes('instruction-based'));assert.ok(block.includes('NOT_RUN'));
+for(const guide of ['domain-contracts.md','decision-memory.md','global-memory.md','parallelism/docs/contract.md'])assert.ok(block.includes(guide));
+assert.ok(!block.includes('# Mandatory domain contracts'));assert.equal(await hook({systemPrompt:first.systemPrompt,prompt:'again'},context()),undefined);
+assert.equal(calls,0);assert.equal(timers.length,0);assert.equal(modelMessages,0);
+""")
+
+    def test_relocated_entry_references_only_its_own_guides_without_loading_bodies(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp).resolve();extension=root/'runtime/packages/core/pi/extension';extension.mkdir(parents=True)
+            for name in ['core.mjs','rpc.mjs']:shutil.copyfile(EXT/name,extension/name)
+            guides=['agents/docs/domain-contracts.md','agents/docs/decision-memory.md','agents/docs/global-memory.md','parallelism/docs/contract.md']
+            for name in guides:
+                file=root/'runtime/packages/core'/name;file.parent.mkdir(parents=True,exist_ok=True);file.write_text('PRIVATE_GUIDE_BODY_SHOULD_NOT_BE_EAGERLY_LOADED')
+            self.js(f"""
+import {{ entryInstructions }} from {json.dumps((extension/'core.mjs').as_uri())};
+const block=entryInstructions();assert.equal(typeof block,'string');assert.ok(Buffer.byteLength(block)<=1536);
+for(const guide of {json.dumps([str(root/'runtime/packages/core'/g)for g in guides])})assert.ok(block.includes(guide));
+assert.ok(!block.includes({json.dumps(str(ROOT))}));assert.ok(!block.includes('PRIVATE_GUIDE_BODY_SHOULD_NOT_BE_EAGERLY_LOADED'));
+""")
+
+    def test_missing_entry_guides_preserve_prompt_and_warn_once_without_side_effects(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            extension=Path(tmp).resolve()/'standalone';extension.mkdir()
+            for name in ['core.mjs','rpc.mjs']:shutil.copyfile(EXT/name,extension/name)
+            self.js(self.prefix()+f"""
+const {{registerPalarran:registerStandalone}}=await import({json.dumps((extension/'core.mjs').as_uri())});
+let calls=0;registerStandalone(pi,{{...dependencies,rpc:async()=>{{calls++;return {{status:'OK'}}}}}});
+const ctx=context(),notes=[];ctx.ui.notify=(text)=>notes.push(text);
+const hook=handlers.get('before_agent_start');assert.equal(typeof hook,'function');
+assert.equal(await hook({{systemPrompt:'Base',prompt:'task'}},ctx),undefined);
+assert.equal(await hook({{systemPrompt:'Base',prompt:'another'}},ctx),undefined);
+assert.equal(notes.length,1);assert.ok(!notes[0].includes({json.dumps(str(extension))}));
+assert.equal(calls,0);assert.equal(timers.length,0);assert.equal(modelMessages,0);
+""")
+
     def test_every_tool_binds_current_parent_and_never_takes_model_authority(self):
         self.js(self.prefix()+"""
 const calls=[];registerPalarran(pi,{...dependencies,rpc:async(command,payload)=>{calls.push({command,payload});return {status:'QUEUED',run_id:'run-a'}}});
@@ -198,4 +241,7 @@ const {{loadExtensions}}=await import({json.dumps(loader.as_uri())});
 const result=await loadExtensions([{json.dumps(str(EXT/'index.ts'))}],process.cwd());
 assert.deepEqual(result.errors,[]);assert.equal(result.extensions.length,1);
 assert.equal(result.extensions[0].tools.size,7);assert.ok(result.extensions[0].commands.has('swarm'));
+const hooks=result.extensions[0].handlers.get('before_agent_start');assert.equal(hooks.length,1);
+const entry=await hooks[0]({{systemPrompt:'Native SDK prefix',prompt:'ordinary task'}},{{hasUI:false}});
+assert.ok(entry.systemPrompt.startsWith('Native SDK prefix'));assert.ok(entry.systemPrompt.includes('[PALARRAN_PI_ENTRY_V1]'));
 """,timeout=25)
