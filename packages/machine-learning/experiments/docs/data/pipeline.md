@@ -45,3 +45,7 @@ flowchart LR
 ```
 
 Failure recovery: failed preparation never overwrites an existing private directory. First verify the known outcome/process termination; retain partial artifacts for diagnosis. Changed frozen inputs require a new reviewed revision carrying already spent budget, not an automatic retry/ceiling reset.
+
+## Source registry and external benchmarks
+
+The pinned split recipe optionally carries the strict [provenance policy](../EXPERIMENT_GUIDE.md). Preparation checks source versions/rights/use and exact protected payloads before writing outputs. It emits logical dataset identity, source/document lineage and `lineage.json`; all are inside the existing hashed packet and independently regenerated. No extra reservations or budget are introduced. Legacy recipes report registry/external overlap NOT_RUN. Exact complete-payload overlap is narrower than substring/near-match decontamination.

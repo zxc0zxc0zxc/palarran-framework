@@ -53,3 +53,23 @@ The separately verified [E-DATA-001..013 register](data/sources.md) includes Kar
 ## Training debugging design — 2026-10-23
 
 [Verified E-DBG-001..012 register](debugging/sources.md): Karpathy/fixed examples, Google pipeline practice, HF PPL/GenerationConfig, PyTorch gradients/AMP, sklearn metrics/calibration, functional code evaluation, Hamel error analysis, MLflow and FID limitations. These justify the design, not new training measurements.
+
+
+## Marin / Open Athena engineering adoption — 2026-11-18
+
+Marin main inspected at `b5d2db5f178263fac27d914cc4ecc1bc8eba31ab` (commit timestamp 2026-11-18T15:11:31Z). The [audit](MARIN_ADOPTION_AUDIT.md) maps these primary sources to current code and scoped decisions. Source code is Apache-2.0; this change transfers methodology and copies no Marin implementation.
+
+| ID | Primary source at inspected revision | Evidence and limits |
+| --- | --- | --- |
+| E-MARIN-001 | [Ingestion manifest](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/lib/marin/src/marin/datakit/ingestion_manifest.py) | Strict source eligibility, separate content and provenance fingerprints; adapt locally |
+| E-MARIN-002 | [Sources](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/lib/marin/src/marin/datakit/sources.py), [normalization](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/lib/marin/src/marin/datakit/normalize.py) | Actual registry/normalization chains; preserve Palarran exact code/chat content |
+| E-MARIN-003 | [Exact dedup](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/experiments/datakit/global_exact_dedup.py), [decontamination](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/lib/marin/src/marin/datakit/decon.py) | Corpus-wide dedup and versioned n-gram policy; our complete-payload check is narrower |
+| E-MARIN-004 | [Reference pipeline](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/experiments/datakit/reference_pipeline.py) | Dependency/version identity; comments acknowledge region-keyed eval corpus and tokenizer revision enforcement gaps |
+| E-MARIN-005 | [Mixture experiment](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/experiments/grug/moe_hero_ep/harrier_mix_2026_08_18.py) | Token stores, weights, repetition and held-out zero weights; no recipe-specific repeat cap copied |
+| E-MARIN-006 | [Evaluation policy issue](https://github.com/marin-community/marin/issues/10197) | Policy/discussion updated 2026-11-06, distinct model/scoring/infra outcomes; comments disclose timeout-policy versus implementation mismatch |
+| E-MARIN-007 | [Scaling ladder](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/experiments/grug/moe_hero_ep/launch_scaling_ladder.py), [scaling heuristic recipe](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/docs/recipes/add_scaling_heuristic.md) | Small meaningful tests, explicit resources/checkpoints/seeds; their workload sizes are not ours |
+| E-MARIN-008 | [Datakit design](https://github.com/marin-community/marin/blob/b5d2db5f178263fac27d914cc4ecc1bc8eba31ab/docs/design/2355_datakit.md) | Explicit proposal/open questions; never treated as implemented evidence alone |
+
+Reviewed author posts: [data pipeline](https://openathena.ai/blog/marin-data-pipeline-overview/) (2026-09-11, historical source pin `64a9483cf1a928e6db97b83130d8a5d171a4aead`), [pretraining speedup](https://openathena.ai/blog/pretraining-speedup/) (2026-06-03), [architecture](https://openathena.ai/blog/marin-535b-architecture/) (2026-11-09), [expert parallelism](https://openathena.ai/blog/expert-parallelism/), [post-training](https://openathena.ai/blog/post-training-in-the-open/), [Iris](https://openathena.ai/blog/cluster-scheduling-with-iris/) (2026-06-25). Publication dates not established here for the other two posts. Scale and speedup figures are author reports tied to their hardware/protocol, not replicated results or Palarran targets. Current code can differ from historical posts.
+
+[Token count metadata](https://huggingface.co/datasets/marin-community/token-counts), [mixture swarm metadata](https://huggingface.co/datasets/marin-community/grug-moe-mix-swarm) and [scaling issue](https://github.com/marin-community/marin/issues/8435) were examined as research records only. No dataset rows, weights or training artifacts were downloaded. All required references were accessible; no large-scale experiment was reproduced.
