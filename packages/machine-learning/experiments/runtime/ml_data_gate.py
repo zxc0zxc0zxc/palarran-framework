@@ -252,6 +252,17 @@ def generate(config, output):
             data.require(padded <= MAX_TOKENS)
             batches.append(collate(chunk,config['pad_token_id']))
         write(output/(split+'-batches.jsonl'),batches,lines=True,max_bytes=config['max_output_bytes'])
+    lineage = dict(version=1, artifact_type='ml-preparation-lineage',
+                   dataset_manifest_sha256=dataset_sha, dataset_id=manifest.get('dataset_id'),
+                   provenance_sha256=manifest.get('provenance_sha256'),
+                   processing_version=manifest.get('provenance', {}).get('processing_version', 'legacy-exact-v1'),
+                   preparation_sha256=data.digest(config), source_sha256=config['files'][config['source']],
+                   tokenizer_sha256=config['files'][config['tokenizer']], tokenizers_version=config['tokenizers_version'],
+                   template_sha256=config['files'][config['template']], split_sha256=config['files'][config['split']],
+                   mixture_sha256=config['files'][config['mixture']], objective=config['objective'],
+                   registry_status='checked' if 'provenance' in manifest else 'NOT_RUN',
+                   benchmark_overlap=manifest.get('benchmark_overlap', {'status': 'NOT_RUN'}))
+    write(output/'lineage.json',lineage,max_bytes=config['max_output_bytes'])
     write(output/'audit.json',audit,max_bytes=config['max_output_bytes'])
     write(output/'mixture.json',mixture,max_bytes=config['max_output_bytes'])
     check_policy(config)

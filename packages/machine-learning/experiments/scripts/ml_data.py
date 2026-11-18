@@ -11,6 +11,8 @@ for _palarran_root in _PalarranPath(__file__).resolve().parents:
 from scripts.palarran_paths import repository_root
 
 import argparse
+from datetime import datetime
+from urllib.parse import urlsplit
 from collections import Counter, defaultdict
 from decimal import Decimal, ROUND_FLOOR, ROUND_CEILING
 import hashlib
@@ -194,13 +196,112 @@ def profile(path):
                 semantic_quality='NOT_RUN', privacy_audit='NOT_RUN')
 
 
+
+def provenance_policy(value):
+    """Validate an explicit local policy snapshot, never contact source URLs."""
+    fields(value, ('version', 'processing_version', 'sources', 'protected_benchmarks'))
+    require(type(value['version']) is int and value['version'] == 1)
+    require(value['processing_version'] == 'identity-v1')
+    sources = value['sources']
+    require(isinstance(sources, list) and 1 <= len(sources) <= 1000)
+    registry = {}
+    for source in sources:
+        fields(source, ('source_id', 'upstream', 'revision', 'license', 'rights_status',
+                        'rights_approval', 'allowed_uses', 'status', 'ingested_at'))
+        for name in ('source_id', 'upstream', 'revision', 'license', 'rights_approval', 'ingested_at'):
+            text(source[name])
+        require(source['source_id'] not in registry)
+        require(source['revision'].strip().casefold() not in ('main', 'master', 'latest', 'unknown'))
+        url = urlsplit(source['upstream'])
+        require(url.scheme == 'https' and bool(url.hostname) and not url.username and not url.password
+                and not url.query and not url.fragment)
+        require(re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z', source['ingested_at']) is not None)
+        datetime.strptime(source['ingested_at'], '%Y-%m-%dT%H:%M:%SZ')
+        require(source['status'] in ('active', 'withdrawn', 'blocked'))
+        require(source['rights_status'] in ('approved', 'unknown', 'rejected'))
+        uses = source['allowed_uses']
+        require(isinstance(uses, list) and len(uses) <= 2 and all(u in ('training', 'evaluation') for u in uses)
+                and len(set(uses)) == len(uses))
+        registry[source['source_id']] = source
+    protected, names = set(), set()
+    benchmarks = value['protected_benchmarks']
+    require(isinstance(benchmarks, list) and len(benchmarks) <= 1000)
+    count = 0
+    for item in benchmarks:
+        fields(item, ('benchmark_id', 'revision', 'payload_sha256'))
+        text(item['benchmark_id']); text(item['revision'])
+        require(item['benchmark_id'] not in names)
+        require(item['revision'].strip().casefold() not in ('main', 'master', 'latest', 'unknown'))
+        names.add(item['benchmark_id'])
+        hashes = item['payload_sha256']
+        require(isinstance(hashes, list) and 0 < len(hashes) <= MAX_ROWS)
+        require(all(isinstance(h, str) and HEX.fullmatch(h) for h in hashes))
+        require(len(set(hashes)) == len(hashes))
+        count += len(hashes)
+        require(count <= MAX_ROWS)
+        protected.update(hashes)
+    return registry, protected
+
+
+def source_eligibility(record, registry, split=None):
+    require(record['source_id'] in registry)
+    source = registry[record['source_id']]
+    require(source['status'] == 'active' and source['rights_status'] == 'approved')
+    require(permitted(record))
+    require(all(record[name] == source[name] for name in ('license', 'rights_status', 'rights_approval')))
+    # Without an assigned split, check identity/rights now and use eligibility later.
+    if split is not None:
+        require(('training' if split == 'train' else 'evaluation') in source['allowed_uses'])
+
+
+def provenance_metadata(records, decisions, config):
+    """Derive metadata from the accepted records and exclusion ledger independently."""
+    policy = config['provenance']
+    registry, protected = provenance_policy(policy)
+    documents, matches = [], Counter()
+    for record in sorted(records, key=lambda r: r['id']):
+        source_eligibility(record, registry, record['split'])
+        content = digest(payload(record))
+        if content in protected:
+            matches[record['split']] += 1
+        documents.append(dict(id=record['id'], content_sha256=content, record_sha256=digest(record),
+                              source_id=record['source_id'], source_revision=registry[record['source_id']]['revision'],
+                              split=record['split'], processing_status='accepted'))
+    require(not matches['train'] and not matches['validation'])
+    survivors = {record['id']: record for record in records}
+    duplicates = [d for d in decisions if d['reason'] == 'exact_duplicate']
+    cross_source = 0
+    for decision in duplicates:
+        require(decision['survivor_id'] in survivors)
+        source_eligibility(decision['provenance'], registry, survivors[decision['survivor_id']]['split'])
+        if decision['provenance']['source_id'] != survivors[decision['survivor_id']]['source_id']:
+            cross_source += 1
+    logical = [dict(id=r['id'], group_id=r['group_id'], source_id=r['source_id'],
+                    revision=registry[r['source_id']]['revision'], domain=r['domain'], language=r['language'],
+                    split=r['split'], content_sha256=digest(payload(r)), completion=r.get('completion'))
+               for r in sorted(records, key=lambda r:r['id'])]
+    source_counts = Counter(r['source_id'] for r in records)
+    return dict(provenance=policy, provenance_sha256=digest(policy), preparation_config=config,
+                dataset_id=digest(dict(processing_version=policy['processing_version'], documents=logical,
+                                       split_policy={k: config[k] for k in ('version', 'seed', 'split_weights')})),
+                documents=documents, source_counts=dict(sorted(source_counts.items())),
+                benchmark_overlap=dict(basis='exact-canonical-payload',
+                    status='PASS' if protected else 'NOT_RUN', protected_payloads=len(protected),
+                    train_matches=matches['train'], validation_matches=matches['validation'], test_matches=matches['test']),
+                deduplication=dict(input_records=len(records)+len(decisions), accepted_records=len(records),
+                                   duplicates=len(duplicates), cross_source_duplicates=cross_source,
+                                   duplicate_rate=str(Decimal(len(duplicates))/max(1,len(records)+len(decisions)))))
+
+
 def prepare(path, config, output):
-    fields(config, ('version', 'seed', 'split_weights'))
+    fields(config, ('version', 'seed', 'split_weights'), ('provenance',))
     require(type(config['version']) is int and config['version'] == 1)
     integer(config['seed'], 0, 2**31-1)
     fields(config['split_weights'], SPLITS)
     weights = {key: number(config['split_weights'][key]) for key in SPLITS}
     require(sum(weights.values()) == 1)
+    policy = config.get('provenance')
+    registry, protected = provenance_policy(policy) if 'provenance' in config else ({}, set())
     records, raw_sha, size = rows(path)
     valid, decisions, ids = [], [], set()
     before = Counter()
@@ -223,6 +324,8 @@ def prepare(path, config, output):
             require(record['id'] not in ids)
             ids.add(record['id'])
         if reason is None:
+            if policy is not None:
+                source_eligibility(record, registry)
             if not permitted(record):
                 reason = 'rights_not_approved'
             elif SECRET.search(canonical(payload(record))):
@@ -263,6 +366,11 @@ def prepare(path, config, output):
                 if bucket < cumulative:
                     assignments[component] = split
                     break
+    if policy is not None:
+        for record in valid:
+            split = assignments[components[record['group_id']]]
+            source_eligibility(record, registry, split)
+            require(split == 'test' or digest(payload(record)) not in protected)
     shards = {split: [] for split in SPLITS}
     survivors = {}
     for record in sorted(valid, key=lambda r: r['id']):
@@ -276,6 +384,7 @@ def prepare(path, config, output):
         shards[assigned['split']].append(assigned)
     after = Counter((r['domain'],r['language']) for values in shards.values() for r in values)
     slices = [dict(domain=key[0],language=key[1],before=before[key],after=after[key],excluded=before[key]-after[key]) for key in sorted(before)]
+    metadata = provenance_metadata([r for values in shards.values() for r in values], decisions, config) if policy is not None else {}
     destination = safe_output(output)
     destination.mkdir(mode=0o700)
     manifest = dict(schema_version=1, artifact_type='ml-prepared-data', input_sha256=raw_sha, input_bytes=size,
@@ -285,6 +394,9 @@ def prepare(path, config, output):
                     excluded_records=len(decisions), excluded_by_reason=dict(Counter(d['reason'] for d in decisions)),
                     audits=dict(near_duplicates='NOT_RUN', language_detection='NOT_RUN', semantic_quality='NOT_RUN',
                                 pii='NOT_RUN', benchmark_contamination='NOT_RUN'), shards={})
+    manifest.update(metadata)
+    if policy is not None and protected:
+        manifest['audits']['benchmark_contamination'] = 'PARTIAL_EXACT_PAYLOAD'
     for split, values in shards.items():
         data = ''.join(canonical(r)+'\n' for r in values).encode()
         manifest['shards'][split] = dict(sha256=write_new(destination / (split+'.jsonl'), data), records=len(values))
@@ -321,6 +433,18 @@ def verify_prepared(directory):
     require(dict(Counter(d['reason'] for d in ledger)) == manifest['excluded_by_reason'])
     require(sum(s['before'] for s in manifest['slices']) == manifest['input_records'] and sum(s['after'] for s in manifest['slices']) == len(records))
     require(len(records) == manifest['accepted_records'] and len(records)+len(ledger) == manifest['input_records'])
+    if 'provenance' in manifest:
+        config = manifest['preparation_config']
+        fields(config, ('version', 'seed', 'split_weights', 'provenance'))
+        require(digest(config) == manifest['config_sha256'] and config['provenance'] == manifest['provenance'])
+        metadata = provenance_metadata(list(records.values()), ledger, config)
+        require(all(manifest.get(key) == value for key, value in metadata.items()))
+        expected = 'PARTIAL_EXACT_PAYLOAD' if metadata['benchmark_overlap']['protected_payloads'] else 'NOT_RUN'
+        require(manifest['audits']['benchmark_contamination'] == expected)
+    else:
+        require(not any(key in manifest for key in ('dataset_id','documents','provenance_sha256','preparation_config',
+                                                       'benchmark_overlap','source_counts','deduplication')))
+        require(manifest['audits']['benchmark_contamination'] == 'NOT_RUN')
     return records, sha(manifest_data)
 
 
