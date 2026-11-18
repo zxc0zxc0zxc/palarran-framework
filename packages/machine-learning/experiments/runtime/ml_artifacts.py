@@ -207,7 +207,7 @@ def evaluation(root, policy):
     proto_ref = prefix['lineage']['protocol']
     proto = protocol(json.loads(reference(root, proto_ref)))
     result = load_json(policy['artifact_root'], 'evaluation.json')
-    keys(result, {'schema_version', 'checkpoint_sha256', 'protocol_sha256', 'metrics', 'baseline', 'sample_count', 'checks', 'verdict'})
+    keys(result, {'schema_version', 'checkpoint_sha256', 'protocol_sha256', 'metrics', 'baseline', 'sample_count', 'checks', 'verdict'} | ({'failures'} if isinstance(result, dict) and 'failures' in result else set()))
     require(type(result['schema_version']) is int and result['schema_version'] == 1)
     require(result['checkpoint_sha256'] == checkpoint_hash(policy) and result['protocol_sha256'] == proto_ref['sha256'])
     require(type(result['sample_count']) is int and result['sample_count'] > 0)
@@ -216,6 +216,12 @@ def evaluation(root, policy):
     primary = proto['primary']; name = primary['name']
     needed = {name} | {g['name'] for g in proto['guardrails']}
     incomplete = not needed <= set(result['metrics']) or name not in result['baseline'] or any(result['checks'].get(c) is not True for c in proto['required_checks'])
+    if 'failures' in result:
+        failures = result['failures']
+        keys(failures, {'model', 'invalid_output', 'scoring', 'infrastructure', 'timeout'})
+        require(all(type(count) is int and 0 <= count <= result['sample_count'] for count in failures.values()))
+        require(sum(failures.values()) <= result['sample_count'])
+        incomplete = incomplete or any(failures[name] for name in ('scoring', 'infrastructure', 'timeout'))
     if incomplete:
         verdict = 'inconclusive'
     else:

@@ -35,3 +35,7 @@ Private resource-attempt/approval tables retain run/task/attempt/token, reserved
 ## Training diagnostics / reports
 
 Optional frozen `execution_policy.diagnostics` enables [runtime diagnostics](debugging/runtime.md) (within the ML section: `debugging/runtime.md`). Fit/evaluate instrumentation writes a private bounded stream; the coordinator tracks rules and assembles report/gallery/CSV/SVG. Terminal/stop/failure produces an immutable report revision; `python3 -m orchestrator ml-report --state /private/state --run RUN` recovers reports without training/provider calls. `status` is read-only. Optional `preprint=true` exports a LaTeX evidence draft without an AI call; compilation/submission NOT RUN. Legacy runs without diagnostics receive partial reports, not diagnostics PASS.
+
+## Classified evaluation failures
+
+Optional `evaluation.json.failures` contains exactly `model`, `invalid_output`, `scoring`, `infrastructure`, `timeout` as nonnegative integers (booleans forbidden), with their sum no greater than `sample_count`, the attempted-unit denominator. Scoring/infrastructure/timeouts require an inconclusive verdict. Model/invalid-output failures remain subject to task-specific frozen metrics; the generic verifier cannot infer metric correctness. Legacy reports retain prior semantics and no classified-error claim. See the [experiment guide](EXPERIMENT_GUIDE.md).

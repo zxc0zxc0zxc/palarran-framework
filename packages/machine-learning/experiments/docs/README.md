@@ -52,4 +52,8 @@ Suite DoD: each stage output includes references/versions/evidence/unknowns, exp
 
 ## Training diagnostics
 
-[Training debugging design](debugging/README.md): task-specific metrics, tracked heuristics, full generation snapshots and a mandatory rolling/terminal report for every outcome. Status design-v001; runtime integration [pending](debugging/integration-plan.md).
+[Training debugging design](debugging/README.md): task-specific metrics, tracked heuristics, full generation snapshots and a mandatory rolling/terminal report for every outcome. Implemented scope and remaining target-specific hooks are in [runtime diagnostics](debugging/runtime.md); the [original integration plan](debugging/integration-plan.md) preserves design history.
+
+## Marin engineering adoption
+
+[Audit and source pin](MARIN_ADOPTION_AUDIT.md), [current architecture](ML_ARCHITECTURE.md), [reproducible experiment guide](EXPERIMENT_GUIDE.md), [research backlog](MARIN_RESEARCH_BACKLOG.md). Source policy, document lineage and exact protected-benchmark checks extend the existing preparation path; advanced training techniques remain separate research.
